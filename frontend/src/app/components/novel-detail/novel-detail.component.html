@@ -1,0 +1,94 @@
+<div class="container mt-4" *ngIf="novel">
+  <div class="row">
+    <div class="col-md-4">
+      <img [src]="novel.coverImage" class="img-fluid rounded" [alt]="novel.title">
+    </div>
+    <div class="col-md-8">
+      <h1>{{ novel.title }}</h1>
+      <p class="text-muted">Tác giả: {{ novel.author }}</p>
+      <div class="mb-3">
+        <span class="badge bg-primary me-1" *ngFor="let category of novel.categories">
+          {{ category }}
+        </span>
+      </div>
+      <div class="mb-3">
+        <span class="badge" [ngClass]="novel.status === 'completed' ? 'bg-success' : 'bg-warning'">
+          {{ novel.status === 'completed' ? 'Đã hoàn thành' : 'Đang tiến hành' }}
+        </span>
+      </div>
+      <div class="mb-3">
+        <span class="text-warning">
+          <i class="fas fa-star" *ngFor="let i of [].constructor(novel.rating)"></i>
+        </span>
+        <span class="ms-2">({{ novel.views }} lượt xem)</span>
+      </div>
+      <p>{{ novel.description }}</p>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Danh sách chương</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <a href="#" 
+               class="list-group-item list-group-item-action" 
+               *ngFor="let chapter of chapters"
+               (click)="selectChapter(chapter)">
+              {{ chapter.title }}
+            </a>
+          </div>
+        </div>
+        <div class="card-footer">
+          <mat-paginator
+            [length]="totalElements"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[5, 10, 25, 100]"
+            (page)="onPageChange($event)"
+            aria-label="Select page">
+          </mat-paginator>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card" *ngIf="selectedChapter">
+        <div class="card-header">
+          <h5 class="card-title mb-0">{{ selectedChapter.title }}</h5>
+        </div>
+        <div class="card-body">
+          <div [innerHTML]="selectedChapter.content"></div>
+        </div>
+        <div class="card-footer">
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-primary" *ngIf="selectedChapter.chapterNumber > 1">
+              Chương trước
+            </button>
+            <button class="btn btn-primary" *ngIf="selectedChapter.chapterNumber < novel.totalChapters">
+              Chương sau
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-info" *ngIf="!selectedChapter">
+        Vui lòng chọn chương để đọc
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-4" *ngIf="!novel && !loading">
+  <div class="alert alert-danger">
+    Không tìm thấy truyện
+  </div>
+</div>
+
+<div class="container mt-4" *ngIf="loading">
+  <div class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+</div> 

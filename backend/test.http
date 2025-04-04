@@ -104,3 +104,8 @@ GET http://localhost:8080/api/test/admin
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+### Get All Novels
+GET http://localhost:8080/api/novels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
