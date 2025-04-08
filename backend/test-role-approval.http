@@ -1,0 +1,102 @@
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc0NDEwMDk2MywiZXhwIjoxNzQ0MTg3MzYzfQ.soxK0E_o0R9sQ7U5uyA3cHH7qd0SHHjlrdEqrv5lQxY
+
+### Register a new user (will automatically get ROLE_USER)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "newpassword"
+}
+
+### Register a new user requesting moderator role
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "modrequest",
+    "email": "modrequest@example.com",
+    "password": "modpassword",
+    "role": ["ROLE_MODERATOR"]
+}
+
+### Register a new user requesting admin role
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "adminrequest",
+    "email": "adminrequest@example.com",
+    "password": "adminpassword",
+    "role": ["ROLE_ADMIN"]
+}
+
+### Login as the new user
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "password": "newpassword"
+}
+
+### Login as the user requesting moderator role
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "modrequest",
+    "password": "modpassword"
+}
+
+### Login as the user requesting admin role
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "adminrequest",
+    "password": "adminpassword"
+}
+
+### Request moderator role (authenticated user)
+POST http://localhost:8080/api/role-approval/request
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "requestedRole": "ROLE_MODERATOR"
+}
+
+### Request admin role (authenticated user)
+POST http://localhost:8080/api/role-approval/request
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "requestedRole": "ROLE_ADMIN"
+}
+
+### Get my role requests (authenticated user)
+GET http://localhost:8080/api/role-approval/my-requests
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Get all pending role requests (admin only)
+GET http://localhost:8080/api/role-approval/pending
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Approve a role request (admin only)
+POST http://localhost:8080/api/role-approval/approve/4
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Reject a role request (admin only)
+POST http://localhost:8080/api/role-approval/reject/3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "reason": "Not enough experience. Please provide more details in your application"
+} 

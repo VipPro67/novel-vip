@@ -13,7 +13,8 @@ RUN mvn clean package -DskipTests -B
 # Run stage (smaller image)
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 # Copy the specific JAR file
 COPY --from=build /app/target/novel-vippro-0.0.1-SNAPSHOT.jar app.jar
 

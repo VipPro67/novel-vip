@@ -49,6 +49,9 @@ public class AuthService {
     @Autowired
     JwtUtils jwtUtils;
 
+    @Autowired
+    RoleApprovalService roleApprovalService;
+
     public ResponseEntity<?> authenticateUser(LoginRequest loginRequest) {
         try {
             logger.info("Attempting to authenticate user: {}", loginRequest.getUsername());
@@ -102,53 +105,46 @@ public class AuthService {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        Set<Role> roles = validateAndGetRoles(signUpRequest.getRole());
-        if (roles == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Invalid role specified"));
-        }
-
+        // Always assign ROLE_USER by default
+        Set<Role> roles = new HashSet<>();
+        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        roles.add(userRole);
         user.setRoles(roles);
+
+        // Save the user with ROLE_USER
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
-    }
+        // If user requested additional roles (MOD or ADMIN), create approval requests
+        if (signUpRequest.getRole() != null && !signUpRequest.getRole().isEmpty()) {
+            for (String roleStr : signUpRequest.getRole()) {
+                ERole requestedRole = null;
 
-    private Set<Role> validateAndGetRoles(Set<String> strRoles) {
-        Set<Role> roles = new HashSet<>();
-
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
-        } else {
-            for (String role : strRoles) {
-                switch (role.toUpperCase()) {
+                switch (roleStr.toUpperCase()) {
                     case "ADMIN":
                     case "ROLE_ADMIN":
-                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
+                        requestedRole = ERole.ROLE_ADMIN;
                         break;
                     case "MOD":
                     case "MODERATOR":
                     case "ROLE_MODERATOR":
-                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(modRole);
+                        requestedRole = ERole.ROLE_MODERATOR;
                         break;
                     case "USER":
                     case "ROLE_USER":
-                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
-                        break;
+                        // Already assigned, skip
+                        continue;
                     default:
-                        return null;
+                        // Invalid role, skip
+                        continue;
+                }
+
+                if (requestedRole != null) {
+                    roleApprovalService.createRoleApprovalRequest(user, requestedRole);
                 }
             }
         }
-        return roles;
+
+        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }

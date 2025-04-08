@@ -1,5 +1,5 @@
 
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZXdhZG1pbiIsImlhdCI6MTc0Mzc1NDY3MSwiZXhwIjoxNzQzODQxMDcxfQ.Rp-T7t-OXFspcmJRN1nCc6Y4y0E0K-coPZmG38ZOfWk
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc0NDEwNDk0NywiZXhwIjoxNzQ0MTkxMzQ3fQ.A9-3yeBX26B1WA54HwjXllqmMeGMzlNom_yQXiKVQgA
 ### Test User Login
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
@@ -14,8 +14,8 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-    "username": "newadmin",
-    "password": "newadminpassword"
+    "username": "admin",
+    "password": "adminpassword"
 }
 
 ### Test User Registration
@@ -34,9 +34,9 @@ POST http://localhost:8080/api/auth/signup
 Content-Type: application/json
 
 {
-    "username": "newadmin",
-    "email": "newadmin@example.com",
-    "password": "newadminpassword",
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "adminpassword",
     "role": ["ROLE_ADMIN"]
 }
 
@@ -109,3 +109,33 @@ GET http://localhost:8080/api/novels
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+### Get Novel by ID
+GET http://localhost:8080/api/novels/1
+Authorization: Bearer {{token}}
+
+
+### Create Novel
+POST http://localhost:8080/api/novels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "New Novel",
+    "author": "John Doe",
+    "description": "A new novel description.",
+    "publishedDate": "2023-10-01"
+}
+
+### Get Chapters by Novel ID
+GET http://localhost:8080/api/chapters/novel/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+### Get Chapter by ID
+GET http://localhost:8080/api/chapters/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Get Chapter by Novel ID and Chapter Number
+GET http://localhost:8080/api/chapters/novel/1/chapter/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
