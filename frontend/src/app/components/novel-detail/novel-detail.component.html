@@ -1,94 +1,139 @@
-<div class="container mt-4" *ngIf="novel">
-  <div class="row">
-    <div class="col-md-4">
-      <img [src]="novel.coverImage" class="img-fluid rounded" [alt]="novel.title">
+<div class="container mt-4">
+  <!-- Loading State -->
+  <div class="text-center py-5" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+
+  <!-- Novel Details -->
+  <div class="row" *ngIf="novel && !loading">
+    <div class="col-md-4 col-sm-12 mb-3">
+      <img
+        [src]="novel.coverImage"
+        class="img-fluid rounded shadow"
+        [alt]="novel.title"
+        style="max-height: 400px; object-fit: cover"
+        (error)="onImageError($event)"
+      />
     </div>
-    <div class="col-md-8">
-      <h1>{{ novel.title }}</h1>
-      <p class="text-muted">Tác giả: {{ novel.author }}</p>
+    <div class="col-md-8 col-sm-12">
+      <h1 class="fw-bold">{{ novel.title }}</h1>
+      <p class="text-muted mb-2">Tác giả: {{ novel.author }}</p>
       <div class="mb-3">
-        <span class="badge bg-primary me-1" *ngFor="let category of novel.categories">
+        <span
+          class="badge bg-primary me-1"
+          *ngFor="let category of novel.categories"
+        >
           {{ category }}
         </span>
-      </div>
-      <div class="mb-3">
-        <span class="badge" [ngClass]="novel.status === 'completed' ? 'bg-success' : 'bg-warning'">
-          {{ novel.status === 'completed' ? 'Đã hoàn thành' : 'Đang tiến hành' }}
+        <span
+          class="badge"
+          [ngClass]="{
+            'bg-success': novel.status === 'completed',
+            'bg-warning': novel.status === 'ongoing'
+          }"
+        >
+          {{
+            novel.status === "completed" ? "Đã hoàn thành" : "Đang tiến hành"
+          }}
         </span>
       </div>
       <div class="mb-3">
         <span class="text-warning">
-          <i class="fas fa-star" *ngFor="let i of [].constructor(novel.rating)"></i>
+          <i
+            class="fas fa-star"
+            *ngFor="let i of [].constructor(novel.rating)"
+          ></i>
+          <i
+            class="far fa-star"
+            *ngFor="let i of [].constructor(5 - novel.rating)"
+          ></i>
         </span>
-        <span class="ms-2">({{ novel.views }} lượt xem)</span>
+        <span class="ms-2 text-muted"
+          >({{ novel.views | number }} lượt xem)</span
+        >
       </div>
-      <p>{{ novel.description }}</p>
+      <p class="lead">{{ novel.description }}</p>
     </div>
   </div>
 
-  <div class="row mt-4">
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Danh sách chương</h5>
-        </div>
-        <div class="card-body p-0">
-          <div class="list-group list-group-flush">
-            <a href="#" 
-               class="list-group-item list-group-item-action" 
-               *ngFor="let chapter of chapters"
-               (click)="selectChapter(chapter)">
+  <!-- Chapters and Content -->
+  <div class="row mt-4" *ngIf="novel && !loading">
+    <div class="col-md-4 col-sm-12">
+      <mat-card class="shadow-sm">
+        <mat-card-header>
+          <mat-card-title>Danh sách chương</mat-card-title>
+          <mat-card-subtitle>{{ totalElements }} chương</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content class="p-0">
+          <mat-list>
+            <mat-list-item
+              *ngFor="let chapter of chapters"
+              (click)="selectChapter(chapter)"
+              class="chapter-item"
+              [class.active]="selectedChapter?.id === chapter.id"
+            >
               {{ chapter.title }}
-            </a>
-          </div>
-        </div>
-        <div class="card-footer">
+              <span
+                matBadge="{{ chapter.views }}"
+                matBadgeOverlap="false"
+                class="ms-2"
+              ></span>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+        <mat-card-actions>
           <mat-paginator
             [length]="totalElements"
             [pageSize]="pageSize"
             [pageSizeOptions]="[5, 10, 25, 100]"
+            [pageIndex]="currentPage"
             (page)="onPageChange($event)"
-            aria-label="Select page">
-          </mat-paginator>
-        </div>
-      </div>
+            aria-label="Chọn trang"
+          ></mat-paginator>
+        </mat-card-actions>
+      </mat-card>
     </div>
-    <div class="col-md-8">
-      <div class="card" *ngIf="selectedChapter">
-        <div class="card-header">
-          <h5 class="card-title mb-0">{{ selectedChapter.title }}</h5>
-        </div>
-        <div class="card-body">
-          <div [innerHTML]="selectedChapter.content"></div>
-        </div>
-        <div class="card-footer">
-          <div class="d-flex justify-content-between">
-            <button class="btn btn-primary" *ngIf="selectedChapter.chapterNumber > 1">
-              Chương trước
-            </button>
-            <button class="btn btn-primary" *ngIf="selectedChapter.chapterNumber < novel.totalChapters">
-              Chương sau
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="alert alert-info" *ngIf="!selectedChapter">
-        Vui lòng chọn chương để đọc
+    <div class="col-md-8 col-sm-12">
+      <mat-card class="shadow-sm" *ngIf="selectedChapter">
+        <mat-card-header>
+          <mat-card-title>{{ selectedChapter.title }}</mat-card-title>
+          <mat-card-subtitle
+            >Chương {{ selectedChapter.chapterNumber }}</mat-card-subtitle
+          >
+        </mat-card-header>
+        <mat-card-content class="chapter-content">
+          <div [innerHTML]="selectedChapter.content | sanitizeHtml"></div>
+        </mat-card-content>
+        <mat-card-actions class="d-flex justify-content-between">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="goToPreviousChapter()"
+            [disabled]="!selectedChapter || selectedChapter.chapterNumber <= 1"
+          >
+            Chương trước
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="goToNextChapter()"
+            [disabled]="
+              !selectedChapter ||
+              selectedChapter.chapterNumber >= novel.totalChapters
+            "
+          >
+            Chương sau
+          </button>
+        </mat-card-actions>
+      </mat-card>
+      <div class="alert alert-info text-center" *ngIf="!selectedChapter">
+        Vui lòng chọn một chương để đọc
       </div>
     </div>
   </div>
-</div>
 
-<div class="container mt-4" *ngIf="!novel && !loading">
-  <div class="alert alert-danger">
+  <!-- Error State -->
+  <div class="alert alert-danger text-center" *ngIf="!novel && !loading">
     Không tìm thấy truyện
   </div>
 </div>
-
-<div class="container mt-4" *ngIf="loading">
-  <div class="text-center">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-</div> 
