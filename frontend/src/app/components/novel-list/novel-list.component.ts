@@ -52,7 +52,7 @@ export class NovelListComponent implements OnInit {
   }
 
   viewNovel(novelId: number): void {
-    this.router.navigate(["/novel", novelId]);
+    this.router.navigate(["/novels", novelId]);
   }
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src =

@@ -22,9 +22,11 @@ public class Chapter {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    @JsonIgnore
-    private String content;
+    @Column(nullable = false)
+    private String jsonUrl;
+
+    @Column(nullable = false)
+    private String audioUrl;
 
     @Column(nullable = false)
     private Integer views = 0;

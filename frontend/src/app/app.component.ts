@@ -1,22 +1,25 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from "@angular/core";
+import { RouterOutlet } from "@angular/router";
+import { NavbarComponent } from "./components/navbar/navbar.component";
 
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NavbarComponent],
   template: `
     <div class="container">
-      <h1>Welcome to Novel App</h1>
+      <app-navbar></app-navbar>
       <router-outlet></router-outlet>
     </div>
   `,
-  styles: [`
-    .container {
-      padding: 20px;
-    }
-  `]
+  styles: [
+    `
+      .container {
+        padding: 20px;
+      }
+    `,
+  ],
 })
 export class AppComponent {
-  title = 'novel-fe';
-} 
+  title = "novel-fe";
+}

@@ -1,56 +1,30 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15
-    container_name: novel_reader_db
-    restart: always
-    environment:
-      POSTGRES_DB: novel_reader
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d novel_reader" ]
-      interval: 10s
-      retries: 5
-      start_period: 10s
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: novel_be
+    env_file:
+      - ./backend/.env # Ensure this file exists in the same directory as docker-compose.yml
     restart: always
     ports:
       - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://novel_reader_db:5432/novel_reader
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
-      interval: 10s
+      interval: 1s
       retries: 5
-      start_period: 30s
+      start_period: 2s
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: novel_fe
+    env_file:
+      - ./frontend/.env
     restart: always
     ports:
       - "3000:80"
     depends_on:
       backend:
         condition: service_healthy
-
-volumes:
-  pgdata:

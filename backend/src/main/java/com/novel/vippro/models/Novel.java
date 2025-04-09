@@ -17,6 +17,9 @@ public class Novel {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String slug;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
