@@ -1,0 +1,51 @@
+.chapter-content {
+    padding: 20px;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.chapter-content p {
+    margin-bottom: 1.5em;
+    text-align: justify;
+}
+
+mat-card {
+    margin-bottom: 20px;
+}
+
+mat-card-header {
+    margin-bottom: 20px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+mat-card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+mat-card-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.alert {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}

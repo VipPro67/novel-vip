@@ -17,7 +17,12 @@ export interface Chapter {
   title: string;
   content: string;
   chapterNumber: number;
+  jsonUrl: string;
+  audioUrl: string;
   views: number;
+  comments: Comment[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface PaginatedResponse<T> {

@@ -136,15 +136,17 @@ Content-Type: application/json
 }
 
 ### Get Chapters by Novel ID
-GET http://localhost:8080/api/chapters/novel/1
+GET http://localhost:8080/api/chapters/novel/114
 Authorization: Bearer {{token}}
 Content-Type: application/json
+
 ### Get Chapter by ID
-GET http://localhost:8080/api/chapters/1
+GET http://localhost:8080/api/chapters/12
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Chapter by Novel ID and Chapter Number
-GET http://localhost:8080/api/chapters/novel/1/chapter/1
+GET http://localhost:8080/api/chapters/novel/114/chapter/2
 Authorization: Bearer {{token}}
 Content-Type: application/json
+

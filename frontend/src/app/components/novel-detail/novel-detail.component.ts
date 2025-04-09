@@ -11,6 +11,8 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatListModule } from "@angular/material/list";
 import { MatBadgeModule } from "@angular/material/badge";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { ChapterContentComponent } from "./chapter-content.component";
+
 @Component({
   selector: "app-novel-detail",
   templateUrl: "./novel-detail.component.html",
@@ -25,6 +27,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
     MatBadgeModule,
     SanitizeHtmlPipe,
     MatProgressSpinnerModule,
+    ChapterContentComponent
   ],
 })
 export class NovelDetailComponent implements OnInit {
@@ -102,7 +105,7 @@ export class NovelDetailComponent implements OnInit {
       this.selectedChapter.chapterNumber > 1
     ) {
       const prevChapterNumber = this.selectedChapter.chapterNumber - 1;
-      const prevChapter = this.novel.chapters.find(
+      const prevChapter = this.chapters.find(
         (ch) => ch.chapterNumber === prevChapterNumber
       );
       if (prevChapter) {
@@ -118,10 +121,10 @@ export class NovelDetailComponent implements OnInit {
     if (
       this.selectedChapter &&
       this.novel &&
-      this.selectedChapter.chapterNumber < this.novel.totalChapters
+      this.selectedChapter.chapterNumber < this.totalElements
     ) {
       const nextChapterNumber = this.selectedChapter.chapterNumber + 1;
-      const nextChapter = this.novel.chapters.find(
+      const nextChapter = this.chapters.find(
         (ch) => ch.chapterNumber === nextChapterNumber
       );
       if (nextChapter) {
@@ -146,6 +149,7 @@ export class NovelDetailComponent implements OnInit {
       },
     });
   }
+
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src =
       "https://res.cloudinary.com/drpudphzv/image/upload/v1/novel/cmmk5yugoqtwzu5axdea";

@@ -2,6 +2,7 @@ package com.novel.vippro.models;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -18,6 +19,9 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(unique = true, nullable = false)
+  private String supabaseId;
+
   @NotBlank
   @Size(max = 20)
   private String username;
@@ -30,6 +34,14 @@ public class User {
   @NotBlank
   @Size(max = 120)
   private String password;
+
+  private String avatarUrl;
+
+  @Column(name = "created_at")
+  private LocalDateTime createdAt;
+
+  @Column(name = "updated_at")
+  private LocalDateTime updatedAt;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -50,6 +62,14 @@ public class User {
 
   public void setId(Long id) {
     this.id = id;
+  }
+
+  public String getSupabaseId() {
+    return supabaseId;
+  }
+
+  public void setSupabaseId(String supabaseId) {
+    this.supabaseId = supabaseId;
   }
 
   public String getUsername() {
@@ -74,6 +94,30 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getAvatarUrl() {
+    return avatarUrl;
+  }
+
+  public void setAvatarUrl(String avatarUrl) {
+    this.avatarUrl = avatarUrl;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
   }
 
   public Set<Role> getRoles() {

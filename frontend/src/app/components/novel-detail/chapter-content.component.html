@@ -1,0 +1,25 @@
+<!-- Loading State -->
+<div class="text-center py-5" *ngIf="loading">
+  <mat-spinner diameter="50"></mat-spinner>
+</div>
+
+<!-- Error State -->
+<div class="alert alert-danger text-center" *ngIf="error">
+  {{ error }}
+</div>
+
+<!-- Chapter Content -->
+<mat-card class="shadow-sm" *ngIf="content && !loading">
+  <mat-card-header>
+    <mat-card-title>{{ content.chapterTitle }}</mat-card-title>
+    <mat-card-subtitle>Chương {{ content.chapterNumber }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content class="chapter-content">
+    <div [innerHTML]="content.content | sanitizeHtml"></div>
+  </mat-card-content>
+</mat-card>
+
+<!-- No Content State -->
+<div class="alert alert-info text-center" *ngIf="!content && !loading && !error">
+  Không có nội dung chương
+</div> 

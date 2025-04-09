@@ -94,38 +94,12 @@
       </mat-card>
     </div>
     <div class="col-md-8 col-sm-12">
-      <mat-card class="shadow-sm" *ngIf="selectedChapter">
-        <mat-card-header>
-          <mat-card-title>{{ selectedChapter.title }}</mat-card-title>
-          <mat-card-subtitle
-            >Chương {{ selectedChapter.chapterNumber }}</mat-card-subtitle
-          >
-        </mat-card-header>
-        <mat-card-content class="chapter-content">
-          <div [innerHTML]="selectedChapter.content | sanitizeHtml"></div>
-        </mat-card-content>
-        <mat-card-actions class="d-flex justify-content-between">
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="goToPreviousChapter()"
-            [disabled]="!selectedChapter || selectedChapter.chapterNumber <= 1"
-          >
-            Chương trước
-          </button>
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="goToNextChapter()"
-            [disabled]="
-              !selectedChapter ||
-              selectedChapter.chapterNumber >= novel.totalChapters
-            "
-          >
-            Chương sau
-          </button>
-        </mat-card-actions>
-      </mat-card>
+      <app-chapter-content
+        *ngIf="selectedChapter"
+        [jsonUrl]="selectedChapter.jsonUrl"
+        [chapterNumber]="selectedChapter.chapterNumber"
+        [chapterTitle]="selectedChapter.title"
+      ></app-chapter-content>
       <div class="alert alert-info text-center" *ngIf="!selectedChapter">
         Vui lòng chọn một chương để đọc
       </div>
