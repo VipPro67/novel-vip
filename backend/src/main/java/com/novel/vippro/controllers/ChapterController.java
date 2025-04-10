@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,8 +48,9 @@ public class ChapterController {
             ChapterDetailDTO chapter = chapterService.getChapterDetailDTO(id);
             return ResponseEntity.ok(ApiResponse.success("Chapter retrieved successfully", chapter));
         } catch (IOException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("Failed to get chapter content: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to get chapter content: " + e.getMessage(),
+                            HttpStatus.BAD_REQUEST.value()));
         }
     }
 
@@ -56,10 +58,11 @@ public class ChapterController {
     public ResponseEntity<ApiResponse<ChapterListDTO>> createChapter(@RequestBody ChapterCreateDTO chapterDTO) {
         try {
             ChapterListDTO chapter = chapterService.createChapterDTO(chapterDTO);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Chapter created successfully", chapter));
+            return ResponseEntity.ok(ApiResponse.success("Chapter created successfully", chapter));
         } catch (IOException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Failed to create chapter: " + e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to create chapter: " + e.getMessage(),
+                            HttpStatus.BAD_REQUEST.value()));
         }
     }
 
@@ -69,16 +72,17 @@ public class ChapterController {
             @RequestBody ChapterCreateDTO chapterDTO) {
         try {
             ChapterListDTO chapter = chapterService.updateChapterDTO(id, chapterDTO);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Chapter updated successfully", chapter));
+            return ResponseEntity.ok(ApiResponse.success("Chapter updated successfully", chapter));
         } catch (IOException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>(false, "Failed to update chapter: " + e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to update chapter: " + e.getMessage(),
+                            HttpStatus.BAD_REQUEST.value()));
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteChapter(@PathVariable UUID id) {
         chapterService.deleteChapter(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Chapter deleted successfully", null));
+        return ResponseEntity.ok(ApiResponse.success("Chapter deleted successfully", null));
     }
 }

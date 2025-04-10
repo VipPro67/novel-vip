@@ -232,7 +232,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Novel by ID
-GET http://localhost:8080/api/novels/1
+GET http://localhost:8080/api/novels/392829eb-c4a7-4c60-8565-3c7ca7ebd492
 Authorization: Bearer {{token}}
 
 

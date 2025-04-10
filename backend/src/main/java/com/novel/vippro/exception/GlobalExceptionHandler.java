@@ -1,5 +1,6 @@
 package com.novel.vippro.exception;
 
+import com.novel.vippro.payload.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, String>> handleMethodArgumentTypeMismatch(
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleMethodArgumentTypeMismatch(
             MethodArgumentTypeMismatchException ex) {
         Map<String, String> errors = new HashMap<>();
 
@@ -28,45 +29,65 @@ public class GlobalExceptionHandler {
             errors.put("error", "Invalid parameter format: " + ex.getName());
         }
 
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Invalid parameter format", errors, HttpStatus.BAD_REQUEST.value()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Validation failed", errors, HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleResourceNotFoundException(
+            ResourceNotFoundException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("resource", ex.getResourceName());
+        errors.put("field", ex.getFieldName());
+        errors.put("value", ex.getFieldValue().toString());
+        errors.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Resource not found", errors, HttpStatus.NOT_FOUND.value()));
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleRuntimeException(RuntimeException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Runtime error", errors, HttpStatus.BAD_REQUEST.value()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleAccessDeniedException(AccessDeniedException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Access denied. You don't have permission to perform this action.");
-        return new ResponseEntity<>(errors, HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("Access denied", errors, HttpStatus.FORBIDDEN.value()));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleBadCredentialsException(BadCredentialsException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Invalid username or password.");
-        return new ResponseEntity<>(errors, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Authentication failed", errors, HttpStatus.UNAUTHORIZED.value()));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleGenericException(Exception ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "An unexpected error occurred. Please try again later.");
-        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Internal server error", errors, HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 }
