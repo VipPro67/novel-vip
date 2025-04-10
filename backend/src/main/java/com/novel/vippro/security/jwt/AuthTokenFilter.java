@@ -1,6 +1,9 @@
 package com.novel.vippro.security.jwt;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,20 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.novel.vippro.security.services.UserDetailsServiceImpl;
+import com.novel.vippro.security.services.UserDetailsImpl;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
   @Autowired
   private JwtUtils jwtUtils;
-
-  @Autowired
-  private UserDetailsServiceImpl userDetailsService;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
@@ -34,13 +37,36 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     try {
       String jwt = parseJwt(request);
       if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-        String username = jwtUtils.getUserNameFromJwtToken(jwt);
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(jwtUtils.getSigningKey())
+            .build()
+            .parseClaimsJws(jwt)
+            .getBody();
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        String username = claims.getSubject();
+        String email = claims.get("email", String.class);
+        String userId = claims.get("userId", String.class);
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) claims.get("roles");
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (roles != null) {
+          for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+          }
+        }
+
+        UserDetailsImpl userDetails = new UserDetailsImpl(
+            UUID.fromString(userId),
+            username,
+            email,
+            "", // Password is not needed for JWT authentication
+            authorities);
+
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
             userDetails,
             null,
-            userDetails.getAuthorities());
+            authorities);
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

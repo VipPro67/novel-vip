@@ -105,14 +105,14 @@ public class AuthService {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        // Always assign ROLE_USER by default
+        // Always assign USER by default
         Set<Role> roles = new HashSet<>();
-        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+        Role userRole = roleRepository.findByName(ERole.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         roles.add(userRole);
         user.setRoles(roles);
 
-        // Save the user with ROLE_USER
+        // Save the user with USER
         userRepository.save(user);
 
         // If user requested additional roles (MOD or ADMIN), create approval requests
@@ -122,16 +122,12 @@ public class AuthService {
 
                 switch (roleStr.toUpperCase()) {
                     case "ADMIN":
-                    case "ROLE_ADMIN":
-                        requestedRole = ERole.ROLE_ADMIN;
+                        requestedRole = ERole.ADMIN;
                         break;
                     case "MOD":
-                    case "MODERATOR":
-                    case "ROLE_MODERATOR":
-                        requestedRole = ERole.ROLE_MODERATOR;
+                        requestedRole = ERole.MODERATOR;
                         break;
                     case "USER":
-                    case "ROLE_USER":
                         // Already assigned, skip
                         continue;
                     default:

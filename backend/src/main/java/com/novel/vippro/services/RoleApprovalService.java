@@ -3,6 +3,7 @@ package com.novel.vippro.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,7 @@ public class RoleApprovalService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<?> approveRoleRequest(Long requestId, String adminUsername) {
+    public ResponseEntity<?> approveRoleRequest(UUID requestId, String adminUsername) {
         RoleApprovalRequest request = roleApprovalRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Error: Request not found"));
 
@@ -99,7 +100,7 @@ public class RoleApprovalService {
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public ResponseEntity<?> rejectRoleRequest(Long requestId, String adminUsername, String reason) {
+    public ResponseEntity<?> rejectRoleRequest(UUID requestId, String adminUsername, String reason) {
         RoleApprovalRequest request = roleApprovalRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Error: Request not found"));
 

@@ -1,12 +1,13 @@
 package com.novel.vippro.payload.response;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.novel.vippro.models.RoleApprovalRequest;
 
 public class RoleApprovalResponse {
-    private Long id;
-    private Long userId;
+    private UUID id;
+    private UUID userId;
     private String username;
     private String requestedRole;
     private String status;
@@ -27,19 +28,19 @@ public class RoleApprovalResponse {
         this.rejectionReason = request.getRejectionReason();
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(UUID userId) {
         this.userId = userId;
     }
 

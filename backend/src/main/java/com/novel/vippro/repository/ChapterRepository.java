@@ -7,14 +7,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.UUID;
 
-public interface ChapterRepository extends JpaRepository<Chapter, Long> {
+public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
     @Query("SELECT c FROM Chapter c WHERE c.novel.id = ?1 ORDER BY c.chapterNumber ASC")
-    List<Chapter> findByNovelIdOrderByChapterNumberAsc(Long novelId);
+    List<Chapter> findByNovelIdOrderByChapterNumberAsc(UUID novelId);
 
     @Query("SELECT c FROM Chapter c WHERE c.novel.id = ?1 AND c.chapterNumber = ?2")
-    Chapter findByNovelIdAndChapterNumber(Long novelId, Integer chapterNumber);
+    Chapter findByNovelIdAndChapterNumber(UUID novelId, Integer chapterNumber);
 
     @Query("SELECT c FROM Chapter c WHERE c.novel.id = ?1")
-    Page<Chapter> findByNovelIdOrderByChapterNumberAsc(Long novelId, Pageable pageable);
+    Page<Chapter> findByNovelIdOrderByChapterNumberAsc(UUID novelId, Pageable pageable);
 }

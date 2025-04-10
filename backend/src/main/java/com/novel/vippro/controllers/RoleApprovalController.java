@@ -1,6 +1,7 @@
 package com.novel.vippro.controllers;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ public class RoleApprovalController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/approve/{requestId}")
-    public ResponseEntity<?> approveRequest(@PathVariable Long requestId) {
+    public ResponseEntity<?> approveRequest(@PathVariable UUID requestId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
@@ -56,7 +57,7 @@ public class RoleApprovalController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/reject/{requestId}")
-    public ResponseEntity<?> rejectRequest(@PathVariable Long requestId, @RequestBody RoleRejectRequest request) {
+    public ResponseEntity<?> rejectRequest(@PathVariable UUID requestId, @RequestBody RoleRejectRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 

@@ -5,10 +5,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-public class ChapterDTO {
+public class ChapterDetailDTO {
     private UUID id;
-    private String title;
     private Integer chapterNumber;
+    private String title;
+    private UUID novelId;
+    private String novelTitle;
+    private String content;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Integer views;
 }

@@ -3,10 +3,11 @@ package com.novel.vippro.dto;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class NovelDTO {
-    private Long id;
+    private UUID id;
     private String title;
     private String description;
     private String author;

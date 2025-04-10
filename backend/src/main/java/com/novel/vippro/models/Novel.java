@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.List;
+import java.util.UUID;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,8 +12,8 @@ import java.time.LocalDateTime;
 @Data
 public class Novel {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(nullable = false)
     private String title;
@@ -47,11 +48,11 @@ public class Novel {
     private Integer rating;
 
     @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("novel-chapters")
     private List<Chapter> chapters;
 
     @OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("novel-comments")
     private List<Comment> comments;
 
     @Column(nullable = false)

@@ -3,6 +3,7 @@ package com.novel.vippro.repository;
 import com.novel.vippro.models.Novel;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,10 +11,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface NovelRepository extends JpaRepository<Novel, Long> {
+public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n WHERE n.id = :id")
-    Optional<Novel> findById(@Param("id") long id);
+    Optional<Novel> findById(@Param("id") UUID id);
 
     @Query("SELECT n FROM Novel n WHERE n.categories LIKE %:category%")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);

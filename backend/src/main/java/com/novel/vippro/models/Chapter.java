@@ -7,14 +7,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "chapters")
 @Data
 public class Chapter {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(nullable = false)
     private Integer chapterNumber;
@@ -25,7 +26,7 @@ public class Chapter {
     @Column(nullable = false)
     private String jsonUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String audioUrl;
 
     @Column(nullable = false)
@@ -33,11 +34,11 @@ public class Chapter {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("novel-chapters")
     private Novel novel;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonManagedReference("chapter-comments")
     private List<Comment> comments;
 
     @Column(nullable = false)

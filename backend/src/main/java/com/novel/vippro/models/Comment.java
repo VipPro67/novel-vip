@@ -2,15 +2,17 @@ package com.novel.vippro.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "comments")
 @Data
 public class Comment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -21,10 +23,12 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id")
+    @JsonBackReference("novel-comments")
     private Novel novel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chapter_id")
+    @JsonBackReference("chapter-comments")
     private Chapter chapter;
 
     @Column(nullable = false)

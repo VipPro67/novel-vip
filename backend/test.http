@@ -1,14 +1,16 @@
 @supabase_token = eyJhbGciOiJIUzI1NiIsImtpZCI6IkF6R1FMd05IRllzNmI5eTciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lqZG9yeGFpa29vdm1lemZwZHJ6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3ZjdiZmY3ZC0yMDkwLTRhMTMtOThkMy00YzBhMTQyMTlkNWUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ0MTgyNDk1LCJpYXQiOjE3NDQxNzg4OTUsImVtYWlsIjoiY2xvbmVtb2l0aW5oQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZ29vZ2xlIiwicHJvdmlkZXJzIjpbImdvb2dsZSJdfSwidXNlcl9tZXRhZGF0YSI6eyJhdmF0YXJfdXJsIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwiZW1haWwiOiJjbG9uZW1vaXRpbmhAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkNsb25lIEdtYWlsIiwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwibmFtZSI6IkNsb25lIEdtYWlsIiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwicHJvdmlkZXJfaWQiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYiLCJzdWIiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvYXV0aCIsInRpbWVzdGFtcCI6MTc0NDE3ODg5NX1dLCJzZXNzaW9uX2lkIjoiOGQzZmFhMjEtYzYyZC00N2Q1LTkyZTQtMzRhODg0YWI4MzkzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.JgV-ghl1eROCHlFgICql1mta5arpwWbIUrVBaJAC7N4
 
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTc0NDEwNDk0NywiZXhwIjoxNzQ0MTkxMzQ3fQ.A9-3yeBX26B1WA54HwjXllqmMeGMzlNom_yQXiKVQgA
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIkFETUlOIiwiVVNFUiJdLCJ1c2VySWQiOiJkYzBlODBiNS04YTE1LTRiMDAtYWM0Ny01MjgyNjMwZjRiZTkiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0MjU4MDgyLCJleHAiOjE3NDQzNDQ0ODJ9.JnvAFWcX0jraLTzc8nD-7x-lDg0lq4pqJnKGIXPAVkc
+
 ### Test User Login
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-    "username": "testuser",
-    "password": "testpassword"
+    "username": "newuser",
+    "password": "newpassword"
 }
+
 
 ### Test Admin Login
 POST http://localhost:8080/api/auth/signin
@@ -27,7 +29,7 @@ Content-Type: application/json
     "username": "newuser",
     "email": "newuser@example.com",
     "password": "newpassword",
-    "role": ["ROLE_USER"]
+    "role": ["USER"]
 }
 
 ### Test Supabase Verify Token
@@ -46,7 +48,7 @@ Content-Type: application/json
     "username": "admin",
     "email": "admin@example.com",
     "password": "adminpassword",
-    "role": ["ROLE_ADMIN"]
+    "role": ["ADMIN"]
 }
 
 ### Test Registration with Multiple Roles
@@ -57,7 +59,7 @@ Content-Type: application/json
     "username": "moderator",
     "email": "moderator@example.com",
     "password": "modpassword",
-    "role": ["ROLE_MODERATOR"]
+    "role": ["MODERATOR"]
 }
 
 ### Test Registration with Invalid Role
@@ -113,6 +115,117 @@ GET http://localhost:8080/api/test/admin
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+### Register a new user (will automatically get USER)
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "email": "newuser@example.com",
+    "password": "newpassword"
+}
+
+### Register a new user requesting moderator role
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "modrequest",
+    "email": "modrequest@example.com",
+    "password": "modpassword",
+    "role": ["MODERATOR"]
+}
+
+### Register a new user requesting admin role
+POST http://localhost:8080/api/auth/signup
+Content-Type: application/json
+
+{
+    "username": "adminrequest",
+    "email": "adminrequest@example.com",
+    "password": "adminpassword",
+    "role": ["ADMIN"]
+}
+
+### Login as the new user
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "password": "newpassword"
+}
+
+### Login as the user requesting moderator role
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "modrequest",
+    "password": "modpassword"
+}
+
+### Login as the user requesting admin role
+POST http://localhost:8080/api/auth/signin
+Content-Type: application/json
+
+{
+    "username": "adminrequest",
+    "password": "adminpassword"
+}
+
+### Request moderator role (authenticated user)
+POST http://localhost:8080/api/role-approval/request
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "requestedRole": "MODERATOR"
+}
+
+### Request admin role (authenticated user)
+POST http://localhost:8080/api/role-approval/request
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "requestedRole": "ADMIN"
+}
+
+### Get my role requests (authenticated user)
+GET http://localhost:8080/api/role-approval/my-requests
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Get all pending role requests (admin only)
+GET http://localhost:8080/api/role-approval/pending
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Approve a role request (admin only)
+POST http://localhost:8080/api/role-approval/approve/5fdc1528-a85b-4446-b3d1-290f7c396eb9
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Reject a role request (admin only)
+POST http://localhost:8080/api/role-approval/reject/3
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "reason": "Not enough experience. Please provide more details in your application"
+} 
+
+### Get user profile
+GET http://localhost:8080/api/users/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Get user  by ID
+GET http://localhost:8080/api/users/e400802e-7a95-4b4c-ad2e-b6ec1f5fb12b
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
 ### Get All Novels
 GET http://localhost:8080/api/novels
 Authorization: Bearer {{token}}
@@ -129,24 +242,40 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "title": "New Novel",
-    "author": "John Doe",
-    "description": "A new novel description.",
-    "publishedDate": "2023-10-01"
+  "title": "Cổ Chân Nhân",
+  "slug": "co-chan-nhan",
+  "description": "Một câu chuyện về võ thuật và tu tiên",
+  "author": "Cổ Long",
+  "coverImage": "https://example.com/cover.jpg",
+  "status": "ongoing",
+  "categories": ["Cultivation", "Martial Arts", "Fantasy"]
+}
+
+
+### Create Chapter
+POST http://localhost:8080/api/chapters
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "chapterNumber": 3,
+  "novelId": "392829eb-c4a7-4c60-8565-3c7ca7ebd492",
+  "title": "Chương 3: Khởi đầu",
+  "content": "3"
 }
 
 ### Get Chapters by Novel ID
-GET http://localhost:8080/api/chapters/novel/114
+GET http://localhost:8080/api/chapters/novel/392829eb-c4a7-4c60-8565-3c7ca7ebd492
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Chapter by ID
-GET http://localhost:8080/api/chapters/12
+GET http://localhost:8080/api/chapters/82d47528-e6ea-4272-a82b-8c1b2e82b075
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Chapter by Novel ID and Chapter Number
-GET http://localhost:8080/api/chapters/novel/114/chapter/2
+GET http://localhost:8080/api/chapters/novel/392829eb-c4a7-4c60-8565-3c7ca7ebd492/chapter/4
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
