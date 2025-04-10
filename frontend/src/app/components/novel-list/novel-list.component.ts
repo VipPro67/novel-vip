@@ -1,6 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { NovelService } from "../../services/novel.service";
-import { Novel, PaginatedResponse } from "../../models/novel.model";
+import { Novel, NovelService } from "../../services/novel.service";
 import { Router } from "@angular/router";
 import { PageEvent, MatPaginatorModule } from "@angular/material/paginator";
 import { TruncateWordsPipe } from "../../pipes/truncate-words.pipe"; // Import here
@@ -10,17 +9,17 @@ import { NgIf, NgFor } from "@angular/common"; // Import NgIf and NgFor
 @Component({
   selector: "app-novel-list",
   templateUrl: "./novel-list.component.html",
-  styleUrls: ["./novel-list.component.css"],
+  styleUrls: ["./novel-list.component.scss"],
   imports: [TruncateWordsPipe, MatPaginatorModule, CommonModule, NgIf, NgFor], // Add to imports array
   standalone: true, // If the component is standalone
 })
 export class NovelListComponent implements OnInit {
   novels: Novel[] = [];
-  currentPage = 0;
-  pageSize = 10;
-  totalPages = 0;
-  totalElements = 0;
   loading = false;
+  currentPage = 0;
+  pageSize = 12;
+  totalNovels = 0;
+  totalElements = 0;
   truncateWords = new TruncateWordsPipe();
 
   constructor(private novelService: NovelService, private router: Router) {}
@@ -31,11 +30,12 @@ export class NovelListComponent implements OnInit {
 
   loadNovels(): void {
     this.loading = true;
-    this.novelService.getAllNovels(this.currentPage, this.pageSize).subscribe({
-      next: (response: PaginatedResponse<Novel>) => {
-        this.novels = response.content;
-        this.totalPages = response.totalPages;
-        this.totalElements = response.totalElements;
+    this.novelService.getNovels(this.currentPage, this.pageSize).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.novels = response.data.content;
+          this.totalNovels = response.data.totalElements;
+        }
         this.loading = false;
       },
       error: (error) => {
@@ -45,15 +45,17 @@ export class NovelListComponent implements OnInit {
     });
   }
 
-  onPageChange(event: PageEvent): void {
+  onPageChange(event: any): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadNovels();
   }
 
-  viewNovel(novelId: number): void {
-    this.router.navigate(["/novels", novelId]);
+  navigateToNovel(novelId: string): void {
+    // Implement navigation to novel detail page
+    // this.router.navigate(['/novels', novelId]);
   }
+
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src =
       "https://res.cloudinary.com/drpudphzv/image/upload/v1/novel/cmmk5yugoqtwzu5axdea";

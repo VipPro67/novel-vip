@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
 } from "@angular/forms";
 import { Router } from "@angular/router";
-import { SupabaseService } from "../../services/supabase.service";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
   selector: "app-register",
@@ -26,7 +26,7 @@ export class RegisterComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
-    private supabaseService: SupabaseService
+    private authService: AuthService
   ) {
     this.registerForm = this.formBuilder.group(
       {
@@ -40,11 +40,9 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit() {
     // If user is already logged in, redirect to home
-    this.supabaseService.currentUser$.subscribe((user) => {
-      if (user) {
-        this.router.navigate(["/"]);
-      }
-    });
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(["/"]);
+    }
   }
 
   // Custom validator to check if passwords match
@@ -59,7 +57,7 @@ export class RegisterComponent implements OnInit {
     return this.registerForm.controls;
   }
 
-  onSubmit() {
+  async onSubmit() {
     this.submitted = true;
 
     // Stop here if form is invalid
@@ -70,29 +68,12 @@ export class RegisterComponent implements OnInit {
     this.loading = true;
     this.error = "";
 
-    // Sign up with Supabase
-    this.supabaseService
-      .signUp(this.f["email"].value, this.f["password"].value)
-      .then(({ user, error }) => {
-        if (error) {
-          this.error = error.message;
-          this.loading = false;
-          return;
-        }
-
-        if (user) {
-          this.success = true;
-          this.loading = false;
-
-          // Redirect to login after 3 seconds
-          setTimeout(() => {
-            this.router.navigate(["/login"]);
-          }, 3000);
-        }
-      })
-      .catch((err) => {
-        this.error = "An error occurred during registration";
-        this.loading = false;
-      });
+    try {
+      await this.authService.register(this.f["email"].value, this.f["password"].value);
+      // Registration successful, AuthService will handle navigation
+    } catch (error: any) {
+      this.error = error.message || "An error occurred during registration";
+      this.loading = false;
+    }
   }
 }

@@ -1,12 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { SupabaseService } from './supabase.service';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export interface UserRole {
-  id: number;
+export interface Role {
+  id: string;
   name: string;
   description?: string;
 }
@@ -15,54 +13,39 @@ export interface UserRole {
   providedIn: 'root'
 })
 export class UserRoleService {
-  private apiUrl = `${environment.apiUrl}/api/users`;
+  constructor(private http: HttpClient) {}
 
-  constructor(
-    private http: HttpClient,
-    private supabaseService: SupabaseService
-  ) {}
-
-  // Get current user's roles from backend
-  getCurrentUserRoles(): Observable<UserRole[]> {
-    return this.http.get<UserRole[]>(`${this.apiUrl}/me/roles`);
+  // Get all available roles
+  getAllRoles(): Observable<Role[]> {
+    return this.http.get<Role[]>(`${environment.apiUrl}/api/roles`);
   }
 
-  // Assign a role to a user
-  assignRole(userId: string, roleId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${userId}/roles`, { roleId });
+  // Request a new role
+  requestRole(roleName: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/role-approval/request`, {
+      requestedRole: roleName
+    });
   }
 
-  // Remove a role from a user
-  removeRole(userId: string, roleId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${userId}/roles/${roleId}`);
+  // Get user's role requests
+  getUserRequests(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/api/role-approval/my-requests`);
   }
 
-  // Check if user has a specific role
-  hasRole(roleName: string): Observable<boolean> {
-    return this.getCurrentUserRoles().pipe(
-      map(roles => roles.some(role => role.name === roleName)),
-      catchError(() => of(false))
-    );
+  // Get all pending role requests (admin only)
+  getPendingRequests(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/api/role-approval/pending`);
   }
 
-  // Sync Supabase user with backend
-  syncUserWithBackend(): Observable<any> {
-    return this.supabaseService.currentUser$.pipe(
-      map(async user => {
-        if (user) {
-          // Get the Supabase token
-          const { data: { session } } = await this.supabaseService.getSession();
-          if (session?.access_token) {
-            // Send token to backend to sync user
-            return this.http.post(`${this.apiUrl}/sync`, { 
-              supabaseId: user.id,
-              email: user.email,
-              token: session.access_token
-            }).toPromise();
-          }
-        }
-        return null;
-      })
-    );
+  // Approve a role request (admin only)
+  approveRequest(requestId: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/role-approval/approve/${requestId}`, {});
+  }
+
+  // Reject a role request (admin only)
+  rejectRequest(requestId: string, reason: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/role-approval/reject/${requestId}`, {
+      reason
+    });
   }
 } 

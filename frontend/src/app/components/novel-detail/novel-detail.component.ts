@@ -27,7 +27,7 @@ import { ChapterContentComponent } from "./chapter-content.component";
     MatBadgeModule,
     SanitizeHtmlPipe,
     MatProgressSpinnerModule,
-    ChapterContentComponent
+    ChapterContentComponent,
   ],
 })
 export class NovelDetailComponent implements OnInit {
@@ -47,14 +47,14 @@ export class NovelDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const novelId = Number(this.route.snapshot.paramMap.get("id"));
+    const novelId = this.route.snapshot.paramMap.get("id");
     if (novelId) {
       this.loadNovel(novelId);
       this.loadChapters(novelId);
     }
   }
 
-  loadNovel(novelId: number): void {
+  loadNovel(novelId: string): void {
     this.loading = true;
     this.novelService.getNovelById(novelId).subscribe({
       next: (novel) => {
@@ -68,7 +68,7 @@ export class NovelDetailComponent implements OnInit {
     });
   }
 
-  loadChapters(novelId: number): void {
+  loadChapters(novelId: string): void {
     this.loading = true;
     this.chapterService
       .getChaptersByNovel(novelId, this.currentPage, this.pageSize)
@@ -112,7 +112,7 @@ export class NovelDetailComponent implements OnInit {
         this.selectedChapter = prevChapter;
       } else {
         // Fetch from API if not in current page
-        this.loadChapterByNumber(this.novel.id, prevChapterNumber);
+        this.loadChapterByNovelIdAndNumber(this.novel.id, prevChapterNumber);
       }
     }
   }
@@ -131,23 +131,28 @@ export class NovelDetailComponent implements OnInit {
         this.selectedChapter = nextChapter;
       } else {
         // Fetch from API if not in current page
-        this.loadChapterByNumber(this.novel.id, nextChapterNumber);
+        this.loadChapterByNovelIdAndNumber(this.novel.id, nextChapterNumber);
       }
     }
   }
 
-  private loadChapterByNumber(novelId: number, chapterNumber: number): void {
+  private loadChapterByNovelIdAndNumber(
+    novelId: number,
+    chapterNumber: number
+  ): void {
     this.loading = true;
-    this.chapterService.getChapterByNumber(novelId, chapterNumber).subscribe({
-      next: (chapter) => {
-        this.selectedChapter = chapter;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error("Error loading chapter:", error);
-        this.loading = false;
-      },
-    });
+    this.chapterService
+      .getChapterByNovelIdAndNumber(novelId, chapterNumber)
+      .subscribe({
+        next: (chapter) => {
+          this.selectedChapter = chapter;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error("Error loading chapter:", error);
+          this.loading = false;
+        },
+      });
   }
 
   onImageError(event: Event): void {

@@ -1,0 +1,84 @@
+.novel-list-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  h1 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+}
+
+.novel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.novel-card {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  img {
+    height: 300px;
+    object-fit: cover;
+  }
+
+  mat-card-content {
+    padding: 16px;
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.2em;
+      color: #333;
+    }
+
+    .author {
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .description {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 16px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      color: #666;
+      font-size: 0.9em;
+
+      span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+@media (max-width: 600px) {
+  .novel-grid {
+    grid-template-columns: 1fr;
+  }
+} 
