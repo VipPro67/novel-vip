@@ -1,36 +1,97 @@
 .chapter-item {
-    cursor: pointer;
-    transition: background-color 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.chapter-item:last-child {
+  border-bottom: none;
+}
+
+.chapter-item:hover {
+  background-color: #f5f5f5;
+}
+
+.chapter-item.active {
+  background-color: #e0f7fa;
+  font-weight: bold;
+}
+
+.chapter-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.chapter-number {
+  font-weight: 500;
+  color: #666;
+  margin-right: 8px;
+}
+
+.chapter-title {
+  color: #333;
+}
+
+mat-card {
+  border-radius: 8px;
+}
+
+img {
+  transition: transform 0.2s;
+}
+
+img:hover {
+  transform: scale(1.02);
+}
+
+mat-spinner {
+  margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .chapter-item {
+    padding: 8px 12px;
   }
-  
-  .chapter-item:hover {
-    background-color: #f5f5f5;
+
+  .chapter-number {
+    display: block;
+    margin-bottom: 4px;
   }
-  
-  .chapter-item.active {
-    background-color: #e0f7fa;
-    font-weight: bold;
+
+  .d-flex {
+    flex-direction: column;
+    gap: 8px;
   }
-  
-  .chapter-content {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-    line-height: 1.6;
+
+  button {
+    width: 100%;
   }
-  
-  mat-card {
-    border-radius: 8px;
-  }
-  
-  img {
-    transition: transform 0.2s;
-  }
-  
-  img:hover {
-    transform: scale(1.02);
-  }
-  
-  mat-spinner {
-    margin: 0 auto;
-  }
+}
+
+.description-container {
+  position: relative;
+}
+
+.description-container p.truncated {
+  max-height: 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.description-container p.truncated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(transparent, white);
+}
+
+.description-container button {
+  margin-top: 8px;
+}

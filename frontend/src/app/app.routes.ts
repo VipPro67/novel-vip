@@ -6,7 +6,7 @@ import { NovelListComponent } from "./components/novel-list/novel-list.component
 import { NovelDetailComponent } from "./components/novel-detail/novel-detail.component";
 import { authGuard, roleGuard } from "./guards/auth.guard";
 import { noAuthGuard } from "./guards/no-auth.guard";
-
+import { ChapterReaderComponent } from "./components/chapter-reader/chapter-reader.component";
 export const routes: Routes = [
   { path: "", component: NovelListComponent },
   {
@@ -21,6 +21,7 @@ export const routes: Routes = [
   },
   { path: "auth/callback", component: AuthCallbackComponent },
   { path: "novels/:id", component: NovelDetailComponent },
+  { path: "novels/:novelId/chapters/:chapterNumber", component: ChapterReaderComponent },
   {
     path: "dashboard",
     loadChildren: () =>

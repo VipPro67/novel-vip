@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
+import { ApiResponse } from './novel.service';
 
 interface User {
   id: string;
@@ -13,8 +14,12 @@ interface User {
 }
 
 interface LoginResponse {
-  token: string;
-  user: User;
+  accessToken: string;
+  id: string;
+  username: string;
+  email: string;
+  roles: string[];
+  tokenType: string;
 }
 
 @Injectable({
@@ -41,10 +46,12 @@ export class AuthService {
   }
 
   private loadUserProfile() {
-    this.http.get<User>(`${environment.apiUrl}/api/users/me`)
+    this.http.get<ApiResponse<User>>(`${environment.apiUrl}/api/users/profile`)
       .pipe(
-        tap(user => {
-          this.currentUserSubject.next(user);
+        tap(response => {
+          if (response.success && response.data) {
+            this.currentUserSubject.next(response.data);
+          }
         }),
         catchError(error => {
           console.error('Error loading user profile:', error);
@@ -57,49 +64,69 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<void> {
     try {
-      const response = await this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, {
+      const response = await this.http.post<ApiResponse<LoginResponse>>(`${environment.apiUrl}/api/auth/signin`, {
         email,
         password
       }).toPromise();
       
-      if (response) {
+      if (response?.success && response.data) {
         // Store token
-        localStorage.setItem('token', response.token);
-        this.tokenSubject.next(response.token);
+        localStorage.setItem('token', response.data.accessToken);
+        this.tokenSubject.next(response.data.accessToken);
         
         // Set user
-        this.currentUserSubject.next(response.user);
+        this.currentUserSubject.next({
+          id: response.data.id,
+          email: response.data.email,
+          username: response.data.username,
+          roles: response.data.roles
+        });
         
         // Navigate to dashboard
         await this.router.navigate(['/dashboard']);
+      } else if (response) {
+        throw new Error(response.message || 'Login failed');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      throw error;
+      if (error.error?.statusCode === 400) {
+        const errorMessage = error.error.message; 
+        throw new Error(errorMessage);
+      }
+      throw new Error(error.error?.message || 'An error occurred during login');
     }
   }
 
   async register(email: string, password: string): Promise<void> {
     try {
-      const response = await this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/register`, {
+      const response = await this.http.post<ApiResponse<LoginResponse>>(`${environment.apiUrl}/api/auth/signup`, {
         email,
         password
       }).toPromise();
       
-      if (response) {
+      if (response?.success && response.data) {
         // Store token
-        localStorage.setItem('token', response.token);
-        this.tokenSubject.next(response.token);
+        localStorage.setItem('token', response.data.accessToken);
+        this.tokenSubject.next(response.data.accessToken);
         
         // Set user
-        this.currentUserSubject.next(response.user);
+        this.currentUserSubject.next({
+          id: response.data.id,
+          email: response.data.email,
+          username: response.data.username,
+          roles: response.data.roles
+        });
         
         // Navigate to dashboard
         await this.router.navigate(['/dashboard']);
+      } else if (response) {
+        throw new Error(response.message || 'Registration failed');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
-      throw error;
+      if (error.error?.statusCode === 400) {
+        const errorMessage = error.error.message || 'Invalid registration data';
+        throw new Error(errorMessage);
+      }
+      throw new Error(error.error?.message || 'An error occurred during registration');
     }
   }
 

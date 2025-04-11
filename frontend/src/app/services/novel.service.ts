@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -82,18 +82,31 @@ export class NovelService {
   constructor(private http: HttpClient) { }
 
   getNovels(page: number = 0, size: number = 10): Observable<ApiResponse<PaginatedResponse<Novel>>> {
-    return this.http.get<ApiResponse<PaginatedResponse<Novel>>>(`${this.apiUrl}/novels?page=${page}&size=${size}`);
+    return this.http.get<ApiResponse<PaginatedResponse<Novel>>>(`${this.apiUrl}/api/novels?page=${page}&size=${size}`);
+  }
+
+  searchNovels(keyword: string, page: number = 0, size: number = 10): Observable<ApiResponse<PaginatedResponse<Novel>>> {
+    const params = new HttpParams()
+      .set('keyword', keyword)
+      .set('page', page.toString())
+      .set('size', size.toString());
+    
+    return this.http.get<ApiResponse<PaginatedResponse<Novel>>>(`${this.apiUrl}/api/novels/search`, { params });
   }
 
   getNovelById(id: string): Observable<ApiResponse<Novel>> {
-    return this.http.get<ApiResponse<Novel>>(`${this.apiUrl}/novels/${id}`);
+    return this.http.get<ApiResponse<Novel>>(`${this.apiUrl}/api/novels/${id}`);
   }
 
   getChaptersByNovel(novelId: string, page: number = 0, size: number = 10): Observable<ApiResponse<PaginatedResponse<Chapter>>> {
-    return this.http.get<ApiResponse<PaginatedResponse<Chapter>>>(`${this.apiUrl}/chapters/novel/${novelId}?page=${page}&size=${size}`);
+    return this.http.get<ApiResponse<PaginatedResponse<Chapter>>>(`${this.apiUrl}/api/novels/${novelId}/chapters?page=${page}&size=${size}`);
   }
 
   getChapterById(id: string): Observable<ApiResponse<ChapterDetail>> {
-    return this.http.get<ApiResponse<ChapterDetail>>(`${this.apiUrl}/chapters/${id}`);
+    return this.http.get<ApiResponse<ChapterDetail>>(`${this.apiUrl}/api/chapters/${id}`);
+  }
+
+  getChapterByNovelIdAndNumber(novelId: string, chapterNumber: number): Observable<ApiResponse<ChapterDetail>> {
+    return this.http.get<ApiResponse<ChapterDetail>>(`${this.apiUrl}/api/chapters/novel/${novelId}/chapter/${chapterNumber}`);
   }
 } 

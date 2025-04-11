@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
-import { User } from '@supabase/supabase-js';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,14 +11,14 @@ import { User } from '@supabase/supabase-js';
   imports: [CommonModule, RouterModule]
 })
 export class NavbarComponent implements OnInit {
-  currentUser: User | null = null;
+  currentUser: any = null;
   isMenuOpen = false;
   
-  constructor(private supabaseService: SupabaseService) {}
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
     // Subscribe to user changes
-    this.supabaseService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
   }
@@ -29,6 +28,6 @@ export class NavbarComponent implements OnInit {
   }
 
   async logout() {
-    await this.supabaseService.signOut();
+    await this.authService.logout();
   }
 } 

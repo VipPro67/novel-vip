@@ -1,0 +1,53 @@
+<!-- Loading State -->
+<div class="text-center py-5" *ngIf="loading">
+  <mat-spinner diameter="50"></mat-spinner>
+</div>
+
+<!-- Error State -->
+<div class="alert alert-danger text-center" *ngIf="error">
+  {{ error }}
+</div>
+<mat-card-actions class="chapter-navigation">
+  <button mat-button color="primary" (click)="goToNovelDetail()">
+    <mat-icon>book</mat-icon>
+    Back to Novel
+  </button>
+  <div class="spacer"></div>
+  <button mat-button color="primary" (click)="openSettings()">
+    <mat-icon>settings</mat-icon>
+    Reading Settings
+  </button>
+  <button mat-button color="primary" (click)="goToPreviousChapter()" [disabled]="chapterNumber <= 1">
+    <mat-icon>arrow_back</mat-icon>
+    Previous Chapter
+  </button>
+  <button mat-button color="primary" (click)="goToNextChapter()">
+    Next Chapter
+    <mat-icon>arrow_forward</mat-icon>
+  </button>
+</mat-card-actions>
+<!-- Chapter Content -->
+<mat-card class="chapter-card" *ngIf="chapter && !loading" 
+  [style.max-width.px]="settings.maxWidth"
+  [style.background-color]="settings.backgroundColor"
+  [style.color]="settings.textColor">
+  <mat-card-header>
+    <mat-card-title>{{ chapter.title }}</mat-card-title>
+    <mat-card-subtitle>Chapter {{ chapter.chapterNumber }}</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content class="chapter-content" 
+    [style.font-family]="settings.fontFamily"
+    [style.font-size.px]="settings.fontSize"
+    [style.line-height]="settings.lineHeight"
+    [style.letter-spacing.px]="settings.letterSpacing">
+    <div [innerHTML]="chapter.content | sanitizeHtml" class="chapter-text"></div>
+  </mat-card-content>
+
+  
+</mat-card>
+
+<!-- No Content State -->
+<div class="alert alert-info text-center" *ngIf="!chapter && !loading && !error">
+  No chapter content available
+</div> 

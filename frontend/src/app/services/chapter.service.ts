@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { Chapter, PaginatedResponse } from "../services/novel.service"
+import { Chapter, PaginatedResponse, ApiResponse } from "../services/novel.service"
 import { environment } from "../../environments/environment";
 
 @Injectable({
@@ -16,26 +16,26 @@ export class ChapterService {
     novelId: string,
     page: number = 0,
     size: number = 10
-  ): Observable<PaginatedResponse<Chapter>> {
+  ): Observable<ApiResponse<PaginatedResponse<Chapter>>> {
     const params = new HttpParams()
       .set("page", page.toString())
       .set("size", size.toString());
-    return this.http.get<PaginatedResponse<Chapter>>(
+    return this.http.get<ApiResponse<PaginatedResponse<Chapter>>>(
       `${this.apiUrl}/novel/${novelId}`,
       { params }
     );
   }
 
   getChapterByNovelIdAndNumber(
-    novelId: number,
+    novelId: string,
     chapterNumber: number
-  ): Observable<Chapter> {
-    return this.http.get<Chapter>(
+  ): Observable<ApiResponse<Chapter>> {
+    return this.http.get<ApiResponse<Chapter>>(
       `${this.apiUrl}/novel/${novelId}/chapter/${chapterNumber}`
     );
   }
 
-  getChapterById(id: number): Observable<Chapter> {
-    return this.http.get<Chapter>(`${this.apiUrl}/${id}`);
+  getChapterById(id: string): Observable<ApiResponse<Chapter>> {
+    return this.http.get<ApiResponse<Chapter>>(`${this.apiUrl}/${id}`);
   }
 }

@@ -1,9 +1,10 @@
 import { Component, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { NovelService } from "../../services/novel.service";
 import { ChapterService } from "../../services/chapter.service";
 import { SanitizeHtmlPipe } from "../../pipes/sanitize-html.pipe";
 import { Novel, Chapter, PaginatedResponse } from "../../models/novel.model";
+import { ApiResponse } from "../../services/novel.service";
 import { MatPaginatorModule, PageEvent } from "@angular/material/paginator";
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
@@ -11,7 +12,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatListModule } from "@angular/material/list";
 import { MatBadgeModule } from "@angular/material/badge";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { ChapterContentComponent } from "./chapter-content.component";
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: "app-novel-detail",
@@ -27,7 +28,7 @@ import { ChapterContentComponent } from "./chapter-content.component";
     MatBadgeModule,
     SanitizeHtmlPipe,
     MatProgressSpinnerModule,
-    ChapterContentComponent,
+    MatIconModule
   ],
 })
 export class NovelDetailComponent implements OnInit {
@@ -38,10 +39,12 @@ export class NovelDetailComponent implements OnInit {
   totalPages = 0;
   totalElements = 0;
   loading = false;
+  showFullDescription = false;
   selectedChapter: Chapter | null = null;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private novelService: NovelService,
     private chapterService: ChapterService
   ) {}
@@ -57,8 +60,10 @@ export class NovelDetailComponent implements OnInit {
   loadNovel(novelId: string): void {
     this.loading = true;
     this.novelService.getNovelById(novelId).subscribe({
-      next: (novel) => {
-        this.novel = novel;
+      next: (response: ApiResponse<Novel>) => {
+        if (response.success && response.data) {
+          this.novel = response.data;
+        }
         this.loading = false;
       },
       error: (error) => {
@@ -73,10 +78,12 @@ export class NovelDetailComponent implements OnInit {
     this.chapterService
       .getChaptersByNovel(novelId, this.currentPage, this.pageSize)
       .subscribe({
-        next: (response: PaginatedResponse<Chapter>) => {
-          this.chapters = response.content;
-          this.totalPages = response.totalPages;
-          this.totalElements = response.totalElements;
+        next: (response: ApiResponse<PaginatedResponse<Chapter>>) => {
+          if (response.success && response.data) {
+            this.chapters = response.data.content;
+            this.totalPages = response.data.totalPages;
+            this.totalElements = response.data.totalElements;
+          }
           this.loading = false;
         },
         error: (error) => {
@@ -137,15 +144,17 @@ export class NovelDetailComponent implements OnInit {
   }
 
   private loadChapterByNovelIdAndNumber(
-    novelId: number,
+    novelId: string,
     chapterNumber: number
   ): void {
     this.loading = true;
     this.chapterService
       .getChapterByNovelIdAndNumber(novelId, chapterNumber)
       .subscribe({
-        next: (chapter) => {
-          this.selectedChapter = chapter;
+        next: (response: ApiResponse<Chapter>) => {
+          if (response.success && response.data) {
+            this.selectedChapter = response.data;
+          }
           this.loading = false;
         },
         error: (error) => {
@@ -153,6 +162,16 @@ export class NovelDetailComponent implements OnInit {
           this.loading = false;
         },
       });
+  }
+
+  readChapter(chapter: Chapter): void {
+    if (this.novel) {
+      this.router.navigate(['/novels', this.novel.id, 'chapters', chapter.chapterNumber]);
+    }
+  }
+
+  toggleDescription(): void {
+    this.showFullDescription = !this.showFullDescription;
   }
 
   onImageError(event: Event): void {

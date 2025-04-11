@@ -1,0 +1,49 @@
+.settings-card {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.settings-section {
+  margin-bottom: 1.5rem;
+  
+  h3 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #555;
+  }
+}
+
+.setting-row {
+  margin-bottom: 1rem;
+  
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.color-option {
+  display: flex;
+  align-items: center;
+  
+  .color-swatch {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #ddd;
+  }
+}
+
+mat-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  
+  button {
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+} 

@@ -1,0 +1,65 @@
+.chapter-card {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.chapter-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin: 2rem 0;
+  padding: 0 1rem;
+  
+  // Improve readability with proper spacing and font settings
+  .chapter-text {
+    p {
+      margin-bottom: 1.5rem;
+      text-align: justify;
+    }
+  }
+}
+
+.chapter-navigation {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  
+  .spacer {
+    flex: 1 1 auto;
+  }
+  
+  button {
+    margin: 0 0.5rem;
+    
+    mat-icon {
+      margin: 0 0.5rem;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .chapter-card {
+    margin: 1rem;
+  }
+  
+  .chapter-content {
+    font-size: 1rem;
+    padding: 0;
+  }
+  
+  .chapter-navigation {
+    flex-direction: column;
+    gap: 1rem;
+    
+    .spacer {
+      display: none;
+    }
+    
+    button {
+      width: 100%;
+    }
+  }
+} 
