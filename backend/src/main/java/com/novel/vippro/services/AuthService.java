@@ -18,13 +18,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.models.ERole;
 import com.novel.vippro.models.Role;
 import com.novel.vippro.models.User;
 import com.novel.vippro.payload.request.LoginRequest;
 import com.novel.vippro.payload.request.SignupRequest;
+import com.novel.vippro.payload.response.ApiResponse;
 import com.novel.vippro.payload.response.JwtResponse;
-import com.novel.vippro.payload.response.MessageResponse;
 import com.novel.vippro.repository.RoleRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.security.jwt.JwtUtils;
@@ -52,12 +53,13 @@ public class AuthService {
     @Autowired
     RoleApprovalService roleApprovalService;
 
-    public ResponseEntity<?> authenticateUser(LoginRequest loginRequest) {
+    public ResponseEntity<ApiResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
         try {
-            logger.info("Attempting to authenticate user: {}", loginRequest.getUsername());
-
+            logger.info("Attempting to authenticate user: {}", loginRequest.getEmail());
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.getEmail()));
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtils.generateJwtToken(authentication);
@@ -67,37 +69,44 @@ public class AuthService {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
-            logger.info("User {} authenticated successfully", userDetails.getUsername());
-            return ResponseEntity.ok(new JwtResponse(jwt,
+            JwtResponse jwtResponse = new JwtResponse(jwt,
                     userDetails.getId(),
                     userDetails.getUsername(),
                     userDetails.getEmail(),
-                    roles));
+                    roles);
+
+            logger.info("User {} authenticated successfully", userDetails.getUsername());
+            return ResponseEntity.ok(new ApiResponse<>(true, "User authenticated successfully", jwtResponse, 200));
         } catch (BadCredentialsException e) {
-            logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.getUsername());
+            logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.getEmail());
             return ResponseEntity
                     .status(401)
-                    .body(new MessageResponse("Error: Invalid username or password"));
+                    .body(new ApiResponse<>(false, "Invalid username or password", null, 401));
+        } catch (ResourceNotFoundException e) {
+            logger.error("User not found: {}", e.getMessage());
+            return ResponseEntity
+                    .status(404)
+                    .body(new ApiResponse<>(false, "User not found", null, 404));
         } catch (Exception e) {
-            logger.error("Unexpected error during authentication for user {}: {}", loginRequest.getUsername(),
+            logger.error("Unexpected error during authentication for user {}: {}", loginRequest.getEmail(),
                     e.getMessage());
             return ResponseEntity
                     .status(500)
-                    .body(new MessageResponse("Error: An unexpected error occurred"));
+                    .body(new ApiResponse<>(false, "An unexpected error occurred", null, 500));
         }
     }
 
-    public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
+    public ResponseEntity<ApiResponse<String>> registerUser(SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .body(new ApiResponse<>(false, "Username is already taken!", null, 400));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(new ApiResponse<>(false, "Email is already in use!", null, 400));
         }
 
         // Create new user's account
@@ -141,6 +150,7 @@ public class AuthService {
             }
         }
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully!",
+                "User registered successfully!", 200));
     }
 }

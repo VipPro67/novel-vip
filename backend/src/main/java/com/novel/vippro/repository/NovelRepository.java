@@ -22,7 +22,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.title LIKE %:keyword% OR n.author LIKE %:keyword%")
+    @Query("SELECT n FROM Novel n WHERE n.titleNomalized LIKE %:keyword%")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.views > 0 ORDER BY n.views DESC")

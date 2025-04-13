@@ -88,11 +88,13 @@ export class ChapterReaderComponent implements OnInit, OnDestroy {
 
   goToPreviousChapter(): void {
     if (this.chapterNumber > 1) {
+      this.chapter = null; // Reset chapter to avoid showing old data
       this.router.navigate(['/novels', this.novelId, 'chapters', this.chapterNumber - 1]);
     }
   }
 
   goToNextChapter(): void {
+    this.chapter = null; // Reset chapter to avoid showing old data
     this.router.navigate(['/novels', this.novelId, 'chapters', this.chapterNumber + 1]);
   }
 

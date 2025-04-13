@@ -3,10 +3,7 @@
   <mat-spinner diameter="50"></mat-spinner>
 </div>
 
-<!-- Error State -->
-<div class="alert alert-danger text-center" *ngIf="error">
-  {{ error }}
-</div>
+
 <mat-card-actions class="chapter-navigation">
   <button mat-button color="primary" (click)="goToNovelDetail()">
     <mat-icon>book</mat-icon>
@@ -26,6 +23,11 @@
     <mat-icon>arrow_forward</mat-icon>
   </button>
 </mat-card-actions>
+
+<!-- Error State -->
+<div class="alert alert-danger text-center" *ngIf="error">
+  {{ error }}
+</div>
 <!-- Chapter Content -->
 <mat-card class="chapter-card" *ngIf="chapter && !loading" 
   [style.max-width.px]="settings.maxWidth"
@@ -33,7 +35,6 @@
   [style.color]="settings.textColor">
   <mat-card-header>
     <mat-card-title>{{ chapter.title }}</mat-card-title>
-    <mat-card-subtitle>Chapter {{ chapter.chapterNumber }}</mat-card-subtitle>
   </mat-card-header>
   
   <mat-card-content class="chapter-content" 

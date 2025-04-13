@@ -5,6 +5,7 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.List;
 import java.util.UUID;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,6 +20,9 @@ public class Novel {
     private String title;
 
     @Column(nullable = false)
+    private String titleNomalized;
+
+    @Column(nullable = false, unique = true)
     private String slug;
 
     @Column(columnDefinition = "TEXT")
@@ -61,8 +65,22 @@ public class Novel {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @PrePersist
+    public void onCreate() {
+        this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "") // Remove accents
+                .toUpperCase();
+        this.slug = this.titleNomalized.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-"
+                + this.id.toString().substring(0, 8);
+    }
+
     @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public void onUpdate() {
+        this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "") // Remove accents
+                .toUpperCase();
+        this.slug = this.titleNomalized.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-"
+                + this.id.toString().substring(0, 8);
+        this.updatedAt = LocalDateTime.now();
     }
 }

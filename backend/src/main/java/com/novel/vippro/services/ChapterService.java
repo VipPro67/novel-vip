@@ -1,6 +1,8 @@
 package com.novel.vippro.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.texttospeech.v1.*;
+import com.google.protobuf.ByteString;
 import com.novel.vippro.dto.ChapterCreateDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
@@ -42,9 +44,17 @@ public class ChapterService {
         return chapters.map(this::convertToChapterListDTO);
     }
 
-    public ChapterListDTO getChapterByNumberDTO(UUID novelId, Integer chapterNumber) {
+    public ChapterDetailDTO getChapterByNumberDTO(UUID novelId, Integer chapterNumber) throws IOException {
+        if (!novelRepository.existsById(novelId)) {
+            throw new ResourceNotFoundException("Novel", "id", novelId);
+        }
         Chapter chapter = getChapterByNovelIdAndNumber(novelId, chapterNumber);
-        return convertToChapterListDTO(chapter);
+
+        Map<String, Object> content = getChapterContent(chapter);
+
+        ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+        dto.setContent((String) content.get("content"));
+        return dto;
     }
 
     public ChapterDetailDTO getChapterDetailDTO(UUID id) throws IOException {
@@ -273,5 +283,40 @@ public class ChapterService {
     public void deleteChapter(UUID id) {
         Chapter chapter = getChapterById(id);
         chapterRepository.delete(chapter);
+    }
+
+    @Transactional
+    public ChapterDetailDTO getChapterAudio(UUID id) throws IOException {
+        Chapter chapter = getChapterById(id);
+
+        if (chapter.getAudioUrl() != null) {
+            ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+            dto.setAudioContent(chapter.getAudioUrl());
+            return dto;
+        }
+
+        // Generate audio using Google TTS
+        TextToSpeechClient textToSpeechClient = TextToSpeechClient.create();
+        SynthesisInput input = SynthesisInput.newBuilder().setText(chapter.getTitle() + "\n" + chapter.getJsonUrl())
+                .build();
+        VoiceSelectionParams voice = VoiceSelectionParams.newBuilder().setLanguageCode("en-US")
+                .setSsmlGender(SsmlVoiceGender.NEUTRAL).build();
+        AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.MP3).build();
+
+        SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
+        ByteString audioContents = response.getAudioContent();
+
+        // Upload audio to Cloudinary
+        String publicId = String.format("chapters/%s/%d-audio", chapter.getNovel().getSlug(),
+                chapter.getChapterNumber());
+        String audioUrl = cloudinaryService.uploadAudio(audioContents.toByteArray(), publicId);
+
+        // Update chapter with audio URL
+        chapter.setAudioUrl(audioUrl);
+        chapterRepository.save(chapter);
+
+        ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+        dto.setAudioContent(audioUrl);
+        return dto;
     }
 }

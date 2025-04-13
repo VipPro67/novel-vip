@@ -12,6 +12,7 @@ public class ChapterDetailDTO {
     private UUID novelId;
     private String novelTitle;
     private String content;
+    private String audioContent;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

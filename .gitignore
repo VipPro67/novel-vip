@@ -78,4 +78,6 @@ frontend/.angular
 environment.ts
 environment.prod.ts
 
-venv
+Crawl/env
+Crawl/target
+Crawl/output

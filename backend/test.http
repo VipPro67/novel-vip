@@ -1,6 +1,6 @@
 @supabase_token = eyJhbGciOiJIUzI1NiIsImtpZCI6IkF6R1FMd05IRllzNmI5eTciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lqZG9yeGFpa29vdm1lemZwZHJ6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3ZjdiZmY3ZC0yMDkwLTRhMTMtOThkMy00YzBhMTQyMTlkNWUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ0MTgyNDk1LCJpYXQiOjE3NDQxNzg4OTUsImVtYWlsIjoiY2xvbmVtb2l0aW5oQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZ29vZ2xlIiwicHJvdmlkZXJzIjpbImdvb2dsZSJdfSwidXNlcl9tZXRhZGF0YSI6eyJhdmF0YXJfdXJsIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwiZW1haWwiOiJjbG9uZW1vaXRpbmhAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkNsb25lIEdtYWlsIiwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwibmFtZSI6IkNsb25lIEdtYWlsIiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwicHJvdmlkZXJfaWQiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYiLCJzdWIiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvYXV0aCIsInRpbWVzdGFtcCI6MTc0NDE3ODg5NX1dLCJzZXNzaW9uX2lkIjoiOGQzZmFhMjEtYzYyZC00N2Q1LTkyZTQtMzRhODg0YWI4MzkzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.JgV-ghl1eROCHlFgICql1mta5arpwWbIUrVBaJAC7N4
 
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIkFETUlOIiwiVVNFUiJdLCJ1c2VySWQiOiJkYzBlODBiNS04YTE1LTRiMDAtYWM0Ny01MjgyNjMwZjRiZTkiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0MjU4MDgyLCJleHAiOjE3NDQzNDQ0ODJ9.JnvAFWcX0jraLTzc8nD-7x-lDg0lq4pqJnKGIXPAVkc
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIkFETUlOIiwiTU9ERVJBVE9SIiwiVVNFUiJdLCJ1c2VySWQiOiJkYzBlODBiNS04YTE1LTRiMDAtYWM0Ny01MjgyNjMwZjRiZTkiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0NTUzODg3LCJleHAiOjE3NDQ2NDAyODd9.56mfz1ZbpBIiPfXLKiKmf5IJfWOUqNTGrE7BFGWPh8M
 
 ### Test User Login
 POST http://localhost:8080/api/auth/signin
@@ -17,7 +17,7 @@ POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-    "username": "admin",
+    "email": "admin@example.com",
     "password": "adminpassword"
 }
 
@@ -265,17 +265,22 @@ Content-Type: application/json
 }
 
 ### Get Chapters by Novel ID
-GET http://localhost:8080/api/chapters/novel/392829eb-c4a7-4c60-8565-3c7ca7ebd492
+GET http://localhost:8080/api/chapters/novel/fe5c3eb9-09c4-4981-894e-5afa7c4c5e24
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Chapter by ID
-GET http://localhost:8080/api/chapters/82d47528-e6ea-4272-a82b-8c1b2e82b075
+GET http://localhost:8080/api/chapters/d29ce9be-8c56-4850-bc40-a11e920c2560
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Get Chapter by ID with Audio
+GET http://localhost:8080/api/chapters/6c8d1f43-8be5-4de3-b7d3-2823b0f6df83/audio
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 ### Get Chapter by Novel ID and Chapter Number
-GET http://localhost:8080/api/chapters/novel/392829eb-c4a7-4c60-8565-3c7ca7ebd492/chapter/4
+GET http://localhost:8080/api/chapters/novel/fe5c3eb9-09c4-4981-894e-5afa7c4c5e24/chapter/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 

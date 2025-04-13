@@ -2,7 +2,6 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { NovelService } from "../../services/novel.service";
 import { ChapterService } from "../../services/chapter.service";
-import { SanitizeHtmlPipe } from "../../pipes/sanitize-html.pipe";
 import { Novel, Chapter, PaginatedResponse } from "../../models/novel.model";
 import { ApiResponse } from "../../services/novel.service";
 import { MatPaginatorModule, PageEvent } from "@angular/material/paginator";
@@ -26,7 +25,6 @@ import { MatIconModule } from "@angular/material/icon";
     MatButtonModule,
     MatListModule,
     MatBadgeModule,
-    SanitizeHtmlPipe,
     MatProgressSpinnerModule,
     MatIconModule
   ],

@@ -35,11 +35,18 @@ public class ChapterController {
     }
 
     @GetMapping("/novel/{novelId}/chapter/{chapterNumber}")
-    public ResponseEntity<ApiResponse<ChapterListDTO>> getChapterByNumber(
+    public ResponseEntity<ApiResponse<ChapterDetailDTO>> getChapterByNumber(
             @PathVariable UUID novelId,
             @PathVariable Integer chapterNumber) {
-        ChapterListDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
-        return ResponseEntity.ok(ApiResponse.success("Chapter retrieved successfully", chapter));
+        try {
+            ChapterDetailDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
+            return ResponseEntity.ok(ApiResponse.success("Chapter retrieved successfully", chapter));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to get chapter content: " + e.getMessage(),
+                            HttpStatus.BAD_REQUEST.value()));
+        }
     }
 
     @GetMapping("/{id}")
@@ -50,6 +57,18 @@ public class ChapterController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Failed to get chapter content: " + e.getMessage(),
+                            HttpStatus.BAD_REQUEST.value()));
+        }
+    }
+
+    @GetMapping("/{id}/audio")
+    public ResponseEntity<ApiResponse<ChapterDetailDTO>> getChapterAudio(@PathVariable UUID id) {
+        try {
+            ChapterDetailDTO chapter = chapterService.getChapterAudio(id);
+            return ResponseEntity.ok(ApiResponse.success("Chapter audio retrieved successfully", chapter));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Failed to retrieve chapter audio: " + e.getMessage(),
                             HttpStatus.BAD_REQUEST.value()));
         }
     }

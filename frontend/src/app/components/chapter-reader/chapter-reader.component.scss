@@ -39,6 +39,12 @@
   }
 }
 
+mat-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000000;
+}
+
 // Responsive adjustments
 @media (max-width: 600px) {
   .chapter-card {

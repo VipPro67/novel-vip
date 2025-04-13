@@ -5,17 +5,24 @@ import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.mapper.NovelMapper;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.repository.NovelRepository;
+import com.novel.vippro.security.jwt.AuthEntryPointJwt;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class NovelService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
 
     @Autowired
     private NovelRepository novelRepository;
@@ -39,6 +46,10 @@ public class NovelService {
     }
 
     public Page<NovelDTO> searchNovels(String keyword, Pageable pageable) {
+        keyword = Normalizer.normalize(keyword, Normalizer.Form.NFD)
+                .replaceAll("[^\\p{ASCII}]", "")
+                .toUpperCase();
+        logger.info("Searching for novels with keyword: {}", keyword);
         Page<Novel> novels = novelRepository.searchByKeyword(keyword, pageable);
         return novels.map(novelMapper::toDTO);
     }
