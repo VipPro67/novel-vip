@@ -1,4 +1,4 @@
-<div class="container mt-4">
+<div class="novel-list-container">
   <!-- Title -->
   <div class="row mb-4">
     <div class="col-12">
@@ -7,36 +7,24 @@
   </div>
 
   <!-- Search Bar -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="search-container">
-        <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="search-form">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Tìm kiếm truyện</mat-label>
-            <input matInput formControlName="searchInput" placeholder="Nhập từ khóa tìm kiếm...">
-            <button mat-icon-button matSuffix type="submit" *ngIf="searchForm.get('searchInput')?.value">
-              <mat-icon>search</mat-icon>
-            </button>
-            <button mat-icon-button matSuffix type="button" (click)="clearSearch()" *ngIf="searchForm.get('searchInput')?.value">
-              <mat-icon>close</mat-icon>
-            </button>
-          </mat-form-field>
-        </form>
-      </div>
-    </div>
+  <div class="search-container" *ngIf="!compactView">
+    <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="search-form">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search novels</mat-label>
+        <input matInput formControlName="searchInput" placeholder="Enter novel title, author...">
+        <button mat-icon-button matSuffix type="submit" *ngIf="searchForm.get('searchInput')?.value">
+          <mat-icon>search</mat-icon>
+        </button>
+        <button mat-icon-button matSuffix type="button" (click)="clearSearch()" *ngIf="searchForm.get('searchInput')?.value">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+    </form>
   </div>
 
   <!-- Loading Spinner -->
-  <div class="row" *ngIf="loading">
-    <div class="col-12 text-center py-5">
-      <div
-        class="spinner-border text-primary"
-        style="width: 3rem; height: 3rem"
-        role="status"
-      >
-        <span class="visually-hidden">Đang tải...</span>
-      </div>
-    </div>
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
   </div>
 
   <!-- Search Results Message -->
@@ -49,88 +37,31 @@
   </div>
 
   <!-- No Results Message -->
-  <div class="row mb-4" *ngIf="!loading && searchKeyword && novels.length === 0">
-    <div class="col-12">
-      <div class="alert alert-warning">
-        Không tìm thấy kết quả nào cho "{{ searchKeyword }}"
-      </div>
-    </div>
+  <div class="no-results" *ngIf="!loading && novels.length === 0">
+    <p>No novels found.</p>
   </div>
 
-  <!-- Novel List -->
-  <div class="row" *ngIf="!loading">
-    <div class="col-md-3 col-sm-3 mb-4" *ngFor="let novel of novels">
-      <div class="card h-100 shadow-sm">
-        <img
-          [src]="novel.coverImage"
-          class="card-img-top"
-          [alt]="novel.title"
-          style="height: 200px; object-fit: cover"
-          (error)="onImageError($event)"
-        />
-        <div class="card-body">
-          <h5 class="card-title fw-bold">{{ novel.title }}</h5>
-          <p class="card-text text-muted mb-1">Tác giả: {{ novel.author }}</p>
-          <p class="card-text" style="min-height: 60px">
-            {{ novel.description | slice : 0 : 100 | truncateWords }}...
-          </p>
-          <div class="mb-2">
-            <span
-              class="badge bg-primary me-1"
-              *ngFor="let category of novel.categories"
-            >
-              {{ category }}
-            </span>
-            <span
-              class="badge"
-              [ngClass]="{
-                'bg-success': novel.status === 'completed',
-                'bg-warning': novel.status === 'ongoing'
-              }"
-            >
-              {{
-                novel.status === "completed" ? "Hoàn thành" : "Đang tiến hành"
-              }}
-            </span>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-muted">{{ novel.totalChapters }} chương</span>
-            <span class="text-muted">{{ novel.views | number }} lượt xem</span>
-          </div>
-          <div class="mt-2">
-            <span class="text-warning">
-              <i
-                class="fas fa-star"
-                *ngFor="let i of [].constructor(novel.rating)"
-              ></i>
-              <i
-                class="far fa-star"
-                *ngFor="let i of [].constructor(5 - novel.rating)"
-              ></i>
-            </span>
-          </div>
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <button class="btn btn-primary w-100" (click)="viewNovel(novel.id)">
-            Đọc truyện
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Novel Grid -->
+  <div class="novel-grid" *ngIf="!loading">
+    <app-novel-card
+      *ngFor="let novel of novels"
+      [novelId]="novel.id"
+      [title]="novel.title"
+      [author]="novel.author"
+      [coverImage]="novel.coverImage"
+      [status]="novel.status"
+      [views]="novel.views"
+      [chapters]="novel.chapters.length"
+    ></app-novel-card>
   </div>
 
-  <!-- Pagination -->
-  <div class="row mt-4" *ngIf="!loading && totalElements > 0">
-    <div class="col-12 d-flex justify-content-center">
-      <mat-paginator
-        [length]="totalElements"
-        [pageSize]="pageSize"
-        [pageSizeOptions]="[5, 10, 25, 100]"
-        [pageIndex]="currentPage"
-        (page)="onPageChange($event)"
-        aria-label="Chọn trang"
-      >
-      </mat-paginator>
-    </div>
-  </div>
+  <!-- Paginator -->
+  <mat-paginator
+    *ngIf="!compactView"
+    [length]="totalElements"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[12, 24, 48, 96]"
+    (page)="onPageChange($event)"
+    aria-label="Select page">
+  </mat-paginator>
 </div>

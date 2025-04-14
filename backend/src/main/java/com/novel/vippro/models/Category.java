@@ -1,0 +1,43 @@
+package com.novel.vippro.models;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity
+@Table(name = "categories")
+@Data
+public class Category {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @Column(nullable = false, unique = true)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String slug;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    private Integer totalNovels = 0;
+
+    @ManyToMany(mappedBy = "categories")
+    @JsonIgnore
+    private Set<Novel> novels = new HashSet<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (this.slug == null || this.slug.isEmpty()) {
+            this.slug = this.name.toLowerCase()
+                    .replaceAll("\\s+", "-")
+                    .replaceAll("[^a-z0-9-]", "");
+        }
+    }
+}

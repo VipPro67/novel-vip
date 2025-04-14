@@ -1,7 +1,9 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { Chapter, PaginatedResponse, ApiResponse } from "../services/novel.service"
+import { ApiResponse } from "../models/api-response.model";
+import { PaginatedResponse } from "../models/paginated-response.model";
+import { Chapter } from "../models/chapter.model";
 import { environment } from "../../environments/environment";
 
 @Injectable({

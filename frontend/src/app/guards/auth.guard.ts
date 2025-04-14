@@ -17,7 +17,7 @@ export const authGuard = () => {
 };
 
 // Role-based guard
-export const roleGuard = (requiredRoles: string[]) => {
+export const roleGuard = () => {
   return () => {
     const router = inject(Router);
     const authService = inject(AuthService);
@@ -27,11 +27,9 @@ export const roleGuard = (requiredRoles: string[]) => {
       return false;
     }
 
-    // Check if user has any of the required roles
-    const hasRequiredRole = requiredRoles.some(role => authService.hasRole(role));
-    
-    if (!hasRequiredRole) {
-      router.navigate(['/dashboard']);
+    // Check if user has admin role
+    if (!authService.hasRole('admin')) {
+      router.navigate(['/']);
       return false;
     }
 

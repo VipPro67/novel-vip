@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // Get return url from route parameters or default to '/'
     this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/";
-    
+
     // If user is already logged in, redirect to home
     if (this.authService.isAuthenticated()) {
       this.router.navigate([this.returnUrl]);
@@ -62,8 +62,12 @@ export class LoginComponent implements OnInit {
     this.error = "";
 
     try {
-      await this.authService.login(this.f["email"].value, this.f["password"].value);
-      // Login successful, AuthService will handle navigation
+      await this.authService.login(
+        this.f["email"].value,
+        this.f["password"].value
+      );
+      this.loading = false;
+      this.router.navigate([this.returnUrl]);
     } catch (error: any) {
       this.error = error.message || "An error occurred during login";
       this.loading = false;

@@ -1,0 +1,123 @@
+<div class="novel-management-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Novel Management</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="table-container">
+        <mat-form-field class="filter-field">
+          <mat-label>Filter</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="Ex. The Great Adventure" #input>
+        </mat-form-field>
+
+        <table mat-table [dataSource]="dataSource" matSort>
+          <!-- ID Column
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.id}} </td>
+          </ng-container> -->
+
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Title </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.title}} </td>
+          </ng-container>
+
+          <!-- Author Column -->
+          <ng-container matColumnDef="author">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Author </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.author}} </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.status}} </td>
+          </ng-container>
+
+          <!-- Chapters Column -->
+          <ng-container matColumnDef="chapters">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Chapters </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.chapters.length}} </td>
+          </ng-container>
+
+          <!-- Views Column -->
+          <ng-container matColumnDef="views">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Views </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.views}} </td>
+          </ng-container>
+
+          <!-- Rating Column -->
+          <ng-container matColumnDef="rating">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> Rating </th>
+            <td mat-cell *matCellDef="let novel"> {{novel.rating}} </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> Actions </th>
+            <td mat-cell *matCellDef="let novel">
+              <button mat-icon-button color="primary" (click)="editNovel(novel)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteNovel(novel)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of novels"></mat-paginator>
+      </div>
+
+      <form [formGroup]="novelForm" (ngSubmit)="onSubmit()" class="novel-form">
+        <h3>{{isEditing ? 'Edit' : 'Add'}} Novel</h3>
+        
+        <mat-form-field>
+          <mat-label>Title</mat-label>
+          <input matInput formControlName="title" required>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Author</mat-label>
+          <input matInput formControlName="author" required>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" required rows="4"></textarea>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Cover Image URL</mat-label>
+          <input matInput formControlName="coverImage">
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Genre</mat-label>
+          <input matInput formControlName="genre" required>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status" required>
+            <mat-option value="draft">Draft</mat-option>
+            <mat-option value="published">Published</mat-option>
+            <mat-option value="archived">Archived</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-button type="button" (click)="resetForm()">Cancel</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="!novelForm.valid">
+            {{isEditing ? 'Update' : 'Create'}}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div> 

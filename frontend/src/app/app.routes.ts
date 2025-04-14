@@ -7,8 +7,9 @@ import { NovelDetailComponent } from "./components/novel-detail/novel-detail.com
 import { authGuard, roleGuard } from "./guards/auth.guard";
 import { noAuthGuard } from "./guards/no-auth.guard";
 import { ChapterReaderComponent } from "./components/chapter-reader/chapter-reader.component";
+import { HomeComponent } from "./components/home/home.component";
 export const routes: Routes = [
-  { path: "", component: NovelListComponent },
+  { path: "", component: HomeComponent },
   {
     path: "login",
     component: LoginComponent,
@@ -21,14 +22,16 @@ export const routes: Routes = [
   },
   { path: "auth/callback", component: AuthCallbackComponent },
   { path: "novels/:id", component: NovelDetailComponent },
-  { path: "novels/:novelId/chapters/:chapterNumber", component: ChapterReaderComponent },
   {
-    path: "dashboard",
+    path: "novels/:novelId/chapters/:chapterNumber",
+    component: ChapterReaderComponent,
+  },
+  {
+    path: "admin",
     loadChildren: () =>
-      import("./components/dashboard/dashboard.routes").then(
-        (m) => m.DASHBOARD_ROUTES
-      ),
-    //canActivate: [authGuard]
+      import("./admin/admin.module").then((m) => m.AdminModule),
+    canActivate: [authGuard, roleGuard],
+    data: { role: "admin" },
   },
   { path: "**", redirectTo: "/login" },
 ];

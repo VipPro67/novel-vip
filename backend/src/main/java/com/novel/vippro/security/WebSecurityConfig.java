@@ -86,20 +86,11 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
 
   @Bean
   SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
+    http.cors(cors -> cors.configure(http))
+        .csrf(csrf -> csrf.disable())
         .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
-            .requestMatchers("/api/test/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/novels/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/chapters/**").permitAll()
-
-            .requestMatchers("/api/role-approval/request").authenticated()
-            .requestMatchers("/api/role-approval/my-requests").authenticated()
-            .requestMatchers("/api/role-approval/approve/**").hasRole("ADMIN")
-            .requestMatchers("/api/role-approval/reject/**").hasRole("ADMIN")
-            .requestMatchers("/api/role-approval/pending").hasRole("ADMIN")
-            .anyRequest().permitAll());
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
     http.authenticationProvider(authenticationProvider());
 

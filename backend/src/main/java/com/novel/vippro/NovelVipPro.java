@@ -13,5 +13,4 @@ public class NovelVipPro {
 		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 		SpringApplication.run(NovelVipPro.class, args);
 	}
-
 }

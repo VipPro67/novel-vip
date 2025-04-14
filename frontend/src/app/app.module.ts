@@ -3,20 +3,33 @@ import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { AppComponent } from "./app.component";
 import { RouterModule } from "@angular/router";
-import { TruncateWordsPipe } from "./pipes/truncate-words.pipe"; // Import the pipe
+import { TruncateWordsPipe } from "./pipes/truncate-words.pipe";
 import { NovelListComponent } from "./components/novel-list/novel-list.component";
 import { routes } from "./app.routes";
+import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
+import { AuthInterceptor } from "./interceptors/auth.interceptor";
+import { HomeComponent } from './components/home/home.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    AppComponent,
+    HomeComponent
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     RouterModule.forRoot(routes),
-    AppComponent,
     TruncateWordsPipe,
     NovelListComponent,
+    HttpClientModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}

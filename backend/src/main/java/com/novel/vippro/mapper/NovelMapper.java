@@ -3,6 +3,7 @@ package com.novel.vippro.mapper;
 import com.novel.vippro.dto.NovelDTO;
 import com.novel.vippro.dto.ChapterDTO;
 import com.novel.vippro.models.Novel;
+import com.novel.vippro.models.Category;
 import com.novel.vippro.models.Chapter;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,9 @@ public class NovelMapper {
         dto.setAuthor(novel.getAuthor());
         dto.setCoverImage(novel.getCoverImage());
         dto.setStatus(novel.getStatus());
-        dto.setCategories(novel.getCategories());
+        dto.setCategories(novel.getCategories().stream()
+                .map(Category::getName)
+                .collect(Collectors.toList()));
         dto.setTotalChapters(novel.getTotalChapters());
         dto.setViews(novel.getViews());
         dto.setRating(novel.getRating());

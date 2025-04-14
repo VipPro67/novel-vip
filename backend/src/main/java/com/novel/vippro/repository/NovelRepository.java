@@ -16,7 +16,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.id = :id")
     Optional<Novel> findById(@Param("id") UUID id);
 
-    @Query("SELECT n FROM Novel n WHERE n.categories LIKE %:category%")
+    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.status = :status")

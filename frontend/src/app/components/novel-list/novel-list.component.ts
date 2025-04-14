@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -11,8 +11,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { NovelService, Novel } from '../../services/novel.service';
+import { Novel } from '../../models/novel.model';
 import { TruncateWordsPipe } from '../../pipes/truncate-words.pipe';
+import { NovelService } from '../../services/novel.service';
+import { NovelCardComponent } from '../novel-card/novel-card.component';
 
 @Component({
   selector: 'app-novel-list',
@@ -29,11 +31,14 @@ import { TruncateWordsPipe } from '../../pipes/truncate-words.pipe';
     MatButtonModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    TruncateWordsPipe
+    TruncateWordsPipe,
+    NovelCardComponent
   ]
 })
 export class NovelListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @Input() compactView = false;
+  @Input() initialPageSize = 12;
   
   novels: Novel[] = [];
   loading = false;
@@ -55,6 +60,7 @@ export class NovelListComponent implements OnInit {
     this.searchForm = this.fb.group({
       searchInput: ['']
     });
+    this.pageSize = this.initialPageSize;
   }
 
   ngOnInit(): void {
@@ -106,7 +112,7 @@ export class NovelListComponent implements OnInit {
     this.currentPage = 0;
     this.loadNovels();
   }
-
+  
   loadNovels(): void {
     this.loading = true;
     this.novelService.getNovels(this.currentPage, this.pageSize).subscribe({
