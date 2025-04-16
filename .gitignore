@@ -75,6 +75,7 @@ frontend/dist
 frontend/.angular
 
 **/.env
+**.json
 environment.ts
 environment.prod.ts
 
