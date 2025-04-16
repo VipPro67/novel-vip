@@ -1,6 +1,7 @@
 @supabase_token = eyJhbGciOiJIUzI1NiIsImtpZCI6IkF6R1FMd05IRllzNmI5eTciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lqZG9yeGFpa29vdm1lemZwZHJ6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3ZjdiZmY3ZC0yMDkwLTRhMTMtOThkMy00YzBhMTQyMTlkNWUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ0MTgyNDk1LCJpYXQiOjE3NDQxNzg4OTUsImVtYWlsIjoiY2xvbmVtb2l0aW5oQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZ29vZ2xlIiwicHJvdmlkZXJzIjpbImdvb2dsZSJdfSwidXNlcl9tZXRhZGF0YSI6eyJhdmF0YXJfdXJsIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwiZW1haWwiOiJjbG9uZW1vaXRpbmhAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkNsb25lIEdtYWlsIiwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwibmFtZSI6IkNsb25lIEdtYWlsIiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwicHJvdmlkZXJfaWQiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYiLCJzdWIiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvYXV0aCIsInRpbWVzdGFtcCI6MTc0NDE3ODg5NX1dLCJzZXNzaW9uX2lkIjoiOGQzZmFhMjEtYzYyZC00N2Q1LTkyZTQtMzRhODg0YWI4MzkzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.JgV-ghl1eROCHlFgICql1mta5arpwWbIUrVBaJAC7N4
 
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIk1PREVSQVRPUiIsIlVTRVIiLCJBRE1JTiJdLCJ1c2VySWQiOiJkYzBlODBiNS04YTE1LTRiMDAtYWM0Ny01MjgyNjMwZjRiZTkiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0NjA0NTgyLCJleHAiOjE3NDQ2OTA5ODJ9.Gr2-f-C1my35W7dWrWMBDC1BPaU5ZclcYQyYuhI_AT4
+@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIlVTRVIiLCJBRE1JTiJdLCJ1c2VySWQiOiJlYTQ0NGNlYy01Y2ZiLTRiY2YtOGFiYS0wMWEzMjkzNjhiN2EiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0Njg4Njg1LCJleHAiOjE3NDQ3NzUwODV9.uW3L7IXaQiIumHmvik_mazRdcHrdE7jEGxtQoO00LoI
+
 ### Test User Login
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
@@ -235,6 +236,17 @@ GET http://localhost:8080/api/novels/392829eb-c4a7-4c60-8565-3c7ca7ebd492
 Authorization: Bearer {{token}}
 
 
+### Create category
+POST http://localhost:8080/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Võng du",
+  "slug": "vong-du",
+  "description": "Võng du là thể loại truyện kể về những cuộc phiêu lưu trong thế giới ảo, nơi mà nhân vật chính có thể trải nghiệm những điều không tưởng."
+}
+
 ### Create Novel
 POST http://localhost:8080/api/novels
 Authorization: Bearer {{token}}
@@ -247,10 +259,37 @@ Content-Type: application/json
   "author": "Cổ Long",
   "coverImage": "https://example.com/cover.jpg",
   "status": "ongoing",
-  "categories": ["Cultivation", "Martial Arts", "Fantasy"]
+  "categories": ["Võng du", "Võ thuật", "Cultivation"]
+}
+### Create Novel
+POST http://localhost:8080/api/novels
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Thiên Đạo Hành",
+  "slug": "thien-dao-hanh",
+  "description": "Hành trình khám phá con đường tu luyện bất tận",
+  "author": "Huyền Phong",
+  "coverImage": "https://example.com/thien-dao-cover.jpg",
+  "status": "ongoing",
+  "categories": ["Adventure", "Mystery"]
 }
 
+### Create Novel
+POST http://localhost:8080/api/novels
+Authorization: Bearer {{token}}
+Content-Type: application/json
 
+{
+  "title": "Võ Đạo Đỉnh Phong",
+  "slug": "vo-dao-dinh-phong",
+  "description": "Cuộc chiến giữa các thế lực võ lâm",
+  "author": "Nguyễn Văn A",
+  "coverImage": "https://example.com/vo-dao-cover.jpg",
+  "status": "completed",
+  "categories": ["Martial Arts", "Action", "Drama"]
+}
 ### Create Chapter
 POST http://localhost:8080/api/chapters
 Authorization: Bearer {{token}}

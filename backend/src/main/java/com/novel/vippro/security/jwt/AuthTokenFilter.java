@@ -37,42 +37,49 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     try {
       String jwt = parseJwt(request);
       if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(jwtUtils.getSigningKey())
-            .build()
-            .parseClaimsJws(jwt)
-            .getBody();
+        try {
+          Claims claims = Jwts.parserBuilder()
+              .setSigningKey(jwtUtils.getSigningKey())
+              .build()
+              .parseClaimsJws(jwt)
+              .getBody();
 
-        String username = claims.getSubject();
-        String email = claims.get("email", String.class);
-        String userId = claims.get("userId", String.class);
-        @SuppressWarnings("unchecked")
-        List<String> roles = (List<String>) claims.get("roles");
+          String username = claims.getSubject();
+          String email = claims.get("email", String.class);
+          String userId = claims.get("userId", String.class);
 
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if (roles != null) {
-          for (String role : roles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+          @SuppressWarnings("unchecked")
+          List<String> roles = (List<String>) claims.get("roles");
+
+          List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+          if (roles != null) {
+            for (String role : roles) {
+              authorities.add(new SimpleGrantedAuthority(role));
+            }
           }
+
+          UserDetailsImpl userDetails = new UserDetailsImpl(
+              UUID.fromString(userId),
+              username,
+              email,
+              null,
+              authorities);
+
+          UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+              userDetails,
+              null,
+              authorities);
+          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (io.jsonwebtoken.io.DecodingException e) {
+          logger.error("JWT token contains invalid Base64 characters: {}", e.getMessage());
+        } catch (Exception e) {
+          logger.error("Error while parsing JWT claims: {}", e.getMessage());
         }
-
-        UserDetailsImpl userDetails = new UserDetailsImpl(
-            UUID.fromString(userId),
-            username,
-            email,
-            "", // Password is not needed for JWT authentication
-            authorities);
-
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            userDetails,
-            null,
-            authorities);
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
       }
     } catch (Exception e) {
-      logger.error("Cannot set user authentication: {}", e);
+      logger.error("Cannot process authentication: {}", e.getMessage());
     }
 
     filterChain.doFilter(request, response);

@@ -24,7 +24,7 @@ import com.novel.vippro.models.Role;
 import com.novel.vippro.models.User;
 import com.novel.vippro.payload.request.LoginRequest;
 import com.novel.vippro.payload.request.SignupRequest;
-import com.novel.vippro.payload.response.ApiResponse;
+import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.payload.response.JwtResponse;
 import com.novel.vippro.repository.RoleRepository;
 import com.novel.vippro.repository.UserRepository;
@@ -53,7 +53,7 @@ public class AuthService {
     @Autowired
     RoleApprovalService roleApprovalService;
 
-    public ResponseEntity<ApiResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
+    public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
         try {
             logger.info("Attempting to authenticate user: {}", loginRequest.getEmail());
             User user = userRepository.findByEmail(loginRequest.getEmail())
@@ -76,37 +76,38 @@ public class AuthService {
                     roles);
 
             logger.info("User {} authenticated successfully", userDetails.getUsername());
-            return ResponseEntity.ok(new ApiResponse<>(true, "User authenticated successfully", jwtResponse, 200));
+            return ResponseEntity
+                    .ok(new ControllerResponse<>(true, "User authenticated successfully", jwtResponse, 200));
         } catch (BadCredentialsException e) {
             logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.getEmail());
             return ResponseEntity
                     .status(401)
-                    .body(new ApiResponse<>(false, "Invalid username or password", null, 401));
+                    .body(new ControllerResponse<>(false, "Invalid username or password", null, 401));
         } catch (ResourceNotFoundException e) {
             logger.error("User not found: {}", e.getMessage());
             return ResponseEntity
                     .status(404)
-                    .body(new ApiResponse<>(false, "User not found", null, 404));
+                    .body(new ControllerResponse<>(false, "User not found", null, 404));
         } catch (Exception e) {
             logger.error("Unexpected error during authentication for user {}: {}", loginRequest.getEmail(),
                     e.getMessage());
             return ResponseEntity
                     .status(500)
-                    .body(new ApiResponse<>(false, "An unexpected error occurred", null, 500));
+                    .body(new ControllerResponse<>(false, "An unexpected error occurred", null, 500));
         }
     }
 
-    public ResponseEntity<ApiResponse<String>> registerUser(SignupRequest signUpRequest) {
+    public ResponseEntity<ControllerResponse<String>> registerUser(SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new ApiResponse<>(false, "Username is already taken!", null, 400));
+                    .body(new ControllerResponse<>(false, "Username is already taken!", null, 400));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new ApiResponse<>(false, "Email is already in use!", null, 400));
+                    .body(new ControllerResponse<>(false, "Email is already in use!", null, 400));
         }
 
         // Create new user's account
@@ -150,7 +151,7 @@ public class AuthService {
             }
         }
 
-        return ResponseEntity.ok(new ApiResponse<>(true, "User registered successfully!",
+        return ResponseEntity.ok(new ControllerResponse<>(true, "User registered successfully!",
                 "User registered successfully!", 200));
     }
 }

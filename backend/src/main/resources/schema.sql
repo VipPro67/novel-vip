@@ -37,3 +37,16 @@ CREATE TABLE IF NOT EXISTS novel_categories (
 CREATE INDEX IF NOT EXISTS idx_novel_slug ON novels(slug);
 CREATE INDEX IF NOT EXISTS idx_category_slug ON categories(slug);
 CREATE INDEX IF NOT EXISTS idx_novel_categories ON novel_categories(novel_id, category_id);
+
+-- File Metadata table
+CREATE TABLE IF NOT EXISTS file_metadata (
+    id UUID PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100),
+    size BIGINT,
+    type VARCHAR(50),
+    public_id VARCHAR(255),
+    file_url TEXT,
+    uploaded_at TIMESTAMP,
+    last_modified_at TIMESTAMP
+);

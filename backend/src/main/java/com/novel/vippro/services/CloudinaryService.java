@@ -1,6 +1,7 @@
 package com.novel.vippro.services;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,32 +15,65 @@ public class CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
-    public String uploadJson(String content, String publicId) throws IOException {
-        Map<String, Object> options = ObjectUtils.asMap(
-                "resource_type", "raw",
-                "format", "json",
-                "public_id", publicId);
+    public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
+        Map<String, String> resourceType = determineResourceType(contentType);
 
-        Map result = cloudinary.uploader().upload(content.getBytes(), options);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = cloudinary.uploader().upload(fileData, ObjectUtils.asMap(
+                "resource_type", resourceType.get("resourceType"),
+                "public_id", publicId,
+                "format", resourceType.get("format")));
+
         return (String) result.get("url");
     }
 
-    public String getJsonContent(String publicId) throws IOException {
-        String url = cloudinary.url()
-                .resourceType("raw")
-                .format("json")
-                .publicId(publicId)
-                .generate();
-        return url;
+    public byte[] downloadFile(String publicId) throws IOException {
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+
+            String url = cloudinary.url()
+                    .resourceType(resourceType)
+                    .generate(publicId);
+
+            // Here you would implement the actual download logic
+            // This is a placeholder - you'll need to implement the actual download logic
+            return new byte[0];
+        } catch (Exception e) {
+            throw new IOException("Failed to download file from Cloudinary", e);
+        }
     }
 
-    public String uploadAudio(byte[] audioData, String publicId) throws IOException {
-        Map<String, Object> options = ObjectUtils.asMap(
-                "resource_type", "video",
-                "format", "mp3",
-                "public_id", publicId);
+    public void deleteFile(String publicId) throws IOException {
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
 
-        Map result = cloudinary.uploader().upload(audioData, options);
-        return (String) result.get("url");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = cloudinary.uploader().destroy(publicId,
+                    ObjectUtils.asMap("resource_type", resourceType));
+
+            if (!(Boolean) result.get("result").equals("ok")) {
+                throw new IOException("Failed to delete file from Cloudinary");
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to delete file from Cloudinary", e);
+        }
+    }
+
+    private Map<String, String> determineResourceType(String contentType) {
+        if (contentType.startsWith("image/")) {
+            return Map.of("resourceType", "image", "format", contentType.substring(6));
+        } else if (contentType.startsWith("video/")) {
+            return Map.of("resourceType", "video", "format", contentType.substring(6));
+        } else if (contentType.startsWith("audio/")) {
+            return Map.of("resourceType", "video", "format", contentType.substring(6));
+        } else {
+            return Map.of("resourceType", "raw", "format", "raw");
+        }
     }
 }

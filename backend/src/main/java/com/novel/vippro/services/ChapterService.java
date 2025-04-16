@@ -39,6 +39,9 @@ public class ChapterService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private TextToSpeechService textToSpeechService;
+
     public Page<ChapterListDTO> getChaptersByNovelDTO(UUID novelId, Pageable pageable) {
         Page<Chapter> chapters = getChaptersByNovel(novelId, pageable);
         return chapters.map(this::convertToChapterListDTO);
@@ -129,7 +132,7 @@ public class ChapterService {
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadJson(jsonContent, publicId);
+        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -233,7 +236,7 @@ public class ChapterService {
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadJson(jsonContent, publicId);
+        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -270,7 +273,7 @@ public class ChapterService {
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadJson(jsonContent, publicId);
+        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -289,27 +292,25 @@ public class ChapterService {
     public ChapterDetailDTO getChapterAudio(UUID id) throws IOException {
         Chapter chapter = getChapterById(id);
 
+        // check if chapter has audio url
         if (chapter.getAudioUrl() != null) {
             ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
             dto.setAudioContent(chapter.getAudioUrl());
             return dto;
         }
 
-        // Generate audio using Google TTS
-        TextToSpeechClient textToSpeechClient = TextToSpeechClient.create();
-        SynthesisInput input = SynthesisInput.newBuilder().setText(chapter.getTitle() + "\n" + chapter.getJsonUrl())
-                .build();
-        VoiceSelectionParams voice = VoiceSelectionParams.newBuilder().setLanguageCode("en-US")
-                .setSsmlGender(SsmlVoiceGender.NEUTRAL).build();
-        AudioConfig audioConfig = AudioConfig.newBuilder().setAudioEncoding(AudioEncoding.MP3).build();
+        // Get chapter content
+        Map<String, Object> content = getChapterContent(chapter);
+        String textToConvert = chapter.getTitle() + "\n" + content.get("content");
 
-        SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
-        ByteString audioContents = response.getAudioContent();
+        // remove all html tags
+        textToConvert = textToConvert.replaceAll("<[^>]*>", "");
 
-        // Upload audio to Cloudinary
-        String publicId = String.format("chapters/%s/%d-audio", chapter.getNovel().getSlug(),
+        // Generate audio using TextToSpeechService
+        String audioUrl = textToSpeechService.synthesizeSpeech(
+                textToConvert,
+                chapter.getNovel().getSlug(),
                 chapter.getChapterNumber());
-        String audioUrl = cloudinaryService.uploadAudio(audioContents.toByteArray(), publicId);
 
         // Update chapter with audio URL
         chapter.setAudioUrl(audioUrl);

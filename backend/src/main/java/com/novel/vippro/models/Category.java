@@ -25,12 +25,31 @@ public class Category {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private Integer totalNovels = 0;
-
     @ManyToMany(mappedBy = "categories")
     @JsonIgnore
     private Set<Novel> novels = new HashSet<>();
+
+    public void addNovel(Novel novel) {
+        if (this.novels == null) {
+            this.novels = new HashSet<>();
+        }
+        this.novels.add(novel);
+    }
+
+    public void removeNovel(Novel novel) {
+        if (this.novels != null) {
+            this.novels.remove(novel);
+        }
+    }
+
+    public void setNovels(Set<Novel> novels) {
+        if (this.novels != null) {
+            this.novels.clear();
+        }
+        if (novels != null) {
+            novels.forEach(this::addNovel);
+        }
+    }
 
     @PrePersist
     public void onCreate() {

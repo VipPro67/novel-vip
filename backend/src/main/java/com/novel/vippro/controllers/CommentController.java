@@ -1,8 +1,11 @@
 package com.novel.vippro.controllers;
 
-import com.novel.vippro.models.Comment;
-import com.novel.vippro.payload.response.ApiResponse;
+import com.novel.vippro.dto.CommentDTO;
+import com.novel.vippro.dto.CommentCreateDTO;
+import com.novel.vippro.dto.CommentUpdateDTO;
+import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.services.CommentService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,70 +14,144 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+
 import java.util.UUID;
 
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/comments")
+@Tag(name = "Comments", description = "Novel and chapter comments management APIs")
+@SecurityRequirement(name = "bearerAuth")
 public class CommentController {
 
-    @Autowired
-    private CommentService commentService;
+        @Autowired
+        private CommentService commentService;
 
-    @GetMapping("/novel/{novelId}")
-    public ResponseEntity<ApiResponse<Page<Comment>>> getCommentsByNovel(
-            @PathVariable UUID novelId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Comment> comments = commentService.getCommentsByNovel(novelId, pageable);
-        return ResponseEntity.ok(ApiResponse.success("Comments retrieved successfully", comments));
-    }
+        @Operation(summary = "Get novel comments", description = "Get all comments for a specific novel")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Novel not found")
+        })
+        @GetMapping("/novel/{novelId}")
+        public ResponseEntity<ControllerResponse<Page<CommentDTO>>> getNovelComments(
+                        @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
+                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<CommentDTO> comments = commentService.getNovelComments(novelId, pageable);
+                return ResponseEntity.ok(ControllerResponse.success("Comments retrieved successfully", comments));
+        }
 
-    @GetMapping("/chapter/{chapterId}")
-    public ResponseEntity<ApiResponse<Page<Comment>>> getCommentsByChapter(
-            @PathVariable UUID chapterId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Comment> comments = commentService.getCommentsByChapter(chapterId, pageable);
-        return ResponseEntity.ok(ApiResponse.success("Comments retrieved successfully", comments));
-    }
+        @Operation(summary = "Get chapter comments", description = "Get all comments for a specific chapter")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Chapter not found")
+        })
+        @GetMapping("/chapter/{chapterId}")
+        public ResponseEntity<ControllerResponse<Page<CommentDTO>>> getChapterComments(
+                        @Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId,
+                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<CommentDTO> comments = commentService.getChapterComments(chapterId, pageable);
+                return ResponseEntity.ok(ControllerResponse.success("Comments retrieved successfully", comments));
+        }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<Page<Comment>>> getCommentsByUser(
-            @PathVariable UUID userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Comment> comments = commentService.getCommentsByUser(userId, pageable);
-        return ResponseEntity.ok(ApiResponse.success("Comments retrieved successfully", comments));
-    }
+        @Operation(summary = "Get user comments", description = "Get all comments made by a specific user")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comments retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "User not found")
+        })
+        @GetMapping("/user/{userId}")
+        public ResponseEntity<ControllerResponse<Page<CommentDTO>>> getUserComments(
+                        @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
+                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<CommentDTO> comments = commentService.getUserComments(userId, pageable);
+                return ResponseEntity.ok(ControllerResponse.success("Comments retrieved successfully", comments));
+        }
 
-    @PostMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Comment>> createComment(
-            @RequestParam UUID userId,
-            @RequestParam(required = false) UUID novelId,
-            @RequestParam(required = false) UUID chapterId,
-            @RequestParam String content) {
-        Comment comment = commentService.createComment(userId, novelId, chapterId, content);
-        return ResponseEntity.ok(ApiResponse.success("Comment created successfully", comment));
-    }
+        @Operation(summary = "Add comment", description = "Add a new comment to a novel or chapter")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comment added successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid comment data"),
+                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+                        @ApiResponse(responseCode = "404", description = "Novel or chapter not found")
+        })
+        @PostMapping
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<ControllerResponse<CommentDTO>> addComment(
+                        @Parameter(description = "Comment details", required = true) @Valid @RequestBody CommentCreateDTO commentDTO) {
+                CommentDTO createdComment = commentService.addComment(commentDTO);
+                return ResponseEntity.ok(ControllerResponse.success("Comment added successfully", createdComment));
+        }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Comment>> updateComment(
-            @PathVariable UUID id,
-            @RequestParam String content) {
-        Comment comment = commentService.updateComment(id, content);
-        return ResponseEntity.ok(ApiResponse.success("Comment updated successfully", comment));
-    }
+        @Operation(summary = "Update comment", description = "Update an existing comment")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comment updated successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid comment data"),
+                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+                        @ApiResponse(responseCode = "404", description = "Comment not found")
+        })
+        @PutMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<ControllerResponse<CommentDTO>> updateComment(
+                        @Parameter(description = "Comment ID", required = true) @PathVariable UUID id,
+                        @Parameter(description = "Updated comment details", required = true) @Valid @RequestBody CommentUpdateDTO commentDTO) {
+                CommentDTO updatedComment = commentService.updateComment(id, commentDTO);
+                return ResponseEntity.ok(ControllerResponse.success("Comment updated successfully", updatedComment));
+        }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Void>> deleteComment(@PathVariable UUID id) {
-        commentService.deleteComment(id);
-        return ResponseEntity.ok(ApiResponse.success("Comment deleted successfully", null));
-    }
+        @Operation(summary = "Delete comment", description = "Delete an existing comment")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Comment deleted successfully"),
+                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+                        @ApiResponse(responseCode = "404", description = "Comment not found")
+        })
+        @DeleteMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<ControllerResponse<Void>> deleteComment(
+                        @Parameter(description = "Comment ID", required = true) @PathVariable UUID id) {
+                commentService.deleteComment(id);
+                return ResponseEntity.ok(ControllerResponse.success("Comment deleted successfully", null));
+        }
+
+        @Operation(summary = "Get comment replies", description = "Get all replies to a specific comment")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Replies retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Parent comment not found")
+        })
+        @GetMapping("/{commentId}/replies")
+        public ResponseEntity<ControllerResponse<Page<CommentDTO>>> getReplies(
+                        @Parameter(description = "Parent comment ID", required = true) @PathVariable UUID commentId,
+                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                Page<CommentDTO> replies = commentService.getCommentReplies(commentId, pageable);
+                return ResponseEntity.ok(ControllerResponse.success("Replies retrieved successfully", replies));
+        }
+
+        @Operation(summary = "Add reply", description = "Add a reply to an existing comment")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Reply added successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid reply data"),
+                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
+                        @ApiResponse(responseCode = "404", description = "Parent comment not found")
+        })
+        @PostMapping("/{commentId}/replies")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<ControllerResponse<CommentDTO>> addReply(
+                        @Parameter(description = "Parent comment ID", required = true) @PathVariable UUID commentId,
+                        @Parameter(description = "Reply details", required = true) @Valid @RequestBody CommentCreateDTO replyDTO) {
+                CommentDTO reply = commentService.addReply(commentId, replyDTO);
+                return ResponseEntity.ok(ControllerResponse.success("Reply added successfully", reply));
+        }
 }

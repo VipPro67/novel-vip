@@ -40,6 +40,18 @@ public class Novel {
         @JoinTable(name = "novel_categories", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
         private Set<Category> categories = new HashSet<>();
 
+        @ElementCollection
+        @CollectionTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"))
+        @MapKeyColumn(name = "genre")
+        @Column(name = "count")
+        private Map<String, Integer> genres = new HashMap<>();
+
+        @ElementCollection
+        @CollectionTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"))
+        @MapKeyColumn(name = "tag")
+        @Column(name = "count")
+        private Map<String, Integer> tags = new HashMap<>();
+
         @Column(nullable = false)
         private Integer totalChapters;
 
@@ -64,31 +76,67 @@ public class Novel {
         private LocalDateTime updatedAt = LocalDateTime.now();
 
         public void addCategory(Category category) {
+                if (this.categories == null) {
+                        this.categories = new HashSet<>();
+                }
                 this.categories.add(category);
-                category.getNovels().add(this);
+                // Don't call category.addNovel(this) to avoid infinite recursion
         }
 
         public void removeCategory(Category category) {
-                this.categories.remove(category);
-                category.getNovels().remove(this);
+                if (this.categories != null) {
+                        this.categories.remove(category);
+                }
+                // Don't call category.removeNovel(this) to avoid infinite recursion
+        }
+
+        public void setCategories(Set<Category> categories) {
+                if (this.categories == null) {
+                        this.categories = new HashSet<>();
+                } else {
+                        this.categories.clear();
+                }
+                if (categories != null) {
+                        this.categories.addAll(categories);
+                }
         }
 
         @PrePersist
         public void onCreate() {
-                this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-                                .replaceAll("\\p{M}", "") // Remove accents
-                                .toUpperCase();
-                this.slug = this.titleNomalized.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-"
-                                + this.id.toString().substring(0, 8);
+                if (this.id == null) {
+                        this.id = UUID.randomUUID();
+                }
+                normalizeFields();
+                this.createdAt = LocalDateTime.now();
+                this.updatedAt = LocalDateTime.now();
         }
 
         @PreUpdate
         public void onUpdate() {
-                this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-                                .replaceAll("\\p{M}", "") // Remove accents
-                                .toUpperCase();
-                this.slug = this.titleNomalized.toLowerCase().replaceAll("[^a-z0-9]+", "-") + "-"
-                                + this.id.toString().substring(0, 8);
+                normalizeFields();
                 this.updatedAt = LocalDateTime.now();
+        }
+
+        private void normalizeFields() {
+                if (this.title != null) {
+                        this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
+                                        .replaceAll("\\p{M}", "") // Remove accents
+                                        .toUpperCase();
+
+                        // Only update slug if it's not already set or if title has changed
+                        if (this.slug == null || this.slug.isEmpty()
+                                        || !this.slug.startsWith(this.titleNomalized.toLowerCase())) {
+                                this.slug = this.titleNomalized.toLowerCase()
+                                                .replaceAll("[^a-z0-9]+", "-");
+                                if (this.id != null) {
+                                        this.slug += "-" + this.id.toString().substring(0, 8);
+                                }
+                        }
+                }
+        }
+
+        public void setTitle(String title) {
+                this.title = title;
+                // The normalization will be handled by @PrePersist/@PreUpdate
         }
 }
