@@ -1,8 +1,6 @@
 package com.novel.vippro.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.texttospeech.v1.*;
-import com.google.protobuf.ByteString;
 import com.novel.vippro.dto.ChapterCreateDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
@@ -158,55 +156,6 @@ public class ChapterService {
 
         // Parse the JSON content
         return objectMapper.readValue(jsonContent, Map.class);
-    }
-
-    private String extractPublicIdFromUrl(String url) {
-        // Extract the public ID from the Cloudinary URL
-        // Example URL:
-        // https://res.cloudinary.com/drpudphzv/raw/upload/v1744167203/novel/chapters/bohuupgcdzv4edx9m47y.json
-        // Public ID: novel/chapters/bohuupgcdzv4edx9m47y
-
-        if (url == null || url.isEmpty()) {
-            return "";
-        }
-
-        try {
-            // Split the URL by "/"
-            String[] parts = url.split("/");
-
-            // Find the index of "upload" or "raw"
-            int uploadIndex = -1;
-            for (int i = 0; i < parts.length; i++) {
-                if (parts[i].equals("upload") || parts[i].equals("raw")) {
-                    uploadIndex = i;
-                    break;
-                }
-            }
-
-            if (uploadIndex == -1 || uploadIndex + 1 >= parts.length) {
-                return "";
-            }
-
-            // The public ID is everything after the version number
-            StringBuilder publicId = new StringBuilder();
-            for (int i = uploadIndex + 2; i < parts.length; i++) {
-                publicId.append(parts[i]);
-                if (i < parts.length - 1) {
-                    publicId.append("/");
-                }
-            }
-
-            // Remove the file extension
-            String result = publicId.toString();
-            int dotIndex = result.lastIndexOf(".");
-            if (dotIndex > 0) {
-                result = result.substring(0, dotIndex);
-            }
-
-            return result;
-        } catch (Exception e) {
-            return "";
-        }
     }
 
     @Transactional

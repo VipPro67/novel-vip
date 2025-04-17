@@ -1,6 +1,5 @@
 package com.novel.vippro.controllers;
 
-import com.novel.vippro.dto.NovelDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.services.RecommendationService;

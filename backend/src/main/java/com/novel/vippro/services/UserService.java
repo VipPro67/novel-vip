@@ -1,5 +1,6 @@
 package com.novel.vippro.services;
 
+import com.novel.vippro.dto.ChangePasswordDTO;
 import com.novel.vippro.dto.UserDTO;
 import com.novel.vippro.dto.UserSearchDTO;
 import com.novel.vippro.dto.UserUpdateDTO;
@@ -53,6 +54,16 @@ public class UserService {
         return userPage.map(this::convertToDTO);
     }
 
+    public User getCurrentUser() {
+        if (SecurityContextHolder.getContext().getAuthentication() == null ||
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal() == null) {
+            return null;
+        }
+        UserDetailsImpl user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findById(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", user.getId()));
+    }
+
     public UUID getCurrentUserId() {
         if (SecurityContextHolder.getContext().getAuthentication() == null ||
                 SecurityContextHolder.getContext().getAuthentication().getPrincipal() == null) {
@@ -89,7 +100,11 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO updateUserProfile(UUID userId, UserUpdateDTO updateDTO) {
+    public UserDTO updateUserProfile(UserUpdateDTO updateDTO) {
+        UUID userId = getCurrentUserId();
+        if (userId == null) {
+            throw new ResourceNotFoundException("User", "id", null);
+        }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
@@ -98,26 +113,54 @@ public class UserService {
             user.setFullName(updateDTO.getFullName());
         }
 
-        // Update email if provided and not already taken
-        if (updateDTO.getEmail() != null && !updateDTO.getEmail().isEmpty()) {
-            if (!user.getEmail().equals(updateDTO.getEmail()) &&
-                    userRepository.existsByEmail(updateDTO.getEmail())) {
-                throw new BadRequestException("Email is already in use");
-            }
-            user.setEmail(updateDTO.getEmail());
+        // Update avatar if provided
+        if (updateDTO.getAvatar() != null && !updateDTO.getAvatar().isEmpty()) {
+            user.setAvatar(updateDTO.getAvatar());
         }
 
+        // Update email if provided and not already taken
+        // if (updateDTO.getEmail() != null && !updateDTO.getEmail().isEmpty()) {
+        // if (!user.getEmail().equals(updateDTO.getEmail()) &&
+        // userRepository.existsByEmail(updateDTO.getEmail())) {
+        // throw new BadRequestException("Email is already in use");
+        // }
+        // user.setEmail(updateDTO.getEmail());
+        // }
+
         // Update password if provided
-        if (updateDTO.getNewPassword() != null && !updateDTO.getNewPassword().isEmpty()) {
-            if (updateDTO.getCurrentPassword() == null ||
-                    !passwordEncoder.matches(updateDTO.getCurrentPassword(), user.getPassword())) {
-                throw new BadRequestException("Current password is incorrect");
-            }
-            user.setPassword(passwordEncoder.encode(updateDTO.getNewPassword()));
-        }
+        // if (updateDTO.getNewPassword() != null &&
+        // !updateDTO.getNewPassword().isEmpty()) {
+        // if (updateDTO.getCurrentPassword() == null ||
+        // !passwordEncoder.matches(updateDTO.getCurrentPassword(), user.getPassword()))
+        // {
+        // throw new BadRequestException("Current password is incorrect");
+        // }
+        // user.setPassword(passwordEncoder.encode(updateDTO.getNewPassword()));
+        // }
 
         User updatedUser = userRepository.save(user);
         return convertToDTO(updatedUser);
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordDTO changePasswordDTO) {
+        String oldPassword = changePasswordDTO.getOldPassword();
+        String newPassword = changePasswordDTO.getNewPassword();
+        if (!changePasswordDTO.isPasswordMatching()) {
+            throw new BadRequestException("New password and confirm password do not match");
+        }
+        UUID userId = getCurrentUserId();
+        if (userId == null) {
+            throw new ResourceNotFoundException("User", "id", null);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadRequestException("Old password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     public Page<UserDTO> searchUsers(UserSearchDTO searchDTO) {

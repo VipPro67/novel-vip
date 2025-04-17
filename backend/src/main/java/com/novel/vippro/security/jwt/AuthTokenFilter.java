@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -51,10 +50,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
           @SuppressWarnings("unchecked")
           List<String> roles = (List<String>) claims.get("roles");
 
+          // Log claims for debugging
+          logger.debug("Claims: userId={}, username={}, email={}, roles={}", userId, username, email, roles);
+
           List<SimpleGrantedAuthority> authorities = new ArrayList<>();
           if (roles != null) {
             for (String role : roles) {
-              authorities.add(new SimpleGrantedAuthority(role));
+              authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
             }
           }
 
@@ -69,17 +71,42 @@ public class AuthTokenFilter extends OncePerRequestFilter {
               userDetails,
               null,
               authorities);
+
+          // Ensure request is not null
+          if (request == null) {
+            logger.error("HttpServletRequest is null");
+            filterChain.doFilter(request, response);
+            return;
+          }
+
           authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-          SecurityContextHolder.getContext().setAuthentication(authentication);
+          // Ensure SecurityContext is initialized
+          if (SecurityContextHolder.getContext() == null) {
+            logger.error("SecurityContext is null");
+            filterChain.doFilter(request, response);
+            return;
+          }
+          logger.info("Setting authentication in SecurityContextHolder");
+          try {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+          } catch (Exception e) {
+            logger.error("Error setting authentication in SecurityContextHolder: {}", e.getMessage());
+          }
+          logger.debug("Authentication set in SecurityContextHolder: {}", authentication);
+
+        } catch (IllegalArgumentException e) {
+          logger.error("Invalid UUID or argument: {}", e.getMessage());
+        } catch (ClassCastException e) {
+          logger.error("Type mismatch in JWT claims: {}", e.getMessage());
         } catch (io.jsonwebtoken.io.DecodingException e) {
           logger.error("JWT token contains invalid Base64 characters: {}", e.getMessage());
         } catch (Exception e) {
-          logger.error("Error while parsing JWT claims: {}", e.getMessage());
+          logger.error("Error while parsing JWT claims: {}", e.getMessage(), e);
         }
       }
     } catch (Exception e) {
-      logger.error("Cannot process authentication: {}", e.getMessage());
+      logger.error("Cannot process authentication: {}", e.getMessage(), e);
     }
 
     filterChain.doFilter(request, response);

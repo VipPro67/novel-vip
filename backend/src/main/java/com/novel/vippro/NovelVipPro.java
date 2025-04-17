@@ -8,7 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class NovelVipPro {
 
 	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.load();
+		// backend/.env
+		Dotenv.configure()
+				.directory("backend")
+				.load();
 		SpringApplication.run(NovelVipPro.class, args);
 	}
 }

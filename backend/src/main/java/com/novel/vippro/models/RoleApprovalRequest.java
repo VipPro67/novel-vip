@@ -1,7 +1,6 @@
 package com.novel.vippro.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 

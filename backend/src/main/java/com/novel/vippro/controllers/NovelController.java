@@ -3,9 +3,7 @@ package com.novel.vippro.controllers;
 import com.novel.vippro.dto.NovelDTO;
 import com.novel.vippro.dto.CommentDTO;
 import com.novel.vippro.dto.NovelCreateDTO;
-import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Chapter;
-import com.novel.vippro.models.Comment;
 import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.services.NovelService;
 
@@ -16,7 +14,6 @@ import com.novel.vippro.services.CommentService;
 
 import java.util.UUID;
 
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,16 +21,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
@@ -65,6 +58,18 @@ public class NovelController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
         Page<NovelDTO> novels = novelService.getAllNovels(pageable);
         return ResponseEntity.ok(ControllerResponse.success("Novels retrieved successfully", novels));
+    }
+
+    @Operation(summary = "Get novel by ID", description = "Retrieve detailed information about a specific novel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Novel found"),
+            @ApiResponse(responseCode = "404", description = "Novel not found")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<ControllerResponse<NovelDTO>> getNovelById(
+            @Parameter(description = "Novel ID") @PathVariable UUID id) {
+        NovelDTO novel = novelService.getNovelById(id);
+        return ResponseEntity.ok(ControllerResponse.success("Novel retrieved successfully", novel));
     }
 
     @Operation(summary = "Get novels by category", description = "Retrieves novels filtered by category")
@@ -110,18 +115,6 @@ public class NovelController {
         Pageable pageable = PageRequest.of(page, size);
         Page<NovelDTO> novels = novelService.searchNovels(keyword, pageable);
         return ResponseEntity.ok(ControllerResponse.success("Novels retrieved successfully", novels));
-    }
-
-    @Operation(summary = "Get novel by ID", description = "Retrieve detailed information about a specific novel")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Novel found"),
-            @ApiResponse(responseCode = "404", description = "Novel not found")
-    })
-    @GetMapping("/{id}")
-    public ResponseEntity<ControllerResponse<NovelDTO>> getNovelById(
-            @Parameter(description = "Novel ID") @PathVariable UUID id) {
-        NovelDTO novel = novelService.getNovelById(id);
-        return ResponseEntity.ok(ControllerResponse.success("Novel retrieved successfully", novel));
     }
 
     @Operation(summary = "Get hot novels", description = "Get popular novels based on view count")

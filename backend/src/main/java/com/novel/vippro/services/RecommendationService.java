@@ -1,6 +1,5 @@
 package com.novel.vippro.services;
 
-import com.novel.vippro.dto.NovelDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Rating;
 import com.novel.vippro.models.User;
@@ -8,7 +7,6 @@ import com.novel.vippro.models.UserPreferences;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.RatingRepository;
 import com.novel.vippro.repository.UserPreferencesRepository;
-import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -26,12 +24,11 @@ public class RecommendationService {
         private final NovelRepository novelRepository;
         private final RatingRepository ratingRepository;
         private final UserPreferencesRepository userPreferencesRepository;
-        private final UserRepository userRepository;
-        private final SecurityUtils securityUtils;
+        private final UserService userService;
 
         @Transactional(readOnly = true)
         public Page<Novel> getPersonalizedRecommendations(Pageable pageable) {
-                User currentUser = securityUtils.getCurrentUser();
+                User currentUser = userService.getCurrentUser();
                 UserPreferences preferences = userPreferencesRepository.findByUser(currentUser)
                                 .orElseGet(() -> createDefaultPreferences(currentUser));
 

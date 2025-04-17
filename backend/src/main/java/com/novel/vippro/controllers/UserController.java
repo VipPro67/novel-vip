@@ -1,5 +1,6 @@
 package com.novel.vippro.controllers;
 
+import com.novel.vippro.dto.ChangePasswordDTO;
 import com.novel.vippro.dto.UserDTO;
 import com.novel.vippro.dto.UserSearchDTO;
 import com.novel.vippro.dto.UserUpdateDTO;
@@ -22,8 +23,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
@@ -78,10 +77,23 @@ public class UserController {
     })
     @PutMapping("/profile")
     public ResponseEntity<ControllerResponse<UserDTO>> updateUserProfile(
-            @Parameter(description = "ID of the user to update") @RequestParam UUID userId,
             @Parameter(description = "Updated user information") @RequestBody UserUpdateDTO userUpdateDTO) {
-        UserDTO updatedUser = userService.updateUserProfile(userId, userUpdateDTO);
+        UserDTO updatedUser = userService.updateUserProfile(userUpdateDTO);
         return ResponseEntity.ok(ControllerResponse.success("User profile updated successfully", updatedUser));
+    }
+
+    @Operation(summary = "Change user password", description = "Change the password of the currently authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid password format"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    @PutMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ControllerResponse<Void>> changePassword(
+            @Parameter(description = "Old and new password information") @RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(changePasswordDTO);
+        return ResponseEntity.ok(ControllerResponse.success("Password changed successfully", null));
     }
 
     @Operation(summary = "Search users", description = "Search for users based on various criteria. Only accessible by admins.")

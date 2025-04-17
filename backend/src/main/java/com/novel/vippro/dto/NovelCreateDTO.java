@@ -31,4 +31,8 @@ public class NovelCreateDTO {
 
     @NotNull(message = "Categories list cannot be null")
     private List<String> categories;
+
+    private List<String> genres;
+
+    private List<String> tags;
 }
