@@ -3,6 +3,9 @@ package com.novel.vippro.models;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.*;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
@@ -10,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "novels")
 @Data
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Novel {
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO)
@@ -70,9 +74,11 @@ public class Novel {
         private List<Comment> comments;
 
         @Column(nullable = false)
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt = LocalDateTime.now();
 
         @Column(nullable = false)
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime updatedAt = LocalDateTime.now();
 
         public void addCategory(Category category) {

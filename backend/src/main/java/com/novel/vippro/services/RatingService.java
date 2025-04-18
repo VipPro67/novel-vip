@@ -10,6 +10,7 @@ import com.novel.vippro.exception.BadRequestException;
 import com.novel.vippro.models.Rating;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.RatingRepository;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.UserRepository;
@@ -39,12 +40,12 @@ public class RatingService {
     @Autowired
     private UserService userService;
 
-    public Page<RatingDTO> getNovelRatings(UUID novelId, Pageable pageable) {
+    public PageResponse<RatingDTO> getNovelRatings(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        return ratingRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(ratingRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Transactional
@@ -154,12 +155,12 @@ public class RatingService {
         return convertToDTO(updatedRating);
     }
 
-    public Page<RatingDTO> getUserRatings(UUID userId, Pageable pageable) {
+    public PageResponse<RatingDTO> getUserRatings(UUID userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User", "id", userId);
         }
-        return ratingRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(ratingRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
     public RatingDTO getUserNovelRating(UUID novelId, UUID userId) {

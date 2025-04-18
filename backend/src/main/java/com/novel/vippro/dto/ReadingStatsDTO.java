@@ -5,6 +5,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+
 @Data
 public class ReadingStatsDTO {
     private long totalNovelsRead;
@@ -17,6 +22,9 @@ public class ReadingStatsDTO {
     private Map<String, Long> readingFrequencyByHourOfDay;
 
     // Additional fields needed by the service
+    @JsonProperty("lastReadAt")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime lastReadAt;
     private long minutesSpentReading;
     private double averageReadingTimePerChapter;

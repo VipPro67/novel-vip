@@ -5,10 +5,14 @@ import com.novel.vippro.dto.ChapterCreateDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
 import com.novel.vippro.exception.ResourceNotFoundException;
+import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.Chapter;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.ChapterRepository;
 import com.novel.vippro.repository.NovelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,8 @@ public class ChapterService {
 
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private Mapper mapper;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -40,12 +46,18 @@ public class ChapterService {
     @Autowired
     private TextToSpeechService textToSpeechService;
 
-    public Page<ChapterListDTO> getChaptersByNovelDTO(UUID novelId, Pageable pageable) {
-        Page<Chapter> chapters = getChaptersByNovel(novelId, pageable);
-        return chapters.map(this::convertToChapterListDTO);
+    @Cacheable(value = "chapters", key = "#id")
+    public ChapterDetailDTO getChapterDetailDTO(UUID id) {
+        Chapter chapter = getChapterById(id);
+        Map<String, Object> content = getChapterContent(chapter);
+
+        ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
+        dto.setContent((String) content.get("content"));
+        return dto;
     }
 
-    public ChapterDetailDTO getChapterByNumberDTO(UUID novelId, Integer chapterNumber) throws IOException {
+    @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-chapter-' + #chapterNumber")
+    public ChapterDetailDTO getChapterByNumberDTO(UUID novelId, Integer chapterNumber) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
@@ -53,61 +65,47 @@ public class ChapterService {
 
         Map<String, Object> content = getChapterContent(chapter);
 
-        ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+        ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
         dto.setContent((String) content.get("content"));
         return dto;
     }
 
-    public ChapterDetailDTO getChapterDetailDTO(UUID id) throws IOException {
-        Chapter chapter = getChapterById(id);
-        Map<String, Object> content = getChapterContent(chapter);
-
-        ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
-        dto.setContent((String) content.get("content"));
-        return dto;
+    @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-page-' + #pageable.pageNumber")
+    public PageResponse<ChapterListDTO> getChaptersByNovelDTO(UUID novelId, Pageable pageable) {
+        Page<Chapter> chapters = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable);
+        return new PageResponse<>(chapters.map(mapper::ChaptertoChapterListDTO));
     }
 
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
-    public ChapterListDTO createChapterDTO(ChapterCreateDTO chapterDTO) throws IOException {
+    public ChapterListDTO createChapterDTO(ChapterCreateDTO chapterDTO) {
         Chapter chapter = createChapter(chapterDTO);
-        return convertToChapterListDTO(chapter);
+
+        return mapper.ChaptertoChapterListDTO(chapter);
     }
 
+    @CacheEvict(value = { "chapters", "novels" }, key = "#id")
     @Transactional
-    public ChapterListDTO updateChapterDTO(UUID id, ChapterCreateDTO chapterDTO) throws IOException {
+    public ChapterListDTO updateChapterDTO(UUID id, ChapterCreateDTO chapterDTO) {
         Chapter chapter = updateChapter(id, chapterDTO);
-        return convertToChapterListDTO(chapter);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
+        return mapper.ChaptertoChapterListDTO(chapter);
     }
 
-    private ChapterListDTO convertToChapterListDTO(Chapter chapter) {
-        ChapterListDTO dto = new ChapterListDTO();
-        dto.setId(chapter.getId());
-        dto.setChapterNumber(chapter.getChapterNumber());
-        dto.setTitle(chapter.getTitle());
-        dto.setNovelId(chapter.getNovel().getId());
-        dto.setNovelTitle(chapter.getNovel().getTitle());
-        dto.setCreatedAt(chapter.getCreatedAt());
-        dto.setUpdatedAt(chapter.getUpdatedAt());
-        return dto;
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
+    @Transactional
+    public void deleteChapter(UUID id) {
+        Chapter chapter = getChapterById(id);
+        chapterRepository.delete(chapter);
     }
 
-    private ChapterDetailDTO convertToChapterDetailDTO(Chapter chapter) {
-        ChapterDetailDTO dto = new ChapterDetailDTO();
-        dto.setId(chapter.getId());
-        dto.setChapterNumber(chapter.getChapterNumber());
-        dto.setTitle(chapter.getTitle());
-        dto.setNovelId(chapter.getNovel().getId());
-        dto.setNovelTitle(chapter.getNovel().getTitle());
-        dto.setCreatedAt(chapter.getCreatedAt());
-        dto.setUpdatedAt(chapter.getUpdatedAt());
-        return dto;
-    }
-
-    public Page<Chapter> getChaptersByNovel(UUID novelId, Pageable pageable) {
+    public PageResponse<Chapter> getChaptersByNovel(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        return chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable);
+        return new PageResponse<>(chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable));
     }
 
     public Chapter getChapterById(UUID id) {
@@ -120,9 +118,20 @@ public class ChapterService {
     }
 
     @Transactional
-    public Chapter saveChapter(Chapter chapter, Map<String, Object> content) throws IOException {
+    public Chapter saveChapter(Chapter chapter, Map<String, Object> content) {
         // Convert content to JSON string
-        String jsonContent = objectMapper.writeValueAsString(content);
+        String jsonContent;
+        try {
+            jsonContent = objectMapper.writeValueAsString(content);
+        } catch (IOException e) {
+            throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
+        }
+        // Check if the chapter number is unique for the novel
+        if (chapterRepository.findByNovelIdAndChapterNumber(chapter.getNovel().getId(),
+                chapter.getChapterNumber()) != null) {
+            throw new RuntimeException(
+                    "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
+        }
 
         // Generate a unique public ID for the chapter
         String publicId = String.format("chapters/%s/%d",
@@ -130,7 +139,12 @@ public class ChapterService {
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        String jsonUrl;
+        try {
+            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        } catch (IOException e) {
+            throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
+        }
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -139,27 +153,47 @@ public class ChapterService {
         return chapterRepository.save(chapter);
     }
 
-    public Map<String, Object> getChapterContent(Chapter chapter) throws IOException {
+    public Map<String, Object> getChapterContent(Chapter chapter) {
         // Get the JSON content URL from Cloudinary
         String jsonUrl = chapter.getJsonUrl();
 
         if (jsonUrl == null || jsonUrl.isEmpty()) {
-            throw new IOException("Chapter content URL is not available");
+            throw new ResourceNotFoundException("Chapter content", "jsonUrl", jsonUrl);
         }
 
         // Fetch the JSON content from the URL
         String jsonContent = restTemplate.getForObject(jsonUrl, String.class);
 
         if (jsonContent == null || jsonContent.isEmpty()) {
-            throw new IOException("Failed to fetch chapter content");
+            throw new ResourceNotFoundException("Chapter content", "jsonContent", jsonContent);
         }
 
         // Parse the JSON content
-        return objectMapper.readValue(jsonContent, Map.class);
+        Map<String, Object> contentMap;
+        try {
+            contentMap = objectMapper.readValue(jsonContent, Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing chapter content: " + e.getMessage(), e);
+        }
+        if (contentMap == null || contentMap.isEmpty()) {
+            throw new ResourceNotFoundException("Chapter content", "contentMap", contentMap);
+        }
+        return contentMap;
     }
 
     @Transactional
-    public Chapter createChapter(ChapterCreateDTO chapterDTO) throws IOException {
+    public Chapter createChapter(ChapterCreateDTO chapterDTO) {
+
+        // Check if the novel exists
+        if (!novelRepository.existsById(chapterDTO.getNovelId())) {
+            throw new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId());
+        }
+        // Check if the chapter number is unique for the novel
+        if (chapterRepository.findByNovelIdAndChapterNumber(chapterDTO.getNovelId(),
+                chapterDTO.getChapterNumber()) != null) {
+            throw new RuntimeException(
+                    "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
+        }
         Chapter chapter = new Chapter();
         chapter.setChapterNumber(chapterDTO.getChapterNumber());
         chapter.setTitle(chapterDTO.getTitle());
@@ -177,15 +211,28 @@ public class ChapterService {
                 "content", chapterDTO.getContent());
 
         // Convert content to JSON string
-        String jsonContent = objectMapper.writeValueAsString(contentMap);
+        String jsonContent;
+        try {
+            jsonContent = objectMapper.writeValueAsString(contentMap);
+        } catch (IOException e) {
+            throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
+        }
 
         // Generate a unique public ID for the chapter
-        String publicId = String.format("chapters/%s/%d",
+        String publicId = String.format("chapters/%s/%d" + ".json",
                 chapter.getNovel().getSlug(),
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        String jsonUrl;
+        try {
+            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        } catch (IOException e) {
+            throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
+        }
+        if (jsonUrl == null || jsonUrl.isEmpty()) {
+            throw new RuntimeException("Error uploading chapter content to Cloudinary: URL is empty");
+        }
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -195,7 +242,7 @@ public class ChapterService {
     }
 
     @Transactional
-    public Chapter updateChapter(UUID id, ChapterCreateDTO chapterDTO) throws IOException {
+    public Chapter updateChapter(UUID id, ChapterCreateDTO chapterDTO) {
         Chapter chapter = getChapterById(id);
         chapter.setChapterNumber(chapterDTO.getChapterNumber());
         chapter.setTitle(chapterDTO.getTitle());
@@ -214,7 +261,18 @@ public class ChapterService {
                 "content", chapterDTO.getContent());
 
         // Convert content to JSON string
-        String jsonContent = objectMapper.writeValueAsString(contentMap);
+        String jsonContent;
+        try {
+            jsonContent = objectMapper.writeValueAsString(contentMap);
+        } catch (IOException e) {
+            throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
+        }
+        // Check if the chapter number is unique for the novel
+        if (chapterRepository.findByNovelIdAndChapterNumber(chapter.getNovel().getId(),
+                chapter.getChapterNumber()) != null) {
+            throw new RuntimeException(
+                    "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
+        }
 
         // Generate a unique public ID for the chapter
         String publicId = String.format("chapters/%s/%d",
@@ -222,7 +280,15 @@ public class ChapterService {
                 chapter.getChapterNumber());
 
         // Upload JSON content to Cloudinary
-        String jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        String jsonUrl;
+        try {
+            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+        } catch (IOException e) {
+            throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
+        }
+        if (jsonUrl == null || jsonUrl.isEmpty()) {
+            throw new RuntimeException("Error uploading chapter content to Cloudinary: URL is empty");
+        }
 
         // Set the JSON URL in the chapter
         chapter.setJsonUrl(jsonUrl);
@@ -232,18 +298,16 @@ public class ChapterService {
     }
 
     @Transactional
-    public void deleteChapter(UUID id) {
+    public ChapterDetailDTO getChapterAudio(UUID id) {
         Chapter chapter = getChapterById(id);
-        chapterRepository.delete(chapter);
-    }
-
-    @Transactional
-    public ChapterDetailDTO getChapterAudio(UUID id) throws IOException {
-        Chapter chapter = getChapterById(id);
+        // check if chapter is not null
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
 
         // check if chapter has audio url
         if (chapter.getAudioUrl() != null) {
-            ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+            ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
             dto.setAudioContent(chapter.getAudioUrl());
             return dto;
         }
@@ -256,16 +320,21 @@ public class ChapterService {
         textToConvert = textToConvert.replaceAll("<[^>]*>", "");
 
         // Generate audio using TextToSpeechService
-        String audioUrl = textToSpeechService.synthesizeSpeech(
-                textToConvert,
-                chapter.getNovel().getSlug(),
-                chapter.getChapterNumber());
+        String audioUrl;
+        try {
+            audioUrl = textToSpeechService.synthesizeSpeech(
+                    textToConvert,
+                    chapter.getNovel().getSlug(),
+                    chapter.getChapterNumber());
+        } catch (IOException e) {
+            throw new RuntimeException("Error generating audio for chapter: " + e.getMessage(), e);
+        }
 
         // Update chapter with audio URL
         chapter.setAudioUrl(audioUrl);
         chapterRepository.save(chapter);
 
-        ChapterDetailDTO dto = convertToChapterDetailDTO(chapter);
+        ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
         dto.setAudioContent(audioUrl);
         return dto;
     }

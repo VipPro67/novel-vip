@@ -7,13 +7,13 @@ import com.novel.vippro.dto.ReviewUpdateDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Review;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.ReviewRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.services.ReviewService;
 import com.novel.vippro.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,18 +36,18 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable) {
+    public PageResponse<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable) {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
-        return reviewRepository.findByNovel(novel, pageable).map(this::toDTO);
+        return new PageResponse<>(reviewRepository.findByNovel(novel, pageable).map(this::toDTO));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable) {
+    public PageResponse<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        return reviewRepository.findByUser(user, pageable).map(this::toDTO);
+        return new PageResponse<>(reviewRepository.findByUser(user, pageable).map(this::toDTO));
     }
 
     @Override

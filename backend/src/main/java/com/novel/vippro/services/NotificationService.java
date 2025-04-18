@@ -2,16 +2,17 @@ package com.novel.vippro.services;
 
 import com.novel.vippro.dto.NotificationDTO;
 import com.novel.vippro.dto.NotificationPreferencesDTO;
-import org.springframework.data.domain.Page;
+import com.novel.vippro.payload.response.PageResponse;
+
 import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface NotificationService {
     NotificationDTO createNotification(NotificationDTO notificationDTO);
 
-    Page<NotificationDTO> getUserNotifications(Pageable pageable);
+    PageResponse<NotificationDTO> getUserNotifications(Pageable pageable);
 
-    Page<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable);
+    PageResponse<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable);
 
     NotificationDTO markAsRead(UUID notificationId);
 

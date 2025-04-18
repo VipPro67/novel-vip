@@ -6,13 +6,13 @@ import com.novel.vippro.exception.BadRequestException;
 import com.novel.vippro.models.Favorite;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.FavoriteRepository;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.UserRepository;
-import com.novel.vippro.mapper.NovelMapper;
+import com.novel.vippro.mapper.Mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +32,15 @@ public class FavoriteService {
     private UserRepository userRepository;
 
     @Autowired
-    private NovelMapper novelMapper;
+    private Mapper mapper;
 
     @Autowired
     private UserService userService;
 
-    public Page<NovelDTO> getUserFavorites(Pageable pageable) {
+    public PageResponse<NovelDTO> getUserFavorites(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
-        return favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(favorite -> novelMapper.toDTO(favorite.getNovel()));
+        return new PageResponse<>(favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(favorite -> mapper.NoveltoDTO(favorite.getNovel())));
     }
 
     @Transactional

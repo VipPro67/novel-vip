@@ -12,9 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,11 +36,11 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload")
-        public ResponseEntity<ControllerResponse<FileUploadDTO>> uploadFile(
+        public ControllerResponse<FileUploadDTO> uploadFile(
                         @Parameter(description = "File to upload", required = true) @RequestParam("file") MultipartFile file,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
                 FileUploadDTO uploadResult = fileService.uploadFile(file, type);
-                return ResponseEntity.ok(ControllerResponse.success("File uploaded successfully", uploadResult));
+                return ControllerResponse.success("File uploaded successfully", uploadResult);
         }
 
         @Operation(summary = "Upload multiple files", description = "Upload multiple files in a single request")
@@ -54,11 +51,11 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload/multiple")
-        public ResponseEntity<ControllerResponse<List<FileUploadDTO>>> uploadMultipleFiles(
+        public ControllerResponse<List<FileUploadDTO>> uploadMultipleFiles(
                         @Parameter(description = "Files to upload", required = true) @RequestParam("files") MultipartFile[] files,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
                 List<FileUploadDTO> uploadResults = fileService.uploadMultipleFiles(files, type);
-                return ResponseEntity.ok(ControllerResponse.success("Files uploaded successfully", uploadResults));
+                return ControllerResponse.success("Files uploaded successfully", uploadResults);
         }
 
         @Operation(summary = "Download file", description = "Download a file by its ID")
@@ -67,14 +64,10 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @GetMapping("/{id}")
-        public ResponseEntity<Resource> downloadFile(
+        public Resource downloadFile(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 FileDownloadDTO fileDownload = fileService.downloadFile(id);
-                return ResponseEntity.ok()
-                                .contentType(MediaType.parseMediaType(fileDownload.getContentType()))
-                                .header(HttpHeaders.CONTENT_DISPOSITION,
-                                                "attachment; filename=\"" + fileDownload.getFileName() + "\"")
-                                .body(fileDownload.getResource());
+                return fileDownload.getResource();
         }
 
         @Operation(summary = "Delete file", description = "Delete a file from the system")
@@ -85,10 +78,10 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @DeleteMapping("/{id}")
-        public ResponseEntity<ControllerResponse<Void>> deleteFile(
+        public ControllerResponse<Void> deleteFile(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 fileService.deleteFile(id);
-                return ResponseEntity.ok(ControllerResponse.success("File deleted successfully", null));
+                return ControllerResponse.success("File deleted successfully", null);
         }
 
         @Operation(summary = "Get file metadata", description = "Get metadata about a file without downloading it")
@@ -97,10 +90,10 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @GetMapping("/{id}/metadata")
-        public ResponseEntity<ControllerResponse<FileMetadataDTO>> getFileMetadata(
+        public ControllerResponse<FileMetadataDTO> getFileMetadata(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 FileMetadataDTO metadata = fileService.getFileMetadata(id);
-                return ResponseEntity.ok(ControllerResponse.success("File metadata retrieved successfully", metadata));
+                return ControllerResponse.success("File metadata retrieved successfully", metadata);
         }
 
         @Operation(summary = "Update file metadata", description = "Update metadata of an existing file")
@@ -111,11 +104,10 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @PutMapping("/{id}/metadata")
-        public ResponseEntity<ControllerResponse<FileMetadataDTO>> updateFileMetadata(
+        public ControllerResponse<FileMetadataDTO> updateFileMetadata(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id,
                         @Parameter(description = "Updated metadata", required = true) @Valid @RequestBody FileMetadataUpdateDTO metadata) {
                 FileMetadataDTO updatedMetadata = fileService.updateFileMetadata(id, metadata);
-                return ResponseEntity
-                                .ok(ControllerResponse.success("File metadata updated successfully", updatedMetadata));
+                return ControllerResponse.success("File metadata updated successfully", updatedMetadata);
         }
 }

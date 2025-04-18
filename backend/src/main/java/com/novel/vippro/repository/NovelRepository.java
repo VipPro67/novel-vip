@@ -1,7 +1,6 @@
 package com.novel.vippro.repository;
 
 import com.novel.vippro.models.Novel;
-import com.novel.vippro.models.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +22,9 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);
+
+    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.id = :categoryId")
+    Page<Novel> findByCategoriesId(@Param("categoryId") UUID categoryId, Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);

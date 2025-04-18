@@ -3,10 +3,8 @@ package com.novel.vippro.controllers;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +22,7 @@ import com.novel.vippro.dto.ReviewDTO;
 import com.novel.vippro.dto.ReviewSummaryDTO;
 import com.novel.vippro.dto.ReviewUpdateDTO;
 import com.novel.vippro.payload.response.ControllerResponse;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.services.ReviewService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,13 +51,13 @@ public class ReviewController {
                         @ApiResponse(responseCode = "404", description = "Novel not found")
         })
         @GetMapping("/novel/{novelId}")
-        public ResponseEntity<ControllerResponse<Page<ReviewDTO>>> getReviewsByNovel(
+        public ControllerResponse<PageResponse<ReviewDTO>> getReviewsByNovel(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
                 Pageable pageable = PageRequest.of(page, size);
-                Page<ReviewDTO> reviews = reviewService.getReviewsByNovel(novelId, pageable);
-                return ResponseEntity.ok(ControllerResponse.success("Reviews retrieved successfully", reviews));
+                PageResponse<ReviewDTO> reviews = reviewService.getReviewsByNovel(novelId, pageable);
+                return ControllerResponse.success("Reviews retrieved successfully", reviews);
         }
 
         @Operation(summary = "Get reviews by user", description = "Retrieve all reviews made by a specific user")
@@ -67,13 +66,13 @@ public class ReviewController {
                         @ApiResponse(responseCode = "404", description = "User not found")
         })
         @GetMapping("/user/{userId}")
-        public ResponseEntity<ControllerResponse<Page<ReviewDTO>>> getReviewsByUser(
+        public ControllerResponse<PageResponse<ReviewDTO>> getReviewsByUser(
                         @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
                 Pageable pageable = PageRequest.of(page, size);
-                Page<ReviewDTO> reviews = reviewService.getReviewsByUser(userId, pageable);
-                return ResponseEntity.ok(ControllerResponse.success("Reviews retrieved successfully", reviews));
+                PageResponse<ReviewDTO> reviews = reviewService.getReviewsByUser(userId, pageable);
+                return ControllerResponse.success("Reviews retrieved successfully", reviews);
         }
 
         @Operation(summary = "Create review", description = "Create a new review for a novel")
@@ -85,10 +84,10 @@ public class ReviewController {
         })
         @PostMapping
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<ReviewDTO>> createReview(
+        public ControllerResponse<ReviewDTO> createReview(
                         @Parameter(description = "Review details", required = true) @Valid @RequestBody ReviewCreateDTO reviewDTO) {
                 ReviewDTO createdReview = reviewService.createReview(reviewDTO);
-                return ResponseEntity.ok(ControllerResponse.success("Review created successfully", createdReview));
+                return ControllerResponse.success("Review created successfully", createdReview);
         }
 
         @Operation(summary = "Update review", description = "Update an existing review")
@@ -101,11 +100,11 @@ public class ReviewController {
         })
         @PutMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<ReviewDTO>> updateReview(
+        public ControllerResponse<ReviewDTO> updateReview(
                         @Parameter(description = "Review ID", required = true) @PathVariable UUID id,
                         @Parameter(description = "Updated review details", required = true) @Valid @RequestBody ReviewUpdateDTO reviewDTO) {
                 ReviewDTO updatedReview = reviewService.updateReview(id, reviewDTO);
-                return ResponseEntity.ok(ControllerResponse.success("Review updated successfully", updatedReview));
+                return ControllerResponse.success("Review updated successfully", updatedReview);
         }
 
         @Operation(summary = "Delete review", description = "Delete an existing review")
@@ -117,10 +116,10 @@ public class ReviewController {
         })
         @DeleteMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<Void>> deleteReview(
+        public ControllerResponse<Void> deleteReview(
                         @Parameter(description = "Review ID", required = true) @PathVariable UUID id) {
                 reviewService.deleteReview(id);
-                return ResponseEntity.ok(ControllerResponse.success("Review deleted successfully", null));
+                return ControllerResponse.success("Review deleted successfully", null);
         }
 
         @Operation(summary = "Get review ratings summary", description = "Get summary statistics of reviews for a novel")
@@ -129,9 +128,9 @@ public class ReviewController {
                         @ApiResponse(responseCode = "404", description = "Novel not found")
         })
         @GetMapping("/novel/{novelId}/summary")
-        public ResponseEntity<ControllerResponse<ReviewSummaryDTO>> getReviewSummary(
+        public ControllerResponse<ReviewSummaryDTO> getReviewSummary(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
                 ReviewSummaryDTO summary = reviewService.getReviewSummary(novelId);
-                return ResponseEntity.ok(ControllerResponse.success("Review summary retrieved successfully", summary));
+                return ControllerResponse.success("Review summary retrieved successfully", summary);
         }
 }

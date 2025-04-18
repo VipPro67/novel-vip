@@ -4,6 +4,7 @@ import com.novel.vippro.dto.*;
 import com.novel.vippro.models.Subscription;
 import com.novel.vippro.models.SubscriptionPlan;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.SubscriptionRepository;
 import com.novel.vippro.repository.SubscriptionPlanRepository;
 import com.novel.vippro.repository.UserRepository;
@@ -11,9 +12,9 @@ import com.novel.vippro.services.SubscriptionService;
 import com.novel.vippro.services.PaymentService;
 import com.novel.vippro.services.UserService;
 import com.novel.vippro.exception.ResourceNotFoundException;
+import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +34,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final PaymentService paymentService;
+    private final Mapper mapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<SubscriptionPlanDTO> getSubscriptionPlans() {
         return subscriptionPlanRepository.findByActiveTrue()
                 .stream()
-                .map(this::convertToPlanDTO)
+                .map(mapper::SubscriptionPlanToSubscriptionPlanDTO)
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +51,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         UUID userId = userService.getCurrentUserId();
         Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, "ACTIVE")
                 .orElseThrow(() -> new ResourceNotFoundException("Subscription", "userId", userId));
-        return convertToDTO(subscription);
+        return mapper.SubscriptionToSubscriptionDTO(subscription);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         paymentDTO.setSubscriptionId(savedSubscription.getId());
         paymentService.createPayment(paymentDTO);
 
-        return convertToDTO(savedSubscription);
+        return mapper.SubscriptionToSubscriptionDTO(savedSubscription);
     }
 
     @Override
@@ -102,15 +104,15 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
         subscription.setStatus("CANCELLED");
         subscription.setEndDate(LocalDateTime.now());
-        return convertToDTO(subscriptionRepository.save(subscription));
+        return mapper.SubscriptionToSubscriptionDTO(subscriptionRepository.save(subscription));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SubscriptionHistoryDTO> getSubscriptionHistory(Pageable pageable) {
+    public PageResponse<SubscriptionHistoryDTO> getSubscriptionHistory(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
-        return subscriptionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToHistoryDTO);
+        return new PageResponse<>(subscriptionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(mapper::SubscriptionToSubscriptionHistoryDTO));
     }
 
     @Override
@@ -128,7 +130,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         subscription.setPaymentMethod(paymentMethodDTO.getPaymentMethod());
         subscription.setPaymentGatewayId(payment.getPaymentGatewayId());
 
-        return convertToDTO(subscriptionRepository.save(subscription));
+        return mapper.SubscriptionToSubscriptionDTO(subscriptionRepository.save(subscription));
     }
 
     @Override
@@ -176,68 +178,5 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             case "YEARLY" -> now.plusYears(1);
             default -> throw new BadRequestException("Invalid billing period: " + billingPeriod);
         };
-    }
-
-    private SubscriptionDTO convertToDTO(Subscription subscription) {
-        SubscriptionDTO dto = new SubscriptionDTO();
-        dto.setId(subscription.getId());
-        dto.setUserId(subscription.getUser().getId());
-        dto.setUsername(subscription.getUser().getUsername());
-        dto.setPlanId(subscription.getPlanId());
-        dto.setStatus(subscription.getStatus());
-        dto.setStartDate(subscription.getStartDate());
-        dto.setEndDate(subscription.getEndDate());
-        dto.setPaymentMethod(subscription.getPaymentMethod());
-        dto.setCreatedAt(subscription.getCreatedAt());
-        dto.setUpdatedAt(subscription.getUpdatedAt());
-
-        // Get plan name
-        subscriptionPlanRepository.findByPlanId(subscription.getPlanId())
-                .ifPresent(plan -> dto.setPlanName(plan.getName()));
-
-        return dto;
-    }
-
-    private SubscriptionPlanDTO convertToPlanDTO(SubscriptionPlan plan) {
-        SubscriptionPlanDTO dto = new SubscriptionPlanDTO();
-        dto.setId(plan.getId());
-        dto.setPlanId(plan.getPlanId());
-        dto.setName(plan.getName());
-        dto.setDescription(plan.getDescription());
-        dto.setPrice(plan.getPrice());
-        dto.setCurrency(plan.getCurrency());
-        dto.setBillingPeriod(plan.getBillingPeriod());
-        dto.setFeatures(List.of(plan.getFeatureList().split(",")));
-        dto.setActive(plan.isActive());
-        dto.setCreatedAt(plan.getCreatedAt());
-        dto.setUpdatedAt(plan.getUpdatedAt());
-        return dto;
-    }
-
-    private SubscriptionHistoryDTO convertToHistoryDTO(Subscription subscription) {
-        SubscriptionHistoryDTO dto = new SubscriptionHistoryDTO();
-        dto.setId(subscription.getId());
-        dto.setUserId(subscription.getUser().getId());
-        dto.setUsername(subscription.getUser().getUsername());
-        dto.setPlanId(subscription.getPlanId());
-        dto.setStatus(subscription.getStatus());
-        dto.setStartDate(subscription.getStartDate());
-        dto.setEndDate(subscription.getEndDate());
-        dto.setPaymentMethod(subscription.getPaymentMethod());
-        dto.setCreatedAt(subscription.getCreatedAt());
-        dto.setUpdatedAt(subscription.getUpdatedAt());
-
-        // Get plan name and payment status
-        subscriptionPlanRepository.findByPlanId(subscription.getPlanId())
-                .ifPresent(plan -> dto.setPlanName(plan.getName()));
-
-        // Get payment status from the latest payment
-        paymentService.getUserPayments(Pageable.unpaged())
-                .stream()
-                .filter(p -> p.getSubscriptionId().equals(subscription.getId()))
-                .findFirst()
-                .ifPresent(p -> dto.setPaymentStatus(p.getStatus()));
-
-        return dto;
     }
 }

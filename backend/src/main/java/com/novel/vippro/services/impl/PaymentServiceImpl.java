@@ -7,13 +7,13 @@ import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.exception.BadRequestException;
 import com.novel.vippro.models.Payment;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.PaymentRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.services.PaymentService;
 import com.novel.vippro.services.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,10 +72,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Page<PaymentDTO> getUserPayments(Pageable pageable) {
+    public PageResponse<PaymentDTO> getUserPayments(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
-        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(paymentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Override

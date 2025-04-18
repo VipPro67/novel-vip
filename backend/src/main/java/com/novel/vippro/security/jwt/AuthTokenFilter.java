@@ -49,10 +49,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
           @SuppressWarnings("unchecked")
           List<String> roles = (List<String>) claims.get("roles");
-
-          // Log claims for debugging
-          logger.debug("Claims: userId={}, username={}, email={}, roles={}", userId, username, email, roles);
-
           List<SimpleGrantedAuthority> authorities = new ArrayList<>();
           if (roles != null) {
             for (String role : roles) {
@@ -87,14 +83,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
           }
-          logger.info("Setting authentication in SecurityContextHolder");
           try {
             SecurityContextHolder.getContext().setAuthentication(authentication);
           } catch (Exception e) {
-            logger.error("Error setting authentication in SecurityContextHolder: {}", e.getMessage());
           }
-          logger.debug("Authentication set in SecurityContextHolder: {}", authentication);
-
         } catch (IllegalArgumentException e) {
           logger.error("Invalid UUID or argument: {}", e.getMessage());
         } catch (ClassCastException e) {

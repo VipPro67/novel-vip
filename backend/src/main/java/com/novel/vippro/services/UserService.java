@@ -6,16 +6,19 @@ import com.novel.vippro.dto.UserSearchDTO;
 import com.novel.vippro.dto.UserUpdateDTO;
 import com.novel.vippro.exception.BadRequestException;
 import com.novel.vippro.exception.ResourceNotFoundException;
+import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.ERole;
 import com.novel.vippro.models.Role;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.RoleRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.security.services.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -43,15 +45,19 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private Mapper mapper;
+
     @Transactional
     public User save(User user) {
         return userRepository.save(user);
     }
 
-    public Page<UserDTO> getAllUsers(int page, int size) {
+    @Cacheable(value = "users", key = "'all-' + #page + '-' + #size")
+    public PageResponse<UserDTO> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<User> userPage = userRepository.findAll(pageable);
-        return userPage.map(this::convertToDTO);
+        return new PageResponse<>(userPage.map(this::convertToDTO));
     }
 
     public User getCurrentUser() {
@@ -93,6 +99,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    @Cacheable(value = "users", key = "#userId")
     public UserDTO getUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -100,6 +107,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", key = "#updateDTO.id")
     public UserDTO updateUserProfile(UserUpdateDTO updateDTO) {
         UUID userId = getCurrentUserId();
         if (userId == null) {
@@ -163,7 +171,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public Page<UserDTO> searchUsers(UserSearchDTO searchDTO) {
+    public PageResponse<UserDTO> searchUsers(UserSearchDTO searchDTO) {
         // Create sort object
         Sort sort = Sort.by(
                 searchDTO.getSortDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
@@ -173,49 +181,10 @@ public class UserService {
         Pageable pageable = PageRequest.of(searchDTO.getPage(), searchDTO.getSize(), sort);
 
         // Use the custom search method if search parameters are provided
-        if (searchDTO.getUsername() != null || searchDTO.getEmail() != null) {
-            Page<User> userPage = userRepository.searchUsers(
-                    searchDTO.getUsername(),
-                    searchDTO.getEmail(),
-                    null, // fullName search not implemented in DTO yet
-                    pageable);
+        Page<User> userPage = userRepository.searchUsers(searchDTO.getUsername(), searchDTO.getEmail(),
+                searchDTO.getRole(), pageable);
+        return new PageResponse<>(userPage.map(this::convertToDTO));
 
-            // Filter by role if specified
-            if (searchDTO.getRole() != null && !searchDTO.getRole().isEmpty()) {
-                List<User> filteredUsers = userPage.getContent().stream()
-                        .filter(user -> user.getRoles().stream()
-                                .anyMatch(role -> role.getName().name().toLowerCase()
-                                        .equals(searchDTO.getRole().toLowerCase())))
-                        .collect(Collectors.toList());
-
-                return new PageImpl<>(
-                        filteredUsers.stream().map(this::convertToDTO).collect(Collectors.toList()),
-                        pageable,
-                        filteredUsers.size());
-            }
-
-            return userPage.map(this::convertToDTO);
-        }
-
-        // If no search parameters, get all users with pagination
-        Page<User> userPage = userRepository.findAll(pageable);
-
-        // Filter by role if specified
-        if (searchDTO.getRole() != null && !searchDTO.getRole().isEmpty()) {
-            List<User> filteredUsers = userPage.getContent().stream()
-                    .filter(user -> user.getRoles().stream()
-                            .anyMatch(role -> role.getName().name().toLowerCase()
-                                    .equals(searchDTO.getRole().toLowerCase())))
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(
-                    filteredUsers.stream().map(this::convertToDTO).collect(Collectors.toList()),
-                    pageable,
-                    filteredUsers.size());
-        }
-
-        // Convert to DTOs
-        return userPage.map(this::convertToDTO);
     }
 
     @Transactional
@@ -257,6 +226,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User", "id", userId);

@@ -3,10 +3,8 @@ package com.novel.vippro.controllers;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.novel.vippro.payload.response.ControllerResponse;
-
+import com.novel.vippro.payload.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,10 +50,10 @@ public class PaymentController {
         })
         @PostMapping
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<PaymentDTO>> createPayment(
+        public ControllerResponse<PaymentDTO> createPayment(
                         @Parameter(description = "Payment details", required = true) @Valid @RequestBody PaymentCreateDTO paymentDTO) {
                 PaymentDTO payment = paymentService.createPayment(paymentDTO);
-                return ResponseEntity.ok(ControllerResponse.success("Payment initiated successfully", payment));
+                return ControllerResponse.success("Payment initiated successfully", payment);
         }
 
         @Operation(summary = "Get user payments", description = "Get all payments for the current user")
@@ -66,12 +64,12 @@ public class PaymentController {
         })
         @GetMapping("/user")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<Page<PaymentDTO>>> getUserPayments(
+        public ControllerResponse<PageResponse<PaymentDTO>> getUserPayments(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
                 Pageable pageable = PageRequest.of(page, size);
-                Page<PaymentDTO> payments = paymentService.getUserPayments(pageable);
-                return ResponseEntity.ok(ControllerResponse.success("Payments retrieved successfully", payments));
+                PageResponse<PaymentDTO> payments = paymentService.getUserPayments(pageable);
+                return ControllerResponse.success("Payments retrieved successfully", payments);
         }
 
         @Operation(summary = "Get payment by ID", description = "Get details of a specific payment")
@@ -83,10 +81,10 @@ public class PaymentController {
         })
         @GetMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<PaymentDTO>> getPayment(
+        public ControllerResponse<PaymentDTO> getPayment(
                         @Parameter(description = "Payment ID", required = true) @PathVariable UUID id) {
                 PaymentDTO payment = paymentService.getPayment(id);
-                return ResponseEntity.ok(ControllerResponse.success("Payment retrieved successfully", payment));
+                return ControllerResponse.success("Payment retrieved successfully", payment);
         }
 
         @Operation(summary = "Process payment webhook", description = "Handle payment gateway webhook notifications")
@@ -95,11 +93,11 @@ public class PaymentController {
                         @ApiResponse(responseCode = "400", description = "Invalid webhook payload")
         })
         @PostMapping("/webhook")
-        public ResponseEntity<ControllerResponse<Void>> handleWebhook(
+        public ControllerResponse<Void> handleWebhook(
                         @Parameter(description = "Webhook payload", required = true) @RequestBody String payload,
                         @Parameter(description = "Webhook signature") @RequestHeader(required = false) String signature) {
                 paymentService.handleWebhook(payload, signature);
-                return ResponseEntity.ok(ControllerResponse.success("Webhook processed successfully", null));
+                return ControllerResponse.success("Webhook processed successfully", null);
         }
 
         @Operation(summary = "Cancel payment", description = "Cancel a pending payment")
@@ -112,10 +110,10 @@ public class PaymentController {
         })
         @DeleteMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
-        public ResponseEntity<ControllerResponse<Void>> cancelPayment(
+        public ControllerResponse<Void> cancelPayment(
                         @Parameter(description = "Payment ID", required = true) @PathVariable UUID id) {
                 paymentService.cancelPayment(id);
-                return ResponseEntity.ok(ControllerResponse.success("Payment cancelled successfully", null));
+                return ControllerResponse.success("Payment cancelled successfully", null);
         }
 
         @Operation(summary = "Get payment statistics", description = "Get payment statistics for admin dashboard", security = @SecurityRequirement(name = "bearerAuth"))
@@ -125,11 +123,10 @@ public class PaymentController {
         })
         @GetMapping("/stats")
         @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<ControllerResponse<PaymentStatsDTO>> getPaymentStats(
+        public ControllerResponse<PaymentStatsDTO> getPaymentStats(
                         @Parameter(description = "Start date (yyyy-MM-dd)") @RequestParam(required = false) String startDate,
                         @Parameter(description = "End date (yyyy-MM-dd)") @RequestParam(required = false) String endDate) {
                 PaymentStatsDTO stats = paymentService.getPaymentStats(startDate, endDate);
-                return ResponseEntity
-                                .ok(ControllerResponse.success("Payment statistics retrieved successfully", stats));
+                return ControllerResponse.success("Payment statistics retrieved successfully", stats);
         }
 }

@@ -4,15 +4,15 @@ import com.novel.vippro.dto.ReviewCreateDTO;
 import com.novel.vippro.dto.ReviewDTO;
 import com.novel.vippro.dto.ReviewSummaryDTO;
 import com.novel.vippro.dto.ReviewUpdateDTO;
-import org.springframework.data.domain.Page;
+import com.novel.vippro.payload.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
 public interface ReviewService {
-    Page<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable);
+    PageResponse<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable);
 
-    Page<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable);
+    PageResponse<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable);
 
     ReviewDTO createReview(ReviewCreateDTO reviewDTO);
 

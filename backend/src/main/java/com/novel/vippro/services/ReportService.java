@@ -10,10 +10,10 @@ import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Chapter;
 import com.novel.vippro.models.Comment;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,24 +42,25 @@ public class ReportService {
     @Autowired
     private UserService userService;
 
-    public Page<ReportDTO> getAllReports(Pageable pageable) {
-        return reportRepository.findAll(pageable)
-                .map(this::convertToDTO);
+    public PageResponse<ReportDTO> getAllReports(Pageable pageable) {
+        return new PageResponse<>(reportRepository.findAll(pageable)
+                .map(this::convertToDTO));
     }
 
-    public Page<ReportDTO> getPendingReports(Pageable pageable) {
-        return reportRepository.findByStatusOrderByCreatedAtDesc(Report.ReportStatus.PENDING, pageable)
-                .map(this::convertToDTO);
+    public PageResponse<ReportDTO> getPendingReports(Pageable pageable) {
+        return new PageResponse<>(
+                reportRepository.findByStatusOrderByCreatedAtDesc(Report.ReportStatus.PENDING, pageable)
+                        .map(this::convertToDTO));
     }
 
-    public Page<ReportDTO> getUserReports(UUID userId, Pageable pageable) {
-        return reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+    public PageResponse<ReportDTO> getUserReports(UUID userId, Pageable pageable) {
+        return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
-    public Page<ReportDTO> getNovelReports(UUID novelId, Pageable pageable) {
-        return reportRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
-                .map(this::convertToDTO);
+    public PageResponse<ReportDTO> getNovelReports(UUID novelId, Pageable pageable) {
+        return new PageResponse<>(reportRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Transactional

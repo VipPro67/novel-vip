@@ -8,14 +8,14 @@ import com.novel.vippro.models.ReadingHistory;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Chapter;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.ReadingHistoryRepository;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.ChapterRepository;
 import com.novel.vippro.repository.UserRepository;
-import com.novel.vippro.mapper.NovelMapper;
+import com.novel.vippro.mapper.Mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ public class ReadingHistoryService {
     private UserService userService;
 
     @Autowired
-    private NovelMapper novelMapper;
+    private Mapper mapper;
 
     @Transactional
     public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer progress,
@@ -82,18 +82,18 @@ public class ReadingHistoryService {
         return convertToDTO(savedHistory);
     }
 
-    public Page<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
+    public PageResponse<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
-        return readingHistoryRepository.findByUserIdOrderByLastReadAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(readingHistoryRepository.findByUserIdOrderByLastReadAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
-    public Page<ReadingHistoryDTO> getNovelReadingHistory(UUID novelId, Pageable pageable) {
+    public PageResponse<ReadingHistoryDTO> getNovelReadingHistory(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        return readingHistoryRepository.findByNovelIdOrderByLastReadAtDesc(novelId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(readingHistoryRepository.findByNovelIdOrderByLastReadAtDesc(novelId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Transactional
@@ -141,7 +141,7 @@ public class ReadingHistoryService {
         UUID userId = userService.getCurrentUserId();
         return readingHistoryRepository.findRecentlyReadNovels(userId, PageRequest.of(0, limit))
                 .stream()
-                .map(history -> novelMapper.toDTO(history.getNovel()))
+                .map(history -> mapper.NoveltoDTO(history.getNovel()))
                 .collect(Collectors.toList());
     }
 

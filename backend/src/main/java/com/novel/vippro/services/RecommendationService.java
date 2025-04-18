@@ -4,13 +4,14 @@ import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Rating;
 import com.novel.vippro.models.User;
 import com.novel.vippro.models.UserPreferences;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.RatingRepository;
 import com.novel.vippro.repository.UserPreferencesRepository;
-import com.novel.vippro.utils.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ public class RecommendationService {
         private final UserService userService;
 
         @Transactional(readOnly = true)
-        public Page<Novel> getPersonalizedRecommendations(Pageable pageable) {
+        public PageResponse<Novel> getPersonalizedRecommendations(Pageable pageable) {
                 User currentUser = userService.getCurrentUser();
                 UserPreferences preferences = userPreferencesRepository.findByUser(currentUser)
                                 .orElseGet(() -> createDefaultPreferences(currentUser));
@@ -65,14 +66,9 @@ public class RecommendationService {
                                 .collect(Collectors.toList());
 
                 // Convert to page
-                int start = (int) pageable.getOffset();
-                int end = Math.min((start + pageable.getPageSize()), sortedNovels.size());
-                List<Novel> pageContent = sortedNovels.subList(start, end);
+                Page<Novel> page = new PageImpl<>(sortedNovels, pageable, sortedNovels.size());
 
-                return new org.springframework.data.domain.PageImpl<>(
-                                pageContent,
-                                pageable,
-                                sortedNovels.size());
+                return new PageResponse<>(page);
         }
 
         private double calculateRecommendationScore(Novel novel, UserPreferences preferences,
@@ -190,22 +186,22 @@ public class RecommendationService {
         }
 
         @Transactional(readOnly = true)
-        public Page<Novel> getPopularNovels(Pageable pageable) {
-                return novelRepository.findAllByOrderByViewsDesc(pageable);
+        public PageResponse<Novel> getPopularNovels(Pageable pageable) {
+                return new PageResponse<>(novelRepository.findAllByOrderByViewsDesc(pageable));
         }
 
         @Transactional(readOnly = true)
-        public Page<Novel> getTopRatedNovels(Pageable pageable) {
-                return novelRepository.findAllByOrderByRatingDesc(pageable);
+        public PageResponse<Novel> getTopRatedNovels(Pageable pageable) {
+                return new PageResponse<>(novelRepository.findAllByOrderByRatingDesc(pageable));
         }
 
         @Transactional(readOnly = true)
-        public Page<Novel> getNewReleases(Pageable pageable) {
-                return novelRepository.findAllByOrderByCreatedAtDesc(pageable);
+        public PageResponse<Novel> getNewReleases(Pageable pageable) {
+                return new PageResponse<>(novelRepository.findAllByOrderByCreatedAtDesc(pageable));
         }
 
         @Transactional(readOnly = true)
-        public Page<Novel> getSimilarNovels(UUID novelId, Pageable pageable) {
+        public PageResponse<Novel> getSimilarNovels(UUID novelId, Pageable pageable) {
                 Novel novel = novelRepository.findById(novelId)
                                 .orElseThrow(() -> new RuntimeException("Novel not found"));
 
@@ -231,15 +227,8 @@ public class RecommendationService {
                                 .sorted((n1, n2) -> Double.compare(similarityScores.get(n2), similarityScores.get(n1)))
                                 .collect(Collectors.toList());
 
-                // Convert to page
-                int start = (int) pageable.getOffset();
-                int end = Math.min((start + pageable.getPageSize()), sortedNovels.size());
-                List<Novel> pageContent = sortedNovels.subList(start, end);
-
-                return new org.springframework.data.domain.PageImpl<>(
-                                pageContent,
-                                pageable,
-                                sortedNovels.size());
+                Page<Novel> page = new PageImpl<>(sortedNovels, pageable, sortedNovels.size());
+                return new PageResponse<>(page);
         }
 
         private double calculateNovelSimilarity(Novel novel1, Novel novel2) {

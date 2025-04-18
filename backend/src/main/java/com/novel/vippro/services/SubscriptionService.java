@@ -1,7 +1,8 @@
 package com.novel.vippro.services;
 
 import com.novel.vippro.dto.*;
-import org.springframework.data.domain.Page;
+import com.novel.vippro.payload.response.PageResponse;
+
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface SubscriptionService {
 
     SubscriptionDTO cancelSubscription();
 
-    Page<SubscriptionHistoryDTO> getSubscriptionHistory(Pageable pageable);
+    PageResponse<SubscriptionHistoryDTO> getSubscriptionHistory(Pageable pageable);
 
     SubscriptionDTO updatePaymentMethod(PaymentMethodUpdateDTO paymentMethodDTO);
 

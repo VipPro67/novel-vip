@@ -4,12 +4,12 @@ import com.novel.vippro.dto.NotificationDTO;
 import com.novel.vippro.dto.NotificationPreferencesDTO;
 import com.novel.vippro.models.Notification;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.NotificationRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.services.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,17 +40,17 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Page<NotificationDTO> getUserNotifications(Pageable pageable) {
+    public PageResponse<NotificationDTO> getUserNotifications(Pageable pageable) {
         // TODO: Get current user ID from security context
         UUID currentUserId = UUID.randomUUID(); // Placeholder
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable)
-                .map(this::convertToDTO);
+        return new PageResponse<>(notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Override
-    public Page<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+    public PageResponse<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable) {
+        return new PageResponse<>(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
     @Override

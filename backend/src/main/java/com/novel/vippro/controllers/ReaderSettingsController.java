@@ -2,7 +2,6 @@ package com.novel.vippro.controllers;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,9 +45,9 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @GetMapping
-        public ResponseEntity<ControllerResponse<ReaderSettingsDTO>> getUserSettings() {
+        public ControllerResponse<ReaderSettingsDTO> getUserSettings() {
                 ReaderSettingsDTO settings = readerSettingsService.getUserSettings();
-                return ResponseEntity.ok(ControllerResponse.success("Settings retrieved successfully", settings));
+                return ControllerResponse.success("Settings retrieved successfully", settings);
         }
 
         @Operation(summary = "Update settings", description = "Update reading preferences for the current user")
@@ -58,10 +57,10 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PutMapping
-        public ResponseEntity<ControllerResponse<ReaderSettingsDTO>> updateSettings(
+        public ControllerResponse<ReaderSettingsDTO> updateSettings(
                         @Parameter(description = "Updated settings", required = true) @Valid @RequestBody ReaderSettingsUpdateDTO settingsDTO) {
                 ReaderSettingsDTO settings = readerSettingsService.updateSettings(settingsDTO);
-                return ResponseEntity.ok(ControllerResponse.success("Settings updated successfully", settings));
+                return ControllerResponse.success("Settings updated successfully", settings);
         }
 
         @Operation(summary = "Reset settings", description = "Reset reading preferences to default values")
@@ -70,9 +69,9 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PostMapping("/reset")
-        public ResponseEntity<ControllerResponse<ReaderSettingsDTO>> resetSettings() {
+        public ControllerResponse<ReaderSettingsDTO> resetSettings() {
                 ReaderSettingsDTO settings = readerSettingsService.resetSettings();
-                return ResponseEntity.ok(ControllerResponse.success("Settings reset successfully", settings));
+                return ControllerResponse.success("Settings reset successfully", settings);
         }
 
         @Operation(summary = "Get font options", description = "Get available font options for reader")
@@ -80,9 +79,9 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "200", description = "Font options retrieved successfully")
         })
         @GetMapping("/fonts")
-        public ResponseEntity<ControllerResponse<List<String>>> getFontOptions() {
+        public ControllerResponse<List<String>> getFontOptions() {
                 List<String> fonts = readerSettingsService.getFontOptions();
-                return ResponseEntity.ok(ControllerResponse.success("Font options retrieved successfully", fonts));
+                return ControllerResponse.success("Font options retrieved successfully", fonts);
         }
 
         @Operation(summary = "Get theme options", description = "Get available theme options for reader")
@@ -90,9 +89,9 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "200", description = "Theme options retrieved successfully")
         })
         @GetMapping("/themes")
-        public ResponseEntity<ControllerResponse<List<String>>> getThemeOptions() {
+        public ControllerResponse<List<String>> getThemeOptions() {
                 List<String> themes = readerSettingsService.getThemeOptions();
-                return ResponseEntity.ok(ControllerResponse.success("Theme options retrieved successfully", themes));
+                return ControllerResponse.success("Theme options retrieved successfully", themes);
         }
 
         @Operation(summary = "Apply theme", description = "Apply a specific theme to the reader")
@@ -102,9 +101,9 @@ public class ReaderSettingsController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PutMapping("/theme/{themeId}")
-        public ResponseEntity<ControllerResponse<ReaderSettingsDTO>> applyTheme(
+        public ControllerResponse<ReaderSettingsDTO> applyTheme(
                         @Parameter(description = "Theme ID", required = true) @PathVariable String themeId) {
                 ReaderSettingsDTO settings = readerSettingsService.applyTheme(themeId);
-                return ResponseEntity.ok(ControllerResponse.success("Theme applied successfully", settings));
+                return ControllerResponse.success("Theme applied successfully", settings);
         }
 }

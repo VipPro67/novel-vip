@@ -2,11 +2,14 @@ package com.novel.vippro.services.impl;
 
 import com.novel.vippro.dto.ReaderSettingsDTO;
 import com.novel.vippro.dto.ReaderSettingsUpdateDTO;
+import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.ReaderSettings;
 import com.novel.vippro.models.User;
 import com.novel.vippro.repository.ReaderSettingsRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.services.ReaderSettingsService;
+import com.novel.vippro.services.UserService;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,39 +24,38 @@ import java.util.UUID;
 public class ReaderSettingsServiceImpl implements ReaderSettingsService {
 
     private final ReaderSettingsRepository readerSettingsRepository;
+    private final Mapper mapper;
+    private final UserService userService;
     private final UserRepository userRepository;
 
     @Override
     public ReaderSettingsDTO getUserSettings() {
-        // TODO: Get current user ID from security context
-        UUID currentUserId = UUID.randomUUID(); // Placeholder
+        UUID currentUserId = userService.getCurrentUserId();
 
         ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
                 .orElseGet(() -> createDefaultSettings(currentUserId));
 
-        return convertToDTO(settings);
+        return mapper.ReaderSettingsToReaderSettingsDTO(settings);
     }
 
     @Override
     @Transactional
     public ReaderSettingsDTO updateSettings(ReaderSettingsUpdateDTO settingsDTO) {
-        // TODO: Get current user ID from security context
-        UUID currentUserId = UUID.randomUUID(); // Placeholder
+        UUID currentUserId = userService.getCurrentUserId();
 
         ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
                 .orElseGet(() -> createDefaultSettings(currentUserId));
 
-        updateSettingsFromDTO(settings, settingsDTO);
+        mapper.updateReaderSettingsFromDTO(settingsDTO, settings);
 
         ReaderSettings savedSettings = readerSettingsRepository.save(settings);
-        return convertToDTO(savedSettings);
+        return mapper.ReaderSettingsToReaderSettingsDTO(savedSettings);
     }
 
     @Override
     @Transactional
     public ReaderSettingsDTO resetSettings() {
-        // TODO: Get current user ID from security context
-        UUID currentUserId = UUID.randomUUID(); // Placeholder
+        UUID currentUserId = userService.getCurrentUserId();
 
         ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
                 .orElseGet(() -> createDefaultSettings(currentUserId));
@@ -74,7 +76,7 @@ public class ReaderSettingsServiceImpl implements ReaderSettingsService {
         settings.setShowBattery(true);
 
         ReaderSettings savedSettings = readerSettingsRepository.save(settings);
-        return convertToDTO(savedSettings);
+        return mapper.ReaderSettingsToReaderSettingsDTO(savedSettings);
     }
 
     @Override
@@ -90,8 +92,7 @@ public class ReaderSettingsServiceImpl implements ReaderSettingsService {
     @Override
     @Transactional
     public ReaderSettingsDTO applyTheme(String themeId) {
-        // TODO: Get current user ID from security context
-        UUID currentUserId = UUID.randomUUID(); // Placeholder
+        UUID currentUserId = userService.getCurrentUserId();
 
         ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
                 .orElseGet(() -> createDefaultSettings(currentUserId));
@@ -99,7 +100,7 @@ public class ReaderSettingsServiceImpl implements ReaderSettingsService {
         settings.setTheme(themeId);
 
         ReaderSettings savedSettings = readerSettingsRepository.save(settings);
-        return convertToDTO(savedSettings);
+        return mapper.ReaderSettingsToReaderSettingsDTO(savedSettings);
     }
 
     private ReaderSettings createDefaultSettings(UUID userId) {
@@ -113,52 +114,4 @@ public class ReaderSettingsServiceImpl implements ReaderSettingsService {
         return readerSettingsRepository.save(settings);
     }
 
-    private void updateSettingsFromDTO(ReaderSettings settings, ReaderSettingsUpdateDTO dto) {
-        if (dto.getFontSize() != null)
-            settings.setFontSize(dto.getFontSize());
-        if (dto.getFontFamily() != null)
-            settings.setFontFamily(dto.getFontFamily());
-        if (dto.getLineHeight() != null)
-            settings.setLineHeight(dto.getLineHeight());
-        if (dto.getTheme() != null)
-            settings.setTheme(dto.getTheme());
-        if (dto.getMarginSize() != null)
-            settings.setMarginSize(dto.getMarginSize());
-        if (dto.getParagraphSpacing() != null)
-            settings.setParagraphSpacing(dto.getParagraphSpacing());
-        if (dto.getAutoScroll() != null)
-            settings.setAutoScroll(dto.getAutoScroll());
-        if (dto.getAutoScrollSpeed() != null)
-            settings.setAutoScrollSpeed(dto.getAutoScrollSpeed());
-        if (dto.getKeepScreenOn() != null)
-            settings.setKeepScreenOn(dto.getKeepScreenOn());
-        if (dto.getShowProgress() != null)
-            settings.setShowProgress(dto.getShowProgress());
-        if (dto.getShowChapterTitle() != null)
-            settings.setShowChapterTitle(dto.getShowChapterTitle());
-        if (dto.getShowTime() != null)
-            settings.setShowTime(dto.getShowTime());
-        if (dto.getShowBattery() != null)
-            settings.setShowBattery(dto.getShowBattery());
-    }
-
-    private ReaderSettingsDTO convertToDTO(ReaderSettings settings) {
-        ReaderSettingsDTO dto = new ReaderSettingsDTO();
-        dto.setId(settings.getId());
-        dto.setUserId(settings.getUser().getId());
-        dto.setFontSize(settings.getFontSize());
-        dto.setFontFamily(settings.getFontFamily());
-        dto.setLineHeight(settings.getLineHeight());
-        dto.setTheme(settings.getTheme());
-        dto.setMarginSize(settings.getMarginSize());
-        dto.setParagraphSpacing(settings.getParagraphSpacing());
-        dto.setAutoScroll(settings.getAutoScroll());
-        dto.setAutoScrollSpeed(settings.getAutoScrollSpeed());
-        dto.setKeepScreenOn(settings.getKeepScreenOn());
-        dto.setShowProgress(settings.getShowProgress());
-        dto.setShowChapterTitle(settings.getShowChapterTitle());
-        dto.setShowTime(settings.getShowTime());
-        dto.setShowBattery(settings.getShowBattery());
-        return dto;
-    }
 }

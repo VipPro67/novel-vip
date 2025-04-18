@@ -3,6 +3,9 @@ package com.novel.vippro.services;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,17 +15,17 @@ import java.util.Map;
 @Service
 public class CloudinaryService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CloudinaryService.class);
     @Autowired
     private Cloudinary cloudinary;
 
     public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
         Map<String, String> resourceType = determineResourceType(contentType);
-
+        logger.info("Uploading file with publicId: {}, resourceType: {}", publicId, resourceType);
         @SuppressWarnings("unchecked")
         Map<String, Object> result = cloudinary.uploader().upload(fileData, ObjectUtils.asMap(
                 "resource_type", resourceType.get("resourceType"),
-                "public_id", publicId,
-                "format", resourceType.get("format")));
+                "public_id", publicId));
 
         return (String) result.get("url");
     }

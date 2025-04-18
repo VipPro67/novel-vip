@@ -8,13 +8,13 @@ import com.novel.vippro.models.Bookmark;
 import com.novel.vippro.models.Chapter;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.User;
+import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.BookmarkRepository;
 import com.novel.vippro.repository.ChapterRepository;
 import com.novel.vippro.repository.NovelRepository;
 import com.novel.vippro.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +37,9 @@ public class BookmarkService {
     @Autowired
     private ChapterRepository chapterRepository;
 
-    public Page<BookmarkDTO> getUserBookmarks(UUID userId, Pageable pageable) {
-        return bookmarkRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable)
-                .map(this::convertToDTO);
+    public PageResponse<BookmarkDTO> getUserBookmarks(UUID userId, Pageable pageable) {
+        return new PageResponse<>(bookmarkRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable)
+                .map(this::convertToDTO));
     }
 
     public List<BookmarkDTO> getNovelBookmarks(UUID novelId) {

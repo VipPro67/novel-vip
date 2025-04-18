@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   backend:
     build:
@@ -5,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: novel_be
     env_file:
-      - ./backend/.env # Ensure this file exists in the same directory as docker-compose.yml
+      - ./backend/.env 
     restart: always
     ports:
       - "8080:8080"
@@ -26,3 +27,15 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
