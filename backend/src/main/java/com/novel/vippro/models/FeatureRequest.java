@@ -1,0 +1,57 @@
+package com.novel.vippro.models;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "feature_requests")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class FeatureRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private FeatureRequestStatus status = FeatureRequestStatus.VOTING;
+
+    @Column(nullable = false)
+    private Integer voteCount = 0;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "feature_request_votes", joinColumns = @JoinColumn(name = "feature_request_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<User> voters = new HashSet<>();
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public enum FeatureRequestStatus {
+        VOTING,
+        PROCESSING,
+        DONE,
+        REJECTED
+    }
+}
