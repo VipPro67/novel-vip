@@ -4,7 +4,6 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-category-item',
-  standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
     <div class="category-item" [routerLink]="['/category', categoryId]">

@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
+import { RouterModule, Router } from "@angular/router";
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatListModule } from "@angular/material/list";
 import { MatIconModule } from "@angular/material/icon";
@@ -19,10 +19,24 @@ import { MatIconModule } from "@angular/material/icon";
   ],
 })
 export class AdminDashboardComponent {
-  navItems = [
-    { path: "users", icon: "people", label: "Users" },
-    { path: "novels", icon: "book", label: "Novels" },
-    { path: "chapters", icon: "menu_book", label: "Chapters" },
-    { path: "comments", icon: "comment", label: "Comments" },
+  navLinks = [
+    { path: 'users', label: 'Users', icon: 'people' },
+    { path: 'novels', label: 'Novels', icon: 'book' },
+    { path: 'categories', label: 'Categories', icon: 'category' },
+    { path: 'reports', label: 'Reports', icon: 'report_problem' },
+    { path: 'feature-requests', label: 'Feature Requests', icon: 'lightbulb' },
+    { path: 'subscriptions', label: 'Subscriptions', icon: 'subscriptions' },
+    { path: 'payments', label: 'Payments', icon: 'payments' }
   ];
+
+  constructor(private router: Router) {}
+
+  isActive(path: string): boolean {
+    return this.router.isActive(`/admin/${path}`, {
+      paths: 'exact',
+      queryParams: 'exact',
+      fragment: 'ignored',
+      matrixParams: 'ignored'
+    });
+  }
 }

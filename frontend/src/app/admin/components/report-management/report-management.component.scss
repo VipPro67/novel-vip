@@ -1,0 +1,51 @@
+.report-management-container {
+  padding: 20px;
+
+  mat-card {
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      mat-form-field {
+        width: 300px;
+      }
+    }
+
+    .table-container {
+      table {
+        width: 100%;
+
+        .mat-column-reporterUsername {
+          width: 15%;
+        }
+
+        .mat-column-reason {
+          width: 25%;
+        }
+
+        .mat-column-status {
+          width: 15%;
+        }
+
+        .mat-column-createdAt {
+          width: 20%;
+        }
+
+        .mat-column-resolvedAt {
+          width: 20%;
+        }
+
+        .mat-column-actions {
+          width: 5%;
+          text-align: center;
+        }
+
+        td.mat-cell {
+          padding: 8px;
+        }
+      }
+    }
+  }
+} 

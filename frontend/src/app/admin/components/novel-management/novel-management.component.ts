@@ -1,236 +1,182 @@
-import { Component, OnInit, ViewChild } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { MatTableDataSource, MatTableModule } from "@angular/material/table";
-import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
-import { MatSort, MatSortModule } from "@angular/material/sort";
-import { MatDialog, MatDialogModule } from "@angular/material/dialog";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import { NovelService } from "../../../services/novel.service";
-import { Novel } from "../../../models/novel.model";
-import { NovelDialogComponent } from "../novel-dialog/novel-dialog.component";
-import { ChapterDialogComponent } from "../chapter-dialog/chapter-dialog.component";
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { AdminService } from '../../services/admin.service';
+import { NovelDTO, NovelCreateDTO, NovelUpdateDTO } from '../../../dtos/novel.dto';
+import { NovelDialogComponent } from './novel-dialog/novel-dialog.component';
 
 @Component({
-  selector: "app-novel-management",
-  template: `
-    <div class="mat-elevation-z8">
-      <div class="header">
-        <h2>Novel Management</h2>
-        <button mat-raised-button color="primary" (click)="openCreateNovelDialog()">
-          <mat-icon>add</mat-icon>
-          Create Novel
-        </button>
-      </div>
-
-      <table mat-table [dataSource]="dataSource" matSort>
-        <ng-container matColumnDef="title">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.title }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="author">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Author</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.author }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.status }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="chapters">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Chapters</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.chapters.length }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="views">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Views</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.views }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="rating">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Rating</th>
-          <td mat-cell *matCellDef="let novel">{{ novel.rating }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let novel">
-            <button mat-icon-button color="primary" (click)="openEditNovelDialog(novel)">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="accent" (click)="openAddChapterDialog(novel)">
-              <mat-icon>add_circle</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteNovel(novel)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-
-      <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Select page of novels"></mat-paginator>
-    </div>
-  `,
-  styles: [`
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-    }
-    table {
-      width: 100%;
-    }
-    .mat-column-actions {
-      width: 120px;
-      text-align: center;
-    }
-  `],
+  selector: 'app-novel-management',
+  templateUrl: './novel-management.component.html',
+  styleUrls: ['./novel-management.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
-    MatTableModule,
+    FormsModule,
     MatPaginatorModule,
     MatSortModule,
+    MatTableModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatDialogModule,
-    MatSnackBarModule
+    MatCardModule,
+    MatChipsModule,
+    NovelDialogComponent
   ]
 })
 export class NovelManagementComponent implements OnInit {
   displayedColumns: string[] = [
-    "title",
-    "author",
-    "status",
-    "chapters",
-    "views",
-    "rating",
-    "actions"
+    'title',
+    'author',
+    'status',
+    'categories',
+    'totalChapters',
+    'views',
+    'rating',
+    'actions'
   ];
-  dataSource: MatTableDataSource<Novel>;
+  dataSource: MatTableDataSource<NovelDTO>;
+  totalItems = 0;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private novelService: NovelService,
+    private adminService: AdminService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
-    this.dataSource = new MatTableDataSource<Novel>([]);
+    this.dataSource = new MatTableDataSource();
   }
 
   ngOnInit(): void {
     this.loadNovels();
   }
 
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
-
-  loadNovels(): void {
-    this.novelService.getNovels().subscribe({
+  loadNovels(page: number = 0): void {
+    this.adminService.getNovels(page, this.pageSize).subscribe({
       next: (response) => {
         if (response.success) {
           this.dataSource.data = response.data.content;
-          this.paginator.length = response.data.totalElements;
+          this.totalItems = response.data.totalElements;
         } else {
-          this.snackBar.open("Error loading novels", "Close", { duration: 3000 });
+          this.snackBar.open(response.message, 'Close', { duration: 3000 });
         }
       },
-      error: (error: Error) => {
-        this.snackBar.open("Error loading novels", "Close", { duration: 3000 });
-        console.error("Error loading novels:", error);
+      error: (error) => {
+        this.snackBar.open('Error loading novels: ' + error.message, 'Close', {
+          duration: 3000
+        });
       }
     });
   }
 
-  openCreateNovelDialog(): void {
+  onPageChange(event: any): void {
+    this.pageSize = event.pageSize;
+    this.loadNovels(event.pageIndex);
+  }
+
+  openNovelDialog(novel?: NovelDTO): void {
     const dialogRef = this.dialog.open(NovelDialogComponent, {
-      width: "500px",
-      data: { novel: null }
+      width: '600px',
+      data: novel || null
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
+    dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.novelService.createNovel(result).subscribe({
-          next: () => {
-            this.loadNovels();
-            this.snackBar.open("Novel created successfully", "Close", { duration: 3000 });
-          },
-          error: (error: Error) => {
-            this.snackBar.open("Error creating novel", "Close", { duration: 3000 });
-            console.error("Error creating novel:", error);
-          }
-        });
+        if (novel) {
+          this.updateNovel(novel.id, result);
+        } else {
+          this.createNovel(result);
+        }
       }
     });
   }
 
-  openEditNovelDialog(novel: Novel): void {
-    const dialogRef = this.dialog.open(NovelDialogComponent, {
-      width: "500px",
-      data: { novel }
-    });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.novelService.updateNovel(result.id, result).subscribe({
-          next: () => {
-            this.loadNovels();
-            this.snackBar.open("Novel updated successfully", "Close", { duration: 3000 });
-          },
-          error: (error: Error) => {
-            this.snackBar.open("Error updating novel", "Close", { duration: 3000 });
-            console.error("Error updating novel:", error);
-          }
-        });
-      }
-    });
-  }
-
-  openAddChapterDialog(novel: Novel): void {
-    const dialogRef = this.dialog.open(ChapterDialogComponent, {
-      width: "500px",
-      data: { chapter: null, novelId: novel.id }
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.novelService.createChapter(novel.id, result).subscribe({
-          next: () => {
-            this.loadNovels();
-            this.snackBar.open("Chapter added successfully", "Close", { duration: 3000 });
-          },
-          error: (error: Error) => {
-            this.snackBar.open("Error adding chapter", "Close", { duration: 3000 });
-            console.error("Error adding chapter:", error);
-          }
-        });
-      }
-    });
-  }
-
-  deleteNovel(novel: Novel): void {
-    if (confirm(`Are you sure you want to delete novel ${novel.title}?`)) {
-      this.novelService.deleteNovel(novel.id).subscribe({
-        next: () => {
+  createNovel(novelData: NovelCreateDTO): void {
+    this.adminService.createNovel(novelData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Novel created successfully', 'Close', { duration: 3000 });
           this.loadNovels();
-          this.snackBar.open("Novel deleted successfully", "Close", { duration: 3000 });
+        } else {
+          this.snackBar.open(response.message, 'Close', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        this.snackBar.open('Error creating novel: ' + error.message, 'Close', {
+          duration: 3000
+        });
+      }
+    });
+  }
+
+  updateNovel(id: string, novelData: NovelUpdateDTO): void {
+    this.adminService.updateNovel(id, novelData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.snackBar.open('Novel updated successfully', 'Close', { duration: 3000 });
+          this.loadNovels();
+        } else {
+          this.snackBar.open(response.message, 'Close', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        this.snackBar.open('Error updating novel: ' + error.message, 'Close', {
+          duration: 3000
+        });
+      }
+    });
+  }
+
+  deleteNovel(id: string): void {
+    if (confirm('Are you sure you want to delete this novel?')) {
+      this.adminService.deleteNovel(id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.snackBar.open('Novel deleted successfully', 'Close', { duration: 3000 });
+            this.loadNovels();
+          } else {
+            this.snackBar.open(response.message, 'Close', { duration: 3000 });
+          }
         },
-        error: (error: Error) => {
-          this.snackBar.open("Error deleting novel", "Close", { duration: 3000 });
-          console.error("Error deleting novel:", error);
+        error: (error) => {
+          this.snackBar.open('Error deleting novel: ' + error.message, 'Close', {
+            duration: 3000
+          });
         }
       });
     }
   }
-}
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+  editNovel(novel: NovelDTO): void {
+    this.openNovelDialog(novel);
+  }
+} 

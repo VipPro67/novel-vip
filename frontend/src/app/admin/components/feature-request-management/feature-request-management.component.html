@@ -1,0 +1,91 @@
+<div class="feature-request-management-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Feature Request Management</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="actions">
+        <mat-form-field>
+          <mat-label>Status Filter</mat-label>
+          <mat-select [(ngModel)]="statusFilter" (selectionChange)="onStatusFilterChange()">
+            <mat-option [value]="null">All Requests</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{status}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Filter</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="Search feature requests..." #input>
+        </mat-form-field>
+      </div>
+
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort>
+          <!-- Title Column -->
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Title</th>
+            <td mat-cell *matCellDef="let request">{{request.title}}</td>
+          </ng-container>
+
+          <!-- Username Column -->
+          <ng-container matColumnDef="username">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Requested By</th>
+            <td mat-cell *matCellDef="let request">{{request.username}}</td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let request">
+              <mat-chip [color]="getStatusColor(request.status)" selected>
+                {{request.status}}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Vote Count Column -->
+          <ng-container matColumnDef="voteCount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Votes</th>
+            <td mat-cell *matCellDef="let request">
+              <div class="vote-count">
+                <mat-icon>thumb_up</mat-icon>
+                <span>{{request.voteCount}}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let request">
+              <button mat-icon-button color="primary" (click)="viewFeatureRequest(request)" matTooltip="View Request">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          <!-- Row shown when there is no matching data -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="5">
+              {{input.value ? 'No feature requests matching "' + input.value + '"' : 'No feature requests available'}}
+            </td>
+          </tr>
+        </table>
+
+        <mat-paginator 
+          [length]="totalItems"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPageChange($event)"
+          aria-label="Select page">
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div> 

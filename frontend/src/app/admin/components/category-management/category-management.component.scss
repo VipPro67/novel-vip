@@ -1,0 +1,39 @@
+.category-management-container {
+  padding: 20px;
+
+  mat-card {
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      mat-form-field {
+        width: 300px;
+      }
+    }
+
+    .table-container {
+      table {
+        width: 100%;
+
+        .mat-column-name {
+          width: 20%;
+        }
+
+        .mat-column-slug {
+          width: 20%;
+        }
+
+        .mat-column-description {
+          width: 45%;
+        }
+
+        .mat-column-actions {
+          width: 15%;
+          text-align: center;
+        }
+      }
+    }
+  }
+} 

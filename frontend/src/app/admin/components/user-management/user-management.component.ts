@@ -1,5 +1,12 @@
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+  FormControl,
+} from "@angular/forms";
 import { MatTableModule, MatTableDataSource } from "@angular/material/table";
 import { MatPaginatorModule, MatPaginator } from "@angular/material/paginator";
 import { MatSortModule, MatSort } from "@angular/material/sort";
@@ -7,98 +14,25 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import { UserService } from "../../../services/user.service";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatSelectModule } from "@angular/material/select";
+import { MatCardModule } from "@angular/material/card";
+import { MatChipsModule } from "@angular/material/chips";
 import { User } from "../../../models/user.model";
-import { UserDialogComponent } from "../user-dialog/user-dialog.component";
+import { UserDialogComponent } from "./user-dialog/user-dialog.component";
+import { AdminService } from "../../services/admin.service";
+import { UpdateRolesDialogComponent } from "./update-roles-dialog/update-roles-dialog.component";
 
 @Component({
   selector: "app-user-management",
-  template: `
-    <div class="mat-elevation-z8">
-      <div class="header">
-        <h2>User Management</h2>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="openCreateUserDialog()"
-        >
-          <mat-icon>add</mat-icon>
-          Create User
-        </button>
-      </div>
-
-      <table mat-table [dataSource]="dataSource" matSort>
-        <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-          <td mat-cell *matCellDef="let user">{{ user.id }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="username">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
-          <td mat-cell *matCellDef="let user">{{ user.username }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="email">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-          <td mat-cell *matCellDef="let user">{{ user.email }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="roles">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Roles</th>
-          <td mat-cell *matCellDef="let user">{{ user.roles }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="fullName">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Full Name</th>
-          <td mat-cell *matCellDef="let user">{{ user.fullName }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let user">
-            <button
-              mat-icon-button
-              color="primary"
-              (click)="openEditUserDialog(user)"
-            >
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteUser(user)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-
-      <mat-paginator
-        [pageSizeOptions]="[5, 10, 25, 100]"
-        aria-label="Select page of users"
-      ></mat-paginator>
-    </div>
-  `,
-  styles: [
-    `
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px;
-      }
-      table {
-        width: 100%;
-      }
-      .mat-column-actions {
-        width: 120px;
-        text-align: center;
-      }
-    `,
-  ],
+  templateUrl: "./user-management.component.html",
+  styleUrls: ["./user-management.component.scss"],
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -106,56 +40,123 @@ import { UserDialogComponent } from "../user-dialog/user-dialog.component";
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    MatChipsModule,
+    UserDialogComponent,
+    UpdateRolesDialogComponent,
+    MatChipsModule,
   ],
 })
 export class UserManagementComponent implements OnInit {
   displayedColumns: string[] = [
-   // "id",
-    "username",
+    /*'id',*/ "username",
+    "fullName",
     "email",
     "roles",
-    "fullName",
     "actions",
   ];
-  dataSource: MatTableDataSource<User>;
+  dataSource: MatTableDataSource<any>;
+  userForm: FormGroup;
+  totalItems = 0;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private userService: UserService,
+    private adminService: AdminService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
-    this.dataSource = new MatTableDataSource<User>([]);
+    this.dataSource = new MatTableDataSource();
+    this.userForm = new FormGroup({
+      username: new FormControl("", [Validators.required]),
+      email: new FormControl("", [Validators.required, Validators.email]),
+      role: new FormControl("", [Validators.required]),
+      password: new FormControl("", [Validators.required]),
+    });
   }
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-  }
-
-  loadUsers(): void {
-    this.userService.getUsers().subscribe({
+  loadUsers(page: number = 0): void {
+    this.adminService.getUsers(page, this.pageSize).subscribe({
       next: (response) => {
-        if (response.success) {
-          this.dataSource.data = response.data.content;
-          this.paginator.length = response.data.totalElements;
-        } else {
-          this.snackBar.open("Error loading users", "Close", {
-            duration: 3000,
-          });
-        }
+        this.dataSource.data = response.data.content;
+        this.totalItems = response.data.totalElements;
       },
       error: (error) => {
-        this.snackBar.open("Error loading users", "Close", { duration: 3000 });
-        console.error("Error loading users:", error);
+        this.snackBar.open("Error loading users: " + error.message, "Close", {
+          duration: 3000,
+        });
       },
     });
+  }
+
+  onPageChange(event: any): void {
+    this.pageSize = event.pageSize;
+    this.loadUsers(event.pageIndex);
+  }
+
+  updateUserRoles(userId: string, currentRoles: string[]): void {
+    const dialogRef = this.dialog.open(UpdateRolesDialogComponent, {
+      data: { userId, currentRoles },
+    });
+
+    dialogRef.afterClosed().subscribe((roles) => {
+      if (roles) {
+        this.adminService.updateUserRoles(userId, roles).subscribe({
+          next: () => {
+            this.snackBar.open("User roles updated successfully", "Close", {
+              duration: 3000,
+            });
+            this.loadUsers();
+          },
+          error: (error) => {
+            this.snackBar.open(
+              "Error updating user roles: " + error.message,
+              "Close",
+              {
+                duration: 3000,
+              }
+            );
+          },
+        });
+      }
+    });
+  }
+
+  deleteUser(userId: string): void {
+    if (confirm("Are you sure you want to delete this user?")) {
+      this.adminService.deleteUser(userId).subscribe({
+        next: () => {
+          this.snackBar.open("User deleted successfully", "Close", {
+            duration: 3000,
+          });
+          this.loadUsers();
+        },
+        error: (error) => {
+          this.snackBar.open("Error deleting user: " + error.message, "Close", {
+            duration: 3000,
+          });
+        },
+      });
+    }
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
   }
 
   openCreateUserDialog(): void {
@@ -166,7 +167,7 @@ export class UserManagementComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.userService.createUser(result).subscribe({
+        this.adminService.createUser(result).subscribe({
           next: () => {
             this.loadUsers();
             this.snackBar.open("User created successfully", "Close", {
@@ -192,7 +193,7 @@ export class UserManagementComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.userService.updateUser(result.id, result).subscribe({
+        this.adminService.updateUser(result.id, result).subscribe({
           next: () => {
             this.loadUsers();
             this.snackBar.open("User updated successfully", "Close", {
@@ -209,23 +210,23 @@ export class UserManagementComponent implements OnInit {
       }
     });
   }
-
-  deleteUser(user: User): void {
-    if (confirm(`Are you sure you want to delete user ${user.username}?`)) {
-      this.userService.deleteUser(user.id).subscribe({
-        next: () => {
-          this.loadUsers();
-          this.snackBar.open("User deleted successfully", "Close", {
-            duration: 3000,
-          });
-        },
-        error: (error) => {
-          this.snackBar.open("Error deleting user", "Close", {
-            duration: 3000,
-          });
-          console.error("Error deleting user:", error);
-        },
-      });
+  onSubmit(): void {
+    if (this.userForm.valid) {
+      this.adminService
+        .updateUser(this.userForm.value.id, this.userForm.value)
+        .subscribe({
+          next: () => {
+            this.snackBar.open("User updated successfully", "Close", {
+              duration: 3000,
+            });
+          },
+          error: (error) => {
+            this.snackBar.open("Error updating user", "Close", {
+              duration: 3000,
+            });
+            console.error("Error updating user:", error);
+          },
+        });
     }
   }
 }

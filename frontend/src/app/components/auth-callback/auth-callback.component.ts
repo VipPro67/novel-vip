@@ -36,7 +36,6 @@ import { SupabaseService } from '../../services/supabase.service';
       margin-top: 1rem;
     }
   `],
-  standalone: true,
   imports: [CommonModule]
 })
 export class AuthCallbackComponent implements OnInit {

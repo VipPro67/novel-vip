@@ -189,4 +189,9 @@ export class AuthService {
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
+
+  isAdmin(): boolean | null {
+    const user = this.currentUserSubject.value;
+    return user && user.roles && user.roles.includes('ADMIN');
+  }
 }

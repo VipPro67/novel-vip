@@ -4,21 +4,23 @@ import { RegisterComponent } from "./components/register/register.component";
 import { AuthCallbackComponent } from "./components/auth-callback/auth-callback.component";
 import { NovelListComponent } from "./components/novel-list/novel-list.component";
 import { NovelDetailComponent } from "./components/novel-detail/novel-detail.component";
-import { authGuard, roleGuard } from "./guards/auth.guard";
+import { authGuard } from "./guards/auth.guard";
 import { noAuthGuard } from "./guards/no-auth.guard";
 import { ChapterReaderComponent } from "./components/chapter-reader/chapter-reader.component";
 import { HomeComponent } from "./components/home/home.component";
+import { AdminGuard } from './guards/admin.guard';
+
 export const routes: Routes = [
   { path: "", component: HomeComponent },
   {
     path: "login",
     component: LoginComponent,
-    canActivate: [noAuthGuard],
+    //   canActivate: [noAuthGuard],
   },
   {
     path: "register",
     component: RegisterComponent,
-    canActivate: [noAuthGuard],
+    //  canActivate: [noAuthGuard],
   },
   { path: "auth/callback", component: AuthCallbackComponent },
   { path: "novels/:id", component: NovelDetailComponent },
@@ -30,8 +32,7 @@ export const routes: Routes = [
     path: "admin",
     loadChildren: () =>
       import("./admin/admin.module").then((m) => m.AdminModule),
-    canActivate: [authGuard, roleGuard],
-    data: { role: "admin" },
+    // canActivate: [AdminGuard],
   },
   { path: "**", redirectTo: "/login" },
 ];

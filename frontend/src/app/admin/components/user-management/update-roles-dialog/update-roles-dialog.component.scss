@@ -1,0 +1,19 @@
+mat-dialog-content {
+  min-width: 300px;
+  padding: 20px;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px;
+  gap: 8px;
+} 
