@@ -3,6 +3,7 @@ package com.novel.vippro.services;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
+import com.google.api.client.util.Value;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,22 +29,6 @@ public class CloudinaryService {
                 "public_id", publicId));
 
         return (String) result.get("url");
-    }
-
-    public String urlFromPublicId(String publicId) {
-        try {
-            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
-            @SuppressWarnings("unchecked")
-            Map<String, Object> resource = apiResponse;
-            String resourceType = (String) resource.get("resource_type");
-            logger.info("Generating URL for publicId: {}, resourceType: {}", publicId, resourceType);
-            return cloudinary.url()
-                    .resourceType(resourceType)
-                    .generate(publicId);
-        } catch (Exception e) {
-            logger.error("Failed to generate URL for publicId: {}", publicId, e);
-            return null;
-        }
     }
 
     public byte[] downloadFile(String publicId) throws IOException {
@@ -91,8 +76,10 @@ public class CloudinaryService {
             return Map.of("resourceType", "video", "format", contentType.substring(6));
         } else if (contentType.startsWith("audio/")) {
             return Map.of("resourceType", "video", "format", contentType.substring(6));
+        } else if (contentType.startsWith("application/json")) {
+            return Map.of("resourceType", "raw", "format", contentType.substring(6));
         } else {
-            return Map.of("resourceType", "raw", "format", "raw");
+            throw new IllegalArgumentException("Unsupported content type: " + contentType);
         }
     }
 }

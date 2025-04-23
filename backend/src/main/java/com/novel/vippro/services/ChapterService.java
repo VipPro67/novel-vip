@@ -2,6 +2,7 @@ package com.novel.vippro.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novel.vippro.dto.ChapterCreateDTO;
+import com.novel.vippro.dto.ChapterDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
 import com.novel.vippro.exception.ResourceNotFoundException;
@@ -59,8 +60,7 @@ public class ChapterService {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        Chapter chapter = getChapterByNovelIdAndNumber(novelId, chapterNumber);
-        ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
+        ChapterDetailDTO dto = chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
         return dto;
     }
 
@@ -74,7 +74,6 @@ public class ChapterService {
     @Transactional
     public ChapterListDTO createChapterDTO(ChapterCreateDTO chapterDTO) {
         Chapter chapter = createChapter(chapterDTO);
-
         return mapper.ChaptertoChapterListDTO(chapter);
     }
 
@@ -113,44 +112,8 @@ public class ChapterService {
                 .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", id));
     }
 
-    public Chapter getChapterByNovelIdAndNumber(UUID novelId, Integer chapterNumber) {
+    public ChapterDetailDTO getChapterByNovelIdAndNumber(UUID novelId, Integer chapterNumber) {
         return chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
-    }
-
-    @Transactional
-    public Chapter saveChapter(Chapter chapter, Map<String, Object> content) {
-        // Convert content to JSON string
-        String jsonContent;
-        try {
-            jsonContent = objectMapper.writeValueAsString(content);
-        } catch (IOException e) {
-            throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
-        }
-        // Check if the chapter number is unique for the novel
-        if (chapterRepository.findByNovelIdAndChapterNumber(chapter.getNovel().getId(),
-                chapter.getChapterNumber()) != null) {
-            throw new RuntimeException(
-                    "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
-        }
-
-        // Generate a unique public ID for the chapter
-        String publicId = String.format("chapters/%s/%d",
-                chapter.getNovel().getSlug(),
-                chapter.getChapterNumber());
-
-        // Upload JSON content to Cloudinary
-        String jsonUrl;
-        try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
-        } catch (IOException e) {
-            throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
-        }
-
-        // Set the JSON URL in the chapter
-        chapter.setJsonUrl(jsonUrl);
-
-        // Save the chapter to the database
-        return chapterRepository.save(chapter);
     }
 
     public Map<String, Object> getChapterContent(Chapter chapter) {
@@ -228,7 +191,7 @@ public class ChapterService {
         // Upload JSON content to Cloudinary
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }
@@ -292,7 +255,7 @@ public class ChapterService {
         // Upload JSON content to Cloudinary
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "json");
+            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }

@@ -77,7 +77,10 @@ public class Mapper {
     }
 
     public ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter) {
-        return modelMapper.map(chapter, ChapterDetailDTO.class);
+        ChapterDetailDTO chapterDetailDTO = modelMapper.map(chapter, ChapterDetailDTO.class);
+        chapterDetailDTO.setNovelId(chapter.getNovel().getId());
+        chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
+        return chapterDetailDTO;
     }
 
     public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
