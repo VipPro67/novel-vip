@@ -76,6 +76,12 @@ public class NovelService {
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
+    @Cacheable(value = "novels", key = "'latest-updates-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    public PageResponse<NovelDTO> getLatestUpdatedNovels(Pageable pageable) {
+        Page<Novel> novels = novelRepository.findAllByOrderByUpdatedAtDesc(pageable);
+        return new PageResponse<>(novels.map(mapper::NoveltoDTO));
+    }
+
     @Cacheable(value = "novels", key = "'most-viewed-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public PageResponse<NovelDTO> getMostViewedNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findAllByOrderByViewsDesc(pageable);

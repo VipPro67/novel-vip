@@ -18,7 +18,7 @@ import lombok.Data;
 @Data
 public class User {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @NotBlank

@@ -78,4 +78,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n ORDER BY n.createdAt DESC")
     Page<Novel> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("SELECT n FROM Novel n ORDER BY n.updatedAt DESC")
+    Page<Novel> findAllByOrderByUpdatedAtDesc(Pageable pageable);
 }

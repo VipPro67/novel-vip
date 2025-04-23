@@ -136,6 +136,17 @@ public class NovelController {
         return ControllerResponse.success("Top rated novels retrieved successfully", novels);
     }
 
+    // latest updated novels
+    @Operation(summary = "Get latest updates novels", description = "Get novels sorted by latest update")
+    @GetMapping("/latest-updates")
+    public ControllerResponse<PageResponse<NovelDTO>> getLatestUpdatedNovels(
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        PageResponse<NovelDTO> novels = novelService.getLatestUpdatedNovels(pageable);
+        return ControllerResponse.success("Latest updated novels retrieved successfully", novels);
+    }
+
     @Operation(summary = "Get chapters by novel", description = "Retrieve chapters of a specific novel")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved chapters"),

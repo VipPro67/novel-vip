@@ -12,6 +12,8 @@ import com.novel.vippro.dto.ChapterDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
 import com.novel.vippro.dto.CommentDTO;
+import com.novel.vippro.dto.CreateFeatureRequestDTO;
+import com.novel.vippro.dto.FeatureRequestDTO;
 import com.novel.vippro.dto.ReaderSettingsUpdateDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.ReaderSettings;
@@ -21,6 +23,7 @@ import com.novel.vippro.models.User;
 import com.novel.vippro.models.Category;
 import com.novel.vippro.models.Chapter;
 import com.novel.vippro.models.Comment;
+import com.novel.vippro.models.FeatureRequest;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +110,18 @@ public class Mapper {
 
     public void updateReaderSettingsFromDTO(ReaderSettingsUpdateDTO dto, ReaderSettings settings) {
         modelMapper.map(dto, settings);
+    }
+
+    public FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request) {
+        return modelMapper.map(request, FeatureRequestDTO.class);
+    }
+
+    public FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO) {
+        return modelMapper.map(requestDTO, FeatureRequest.class);
+    }
+
+    public FeatureRequest CreateFeatureRequestDTOtoFeatureRequest(CreateFeatureRequestDTO requestDTO) {
+        return modelMapper.map(requestDTO, FeatureRequest.class);
     }
 
 }

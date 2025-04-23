@@ -8,7 +8,7 @@ import java.util.UUID;
 @Table(name = "role_approval_requests")
 public class RoleApprovalRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)

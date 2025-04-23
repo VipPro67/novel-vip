@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copy only necessary files to leverage caching
 COPY pom.xml .
+COPY .env /app
 RUN mvn dependency:go-offline -B
 
 # Copy source code and build the application

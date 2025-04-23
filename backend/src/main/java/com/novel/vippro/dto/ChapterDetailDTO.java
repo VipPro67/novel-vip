@@ -16,8 +16,8 @@ public class ChapterDetailDTO {
     private String title;
     private UUID novelId;
     private String novelTitle;
-    private String content;
-    private String audioContent;
+    private String jsonUrl;
+    private String audioUrl;
 
     @JsonProperty("createdAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")

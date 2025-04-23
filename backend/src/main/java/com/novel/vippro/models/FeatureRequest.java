@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "feature_requests")
@@ -18,8 +19,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class FeatureRequest {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false)
     private String title;
@@ -53,5 +54,12 @@ public class FeatureRequest {
         PROCESSING,
         DONE,
         REJECTED
+    }
+
+    // set timestamp for createdAt and updatedAt
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 }

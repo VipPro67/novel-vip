@@ -30,6 +30,22 @@ public class CloudinaryService {
         return (String) result.get("url");
     }
 
+    public String urlFromPublicId(String publicId) {
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+            logger.info("Generating URL for publicId: {}, resourceType: {}", publicId, resourceType);
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .generate(publicId);
+        } catch (Exception e) {
+            logger.error("Failed to generate URL for publicId: {}", publicId, e);
+            return null;
+        }
+    }
+
     public byte[] downloadFile(String publicId) throws IOException {
         try {
             ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());

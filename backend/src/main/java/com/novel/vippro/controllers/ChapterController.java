@@ -79,9 +79,9 @@ public class ChapterController {
                         @ApiResponse(responseCode = "400", description = "Error generating audio content")
         })
         @GetMapping("/{id}/audio")
-        public ControllerResponse<ChapterDetailDTO> getChapterAudio(
+        public ControllerResponse<ChapterDetailDTO> createChapterAudio(
                         @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
-                ChapterDetailDTO chapter = chapterService.getChapterAudio(id);
+                ChapterDetailDTO chapter = chapterService.createChapterAudio(id);
                 return ControllerResponse.success("Chapter audio retrieved successfully", chapter);
 
         }

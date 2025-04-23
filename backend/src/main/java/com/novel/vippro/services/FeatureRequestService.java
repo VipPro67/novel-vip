@@ -1,6 +1,8 @@
 package com.novel.vippro.services;
 
+import com.novel.vippro.dto.CreateFeatureRequestDTO;
 import com.novel.vippro.dto.FeatureRequestDTO;
+import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.FeatureRequest;
 import com.novel.vippro.models.User;
 import com.novel.vippro.payload.response.PageResponse;
@@ -27,53 +29,48 @@ public class FeatureRequestService {
         @Autowired
         private UserRepository userRepository;
 
+        @Autowired
+        private Mapper mapper;
+
         @Transactional
-        public FeatureRequestDTO createFeatureRequest(FeatureRequestDTO requestDTO, UUID userId) {
+        public FeatureRequestDTO createFeatureRequest(CreateFeatureRequestDTO requestDTO, UUID userId) {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-                FeatureRequest featureRequest = new FeatureRequest();
-                featureRequest.setTitle(requestDTO.getTitle());
-                featureRequest.setDescription(requestDTO.getDescription());
+                FeatureRequest featureRequest = mapper.CreateFeatureRequestDTOtoFeatureRequest(requestDTO);
                 featureRequest.setCreatedBy(user);
                 featureRequest.setStatus(FeatureRequest.FeatureRequestStatus.VOTING);
                 featureRequest.setVoteCount(0);
-
                 FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
-                return FeatureRequestDTO.fromEntity(savedRequest, false);
+                return mapper.RequesttoRequestDTO(savedRequest);
         }
 
         @Cacheable(value = "featureRequests", key = "#id")
-        public FeatureRequestDTO getFeatureRequest(Long id, UUID userId) {
+        public FeatureRequestDTO getFeatureRequest(UUID id, UUID userId) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
 
                 boolean hasVoted = featureRequestRepository.hasUserVoted(id,
                                 userRepository.findById(userId).orElseThrow());
 
-                return FeatureRequestDTO.fromEntity(featureRequest, hasVoted);
+                return mapper.RequesttoRequestDTO(featureRequest);
         }
 
         @Cacheable(value = "featureRequests")
-        public PageResponse<FeatureRequestDTO> getAllFeatureRequests(Pageable pageable, UUID userId) {
-                User user = userRepository.findById(userId).orElseThrow();
+        public PageResponse<FeatureRequestDTO> getAllFeatureRequests(Pageable pageable) {
                 Page<FeatureRequest> page = featureRequestRepository.findAll(pageable);
-                return new PageResponse<>(page.map(fr -> FeatureRequestDTO.fromEntity(fr,
-                                featureRequestRepository.hasUserVoted(fr.getId(), user))));
+                return new PageResponse<>(page.map(fr -> mapper.RequesttoRequestDTO(fr)));
         }
 
         @Cacheable(value = "featureRequests", key = "#status")
         public PageResponse<FeatureRequestDTO> getFeatureRequestsByStatus(
-                        FeatureRequest.FeatureRequestStatus status, Pageable pageable, UUID userId) {
-                User user = userRepository.findById(userId).orElseThrow();
-                Page<FeatureRequest> page = featureRequestRepository.findByStatus(status, pageable);
-                return new PageResponse<>(page.map(fr -> FeatureRequestDTO.fromEntity(fr,
-                                featureRequestRepository.hasUserVoted(fr.getId(), user))));
+                        FeatureRequest.FeatureRequestStatus status, Pageable pageable) {
+                Page<FeatureRequestDTO> page = featureRequestRepository.findByStatus(status, pageable);
+                return new PageResponse<>(page);
         }
 
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
-        public FeatureRequestDTO voteForFeatureRequest(Long id, UUID userId) {
+        public FeatureRequestDTO voteForFeatureRequest(UUID id, UUID userId) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
 
@@ -92,13 +89,13 @@ public class FeatureRequestService {
                 featureRequest.setVoteCount(featureRequest.getVoteCount() + 1);
                 FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
 
-                return FeatureRequestDTO.fromEntity(savedRequest, true);
+                return mapper.RequesttoRequestDTO(savedRequest);
         }
 
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
         public FeatureRequestDTO updateFeatureRequestStatus(
-                        Long id, FeatureRequest.FeatureRequestStatus newStatus, UUID userId) {
+                        UUID id, FeatureRequest.FeatureRequestStatus newStatus, UUID userId) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
 
@@ -113,13 +110,12 @@ public class FeatureRequestService {
                 featureRequest.setStatus(newStatus);
                 FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
 
-                return FeatureRequestDTO.fromEntity(savedRequest,
-                                featureRequestRepository.hasUserVoted(id, user));
+                return mapper.RequesttoRequestDTO(savedRequest);
         }
 
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
-        public void deleteFeatureRequest(Long id, UUID userId) {
+        public void deleteFeatureRequest(UUID id, UUID userId) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
 

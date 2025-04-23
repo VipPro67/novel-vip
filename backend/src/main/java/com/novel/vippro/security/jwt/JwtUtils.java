@@ -23,10 +23,10 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtils {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-  @Value("${novel.app.jwtSecret}")
+  @Value("${JWT_SECRET:VGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lZXJhdGlvbg==}")
   private String jwtSecret;
 
-  @Value("${novel.app.jwtExpirationMs}")
+  @Value("${JWT_EXPIRATION:86400000}")
   private int jwtExpirationMs;
 
   public String generateJwtToken(Authentication authentication) {
@@ -75,8 +75,6 @@ public class JwtUtils {
       logger.error("JWT token is unsupported: {}", e.getMessage());
     } catch (IllegalArgumentException e) {
       logger.error("JWT claims string is empty: {}", e.getMessage());
-    } catch (SignatureException e) {
-      logger.error("Invalid JWT signature: {}", e.getMessage());
     } catch (Exception e) {
       logger.error("JWT token validation failed: {}", e.getMessage());
     }

@@ -11,7 +11,7 @@ import java.util.UUID;
 @Data
 public class SubscriptionPlan {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true)

@@ -17,7 +17,7 @@ public class NovelDTO {
     private String author;
     private String coverImage;
     private String status;
-    private List<String> categories;
+    private List<CategoryDTO> categories;
     private Integer totalChapters;
     private Integer views;
     private Integer rating;
