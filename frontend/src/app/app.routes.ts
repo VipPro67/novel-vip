@@ -1,17 +1,11 @@
 import { Routes } from "@angular/router";
-import { LoginComponent } from "./components/login/login.component";
-import { RegisterComponent } from "./components/register/register.component";
-import { AuthCallbackComponent } from "./components/auth-callback/auth-callback.component";
-import { NovelListComponent } from "./components/novel-list/novel-list.component";
-import { NovelDetailComponent } from "./components/novel-detail/novel-detail.component";
+import { LoginComponent } from "./public/login/login.component";
+import { RegisterComponent } from "./public/register/register.component";
 import { authGuard } from "./guards/auth.guard";
 import { noAuthGuard } from "./guards/no-auth.guard";
-import { ChapterReaderComponent } from "./components/chapter-reader/chapter-reader.component";
-import { HomeComponent } from "./components/home/home.component";
-import { AdminGuard } from './guards/admin.guard';
+import { AdminGuard } from "./guards/admin.guard";
 
 export const routes: Routes = [
-  { path: "", component: HomeComponent },
   {
     path: "login",
     component: LoginComponent,
@@ -21,12 +15,6 @@ export const routes: Routes = [
     path: "register",
     component: RegisterComponent,
     //  canActivate: [noAuthGuard],
-  },
-  { path: "auth/callback", component: AuthCallbackComponent },
-  { path: "novels/:id", component: NovelDetailComponent },
-  {
-    path: "novels/:novelId/chapters/:chapterNumber",
-    component: ChapterReaderComponent,
   },
   {
     path: "admin",

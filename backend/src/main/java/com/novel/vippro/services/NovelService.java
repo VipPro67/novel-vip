@@ -5,10 +5,14 @@ import com.novel.vippro.dto.NovelCreateDTO;
 import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.Category;
+import com.novel.vippro.models.Genre;
 import com.novel.vippro.models.Novel;
+import com.novel.vippro.models.Tag;
 import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.CategoryRepository;
+import com.novel.vippro.repository.GenreRepository;
 import com.novel.vippro.repository.NovelRepository;
+import com.novel.vippro.repository.TagRepository;
 import com.novel.vippro.security.jwt.AuthEntryPointJwt;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +36,12 @@ public class NovelService {
 
     @Autowired
     private NovelRepository novelRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
+
+    @Autowired
+    private GenreRepository genreRepository;
 
     @Autowired
     private Mapper mapper;
@@ -133,6 +143,44 @@ public class NovelService {
             novel.getCategories().addAll(categories);
         }
 
+        // Handle tags - only use existing tags
+        if (novelDTO.getTags() != null && !novelDTO.getTags().isEmpty()) {
+            Set<Tag> tags = new HashSet<>();
+
+            for (String tagName : novelDTO.getTags()) {
+                try {
+                    Tag tag = tagRepository.findByNameIgnoreCase(tagName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Tag", "name", tagName));
+                    tags.add(tag);
+                } catch (ResourceNotFoundException e) {
+                    logger.warn("Tag not found: {}", tagName);
+                    // Skip this tag and continue with others
+                }
+            }
+
+            // Add found tags to the novel
+            novel.getTags().addAll(tags);
+        }
+
+        // Handle genres - only use existing genres
+        if (novelDTO.getGenres() != null && !novelDTO.getGenres().isEmpty()) {
+            Set<Genre> genres = new HashSet<>();
+
+            for (String genreName : novelDTO.getGenres()) {
+                try {
+                    Genre genre = genreRepository.findByNameIgnoreCase(genreName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Genre", "name", genreName));
+                    genres.add(genre);
+                } catch (ResourceNotFoundException e) {
+                    logger.warn("Genre not found: {}", genreName);
+                    // Skip this genre and continue with others
+                }
+            }
+
+            // Add found genres to the novel
+            novel.getGenres().addAll(genres);
+        }
+
         // Save the novel
         logger.info("Saving novel: {}", novel);
         logger.info("Novel categories: {}", novel.getCategories());
@@ -174,6 +222,44 @@ public class NovelService {
                     }
                 }
             }
+        }
+
+        // Handle tags - only use existing tags
+        if (novelDTO.getTags() != null && !novelDTO.getTags().isEmpty()) {
+            Set<Tag> tags = new HashSet<>();
+
+            for (String tagName : novelDTO.getTags()) {
+                try {
+                    Tag tag = tagRepository.findByNameIgnoreCase(tagName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Tag", "name", tagName));
+                    tags.add(tag);
+                } catch (ResourceNotFoundException e) {
+                    logger.warn("Tag not found: {}", tagName);
+                    // Skip this tag and continue with others
+                }
+            }
+
+            // Add found tags to the novel
+            novel.getTags().addAll(tags);
+        }
+
+        // Handle genres - only use existing genres
+        if (novelDTO.getGenres() != null && !novelDTO.getGenres().isEmpty()) {
+            Set<Genre> genres = new HashSet<>();
+
+            for (String genreName : novelDTO.getGenres()) {
+                try {
+                    Genre genre = genreRepository.findByNameIgnoreCase(genreName)
+                            .orElseThrow(() -> new ResourceNotFoundException("Genre", "name", genreName));
+                    genres.add(genre);
+                } catch (ResourceNotFoundException e) {
+                    logger.warn("Genre not found: {}", genreName);
+                    // Skip this genre and continue with others
+                }
+            }
+
+            // Add found genres to the novel
+            novel.getGenres().addAll(genres);
         }
 
         Novel updatedNovel = novelRepository.save(novel);

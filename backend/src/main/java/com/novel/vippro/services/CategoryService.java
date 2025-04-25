@@ -32,91 +32,69 @@ public class CategoryService {
     @Autowired
     private Mapper mapper;
 
-    @Cacheable(value = "categories", key = "'page-' + #pageable.pageNumber + '-' + #pageable.pageSize")
-    public PageResponse<CategoryDTO> getAllCategories(Pageable pageable) {
-        Page<Category> page = categoryRepository.findAll(pageable);
-        // Convert to DTO if necessary
-        return new PageResponse<>(page.map(mapper::CategorytoDTO));
-    }
-
-    @Cacheable(value = "categories", key = "#id")
-    public Category getCategoryById(UUID id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
-    }
-
-    @Transactional
-    public Category getCategoryByName(String name) {
-        return categoryRepository.findByNameIgnoreCase(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "name", name));
-    }
-
     @CacheEvict(value = "categories", allEntries = true)
     @Transactional
-    public Category createCategory(Category category) {
-        // Generate slug from name if not provided
-        if (category.getSlug() == null || category.getSlug().isEmpty()) {
-            category.setSlug(category.getName().toLowerCase()
-                    .replaceAll("\\s+", "-")
-                    .replaceAll("[^a-z0-9-]", ""));
+    public CategoryDTO createCategory(CategoryDTO categoryDTO) {
+        Category category = mapper.DTOtoCategory(categoryDTO);
+        // Ensure the category name is unique
+        if (categoryRepository.findByNameIgnoreCase(category.getName()).isPresent()) {
+            throw new ResourceNotFoundException("Category", "name", category.getName());
         }
-        return categoryRepository.save(category);
+        categoryRepository.save(category);
+        return mapper.CategorytoDTO(category);
     }
 
     @CacheEvict(value = "categories", key = "#id")
     @Transactional
-    public Category updateCategory(UUID id, Category categoryDetails) {
-        Category category = getCategoryById(id);
-
+    public CategoryDTO updateCategory(UUID id, CategoryDTO categoryDetails) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
         category.setName(categoryDetails.getName());
         category.setDescription(categoryDetails.getDescription());
-
-        // Update slug if name has changed
-        if (!category.getName().equalsIgnoreCase(categoryDetails.getName())) {
-            category.setSlug(category.getName().toLowerCase()
-                    .replaceAll("\\s+", "-")
-                    .replaceAll("[^a-z0-9-]", ""));
-        }
-
-        return categoryRepository.save(category);
+        categoryRepository.save(category);
+        return mapper.CategorytoDTO(category);
     }
 
     @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public void deleteCategory(UUID id) {
-        Category category = getCategoryById(id);
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
         categoryRepository.delete(category);
-    }
-
-    @Transactional
-    public Set<Category> getOrCreateCategories(Set<String> categoryNames) {
-        Set<Category> result = new HashSet<>();
-
-        // First, find all existing categories
-        for (String name : categoryNames) {
-            try {
-                Category category = getCategoryByName(name);
-                result.add(category);
-            } catch (ResourceNotFoundException e) {
-                // Category doesn't exist, create it
-                Category newCategory = new Category();
-                newCategory.setName(name);
-                // Generate slug from name
-                newCategory.setSlug(name.toLowerCase()
-                        .replaceAll("\\s+", "-")
-                        .replaceAll("[^a-z0-9-]", ""));
-                result.add(categoryRepository.save(newCategory));
-            }
-        }
-
-        return result;
     }
 
     @Cacheable(value = { "categories",
             "novels" }, key = "'category-novels-' + #categoryName + '-' + #pageable.pageNumber")
     @Transactional
     public PageResponse<NovelDTO> getNovelsByCategory(String categoryName, Pageable pageable) {
-        Category category = getCategoryByName(categoryName);
+        Category category = categoryRepository.findByNameIgnoreCase(categoryName)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "name", categoryName));
         return novelService.getNovelsByCategory(category.getId(), pageable);
+    }
+
+    @Cacheable(value = "categories", key = "#id")
+    @Transactional(readOnly = true)
+    public CategoryDTO getCategoryById(UUID id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
+        return mapper.CategorytoDTO(category);
+    }
+
+    @Cacheable(value = "categories", key = "#name")
+    @Transactional(readOnly = true)
+    public CategoryDTO getCategoryByName(String name) {
+        Category category = categoryRepository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "name", name));
+        return mapper.CategorytoDTO(category);
+    }
+
+    @Cacheable(value = "categories")
+    @Transactional(readOnly = true)
+    public Set<CategoryDTO> getAllCategories() {
+        Set<CategoryDTO> categoryDTOs = new HashSet<>();
+        for (Category category : categoryRepository.findAll()) {
+            categoryDTOs.add(mapper.CategorytoDTO(category));
+        }
+        return categoryDTOs;
     }
 }

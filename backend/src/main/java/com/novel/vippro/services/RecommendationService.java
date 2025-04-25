@@ -1,7 +1,9 @@
 package com.novel.vippro.services;
 
+import com.novel.vippro.models.Genre;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Rating;
+import com.novel.vippro.models.Tag;
 import com.novel.vippro.models.User;
 import com.novel.vippro.models.UserPreferences;
 import com.novel.vippro.payload.response.PageResponse;
@@ -95,7 +97,9 @@ public class RecommendationService {
         }
 
         private double calculateGenreMatchScore(Novel novel, UserPreferences preferences) {
-                Set<String> novelGenres = new HashSet<>(novel.getGenres().keySet());
+                Set<String> novelGenres = novel.getGenres().stream()
+                                .map(Genre::getName)
+                                .collect(Collectors.toSet());
                 Set<String> userGenres = preferences.getFavoriteGenres();
 
                 if (userGenres.isEmpty())
@@ -109,7 +113,9 @@ public class RecommendationService {
         }
 
         private double calculateTagMatchScore(Novel novel, UserPreferences preferences) {
-                Set<String> novelTags = new HashSet<>(novel.getTags().keySet());
+                Set<String> novelTags = novel.getTags().stream()
+                                .map(Tag::getName)
+                                .collect(Collectors.toSet());
                 Set<String> userTags = preferences.getFavoriteTags();
 
                 if (userTags.isEmpty())
@@ -151,8 +157,12 @@ public class RecommendationService {
                                 Novel ratedNovel = rating.getNovel();
 
                                 // Genre similarity
-                                Set<String> novelGenres = new HashSet<>(novel.getGenres().keySet());
-                                Set<String> ratedGenres = new HashSet<>(ratedNovel.getGenres().keySet());
+                                Set<String> novelGenres = novel.getGenres().stream()
+                                                .map(Genre::getName)
+                                                .collect(Collectors.toSet());
+                                Set<String> ratedGenres = ratedNovel.getGenres().stream()
+                                                .map(Genre::getName)
+                                                .collect(Collectors.toSet());
                                 long matchingGenres = novelGenres.stream()
                                                 .filter(ratedGenres::contains)
                                                 .count();
@@ -160,8 +170,12 @@ public class RecommendationService {
                                                 Math.max(novelGenres.size(), ratedGenres.size());
 
                                 // Tag similarity
-                                Set<String> novelTags = new HashSet<>(novel.getTags().keySet());
-                                Set<String> ratedTags = new HashSet<>(ratedNovel.getTags().keySet());
+                                Set<String> novelTags = novel.getTags().stream()
+                                                .map(Tag::getName)
+                                                .collect(Collectors.toSet());
+                                Set<String> ratedTags = novel.getTags().stream()
+                                                .map(Tag::getName)
+                                                .collect(Collectors.toSet());
                                 long matchingTags = novelTags.stream()
                                                 .filter(ratedTags::contains)
                                                 .count();
@@ -207,8 +221,12 @@ public class RecommendationService {
 
                 // Get novels with similar genres and tags
                 List<Novel> similarNovels = novelRepository.findByGenresInAndTagsIn(
-                                new ArrayList<>(novel.getGenres().keySet()),
-                                new ArrayList<>(novel.getTags().keySet()));
+                                new ArrayList<>(novel.getGenres().stream()
+                                                .map(Genre::getName)
+                                                .collect(Collectors.toList())),
+                                new ArrayList<>(novel.getTags().stream()
+                                                .map(Tag::getName)
+                                                .collect(Collectors.toList())));
 
                 // Filter out the original novel
                 similarNovels = similarNovels.stream()
@@ -233,8 +251,8 @@ public class RecommendationService {
 
         private double calculateNovelSimilarity(Novel novel1, Novel novel2) {
                 // Genre similarity (40% weight)
-                Set<String> genres1 = new HashSet<>(novel1.getGenres().keySet());
-                Set<String> genres2 = new HashSet<>(novel2.getGenres().keySet());
+                Set<Genre> genres1 = novel1.getGenres();
+                Set<Genre> genres2 = novel2.getGenres();
                 long matchingGenres = genres1.stream()
                                 .filter(genres2::contains)
                                 .count();
@@ -242,8 +260,8 @@ public class RecommendationService {
                                 Math.max(genres1.size(), genres2.size());
 
                 // Tag similarity (30% weight)
-                Set<String> tags1 = new HashSet<>(novel1.getTags().keySet());
-                Set<String> tags2 = new HashSet<>(novel2.getTags().keySet());
+                Set<Tag> tags1 = novel1.getTags();
+                Set<Tag> tags2 = novel2.getTags();
                 long matchingTags = tags1.stream()
                                 .filter(tags2::contains)
                                 .count();

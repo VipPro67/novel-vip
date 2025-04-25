@@ -186,13 +186,13 @@ def save_to_postgresql(chapters, uploaded_files, novel_id):
 def main():
 
     config = {
-        'url': "https://truyenyy.app/truyen/co-chan-nhan", # Replace with source URL
+        'url': "https://truyenyy.co/truyen/co-chan-nhan", # Replace with source URL
         'start_chapter':1, # Replace with actual start chapter
         'end_chapter': 50, # Replace with actual end chapter
         'title': "Cổ Chân Nhân", # Replace with actual title
-        'slug': "co-chan-nhan-fe5c3eb9ss" # Replace with actual slug
+        'slug': "co-chan-nhan-44df36d0" # Replace with actual slug
     }
-    novel_id = "fe5c3eb9-09c4-4981-894e-5afa7c4c5e24"  # Replace with actual novel_id from novels table
+    novel_id = "44df36d0-baf2-42ab-92e8-fa5791fc1b9e"  # Replace with actual novel_id from novels table
 
     # Step 1: Crawl chapters
     crawler = NovelCrawler(config)

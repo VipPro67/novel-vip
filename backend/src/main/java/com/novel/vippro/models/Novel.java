@@ -44,17 +44,13 @@ public class Novel {
         @JoinTable(name = "novel_categories", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
         private Set<Category> categories = new HashSet<>();
 
-        @ElementCollection
-        @CollectionTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"))
-        @MapKeyColumn(name = "genre")
-        @Column(name = "count")
-        private Map<String, Integer> genres = new HashMap<>();
+        @ManyToMany
+        @JoinTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
+        private Set<Tag> tags = new HashSet<>();
 
-        @ElementCollection
-        @CollectionTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"))
-        @MapKeyColumn(name = "tag")
-        @Column(name = "count")
-        private Map<String, Integer> tags = new HashMap<>();
+        @ManyToMany
+        @JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
+        private Set<Genre> genres = new HashSet<>();
 
         @Column(nullable = false)
         private Integer totalChapters;

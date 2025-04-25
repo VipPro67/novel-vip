@@ -66,6 +66,7 @@ build/
 
 ### VS Code ###
 .vscode/
+.github/
 
 
 ###node_modules###
@@ -79,7 +80,7 @@ frontend/.angular
 environment.ts
 environment.prod.ts
 
-Crawl/env
+Crawl/venv
 Crawl/target
 Crawl/output
 
