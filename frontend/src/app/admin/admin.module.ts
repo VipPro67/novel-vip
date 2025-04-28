@@ -18,11 +18,11 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatTooltipModule } from "@angular/material/tooltip";
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatDatepickerModule } from "@angular/material/datepicker";
+import { MatNativeDateModule } from "@angular/material/core";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
 
 // Components
 import { AdminDashboardComponent } from "./components/admin-dashboard/admin-dashboard.component";
@@ -30,7 +30,6 @@ import { UserManagementComponent } from "./components/user-management/user-manag
 import { UserDialogComponent } from "./components/user-management/user-dialog/user-dialog.component";
 import { UpdateRolesDialogComponent } from "./components/user-management/update-roles-dialog/update-roles-dialog.component";
 import { NovelManagementComponent } from "./components/novel-management/novel-management.component";
-import { NovelDialogComponent } from "./components/novel-management/novel-dialog/novel-dialog.component";
 import { ChapterManagementComponent } from "./components/chapter-management/chapter-management.component";
 import { ChapterDialogComponent } from "./components/chapter-management/chapter-dialog/chapter-dialog.component";
 import { CategoryManagementComponent } from "./components/category-management/category-management.component";
@@ -56,7 +55,10 @@ const routes: Routes = [
       { path: "chapters", component: ChapterManagementComponent },
       { path: "categories", component: CategoryManagementComponent },
       { path: "reports", component: ReportManagementComponent },
-      { path: "feature-requests", component: FeatureRequestManagementComponent },
+      {
+        path: "feature-requests",
+        component: FeatureRequestManagementComponent,
+      },
       { path: "subscriptions", component: SubscriptionManagementComponent },
       { path: "payments", component: PaymentManagementComponent },
       { path: "", redirectTo: "users", pathMatch: "full" },
@@ -97,7 +99,6 @@ const routes: Routes = [
     UserDialogComponent,
     UpdateRolesDialogComponent,
     NovelManagementComponent,
-    NovelDialogComponent,
     ChapterManagementComponent,
     ChapterDialogComponent,
     CategoryManagementComponent,
@@ -119,4 +120,4 @@ const routes: Routes = [
     },
   ],
 })
-export class AdminModule { }
+export class AdminModule {}

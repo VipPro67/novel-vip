@@ -45,8 +45,6 @@ import { UpdateRolesDialogComponent } from "./update-roles-dialog/update-roles-d
     MatSelectModule,
     MatCardModule,
     MatChipsModule,
-    UserDialogComponent,
-    UpdateRolesDialogComponent,
     MatChipsModule,
   ],
 })

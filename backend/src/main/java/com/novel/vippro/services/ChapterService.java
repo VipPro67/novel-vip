@@ -184,7 +184,7 @@ public class ChapterService {
         }
 
         // Generate a unique public ID for the chapter
-        String publicId = String.format("chapters/%s/%d" + ".json",
+        String publicId = String.format("novels/%s/chapters/%d.json",
                 chapter.getNovel().getSlug(),
                 chapter.getChapterNumber());
 
@@ -248,7 +248,7 @@ public class ChapterService {
         }
 
         // Generate a unique public ID for the chapter
-        String publicId = String.format("chapters/%s/%d",
+        String publicId = String.format("novels/%s/chapters/%d" + ".json",
                 chapter.getNovel().getSlug(),
                 chapter.getChapterNumber());
 

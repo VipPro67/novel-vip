@@ -23,7 +23,6 @@ public class DatabaseConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        System.out.println("Configuring DataSource with URL: " + dbUrl);
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setJdbcUrl(dbUrl);
         dataSource.setUsername(dbUsername);

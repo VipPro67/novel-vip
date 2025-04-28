@@ -1,9 +1,0 @@
-requests 
-beautifulsoup4 
-tqdm
-cloudinary
-psycopg2-binary
-dotenv
-unidecode
-tenacity
-aiohttp

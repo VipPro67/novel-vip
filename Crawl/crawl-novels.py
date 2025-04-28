@@ -10,6 +10,7 @@ import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 from unidecode import unidecode
 import os
+import bleach
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -78,10 +79,8 @@ class NovelCrawler:
                         logging.warning("Title is empty")
                         continue
                     title = title.replace('Hot', '').strip()
-                    title = re.sub(r'\s+', ' ', title)
-                    title = title.replace('Truyện', '').strip()
                     title = title.replace('Full', '').strip()
-                    title = title.replace('[Dịch]', '').strip()
+                    title = re.sub(r'\s+', ' ', title)
                     slug = title_link['href'].strip('/').split('/')[-1]
                     author = item.find('span', class_='italic text-sm').get_text(strip=True) if item.find('span', class_='italic text-sm') else 'Unknown'
                     base_slug = self.clean_slug(title)
@@ -90,23 +89,26 @@ class NovelCrawler:
                     cover_img = item.find('img', class_='w-full h-full object-cover')
                     cover_image = cover_img['src'] if cover_img else 'https://cdn.apptruyen.lol/images/public/default-image.jpg'
 
+                    # Extract status
+                    status = 'crawling'
                     # Extract total chapters
-                    chapter_link = item.find('a', class_='text-[#14394d] hover:underline')
+                    ###<div class="text-right text-sm font-semibold text-secondary"><a class="text-[#14394d] hover:underline" href="/doc-quyen-dich-thien-uyen/chuong-792">Chương 792</a></div>
                     total_chapters = 0
-                    if chapter_link:
-                        chapter_text = chapter_link.get_text(strip=True)
-                        match = re.search(r'Chương\s+(\d+)', chapter_text)
-                        if match:
-                            total_chapters = int(match.group(1))
+                    total_chapters_tag = item.find('div', class_='text-right text-sm font-semibold text-secondary')
+                    if total_chapters_tag:
+                        total_chapters_link = total_chapters_tag.find('a')
+                        if total_chapters_link:
+                            total_chapters_text = total_chapters_link.get_text(strip=True)
+                            match = re.search(r'Chương(\d+)', total_chapters_text)
+                            if match:
+                                total_chapters = int(match.group(1))
 
                     # Extract status
-                    status_span = item.find('span', class_='bg-green-50 text-green-600')
-                    status = 'completed' if status_span and status_span.get_text(strip=True) == 'Full' else 'updating'
 
                     novel_data = {
                         'id': str(uuid.uuid4()),
                         'title': title,
-                        'title_nomalized': self.normalize_title(title),
+                        'title_nomalized': self.normalize_title(title).replace('[dich] ', ''),
                         'author': author,
                         'slug': slug,
                         'cover_image': cover_image,
@@ -138,14 +140,20 @@ class NovelCrawler:
             html = await self.fetch_page(session, detail_url)
             soup = BeautifulSoup(html, 'html.parser')
 
-            # Extract author
-            author = 'Unknown'
-            author_tag = soup.find('p', string=re.compile(r'Tác giả:'))
-            if author_tag:
-                strong_tag = author_tag.find('strong')
-                if strong_tag and strong_tag.next_sibling:
-                    author = strong_tag.next_sibling.strip()
+           # Extract author
+           # <div class="mt-4 text-sm flex flex-col gap-2"><p><strong>Tác giả:</strong> <!-- -->phong tiên</p><div class="flex flex-wrap items-baseline gap-1"><strong class="whitespace-nowrap">Thể loại:</strong> <a class="hover:underline" href="/the-loai/huyen-huyen">Huyền huyễn<!-- -->,</a><a class="hover:underline" href="/the-loai/tien-hiep">Tiên hiệp </a></div><p><strong>Trạng thái:</strong> <span class=" text-green-500 font-semibold">Full</span></p></div>#
 
+            author = 'Unknown'
+            author_tag = soup.find('strong', string=re.compile(r'Tác giả:'))
+            if author_tag:
+                # author parent tag
+                author_parent = author_tag.find_parent('p')
+                if author_parent:
+                    author = author_parent.get_text(strip=True).split(':')[-1].strip()
+            else:
+                author_tag = soup.find('p', string=re.compile(r'Tác giả:'))
+                if author_tag:
+                    author = author_tag.get_text(strip=True).split(':')[-1].strip()
             # Extract genres (categories)
             genres_container = soup.find('div', class_='flex flex-wrap items-baseline gap-1')
             genres = []
@@ -153,26 +161,34 @@ class NovelCrawler:
                 genre_links = genres_container.find_all('a', class_='hover:underline')
                 genres = [link.get_text(strip=True).rstrip(',') for link in genre_links]
 
-            # Extract status
-            status_tag = soup.find('p', string=re.compile(r'Trạng thái:'))
-            status_text = status_tag.find('span').get_text(strip=True) if status_tag else 'updating'
-            status = 'completed' if status_text.lower() == 'full' else 'updating'
-
+            # # Extract status
+            # status_tag = soup.find('p', string=re.compile(r'Trạng thái:'))
+            # status_text = status_tag.find('span').get_text(strip=True) if status_tag else 'updating'
+            # status = 'completed' if status_text.lower() == 'full' else 'updating'
+            status =  'crawling'
             # Extract rating
-            rating_tag = soup.find('span', class_='text-gray-600 ml-2 text-xs')
+            # rating_tag = soup.find('span', class_='text-gray-600 ml-2 text-xs')
             rating = 0.0
-            if rating_tag:
-                rating_text = rating_tag.get_text(strip=True)
-                match = re.search(r'Đánh giá: (\d+\.?\d*)/10', rating_text)
-                if match:
-                    rating = float(match.group(1))
+            # if rating_tag:
+            #     rating_text = rating_tag.get_text(strip=True)
+            #     match = re.search(r'Đánh giá: (\d+\.?\d*)/10', rating_text)
+            #     if match:
+            #         rating = float(match.group(1))
 
-            # Extract description
+            # Your scraping code
             description_container = soup.find('div', class_='mt-4 text-gray-700 space-y-3 text-sm')
-            description = ''
+            description= ''
+
             if description_container:
-                paragraphs = description_container.find_all('p')
-                description = ' '.join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+                raw_html = str(description_container)
+
+                # Sanitize the HTML
+                allowed_tags = ['p', 'strong', 'em', 'ul', 'ol','li', 'br', 'a']
+                allowed_attrs = {
+                    'a': ['href', 'title'],
+                }
+
+                description= bleach.clean(raw_html, tags=allowed_tags, attributes=allowed_attrs, strip=True)
 
             # Extract cover image
             cover_img = soup.find('img', class_='object-cover')
@@ -441,7 +457,7 @@ def main():
     crawler = NovelCrawler(base_url, db_config)
 
     # Run crawler
-    total_novels, total_details = asyncio.run(crawler.crawl_novels(max_pages=3))
+    total_novels, total_details = asyncio.run(crawler.crawl_novels(max_pages=1))
     print(f"Total novels saved: {total_novels}")
     print(f"Total novel details updated: {total_details}")
 

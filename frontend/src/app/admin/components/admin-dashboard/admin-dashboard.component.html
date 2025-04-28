@@ -5,11 +5,14 @@
         <h2>Admin Panel</h2>
       </div>
       <mat-nav-list>
-        <a mat-list-item *ngFor="let link of navLinks" 
-           [routerLink]="link.path"
-           [class.active]="isActive(link.path)">
-          <mat-icon matListItemIcon>{{link.icon}}</mat-icon>
-          <span matListItemTitle>{{link.label}}</span>
+        <a
+          mat-list-item
+          *ngFor="let link of navLinks"
+          [routerLink]="link.path"
+          [class.active]="isActive(link.path)"
+        >
+          <mat-icon matListItemIcon>{{ link.icon }}</mat-icon>
+          <span matListItemTitle>{{ link.label }}</span>
         </a>
       </mat-nav-list>
     </mat-sidenav>

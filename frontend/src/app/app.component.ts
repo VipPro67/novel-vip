@@ -16,7 +16,11 @@ import { NavbarService } from "./services/navbar.service";
   styles: [
     `
       .container {
-        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 0;
+        max-width: 100vw;
       }
     `,
   ],

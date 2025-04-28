@@ -62,7 +62,7 @@ public class TextToSpeechService {
             ByteString audioContents = response.getAudioContent();
 
             // Generate a unique public ID for the audio file
-            String publicId = String.format("chapters/%s/%d-audio", novelSlug, chapterNumber);
+            String publicId = String.format("novels/%s/audios/%d-audio", novelSlug, chapterNumber);
 
             // Upload the audio content to Cloudinary
             return cloudinaryService.uploadFile(audioContents.toByteArray(), publicId, "audio/mpeg");

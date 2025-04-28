@@ -122,23 +122,12 @@ public class Novel {
         private void normalizeFields() {
                 if (this.title != null) {
                         this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-                                        .replaceAll("\\p{M}", "") // Remove accents
+                                        .replaceAll("\\p{M}", "")
                                         .toUpperCase();
-
-                        // Only update slug if it's not already set or if title has changed
-                        if (this.slug == null || this.slug.isEmpty()
-                                        || !this.slug.startsWith(this.titleNomalized.toLowerCase())) {
-                                this.slug = this.titleNomalized.toLowerCase()
-                                                .replaceAll("[^a-z0-9]+", "-");
-                                if (this.id != null) {
-                                        this.slug += "-" + this.id.toString().substring(0, 8);
-                                }
-                        }
                 }
         }
 
         public void setTitle(String title) {
                 this.title = title;
-                // The normalization will be handled by @PrePersist/@PreUpdate
         }
 }
