@@ -17,8 +17,10 @@ import com.novel.vippro.dto.CreateFeatureRequestDTO;
 import com.novel.vippro.dto.FeatureRequestDTO;
 import com.novel.vippro.dto.GenreDTO;
 import com.novel.vippro.dto.ReaderSettingsUpdateDTO;
+import com.novel.vippro.dto.ReadingHistoryDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.ReaderSettings;
+import com.novel.vippro.models.ReadingHistory;
 import com.novel.vippro.models.Subscription;
 import com.novel.vippro.models.SubscriptionPlan;
 import com.novel.vippro.models.Tag;
@@ -29,6 +31,7 @@ import com.novel.vippro.models.Comment;
 import com.novel.vippro.models.FeatureRequest;
 import com.novel.vippro.models.Genre;
 
+import org.checkerframework.checker.units.qual.C;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -86,7 +89,10 @@ public class Mapper {
     }
 
     public ChapterListDTO ChaptertoChapterListDTO(Chapter chapter) {
-        return modelMapper.map(chapter, ChapterListDTO.class);
+        ChapterListDTO chapterListDTO = modelMapper.map(chapter, ChapterListDTO.class);
+        chapterListDTO.setNovelId(chapter.getNovel().getId());
+        chapterListDTO.setNovelTitle(chapter.getNovel().getTitle());
+        return chapterListDTO;
     }
 
     public UserDTO UsertoUserDTO(User user) {
@@ -164,6 +170,16 @@ public class Mapper {
     public List<CategoryDTO> CategoryListtoDTOList(List<Category> categories) {
         return categories.stream()
                 .map(this::CategorytoDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ReadingHistoryDTO ReadingHistorytoDTO(ReadingHistory readingHistory) {
+        return modelMapper.map(readingHistory, ReadingHistoryDTO.class);
+    }
+
+    public List<ReadingHistoryDTO> ReadingHistoryListtoDTOList(List<ReadingHistory> readingHistories) {
+        return readingHistories.stream()
+                .map(this::ReadingHistorytoDTO)
                 .collect(Collectors.toList());
     }
 

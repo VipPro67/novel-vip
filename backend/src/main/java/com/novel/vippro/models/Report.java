@@ -6,7 +6,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reports")
+@Table(name = "reports", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "reporter_id", "novel_id", "chapter_id", "comment_id" })
+}, indexes = {
+        @Index(name = "idx_reporter_id", columnList = "reporter_id"),
+        @Index(name = "idx_novel_id", columnList = "novel_id"),
+        @Index(name = "idx_chapter_id", columnList = "chapter_id"),
+        @Index(name = "idx_comment_id", columnList = "comment_id")
+})
+
 @Data
 public class Report {
     @Id

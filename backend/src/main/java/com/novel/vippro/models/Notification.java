@@ -6,7 +6,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id", "title" })
+}, indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_title", columnList = "title")
+})
 @Data
 public class Notification {
     @Id

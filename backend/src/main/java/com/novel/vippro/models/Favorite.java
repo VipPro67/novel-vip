@@ -8,6 +8,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "favorites", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "novel_id" })
+}, indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_novel_id", columnList = "novel_id")
 })
 @Data
 public class Favorite {

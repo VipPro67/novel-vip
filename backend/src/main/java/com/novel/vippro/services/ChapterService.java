@@ -8,8 +8,11 @@ import com.novel.vippro.dto.ChapterListDTO;
 import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.Chapter;
+import com.novel.vippro.models.FileMetadata;
+import com.novel.vippro.models.Novel;
 import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.repository.ChapterRepository;
+import com.novel.vippro.repository.FileMetadataRepository;
 import com.novel.vippro.repository.NovelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -47,6 +50,9 @@ public class ChapterService {
 
     @Autowired
     private TextToSpeechService textToSpeechService;
+
+    @Autowired
+    private FileMetadataRepository fileMetadataRepository;
 
     @Cacheable(value = "chapters", key = "#id")
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
@@ -118,7 +124,7 @@ public class ChapterService {
 
     public Map<String, Object> getChapterContent(Chapter chapter) {
         // Get the JSON content URL from Cloudinary
-        String jsonUrl = chapter.getJsonUrl();
+        String jsonUrl = chapter.getJsonFile().getFileUrl();
         // jsonurl only save publicId not full url
 
         if (jsonUrl == null || jsonUrl.isEmpty()) {
@@ -159,13 +165,15 @@ public class ChapterService {
             throw new RuntimeException(
                     "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
         }
+
+        // Set the novel
+        Novel chapterNovel = novelRepository.findById(chapterDTO.getNovelId())
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId()));
+
         Chapter chapter = new Chapter();
         chapter.setChapterNumber(chapterDTO.getChapterNumber());
         chapter.setTitle(chapterDTO.getTitle());
-
-        // Set the novel
-        chapter.setNovel(novelRepository.findById(chapterDTO.getNovelId())
-                .orElseThrow(() -> new RuntimeException("Novel not found with id: " + chapterDTO.getNovelId())));
+        chapter.setNovel(chapterNovel);
 
         // Create content map
         Map<String, Object> contentMap = Map.of(
@@ -199,9 +207,14 @@ public class ChapterService {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: URL is empty");
         }
 
-        // Set the JSON URL in the chapter only use publicId not save full url
-        // chapter.setJsonUrl(jsonUrl);
-        chapter.setJsonUrl(publicId);
+        // Save JSON file metadata
+        FileMetadata jsonFile = new FileMetadata();
+        jsonFile.setPublicId(publicId);
+        jsonFile.setContentType("application/json");
+        jsonFile.setFileUrl(jsonUrl);
+        jsonFile.setUploadedAt(LocalDateTime.now());
+        fileMetadataRepository.save(jsonFile);
+        chapter.setJsonFile(jsonFile);
 
         // Update total chapters and updated at
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
@@ -211,7 +224,8 @@ public class ChapterService {
         });
 
         // Save the chapter to the database
-        return chapterRepository.save(chapter);
+        chapterRepository.save(chapter);
+        return chapter;
     }
 
     @Transactional
@@ -248,7 +262,7 @@ public class ChapterService {
         }
 
         // Generate a unique public ID for the chapter
-        String publicId = String.format("novels/%s/chapters/%d" + ".json",
+        String publicId = String.format("novels/%s/chapters/chap-%d" + ".json",
                 chapter.getNovel().getSlug(),
                 chapter.getChapterNumber());
 
@@ -263,8 +277,20 @@ public class ChapterService {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: URL is empty");
         }
 
-        // Set the JSON URL in the chapter
-        chapter.setJsonUrl(jsonUrl);
+        // Update JSON file metadata
+        FileMetadata jsonFile = chapter.getJsonFile();
+        if (jsonFile == null) {
+            jsonFile = new FileMetadata();
+        }
+        jsonFile.setPublicId(publicId);
+        jsonFile.setFileName(chapter.getTitle());
+        jsonFile.setType("json");
+        jsonFile.setSize(jsonContent.length());
+        jsonFile.setContentType("application/json");
+        jsonFile.setFileUrl(jsonUrl);
+        jsonFile.setLastModifiedAt(LocalDateTime.now());
+        fileMetadataRepository.save(jsonFile);
+        chapter.setJsonFile(jsonFile);
 
         // Update total chapters and updated at
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
@@ -285,7 +311,7 @@ public class ChapterService {
         }
 
         // check if chapter has audio url
-        if (chapter.getAudioUrl() != null) {
+        if (chapter.getAudioFile() != null) {
             ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
             return dto;
         }
@@ -308,8 +334,18 @@ public class ChapterService {
             throw new RuntimeException("Error generating audio for chapter: " + e.getMessage(), e);
         }
 
-        // Update chapter with audio URL by using publicId
-        chapter.setAudioUrl(audioUrl);
+        // Save audio file metadata
+        FileMetadata audioFile = new FileMetadata();
+        audioFile.setPublicId(chapter.getNovel().getSlug() + "-" + chapter.getChapterNumber() + ".mp3");
+        audioFile.setContentType("audio/mpeg");
+        audioFile.setFileUrl(audioUrl);
+        audioFile.setFileName(chapter.getTitle());
+        audioFile.setType("audio");
+        audioFile.setSize(0);
+        audioFile.setUploadedAt(LocalDateTime.now());
+        fileMetadataRepository.save(audioFile);
+        chapter.setAudioFile(audioFile);
+
         chapterRepository.save(chapter);
 
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);

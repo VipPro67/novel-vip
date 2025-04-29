@@ -4,7 +4,11 @@ import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.io.File;
 import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class NovelCreateDTO {
@@ -24,7 +28,7 @@ public class NovelCreateDTO {
     private String author;
 
     @NotBlank(message = "Cover image URL is required")
-    private String coverImage;
+    private MultipartFile coverImage;
 
     @NotBlank(message = "Status is required")
     private String status;

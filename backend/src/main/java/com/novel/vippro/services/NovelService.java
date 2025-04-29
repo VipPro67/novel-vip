@@ -5,6 +5,7 @@ import com.novel.vippro.dto.NovelCreateDTO;
 import com.novel.vippro.exception.ResourceNotFoundException;
 import com.novel.vippro.mapper.Mapper;
 import com.novel.vippro.models.Category;
+import com.novel.vippro.models.FileMetadata;
 import com.novel.vippro.models.Genre;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.Tag;
@@ -42,6 +43,9 @@ public class NovelService {
 
     @Autowired
     private GenreRepository genreRepository;
+
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     private Mapper mapper;
@@ -112,7 +116,17 @@ public class NovelService {
         novel.setSlug(novelDTO.getSlug());
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
-        novel.setCoverImage(novelDTO.getCoverImage());
+
+        // Set cover image if provided
+        if (novelDTO.getCoverImage() != null) {
+            try {
+                FileMetadata coverImage = fileService.uploadFile(novelDTO.getCoverImage(), "cover");
+                novel.setCoverImage(coverImage);
+            } catch (Exception e) {
+                logger.error("Error uploading cover image: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload cover image", e);
+            }
+        }
         novel.setStatus(novelDTO.getStatus());
 
         // Set default values
@@ -200,7 +214,19 @@ public class NovelService {
         novel.setSlug(novelDTO.getSlug());
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
-        novel.setCoverImage(novelDTO.getCoverImage());
+        novel.setTitleNomalized(novelDTO.getTitle().toLowerCase());
+
+        // Update cover image if provided
+        if (novelDTO.getCoverImage() != null) {
+            try {
+                FileMetadata coverImage = fileService.uploadFile(novelDTO.getCoverImage(), "cover");
+                novel.setCoverImage(coverImage);
+            } catch (Exception e) {
+                logger.error("Error uploading cover image: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload cover image", e);
+            }
+        }
+        // Update status
         novel.setStatus(novelDTO.getStatus());
 
         // Handle categories

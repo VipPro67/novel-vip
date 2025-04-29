@@ -11,7 +11,10 @@ import java.text.Normalizer;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "novels")
+@Table(name = "novels", indexes = {
+                @Index(name = "idx_novel_title", columnList = "title"),
+                @Index(name = "idx_novel_slug", columnList = "slug")
+})
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Novel {
@@ -34,8 +37,9 @@ public class Novel {
         @Column(nullable = false)
         private String author;
 
-        @Column(nullable = false)
-        private String coverImage;
+        @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+        @JoinColumn(name = "cover_image_id", referencedColumnName = "id")
+        private FileMetadata coverImage;
 
         @Column(nullable = false)
         private String status; // ongoing, completed

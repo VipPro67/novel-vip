@@ -8,7 +8,9 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name = "categories")
+@Table(name = "categories", indexes = {
+        @Index(name = "idx_category_name", columnList = "name")
+})
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Category {

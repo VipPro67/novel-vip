@@ -16,13 +16,12 @@ public class FileMetadata {
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;
-
-    private String fileName;
     private String contentType;
-    private long size;
-    private String type;
     private String publicId;
     private String fileUrl;
-    private LocalDateTime uploadedAt;
-    private LocalDateTime lastModifiedAt;
+    private LocalDateTime uploadedAt = LocalDateTime.now();
+    private LocalDateTime lastModifiedAt = LocalDateTime.now();
+    private String fileName;
+    private String type;
+    private long size;
 }

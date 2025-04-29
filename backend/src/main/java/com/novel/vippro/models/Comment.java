@@ -8,7 +8,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "comments", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_novel_id", columnList = "novel_id"),
+        @Index(name = "idx_chapter_id", columnList = "chapter_id")
+})
 @Data
 public class Comment {
     @Id

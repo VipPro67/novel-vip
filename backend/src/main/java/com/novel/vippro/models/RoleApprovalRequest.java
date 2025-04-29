@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "role_approval_requests")
+@Table(name = "role_approval_requests", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id", "role_id" })
+})
 public class RoleApprovalRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

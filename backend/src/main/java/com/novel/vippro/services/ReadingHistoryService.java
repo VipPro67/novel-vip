@@ -15,7 +15,9 @@ import com.novel.vippro.repository.ChapterRepository;
 import com.novel.vippro.repository.UserRepository;
 import com.novel.vippro.mapper.Mapper;
 
+import org.checkerframework.checker.units.qual.m;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -79,21 +81,25 @@ public class ReadingHistoryService {
         history.setLastReadAt(LocalDateTime.now());
 
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
-        return convertToDTO(savedHistory);
+        return mapper.ReadingHistorytoDTO(savedHistory);
     }
 
     public PageResponse<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
-        return new PageResponse<>(readingHistoryRepository.findByUserIdOrderByLastReadAtDesc(userId, pageable)
-                .map(this::convertToDTO));
+        Page<ReadingHistory> historyPage = readingHistoryRepository
+                .findByUserIdOrderByLastReadAtDesc(userId, pageable);
+        return new PageResponse<>(
+                historyPage.map(mapper::ReadingHistorytoDTO));
     }
 
     public PageResponse<ReadingHistoryDTO> getNovelReadingHistory(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        return new PageResponse<>(readingHistoryRepository.findByNovelIdOrderByLastReadAtDesc(novelId, pageable)
-                .map(this::convertToDTO));
+        Page<ReadingHistory> historyPage = readingHistoryRepository
+                .findByNovelIdOrderByLastReadAtDesc(novelId, pageable);
+        return new PageResponse<>(
+                historyPage.map(mapper::ReadingHistorytoDTO));
     }
 
     @Transactional
@@ -113,14 +119,18 @@ public class ReadingHistoryService {
         history.setChapter(chapter);
         history.setProgress(0); // Initial progress
 
-        return convertToDTO(readingHistoryRepository.save(history));
+        history.setReadingTime(0); // Initial reading time
+        history.setLastReadAt(LocalDateTime.now());
+        ReadingHistory savedHistory = readingHistoryRepository.save(history);
+        return mapper.ReadingHistorytoDTO(savedHistory);
     }
 
     public ReadingHistoryDTO getLastReadChapter(UUID novelId) {
         UUID userId = userService.getCurrentUserId();
-        return readingHistoryRepository.findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, novelId)
-                .map(this::convertToDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Reading history not found"));
+        ReadingHistory history = readingHistoryRepository
+                .findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reading history", "novelId", novelId));
+        return mapper.ReadingHistorytoDTO(history);
     }
 
     @Transactional
@@ -254,23 +264,6 @@ public class ReadingHistoryService {
         history.setChapter(chapter);
         history.setProgress(progress);
 
-        return convertToDTO(readingHistoryRepository.save(history));
-    }
-
-    private ReadingHistoryDTO convertToDTO(ReadingHistory history) {
-        ReadingHistoryDTO dto = new ReadingHistoryDTO();
-        dto.setId(history.getId());
-        dto.setUserId(history.getUser().getId());
-        dto.setNovelId(history.getNovel().getId());
-        dto.setNovelTitle(history.getNovel().getTitle());
-        dto.setNovelCover(history.getNovel().getCoverImage());
-        dto.setChapterId(history.getChapter().getId());
-        dto.setChapterTitle(history.getChapter().getTitle());
-        dto.setChapterNumber(history.getChapter().getChapterNumber());
-        dto.setProgress(history.getProgress());
-        dto.setReadingTime(history.getReadingTime());
-        dto.setLastReadAt(history.getLastReadAt());
-        dto.setCreatedAt(history.getCreatedAt());
-        return dto;
+        return mapper.ReadingHistorytoDTO(readingHistoryRepository.save(history));
     }
 }

@@ -1,6 +1,7 @@
 package com.novel.vippro.controllers;
 
 import com.novel.vippro.dto.*;
+import com.novel.vippro.models.FileMetadata;
 import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.services.FileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,10 +37,10 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload")
-        public ControllerResponse<FileUploadDTO> uploadFile(
+        public ControllerResponse<FileMetadata> uploadFile(
                         @Parameter(description = "File to upload", required = true) @RequestParam("file") MultipartFile file,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
-                FileUploadDTO uploadResult = fileService.uploadFile(file, type);
+                FileMetadata uploadResult = fileService.uploadFile(file, type);
                 return ControllerResponse.success("File uploaded successfully", uploadResult);
         }
 
@@ -51,10 +52,10 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload/multiple")
-        public ControllerResponse<List<FileUploadDTO>> uploadMultipleFiles(
+        public ControllerResponse<List<FileMetadata>> uploadMultipleFiles(
                         @Parameter(description = "Files to upload", required = true) @RequestParam("files") MultipartFile[] files,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
-                List<FileUploadDTO> uploadResults = fileService.uploadMultipleFiles(files, type);
+                List<FileMetadata> uploadResults = fileService.uploadMultipleFiles(files, type);
                 return ControllerResponse.success("Files uploaded successfully", uploadResults);
         }
 

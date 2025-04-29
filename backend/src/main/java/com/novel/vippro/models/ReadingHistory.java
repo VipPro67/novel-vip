@@ -14,7 +14,11 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "reading_history")
+@Table(name = "reading_history", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_novel_id", columnList = "novel_id"),
+        @Index(name = "idx_chapter_id", columnList = "chapter_id")
+})
 public class ReadingHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

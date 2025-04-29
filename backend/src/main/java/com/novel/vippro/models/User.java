@@ -14,6 +14,9 @@ import lombok.Data;
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(columnNames = "username"),
     @UniqueConstraint(columnNames = "email")
+}, indexes = {
+    @Index(name = "idx_username", columnList = "username"),
+    @Index(name = "idx_email", columnList = "email")
 })
 @Data
 public class User {

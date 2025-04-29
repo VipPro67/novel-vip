@@ -11,7 +11,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "chapters")
+@Table(name = "chapters", uniqueConstraints = @UniqueConstraint(columnNames = { "chapterNumber",
+        "novel_id" }), indexes = {
+                @Index(name = "idx_novel_id_chapter_number", columnList = "novel_id,chapterNumber"),
+                @Index(name = "idx_novel_id", columnList = "novel_id")
+        })
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Chapter {
@@ -26,12 +30,6 @@ public class Chapter {
     private String title;
 
     @Column(nullable = false)
-    private String jsonUrl;
-
-    @Column(nullable = true)
-    private String audioUrl;
-
-    @Column(nullable = false)
     private Integer views = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -43,6 +41,14 @@ public class Chapter {
     @JsonManagedReference("chapter-comments")
     private List<Comment> comments;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "json_file_id", referencedColumnName = "id")
+    private FileMetadata jsonFile;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
+    private FileMetadata audioFile;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -53,4 +59,5 @@ public class Chapter {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

@@ -13,7 +13,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "feature_requests")
+@Table(name = "feature_requests", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_status", columnList = "status")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_preferences")
+@Table(name = "user_preferences", uniqueConstraints = @UniqueConstraint(columnNames = "user_id"))
 @Data
 @NoArgsConstructor
 public class UserPreferences {

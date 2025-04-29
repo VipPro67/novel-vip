@@ -5,7 +5,11 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name = "reader_settings")
+@Table(name = "reader_settings", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user_id" })
+}, indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id")
+})
 @Data
 public class ReaderSettings {
     @Id

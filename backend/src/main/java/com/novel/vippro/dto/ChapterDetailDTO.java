@@ -6,12 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.novel.vippro.models.Chapter;
+import com.novel.vippro.models.FileMetadata;
 import com.novel.vippro.models.Novel;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import org.checkerframework.checker.units.qual.C;
 
 @Data
 public class ChapterDetailDTO {
@@ -42,8 +41,8 @@ public class ChapterDetailDTO {
         this.title = c.getTitle();
         this.novelId = n.getId();
         this.novelTitle = n.getTitle();
-        this.jsonUrl = c.getJsonUrl();
-        this.audioUrl = c.getAudioUrl();
+        this.jsonUrl = c.getJsonFile() != null ? c.getJsonFile().getFileUrl() : null;
+        this.audioUrl = c.getAudioFile() != null ? c.getAudioFile().getFileUrl() : null;
         this.createdAt = c.getCreatedAt();
         this.updatedAt = c.getUpdatedAt();
     }

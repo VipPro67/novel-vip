@@ -27,7 +27,7 @@ public class FileService {
     private FileMetadataRepository fileMetadataRepository;
 
     @Transactional
-    public FileUploadDTO uploadFile(MultipartFile file, String type) {
+    public FileMetadata uploadFile(MultipartFile file, String type) {
         try {
             String publicId = UUID.randomUUID().toString();
             String fileUrl = cloudinaryService.uploadFile(file.getBytes(), publicId, file.getContentType());
@@ -43,15 +43,14 @@ public class FileService {
             metadata.setLastModifiedAt(LocalDateTime.now());
 
             metadata = fileMetadataRepository.save(metadata);
-
-            return convertToUploadDTO(metadata);
+            return metadata;
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file", e);
         }
     }
 
     @Transactional
-    public List<FileUploadDTO> uploadMultipleFiles(MultipartFile[] files, String type) {
+    public List<FileMetadata> uploadMultipleFiles(MultipartFile[] files, String type) {
         return Arrays.stream(files)
                 .map(file -> uploadFile(file, type))
                 .collect(Collectors.toList());
@@ -108,8 +107,8 @@ public class FileService {
         return convertToMetadataDTO(metadata);
     }
 
-    private FileUploadDTO convertToUploadDTO(FileMetadata metadata) {
-        FileUploadDTO dto = new FileUploadDTO();
+    private FileMetadata convertToUploadDTO(FileMetadata metadata) {
+        FileMetadata dto = new FileMetadata();
         dto.setId(metadata.getId());
         dto.setFileName(metadata.getFileName());
         dto.setFileUrl(metadata.getFileUrl());

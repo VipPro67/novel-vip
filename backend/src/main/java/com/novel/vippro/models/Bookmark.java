@@ -6,7 +6,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "bookmarks")
+@Table(name = "bookmarks", indexes = {
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "idx_chapter_id", columnList = "chapter_id"),
+        @Index(name = "idx_novel_id", columnList = "novel_id")
+})
 @Data
 public class Bookmark {
     @Id

@@ -3,6 +3,8 @@ package com.novel.vippro.controllers;
 import com.novel.vippro.dto.ChapterCreateDTO;
 import com.novel.vippro.dto.ChapterDetailDTO;
 import com.novel.vippro.dto.ChapterListDTO;
+import com.novel.vippro.models.Chapter;
+import com.novel.vippro.models.FileMetadata;
 import com.novel.vippro.payload.response.ControllerResponse;
 import com.novel.vippro.payload.response.PageResponse;
 import com.novel.vippro.services.ChapterService;
@@ -128,5 +130,29 @@ public class ChapterController {
                         @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
                 chapterService.deleteChapter(id);
                 return ControllerResponse.success("Chapter deleted successfully", null);
+        }
+
+        @Operation(summary = "Get chapter JSON file metadata", description = "Retrieve metadata for the JSON file of a specific chapter")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "JSON file metadata retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Chapter not found")
+        })
+        @GetMapping("/{id}/json-metadata")
+        public ControllerResponse<FileMetadata> getChapterJsonMetadata(
+                        @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
+                Chapter chapter = chapterService.getChapterById(id);
+                return ControllerResponse.success("JSON file metadata retrieved successfully", chapter.getJsonFile());
+        }
+
+        @Operation(summary = "Get chapter audio file metadata", description = "Retrieve metadata for the audio file of a specific chapter")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Audio file metadata retrieved successfully"),
+                        @ApiResponse(responseCode = "404", description = "Chapter not found")
+        })
+        @GetMapping("/{id}/audio-metadata")
+        public ControllerResponse<FileMetadata> getChapterAudioMetadata(
+                        @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
+                Chapter chapter = chapterService.getChapterById(id);
+                return ControllerResponse.success("Audio file metadata retrieved successfully", chapter.getAudioFile());
         }
 }
