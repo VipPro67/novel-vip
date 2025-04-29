@@ -21,8 +21,6 @@ import com.novel.vippro.dto.ReadingHistoryDTO;
 import com.novel.vippro.models.Novel;
 import com.novel.vippro.models.ReaderSettings;
 import com.novel.vippro.models.ReadingHistory;
-import com.novel.vippro.models.Subscription;
-import com.novel.vippro.models.SubscriptionPlan;
 import com.novel.vippro.models.Tag;
 import com.novel.vippro.models.User;
 import com.novel.vippro.models.Category;
@@ -97,18 +95,6 @@ public class Mapper {
 
     public UserDTO UsertoUserDTO(User user) {
         return modelMapper.map(user, UserDTO.class);
-    }
-
-    public SubscriptionPlanDTO SubscriptionPlanToSubscriptionPlanDTO(SubscriptionPlan subscriptionPlan) {
-        return modelMapper.map(subscriptionPlan, SubscriptionPlanDTO.class);
-    }
-
-    public SubscriptionDTO SubscriptionToSubscriptionDTO(Subscription subscription) {
-        return modelMapper.map(subscription, SubscriptionDTO.class);
-    }
-
-    public SubscriptionHistoryDTO SubscriptionToSubscriptionHistoryDTO(Subscription subscription) {
-        return modelMapper.map(subscription, SubscriptionHistoryDTO.class);
     }
 
     public ReaderSettingsDTO ReaderSettingsToReaderSettingsDTO(ReaderSettings readerSettings) {

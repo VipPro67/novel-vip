@@ -56,6 +56,13 @@ public class Novel {
         @JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
         private Set<Genre> genres = new HashSet<>();
 
+        @ManyToOne
+        @JoinColumn(name = "owner_id", referencedColumnName = "id")
+        private User owner;
+
+        @Column(nullable = false)
+        private boolean isPublic = false;
+
         @Column(nullable = false)
         private Integer totalChapters;
 
