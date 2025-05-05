@@ -16,6 +16,7 @@ import com.novel.vippro.dto.CommentDTO;
 import com.novel.vippro.dto.CreateFeatureRequestDTO;
 import com.novel.vippro.dto.FeatureRequestDTO;
 import com.novel.vippro.dto.GenreDTO;
+import com.novel.vippro.dto.NotificationDTO;
 import com.novel.vippro.dto.ReaderSettingsUpdateDTO;
 import com.novel.vippro.dto.ReadingHistoryDTO;
 import com.novel.vippro.models.Novel;
@@ -28,6 +29,7 @@ import com.novel.vippro.models.Chapter;
 import com.novel.vippro.models.Comment;
 import com.novel.vippro.models.FeatureRequest;
 import com.novel.vippro.models.Genre;
+import com.novel.vippro.models.Notification;
 
 import org.checkerframework.checker.units.qual.C;
 import org.modelmapper.ModelMapper;
@@ -167,6 +169,10 @@ public class Mapper {
         return readingHistories.stream()
                 .map(this::ReadingHistorytoDTO)
                 .collect(Collectors.toList());
+    }
+
+    public NotificationDTO NotificationtoDTO(Notification notification) {
+        return modelMapper.map(notification, NotificationDTO.class);
     }
 
 }

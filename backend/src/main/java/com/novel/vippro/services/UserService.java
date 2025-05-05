@@ -79,14 +79,17 @@ public class UserService {
         return user.getId();
     }
 
+    @Cacheable(value = "users", key = "#username")
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
+    @Cacheable(value = "users", key = "#id")
     public Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
 
+    @Cacheable(value = "users", key = "#email")
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
@@ -95,6 +98,7 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
+    @Cacheable(value = "users", key = "#email")
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
