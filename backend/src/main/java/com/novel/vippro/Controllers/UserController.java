@@ -9,6 +9,9 @@ import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.UserService;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,8 +49,12 @@ public class UserController {
         @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<PageResponse<UserDTO>> getAllUsers(
                         @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size) {
-                PageResponse<UserDTO> users = userService.getAllUsers(page, size);
+                        @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field") @RequestParam(defaultValue = "id") String sortBy,
+                        @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
+                PageResponse<UserDTO> users = userService.getAllUsers(pageable);
                 return ControllerResponse.success("Users retrieved successfully", users);
         }
 

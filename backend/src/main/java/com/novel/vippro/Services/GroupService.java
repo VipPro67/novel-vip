@@ -9,11 +9,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.novel.vippro.DTO.Group.CreateGroupDTO;
 import com.novel.vippro.DTO.Group.GroupDTO;
-import com.novel.vippro.DTO.GroupMember.GroupMemberDTO;
+import com.novel.vippro.DTO.Group.UpdateGroupDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Group;
+import com.novel.vippro.Models.GroupMember;
 import com.novel.vippro.Models.User;
+import com.novel.vippro.Repository.GroupMemberRepository;
 import com.novel.vippro.Repository.GroupRepository;
 import com.novel.vippro.Services.GroupService;
 
@@ -29,7 +32,7 @@ public class GroupService {
     private UserService userService;
 
     @Autowired
-    private GroupMemberService groupMemberService;
+    private GroupMemberRepository groupMemberRepository;
 
     @Autowired
     private Mapper mapper;
@@ -49,21 +52,22 @@ public class GroupService {
     }
 
     @Transactional
-    public GroupDTO createGroup(GroupDTO groupDTO) {
-        Group group = mapper.DTOtoGroup(groupDTO);
+    public GroupDTO createGroup(CreateGroupDTO groupDTO) {
+        Group group = mapper.CreateDTOtoGroup(groupDTO);
         group = groupRepository.save(group);
         groupRepository.flush();
         User user = userService.getCurrentUser();
-        GroupMemberDTO groupMemberDTO = new GroupMemberDTO();
-        groupMemberDTO.setUserId(user.getId());
-        groupMemberDTO.setGroupId(group.getId());
-        groupMemberDTO.setIsAdmin(true);
-        groupMemberDTO.setDisplayName(user.getUsername());
-        groupMemberService.createGroupMember(groupMemberDTO);
+        GroupMember groupMember = new GroupMember();
+        groupMember.setGroup(group);
+        groupMember.setUser(user);
+        groupMember.setIsAdmin(true);
+        groupMember.setDisplayName(user.getFullName());
+        groupMember = groupMemberRepository.save(groupMember);
+        groupMemberRepository.save(groupMember);
         return mapper.GroupToDTO(group);
     }
 
-    public GroupDTO updateGroup(UUID id, GroupDTO groupDTO) {
+    public GroupDTO updateGroup(UUID id, UpdateGroupDTO groupDTO) {
         Group existingGroup = groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
         mapper.updateGroupFromDTO(groupDTO, existingGroup);

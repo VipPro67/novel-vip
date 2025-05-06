@@ -24,7 +24,7 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = true)
-    private GroupMember group;
+    private Group group;
 
     @Column(columnDefinition = "TEXT")
     private String content;

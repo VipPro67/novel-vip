@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -49,8 +50,10 @@ public class ReadingHistoryController {
         @GetMapping
         public ControllerResponse<PageResponse<ReadingHistoryDTO>> getReadingHistory(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<ReadingHistoryDTO> history = readingHistoryService.getUserReadingHistory(pageable);
                 return ControllerResponse.success("Reading history retrieved successfully", history);
         }
@@ -65,8 +68,10 @@ public class ReadingHistoryController {
         public ControllerResponse<PageResponse<ReadingHistoryDTO>> getNovelReadingHistory(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<ReadingHistoryDTO> history = readingHistoryService.getNovelReadingHistory(novelId,
                                 pageable);
                 return ControllerResponse.success("Novel reading history retrieved successfully", history);

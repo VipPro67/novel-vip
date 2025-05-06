@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,8 +73,9 @@ public class FeatureRequestController {
         public ControllerResponse<PageResponse<FeatureRequestDTO>> getAllFeatureRequests(
                         @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        Authentication authentication) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<FeatureRequestDTO> requests = featureRequestService.getAllFeatureRequests(pageable);
                 return ControllerResponse.success("Feature requests retrieved successfully", requests);
         }
@@ -89,8 +91,10 @@ public class FeatureRequestController {
                         @Parameter(description = "Status to filter by (VOTING, PROCESSING, DONE, REJECTED)", required = true) @PathVariable FeatureRequest.FeatureRequestStatus status,
                         @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        Authentication authentication) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<FeatureRequestDTO> requests = featureRequestService.getFeatureRequestsByStatus(status,
                                 pageable);
                 return ControllerResponse.success("Feature requests retrieved successfully", requests);

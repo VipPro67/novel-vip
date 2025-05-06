@@ -2,10 +2,8 @@ package com.novel.vippro.Controllers;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -48,12 +46,8 @@ public class RoleApprovalController {
                 UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
                 User user = userRepository.findById(userDetails.getId())
                                 .orElseThrow(() -> new RuntimeException("Error: User not found"));
-
-                return ControllerResponse
-                                .success(
-                                                "Role request submitted successfully",
-                                                roleApprovalService.createRoleApprovalRequest(user,
-                                                                request.getRequestedRole()));
+                return ControllerResponse.success("Role request submitted successfully",
+                                roleApprovalService.createRoleApprovalRequest(user, request.getRequestedRole()));
         }
 
         @PreAuthorize("hasRole('ADMIN')")
@@ -89,12 +83,10 @@ public class RoleApprovalController {
         public ControllerResponse<PageResponse<RoleApprovalDTO>> getAllPendingRequests(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
-                        @RequestParam(defaultValue = "createdAt,desc") String sort) {
-                String[] sortParams = sort.split(",");
-                Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
-                String sortBy = sortParams[0];
-
-                Pageable pageable = PageRequest.of(page, size, direction, sortBy);
+                        @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @RequestParam(defaultValue = "asc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<RoleApprovalDTO> requests = roleApprovalService.getAllPendingRequests(pageable);
 
                 return ControllerResponse.success("Pending requests retrieved successfully", requests);

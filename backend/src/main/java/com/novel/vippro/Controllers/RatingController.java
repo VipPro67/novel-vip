@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,8 +57,10 @@ public class RatingController {
         public ControllerResponse<PageResponse<RatingDTO>> getNovelRatings(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<RatingDTO> ratings = ratingService.getNovelRatings(novelId, pageable);
                 return ControllerResponse.success("Ratings retrieved successfully", ratings);
         }
@@ -157,8 +160,10 @@ public class RatingController {
         public ControllerResponse<PageResponse<RatingDTO>> getUserRatings(
                         @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<RatingDTO> ratings = ratingService.getUserRatings(userId, pageable);
                 return ControllerResponse.success("User ratings retrieved successfully", ratings);
         }

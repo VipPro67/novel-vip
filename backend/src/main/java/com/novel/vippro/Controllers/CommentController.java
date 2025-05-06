@@ -10,6 +10,7 @@ import com.novel.vippro.Services.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,8 +43,10 @@ public class CommentController {
         public ControllerResponse<PageResponse<CommentDTO>> getNovelComments(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<CommentDTO> comments = commentService.getNovelComments(novelId, pageable);
                 return ControllerResponse.success("Comments retrieved successfully", comments);
         }
@@ -57,8 +60,10 @@ public class CommentController {
         public ControllerResponse<PageResponse<CommentDTO>> getChapterComments(
                         @Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<CommentDTO> comments = commentService.getChapterComments(chapterId, pageable);
                 return ControllerResponse.success("Comments retrieved successfully", comments);
         }
@@ -72,8 +77,10 @@ public class CommentController {
         public ControllerResponse<PageResponse<CommentDTO>> getUserComments(
                         @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<CommentDTO> comments = commentService.getUserComments(userId, pageable);
                 return ControllerResponse.success("Comments retrieved successfully", comments);
         }
@@ -132,8 +139,10 @@ public class CommentController {
         public ControllerResponse<PageResponse<CommentDTO>> getReplies(
                         @Parameter(description = "Parent comment ID", required = true) @PathVariable UUID commentId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<CommentDTO> replies = commentService.getCommentReplies(commentId, pageable);
                 return ControllerResponse.success("Replies retrieved successfully", replies);
         }

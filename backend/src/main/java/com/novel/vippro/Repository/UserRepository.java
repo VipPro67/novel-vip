@@ -25,9 +25,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         Optional<User> findByEmail(String email);
 
         @Query("SELECT u FROM User u WHERE " +
-                        "(:username IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))) AND " +
-                        "(:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
-                        "(:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))")
+                        "(:username IS NULL OR username ILIKE CONCAT('%', :username, '%')) AND " +
+                        "(:email IS NULL OR email ILIKE CONCAT('%', :email, '%')) AND " +
+                        "(:fullName IS NULL OR fullName ILIKE CONCAT('%', :fullName, '%'))")
         Page<User> searchUsers(
                         @Param("username") String username,
                         @Param("email") String email,

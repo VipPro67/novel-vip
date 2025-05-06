@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -100,8 +101,11 @@ public class NotificationController {
         @GetMapping
         public ControllerResponse<PageResponse<NotificationDTO>> getUserNotifications(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<NotificationDTO> notifications = notificationService.getUserNotifications(pageable);
                 return ControllerResponse.success("Notifications retrieved successfully", notifications);
         }

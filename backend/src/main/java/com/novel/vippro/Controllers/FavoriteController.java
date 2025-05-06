@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,8 +41,10 @@ public class FavoriteController {
         @GetMapping
         public ControllerResponse<PageResponse<NovelDTO>> getUserFavorites(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<NovelDTO> favorites = favoriteService.getUserFavorites(pageable);
                 return ControllerResponse.success("Favorites retrieved successfully", favorites);
         }

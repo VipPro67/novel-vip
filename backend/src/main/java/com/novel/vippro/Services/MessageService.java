@@ -6,15 +6,23 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Message;
+import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.MessageRepository;
 
 @Service
 public class MessageService {
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private GroupService groupService;
 
     @Autowired
     private Mapper mapper;
@@ -31,9 +39,20 @@ public class MessageService {
         return mapper.MessagetoDTO(message);
     }
 
-    public MessageDTO createMessage(MessageDTO messageDTO) {
-        Message message = mapper.DTOtoMessage(messageDTO);
+    public MessageDTO createMessage(CreateMessageDTO messageDTO) {
+        Message message = mapper.CreateDTOtoMessage(messageDTO);
+        User user = userService.getCurrentUser();
+        message.setSender(user);
+        if (messageDTO.getGroupId() == null && messageDTO.getReceiverId() == null) {
+            throw new RuntimeException("Either groupId or receiverId must be provided");
+        }
+        if (messageDTO.getGroupId() != null) {
+            message.setGroup(mapper.DTOtoGroup(groupService.getGroupById(messageDTO.getGroupId())));
+        } else {
+            message.setReceiver(userService.getUserById(messageDTO.getReceiverId()));
+        }
         message = messageRepository.save(message);
+        messageRepository.flush();
         return mapper.MessagetoDTO(message);
     }
 

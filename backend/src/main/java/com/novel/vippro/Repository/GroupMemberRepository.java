@@ -14,4 +14,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, UUID> 
 
     @Query("SELECT mg FROM GroupMember mg WHERE mg.group.id = ?1")
     List<GroupMember> findByGroupId(UUID groupId);
+
+    @Query("SELECT mg FROM GroupMember mg WHERE mg.user.id = ?1 AND mg.group.id = ?2")
+    GroupMember findByUserIdAndGroupId(UUID userId, UUID groupId);
 }

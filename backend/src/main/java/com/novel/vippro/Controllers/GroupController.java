@@ -10,8 +10,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.google.api.Page;
+import com.novel.vippro.DTO.Group.CreateGroupDTO;
 import com.novel.vippro.DTO.Group.GroupDTO;
+import com.novel.vippro.DTO.Group.UpdateGroupDTO;
 import com.novel.vippro.DTO.GroupMember.GroupMemberDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -37,22 +38,53 @@ public class GroupController {
     @Operation(summary = "Get all groups", description = "Retrieve all groups in the system")
     @GetMapping()
     public ControllerResponse<List<GroupDTO>> getAllGroups(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return ControllerResponse.success("Groups retrieved successfully", groupService.getAllGroups(pageable));
     }
 
     @Operation(summary = "Get group members by group ID", description = "Retrieve all members of a specific group")
     @GetMapping("/{id}/members")
     public ControllerResponse<PageResponse<GroupMemberDTO>> getMembersByGroupId(@PathVariable UUID id,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "createdAt,desc") String sort) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         return ControllerResponse.success("Group members retrieved successfully",
                 groupMemberService.getAllGroupMembers(pageable));
+    }
+
+    @Operation(summary = "Add a member to a group", description = "Add a new member to a specific group")
+    @PostMapping("/{id}/members")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<GroupMemberDTO> addMemberToGroup(@PathVariable UUID id,
+            @RequestBody GroupMemberDTO groupMemberDTO) {
+        return ControllerResponse.success("Group member added successfully",
+                groupMemberService.addGroupMember(id, groupMemberDTO));
+    }
+
+    // remove a member from a group
+    @Operation(summary = "Remove a member from a group", description = "Remove a member from a specific group")
+    @DeleteMapping("/{id}/members/{memberId}")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<Void> removeMemberFromGroup(@PathVariable UUID id, @PathVariable UUID memberId) {
+        groupMemberService.removeGroupMember(id, memberId);
+        return ControllerResponse.success("Group member removed successfully", null);
+    }
+
+    // leave a group
+    @Operation(summary = "Leave a group", description = "Leave a specific group")
+    @DeleteMapping("/{id}/leave")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<Void> leaveGroup(@PathVariable UUID id) {
+        groupMemberService.leaveGroup(id);
+        return ControllerResponse.success("Left group successfully", null);
     }
 
     @GetMapping("/{id}")
@@ -62,13 +94,13 @@ public class GroupController {
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    public ControllerResponse<GroupDTO> createGroup(@RequestBody GroupDTO groupDTO) {
+    public ControllerResponse<GroupDTO> createGroup(@RequestBody CreateGroupDTO groupDTO) {
         return ControllerResponse.success("Group created successfully", groupService.createGroup(groupDTO));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ControllerResponse<GroupDTO> updateGroup(@PathVariable UUID id, @RequestBody GroupDTO groupDTO) {
+    public ControllerResponse<GroupDTO> updateGroup(@PathVariable UUID id, @RequestBody UpdateGroupDTO groupDTO) {
         return ControllerResponse.success("Group updated successfully", groupService.updateGroup(id, groupDTO));
     }
 

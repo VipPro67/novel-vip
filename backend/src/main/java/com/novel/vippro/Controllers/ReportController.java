@@ -10,6 +10,7 @@ import com.novel.vippro.Services.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,8 +43,10 @@ public class ReportController {
         @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<PageResponse<ReportDTO>> getAllReports(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
                 PageResponse<ReportDTO> reports = reportService.getAllReports(pageable);
                 return ControllerResponse.success("Reports retrieved successfully", reports);
         }
@@ -57,8 +60,11 @@ public class ReportController {
         @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<PageResponse<ReportDTO>> getPendingReports(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<ReportDTO> reports = reportService.getPendingReports(pageable);
                 return ControllerResponse.success("Pending reports retrieved successfully", reports);
         }
@@ -74,8 +80,11 @@ public class ReportController {
         public ControllerResponse<PageResponse<ReportDTO>> getUserReports(
                         @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<ReportDTO> reports = reportService.getUserReports(userId, pageable);
                 return ControllerResponse.success("User reports retrieved successfully", reports);
         }
@@ -91,8 +100,11 @@ public class ReportController {
         public ControllerResponse<PageResponse<ReportDTO>> getNovelReports(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<ReportDTO> reports = reportService.getNovelReports(novelId, pageable);
                 return ControllerResponse.success("Novel reports retrieved successfully", reports);
         }

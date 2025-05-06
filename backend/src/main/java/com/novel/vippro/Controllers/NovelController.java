@@ -52,9 +52,11 @@ public class NovelController {
     public ControllerResponse<PageResponse<NovelDTO>> getAllNovels(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Sort field (views, rating, createdAt)") @RequestParam(defaultValue = "views") String sortBy) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
-        PageResponse<NovelDTO> novels = novelService.getAllNovels(pageable, sortBy);
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        PageResponse<NovelDTO> novels = novelService.getAllNovels(pageable);
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
 
@@ -79,8 +81,11 @@ public class NovelController {
     public ControllerResponse<PageResponse<NovelDTO>> getNovelsByCategory(
             @Parameter(description = "Category name or slug") @PathVariable UUID category,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         PageResponse<NovelDTO> novels = novelService.getNovelsByCategory(category, pageable);
         return ControllerResponse.success("Novels retrieved successfully", novels);
@@ -95,8 +100,11 @@ public class NovelController {
     public ControllerResponse<PageResponse<NovelDTO>> getNovelsByStatus(
             @Parameter(description = "Status") @PathVariable String status,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getNovelsByStatus(status, pageable);
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
@@ -109,8 +117,11 @@ public class NovelController {
     public ControllerResponse<PageResponse<NovelDTO>> searchNovels(
             @Parameter(description = "Search keyword") @RequestParam String keyword,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.searchNovels(keyword, pageable);
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
@@ -119,8 +130,11 @@ public class NovelController {
     @GetMapping("/hot")
     public ControllerResponse<PageResponse<NovelDTO>> getHotNovels(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getHotNovels(pageable);
         return ControllerResponse.success("Hot novels retrieved successfully", novels);
     }
@@ -129,8 +143,11 @@ public class NovelController {
     @GetMapping("/top-rated")
     public ControllerResponse<PageResponse<NovelDTO>> getTopRatedNovels(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getTopRatedNovels(pageable);
         return ControllerResponse.success("Top rated novels retrieved successfully", novels);
     }
@@ -140,8 +157,11 @@ public class NovelController {
     @GetMapping("/latest-updates")
     public ControllerResponse<PageResponse<NovelDTO>> getLatestUpdatedNovels(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getLatestUpdatedNovels(pageable);
         return ControllerResponse.success("Latest updated novels retrieved successfully", novels);
     }
@@ -155,8 +175,12 @@ public class NovelController {
     public ControllerResponse<PageResponse<Chapter>> getChaptersByNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID novelId,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updateAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<Chapter> chapters = chapterService.getChaptersByNovel(novelId, pageable);
         return ControllerResponse.success("Chapters retrieved successfully", chapters);
     }
@@ -170,8 +194,11 @@ public class NovelController {
     public ControllerResponse<PageResponse<CommentDTO>> getCommentsByNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID novelId,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "createAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<CommentDTO> comments = commentService.getNovelComments(novelId, pageable);
         return ControllerResponse.success("Comments retrieved successfully", comments);
     }

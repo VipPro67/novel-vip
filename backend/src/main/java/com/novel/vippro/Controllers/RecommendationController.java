@@ -8,6 +8,7 @@ import com.novel.vippro.Services.RecommendationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,8 +40,11 @@ public class RecommendationController {
         @PreAuthorize("isAuthenticated()")
         public ControllerResponse<PageResponse<Novel>> getPersonalizedRecommendations(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "rating") @RequestParam(defaultValue = "rating") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<Novel> recommendations = recommendationService.getPersonalizedRecommendations(pageable);
                 return ControllerResponse.success("Recommendations retrieved successfully", recommendations);
         }
@@ -54,8 +58,11 @@ public class RecommendationController {
         public ControllerResponse<PageResponse<Novel>> getSimilarNovels(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "rating") @RequestParam(defaultValue = "rating") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<Novel> similarNovels = recommendationService.getSimilarNovels(novelId, pageable);
                 return ControllerResponse.success("Similar novels retrieved successfully", similarNovels);
         }
@@ -67,8 +74,11 @@ public class RecommendationController {
         @GetMapping("/popular")
         public ControllerResponse<PageResponse<Novel>> getPopularNovels(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "rating") @RequestParam(defaultValue = "rating") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+                Pageable pageable = PageRequest.of(page, size, sort);
                 PageResponse<Novel> popularNovels = recommendationService.getPopularNovels(pageable);
                 return ControllerResponse.success("Popular novels retrieved successfully", popularNovels);
         }

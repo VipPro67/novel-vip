@@ -4,11 +4,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Services.MessageService;
+
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -17,7 +21,9 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
+    @Operation(summary = "Get all messages")
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ControllerResponse<List<MessageDTO>> getAllMessages() {
         return ControllerResponse.success("Messages retrieved successfully", messageService.getAllMessages());
     }
@@ -28,7 +34,8 @@ public class MessageController {
     }
 
     @PostMapping
-    public ControllerResponse<MessageDTO> createMessage(@RequestBody MessageDTO messageDTO) {
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<MessageDTO> createMessage(@RequestBody CreateMessageDTO messageDTO) {
         return ControllerResponse.success("Message created successfully", messageService.createMessage(messageDTO));
     }
 

@@ -53,9 +53,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @Cacheable(value = "users", key = "'all-' + #page + '-' + #size")
-    public PageResponse<UserDTO> getAllUsers(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    @Cacheable(value = "users", key = "#pageable.pageNumber + '_' + pageable.pageSize + '_' + #pageable.sort")
+    public PageResponse<UserDTO> getAllUsers(Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
         return new PageResponse<>(userPage.map(this::convertToDTO));
     }
@@ -71,6 +70,12 @@ public class UserService {
         }
         return userRepository.findById(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", user.getId()));
+    }
+
+    @Cacheable(value = "users", key = "#id")
+    public User getUserById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     public UUID getCurrentUserId() {
