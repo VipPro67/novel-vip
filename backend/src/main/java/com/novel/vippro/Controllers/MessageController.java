@@ -13,9 +13,14 @@ import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Services.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/messages")
+@CrossOrigin(origins = "*", maxAge = 3600)
+@Tag(name = "Message", description = "Message API")
+@SecurityRequirement(name = "bearerAuth")
 public class MessageController {
 
     @Autowired
@@ -28,9 +33,26 @@ public class MessageController {
         return ControllerResponse.success("Messages retrieved successfully", messageService.getAllMessages());
     }
 
-    @GetMapping("/{id}")
-    public ControllerResponse<MessageDTO> getMessageById(@PathVariable UUID id) {
-        return ControllerResponse.success("Message retrieved successfully", messageService.getMessageById(id));
+    @Operation(summary = "Search messages by content")
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<List<MessageDTO>> searchMessages(@RequestParam String content) {
+        return ControllerResponse.success("Messages retrieved successfully", messageService.searchMessages(content));
+    }
+
+    @Operation(summary = "Get my conversations")
+    @GetMapping("/my-conversations")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<List<MessageDTO>> getMyConversations() {
+        return ControllerResponse.success("Conversations retrieved successfully", messageService.getMyConversations());
+    }
+
+    @Operation(summary = "Get all messages by rereiver or group id")
+    @GetMapping("/by-receiver-or-group/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ControllerResponse<List<MessageDTO>> getMessagesByReceiverOrGroup(@PathVariable UUID id) {
+        return ControllerResponse.success("Messages retrieved successfully",
+                messageService.getMessagesByReceiverOrGroup(id));
     }
 
     @PostMapping

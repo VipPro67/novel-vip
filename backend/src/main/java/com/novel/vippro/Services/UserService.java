@@ -53,7 +53,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @Cacheable(value = "users", key = "#pageable.pageNumber + '_' + pageable.pageSize + '_' + #pageable.sort")
+    @Cacheable(value = "users", key = "#pageable.pageNumber + '_' + pageable.pageSize + '_' + #pageable.sort.toString()")
     public PageResponse<UserDTO> getAllUsers(Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
         return new PageResponse<>(userPage.map(this::convertToDTO));

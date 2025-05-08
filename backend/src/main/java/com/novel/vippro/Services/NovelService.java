@@ -60,8 +60,9 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
-    @Cacheable(value = "novels", key = "'all-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    @Cacheable(value = "novels", key = "'all-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     public PageResponse<NovelDTO> getAllNovels(Pageable pageable) {
+
         Page<Novel> novels = novelRepository.findAll(pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
@@ -78,7 +79,7 @@ public class NovelService {
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
-    @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     public PageResponse<NovelDTO> searchNovels(String keyword, Pageable pageable) {
         Page<Novel> novels = novelRepository.searchByKeyword(keyword, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
