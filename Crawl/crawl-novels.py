@@ -453,7 +453,7 @@ def main():
     }
 
     # Initialize crawler
-    base_url = "https://www.truyenfull.co"
+    base_url = "https://truyenfull.vision"
     crawler = NovelCrawler(base_url, db_config)
 
     # Run crawler

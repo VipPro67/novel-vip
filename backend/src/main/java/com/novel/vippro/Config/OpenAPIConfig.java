@@ -16,47 +16,47 @@ import java.util.List;
 @Configuration
 public class OpenAPIConfig {
 
-        @Value("${novel.openapi.dev-url}")
-        private String devUrl;
+    @Value("${novel.openapi.dev-url}")
+    private String devUrl;
 
-        @Value("${novel.openapi.prod-url}")
-        private String prodUrl;
+    @Value("${novel.openapi.prod-url}")
+    private String prodUrl;
 
-        @Bean
-        public OpenAPI myOpenAPI() {
-                Server devServer = new Server();
-                devServer.setUrl(devUrl);
-                devServer.setDescription("Server URL in Development environment");
+    @Bean
+    public OpenAPI myOpenAPI() {
+        Server devServer = new Server();
+        devServer.setUrl(devUrl);
+        devServer.setDescription("Server URL in Development environment");
 
-                Server prodServer = new Server();
-                prodServer.setUrl(prodUrl);
-                prodServer.setDescription("Server URL in Production environment");
+        Server prodServer = new Server();
+        prodServer.setUrl(prodUrl);
+        prodServer.setDescription("Server URL in Production environment");
 
-                Contact contact = new Contact();
-                contact.setEmail("vippro@example.com");
-                contact.setName("Novel VIP Pro");
-                contact.setUrl("https://www.novelvippro.com");
+        Contact contact = new Contact();
+        contact.setEmail("vippro@example.com");
+        contact.setName("Novel VIP Pro");
+        contact.setUrl("https://www.novelvippro.com");
 
-                License mitLicense = new License().name("MIT License").url("https://choosealicense.com/licenses/mit/");
+        License mitLicense = new License().name("MIT License").url("https://choosealicense.com/licenses/mit/");
 
-                Info info = new Info()
-                                .title("Novel VIP Pro API")
-                                .version("1.0")
-                                .contact(contact)
-                                .description("This API exposes endpoints to manage novels, chapters, and users.")
-                                .termsOfService("https://www.novelvippro.com/terms")
-                                .license(mitLicense);
+        Info info = new Info()
+                .title("Novel VIP Pro API")
+                .version("1.0")
+                .contact(contact)
+                .description("This API exposes endpoints to manage novels, chapters, and users.")
+                .termsOfService("https://www.novelvippro.com/terms")
+                .license(mitLicense);
 
-                return new OpenAPI()
-                                .info(info)
-                                .servers(List.of(devServer, prodServer))
-                                .components(new Components()
-                                                .addSecuritySchemes("bearerAuth",
-                                                                new SecurityScheme()
-                                                                                .type(SecurityScheme.Type.HTTP)
-                                                                                .scheme("bearer")
-                                                                                .bearerFormat("JWT")
-                                                                                .description(
-                                                                                                "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'")));
-        }
+        return new OpenAPI()
+                .info(info)
+                .servers(List.of(devServer, prodServer))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .description(
+                                                "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'")));
+    }
 }

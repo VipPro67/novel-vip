@@ -1,0 +1,45 @@
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
+
+spring.jpa.properties.hibernate.dialect=
+spring.jpa.hibernate.ddl-auto=
+spring.jpa.show-sql=
+spring.jpa.properties.hibernate.format_sql=
+spring.jpa.properties.hibernate.jdbc.batch_size=
+spring.jpa.properties.hibernate.order_inserts=
+spring.jpa.properties.hibernate.order_updates=
+
+# App Properties
+novel.app.jwtSecret=
+novel.app.jwtExpirationMs=
+
+# Cloudinary Properties
+cloudinary.cloud.name=
+cloudinary.api.key=
+cloudinary.api.secret=
+
+#Google
+google.cerdentials.path =
+
+# Supabase Properties
+supabase.url=
+supabase.service.role.key=
+supabase.anon.key=
+supabase.webhook.secret=
+
+management.endpoints.web.exposure.include= *
+
+# OpenAPI config
+novel.openapi.dev-url=
+novel.openapi.prod-url=
+
+# Redis Configuration
+spring.data.redis.host=
+spring.data.redis.port=
+spring.data.redis.password=
+spring.data.redis.ssl.enabled=               
+spring.data.redis.timeout=
+
+spring.cache.type=
+spring.cache.redis.time-to-live= 

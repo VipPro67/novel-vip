@@ -20,50 +20,50 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
-        @Bean
-        public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
-                RedisTemplate<String, Object> template = new RedisTemplate<>();
-                template.setConnectionFactory(factory);
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+		RedisTemplate<String, Object> template = new RedisTemplate<>();
+		template.setConnectionFactory(factory);
 
-                // Configure Jackson serializer with type information and JSR-310 support
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.registerModule(new JavaTimeModule());
-                objectMapper.activateDefaultTyping(
-                                objectMapper.getPolymorphicTypeValidator(),
-                                ObjectMapper.DefaultTyping.NON_FINAL,
-                                JsonTypeInfo.As.PROPERTY);
-                Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
-                                Object.class);
+		// Configure Jackson serializer with type information and JSR-310 support
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.activateDefaultTyping(
+				objectMapper.getPolymorphicTypeValidator(),
+				ObjectMapper.DefaultTyping.NON_FINAL,
+				JsonTypeInfo.As.PROPERTY);
+		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
+				Object.class);
 
-                template.setKeySerializer(new StringRedisSerializer());
-                template.setValueSerializer(serializer);
-                template.setHashKeySerializer(new StringRedisSerializer());
-                template.setHashValueSerializer(serializer);
-                template.afterPropertiesSet();
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setValueSerializer(serializer);
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setHashValueSerializer(serializer);
+		template.afterPropertiesSet();
 
-                return template;
-        }
+		return template;
+	}
 
-        @Bean
-        public CacheManager cacheManager(RedisConnectionFactory factory) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.registerModule(new JavaTimeModule());
-                objectMapper.activateDefaultTyping(
-                                objectMapper.getPolymorphicTypeValidator(),
-                                ObjectMapper.DefaultTyping.NON_FINAL,
-                                JsonTypeInfo.As.PROPERTY);
-                Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
-                                Object.class);
+	@Bean
+	public CacheManager cacheManager(RedisConnectionFactory factory) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.activateDefaultTyping(
+				objectMapper.getPolymorphicTypeValidator(),
+				ObjectMapper.DefaultTyping.NON_FINAL,
+				JsonTypeInfo.As.PROPERTY);
+		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
+				Object.class);
 
-                RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                                .serializeKeysWith(RedisSerializationContext.SerializationPair
-                                                .fromSerializer(new StringRedisSerializer()))
-                                .serializeValuesWith(
-                                                RedisSerializationContext.SerializationPair.fromSerializer(serializer))
-                                .entryTtl(Duration.ofMinutes(10));
+		RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+				.serializeKeysWith(RedisSerializationContext.SerializationPair
+						.fromSerializer(new StringRedisSerializer()))
+				.serializeValuesWith(
+						RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+				.entryTtl(Duration.ofMinutes(10));
 
-                return RedisCacheManager.builder(factory)
-                                .cacheDefaults(cacheConfig)
-                                .build();
-        }
+		return RedisCacheManager.builder(factory)
+				.cacheDefaults(cacheConfig)
+				.build();
+	}
 }

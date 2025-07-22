@@ -16,7 +16,7 @@ import java.io.InputStream;
 @Service
 public class TextToSpeechService {
 
-    @Value("${GOOGLE_APPLICATION_CREDENTIALS}")
+    @Value("${google.cerdentials.path}")
     private String googleCredentialsPath;
 
     @Autowired

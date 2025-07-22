@@ -311,7 +311,7 @@ def main():
     }
 
     # Initialize crawler
-    base_url = "https://www.truyenfull.co"
+    base_url = "https://www.truyenfull.vision"
     crawler = NovelChapterCrawler(base_url, db_config)
 
     # Crawl chapters

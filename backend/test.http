@@ -1,14 +1,13 @@
 @supabase_token = eyJhbGciOiJIUzI1NiIsImtpZCI6IkF6R1FMd05IRllzNmI5eTciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2lqZG9yeGFpa29vdm1lemZwZHJ6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI3ZjdiZmY3ZC0yMDkwLTRhMTMtOThkMy00YzBhMTQyMTlkNWUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ0MTgyNDk1LCJpYXQiOjE3NDQxNzg4OTUsImVtYWlsIjoiY2xvbmVtb2l0aW5oQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZ29vZ2xlIiwicHJvdmlkZXJzIjpbImdvb2dsZSJdfSwidXNlcl9tZXRhZGF0YSI6eyJhdmF0YXJfdXJsIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwiZW1haWwiOiJjbG9uZW1vaXRpbmhAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkNsb25lIEdtYWlsIiwiaXNzIjoiaHR0cHM6Ly9hY2NvdW50cy5nb29nbGUuY29tIiwibmFtZSI6IkNsb25lIEdtYWlsIiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVhZNVROaUJHSXBOY09TblRGcmNLSi1nS2hkeU9fWkRRcEc1NThLaTI4NHZ4NEdRPXM5Ni1jIiwicHJvdmlkZXJfaWQiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYiLCJzdWIiOiIxMTE4MTU2MjM5OTg5OTE0NDYyMTYifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvYXV0aCIsInRpbWVzdGFtcCI6MTc0NDE3ODg5NX1dLCJzZXNzaW9uX2lkIjoiOGQzZmFhMjEtYzYyZC00N2Q1LTkyZTQtMzRhODg0YWI4MzkzIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.JgV-ghl1eROCHlFgICql1mta5arpwWbIUrVBaJAC7N4
 
-@token = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIlVTRVIiLCJBRE1JTiJdLCJ1c2VySWQiOiJlYTQ0NGNlYy01Y2ZiLTRiY2YtOGFiYS0wMWEzMjkzNjhiN2EiLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ0Njg4Njg1LCJleHAiOjE3NDQ3NzUwODV9.uW3L7IXaQiIumHmvik_mazRdcHrdE7jEGxtQoO00LoI
-
+@token =eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJWaXBQcm82NyIsInJvbGVzIjpbIkFETUlOIiwiVVNFUiJdLCJ1c2VySWQiOiJmY2MxN2FlMS1mYWE0LTQxMjItYmUxYS1hNjE1ODMzY2Y5MTIiLCJlbWFpbCI6InR0dC50dUB0c2IuY29tLnZuIiwiaWF0IjoxNzUzMTc2MzkwLCJleHAiOjE3NTMyNjI3OTB9.QeZnoH_OUxeicKCyM8SyY6mJvWurqypIdXi4ly27S0Q
 ### Test User Login
 POST http://localhost:8080/api/auth/signin
 Content-Type: application/json
 
 {
-    "username": "newuser",
-    "password": "newpassword"
+    "email": "ttt.tu@tsb.com.vn",
+    "password": "123123a"
 }
 
 
@@ -18,7 +17,7 @@ Content-Type: application/json
 
 {
     "email": "admin@example.com",
-    "password": "adminpassword"
+    "password": "123123@Aa"
 }
 
 ### Test User Registration
@@ -257,7 +256,7 @@ Content-Type: application/json
   "slug": "co-chan-nhan",
   "description": "Một câu chuyện về võ thuật và tu tiên",
   "author": "Cổ Long",
-  "coverImage": "https://example.com/cover.jpg",
+  "coverImage": null,
   "status": "ongoing",
   "categories": ["Võng du", "Võ thuật", "Cultivation"]
 }
