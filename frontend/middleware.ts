@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("token")?.value
   const { pathname } = request.nextUrl
 
   // Protected routes that require authentication
@@ -13,23 +12,13 @@ export function middleware(request: NextRequest) {
 
   // Check if the current path is protected
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
-
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route))
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  // For admin routes, we'll handle role checking in the component
-  // since we need to decode the JWT to check roles
-  if (isAdminRoute && !token) {
-    return NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (token && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/", request.url))
+  // For client-side routes that need authentication, we'll handle the redirect in the component
+  // since localStorage is not available in middleware
+  if (isProtectedRoute || isAdminRoute) {
+    // Let the request pass through - authentication will be handled client-side
+    return NextResponse.next()
   }
 
   return NextResponse.next()

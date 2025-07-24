@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://backend-production-eeef.up.railway.app"
 
 export interface ApiResponse<T> {
   success: boolean
@@ -150,12 +150,26 @@ export interface ReaderSettings {
   marginSize: number
   paragraphSpacing: number
   autoScroll: boolean
-  autoScrollSpeed: number
+  autoScrollSpeed: boolean
   keepScreenOn: boolean
   showProgress: boolean
   showChapterTitle: boolean
   showTime: boolean
   showBattery: boolean
+}
+
+export interface RoleRequest {
+  id: string
+  userId: string
+  username: string
+  email: string
+  requestedRole: string
+  reason: string
+  status: "PENDING" | "APPROVED" | "REJECTED"
+  requestedAt: string
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewerUsername?: string
 }
 
 class ApiClient {
@@ -183,6 +197,10 @@ class ApiClient {
     }
   }
 
+  getToken(): string | null {
+    return this.token
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
     const headers: HeadersInit = {
@@ -190,20 +208,47 @@ class ApiClient {
       ...options.headers,
     }
 
+    // Add Authorization header if token exists
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
+    console.log(`API Request: ${options.method || "GET"} ${url}`)
+    console.log("Headers:", headers)
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      })
+
+      console.log(`API Response: ${response.status} ${response.statusText}`)
+
+      if (!response.ok) {
+        // Handle different error status codes
+        if (response.status === 401) {
+          // Unauthorized - token might be expired
+          this.clearToken()
+          throw new Error("Authentication failed. Please login again.")
+        } else if (response.status === 403) {
+          // Forbidden - insufficient permissions
+          throw new Error("Access denied. Insufficient permissions.")
+        } else if (response.status === 404) {
+          throw new Error("Resource not found.")
+        } else if (response.status >= 500) {
+          throw new Error("Server error. Please try again later.")
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+      }
+
+      const data = await response.json()
+      console.log("API Response Data:", data)
+      return data
+    } catch (error) {
+      console.error("API Request Error:", error)
+      throw error
     }
-
-    return response.json()
   }
 
   // Auth endpoints
@@ -259,14 +304,27 @@ class ApiClient {
       size?: number
       sortBy?: string
       sortDir?: string
+      search?: string
     } = {},
   ) {
     const searchParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        searchParams.append(key, value.toString())
-      }
-    })
+
+    // Set default values
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "updatedAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    // Add pagination parameters
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    // Add search parameter if provided
+    if (params.search && params.search.trim()) {
+      searchParams.append("search", params.search.trim())
+    }
 
     return this.request<PageResponse<Novel>>(`/api/novels?${searchParams}`)
   }
@@ -606,14 +664,27 @@ class ApiClient {
       size?: number
       sortBy?: string
       sortDir?: string
+      search?: string
     } = {},
   ) {
     const searchParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
-        searchParams.append(key, value.toString())
-      }
-    })
+
+    // Set default values
+    const page = params.page ?? 0
+    const size = params.size ?? 10
+    const sortBy = params.sortBy ?? "id"
+    const sortDir = params.sortDir ?? "asc"
+
+    // Add pagination parameters
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    // Add search parameter if provided
+    if (params.search && params.search.trim()) {
+      searchParams.append("search", params.search.trim())
+    }
 
     return this.request<PageResponse<User>>(`/api/users?${searchParams}`)
   }
@@ -628,6 +699,69 @@ class ApiClient {
   async deleteUser(userId: string) {
     return this.request<void>(`/api/users/${userId}`, {
       method: "DELETE",
+    })
+  }
+
+  // Role Approval endpoints
+  async requestRole(requestedRole: string, reason: string) {
+    return this.request<RoleRequest>("/api/role-approval/request", {
+      method: "POST",
+      body: JSON.stringify({ requestedRole, reason }),
+    })
+  }
+
+  async getPendingRoleRequests(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+
+    // Set default values
+    const page = params.page ?? 0
+    const size = params.size ?? 10
+    const sortBy = params.sortBy ?? "requestedAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    // Add pagination parameters
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<RoleRequest>>(`/api/role-approval/pending?${searchParams}`)
+  }
+
+  async getMyRoleRequests(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    return this.request<PageResponse<RoleRequest>>(`/api/role-approval/my-requests?${searchParams}`)
+  }
+
+  async approveRoleRequest(requestId: string) {
+    return this.request<RoleRequest>(`/api/role-approval/approve/${requestId}`, {
+      method: "POST",
+    })
+  }
+
+  async rejectRoleRequest(requestId: string) {
+    return this.request<RoleRequest>(`/api/role-approval/reject/${requestId}`, {
+      method: "POST",
     })
   }
 }

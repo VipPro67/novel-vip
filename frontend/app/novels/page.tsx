@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Header } from "@/components/layout/header"
 import { NovelCard } from "@/components/novel/novel-card"
 import { api, type Novel } from "@/lib/api"
+import { Pagination } from "@/components/ui/pagination"
 
 export default function NovelsPage() {
   const [novels, setNovels] = useState<Novel[]>([])
@@ -151,27 +152,13 @@ export default function NovelsPage() {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-              >
-                Previous
-              </Button>
-              <span className="flex items-center px-4">
-                Page {currentPage + 1} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                disabled={currentPage === totalPages - 1}
-              >
-                Next
-              </Button>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            showPageNumbers={true}
+            className="mt-8"
+          />
         </div>
       </main>
     </div>

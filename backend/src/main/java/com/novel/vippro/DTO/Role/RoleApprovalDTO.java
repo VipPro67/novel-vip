@@ -12,8 +12,8 @@ public class RoleApprovalDTO {
     private String username;
     private String requestedRole;
     private String status;
-    private LocalDateTime requestDate;
-    private LocalDateTime processedDate;
+    private LocalDateTime requestedAt;
+    private LocalDateTime processedAt;
     private String processedBy;
     private String rejectionReason;
 }

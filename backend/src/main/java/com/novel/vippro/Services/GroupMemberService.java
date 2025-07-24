@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class GroupMemberService {
     @Autowired
     private Mapper mapper;
 
+    @Cacheable(value = "groupMembers", key = "#pageable")
     public PageResponse<GroupMemberDTO> getAllGroupMembers(Pageable pageable) {
         Page<GroupMember> groupMemberPage = groupMemberRepository.findAll(pageable);
         PageResponse<GroupMemberDTO> groupMemberDTOs = new PageResponse<>();
@@ -62,6 +65,7 @@ public class GroupMemberService {
         return mapper.GroupMembertoDTO(groupMember);
     }
 
+    @CacheEvict(value = "groupMembers", key = "#groupId")
     public void removeGroupMember(UUID groupId, UUID userId) {
         GroupMember currentUserGroupMember = groupMemberRepository.findByUserIdAndGroupId(
                 userService.getCurrentUser().getId(), groupId);
@@ -75,6 +79,7 @@ public class GroupMemberService {
         groupMemberRepository.delete(existingGroupMember);
     }
 
+    @CacheEvict(value = "groupMembers", key = "#groupId")
     public void leaveGroup(UUID groupId) {
         GroupMember existingGroupMember = groupMemberRepository.findByUserIdAndGroupId(
                 userService.getCurrentUser().getId(), groupId);
@@ -84,18 +89,21 @@ public class GroupMemberService {
         groupMemberRepository.delete(existingGroupMember);
     }
 
+    @Cacheable(value = "groupMembersByGroupId", key = "#groupId")
     public List<GroupMemberDTO> getMembersByGroupId(UUID groupId) {
         return groupMemberRepository.findByGroupId(groupId).stream()
                 .map(mapper::GroupMembertoDTO)
                 .toList();
     }
 
+    @Cacheable(value = "groupMember", key = "#id")
     public GroupMemberDTO getGroupMemberById(UUID id) {
         GroupMember groupMember = groupMemberRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("GroupMember not found"));
         return mapper.GroupMembertoDTO(groupMember);
     }
 
+    
     public GroupMemberDTO createGroupMember(GroupMemberDTO groupMemberDTO) {
         GroupMember groupMember = mapper.DTOtoGroupMember(groupMemberDTO);
         groupMember = groupMemberRepository.save(groupMember);

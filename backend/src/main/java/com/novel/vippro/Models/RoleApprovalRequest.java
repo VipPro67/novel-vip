@@ -25,9 +25,9 @@ public class RoleApprovalRequest {
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
     @Column(nullable = false)
-    private LocalDateTime requestDate = LocalDateTime.now();
+    private LocalDateTime requestedAt = LocalDateTime.now();
 
-    private LocalDateTime processedDate;
+    private LocalDateTime processedAt;
 
     private String processedBy;
 
@@ -74,19 +74,19 @@ public class RoleApprovalRequest {
     }
 
     public LocalDateTime getRequestDate() {
-        return requestDate;
+        return requestedAt;
     }
 
-    public void setRequestDate(LocalDateTime requestDate) {
-        this.requestDate = requestDate;
+    public void setRequestDate(LocalDateTime requestedAt) {
+        this.requestedAt = requestedAt;
     }
 
     public LocalDateTime getProcessedDate() {
-        return processedDate;
+        return processedAt;
     }
 
-    public void setProcessedDate(LocalDateTime processedDate) {
-        this.processedDate = processedDate;
+    public void setProcessedDate(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
     }
 
     public String getProcessedBy() {

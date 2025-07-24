@@ -15,6 +15,7 @@ import com.novel.vippro.Services.ReviewService;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,7 @@ public class ReviewService {
     private UserService userService;
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "reviews", key = "#novelId + '_' + #pageable")
     public PageResponse<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable) {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
@@ -46,6 +48,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "reviewsByUser", key = "#userId + '_' + #pageable")
     public PageResponse<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -74,6 +77,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @Cacheable(value = "review", key = "#id")
     public ReviewDTO updateReview(UUID id, ReviewUpdateDTO reviewDTO) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
@@ -92,6 +96,7 @@ public class ReviewService {
     }
 
     @Transactional
+    @Cacheable(value = "review", key = "#id")
     public void deleteReview(UUID id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
@@ -105,6 +110,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "reviewSummary", key = "#novelId")
     public ReviewSummaryDTO getReviewSummary(UUID novelId) {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
