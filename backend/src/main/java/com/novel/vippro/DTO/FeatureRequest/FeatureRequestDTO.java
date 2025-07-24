@@ -2,7 +2,9 @@ package com.novel.vippro.DTO.FeatureRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -10,6 +12,8 @@ import com.novel.vippro.Models.FeatureRequest;
 import com.novel.vippro.Models.User;
 
 @Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class FeatureRequestDTO {

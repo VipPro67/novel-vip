@@ -4,6 +4,7 @@ import com.novel.vippro.DTO.File.FileDownloadDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.File.FileMetadataUpdateDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
+import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Repository.FileMetadataRepository;
 
@@ -28,6 +29,9 @@ public class FileService {
 
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
+
+    @Autowired
+    private Mapper mapper;
 
     @Transactional
     public FileMetadata uploadFile(MultipartFile file, String type) {
@@ -94,7 +98,7 @@ public class FileService {
         FileMetadata metadata = fileMetadataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));
 
-        return convertToMetadataDTO(metadata);
+        return mapper.FileMetadataToDTO(metadata);
     }
 
     @Transactional
@@ -107,29 +111,7 @@ public class FileService {
         metadata.setLastModifiedAt(LocalDateTime.now());
 
         metadata = fileMetadataRepository.save(metadata);
-        return convertToMetadataDTO(metadata);
+        return mapper.FileMetadataToDTO(metadata);
     }
 
-    private FileMetadata convertToUploadDTO(FileMetadata metadata) {
-        FileMetadata dto = new FileMetadata();
-        dto.setId(metadata.getId());
-        dto.setFileName(metadata.getFileName());
-        dto.setFileUrl(metadata.getFileUrl());
-        dto.setContentType(metadata.getContentType());
-        dto.setSize(metadata.getSize());
-        dto.setType(metadata.getType());
-        return dto;
-    }
-
-    private FileMetadataDTO convertToMetadataDTO(FileMetadata metadata) {
-        FileMetadataDTO dto = new FileMetadataDTO();
-        dto.setId(metadata.getId());
-        dto.setFileName(metadata.getFileName());
-        dto.setContentType(metadata.getContentType());
-        dto.setSize(metadata.getSize());
-        dto.setType(metadata.getType());
-        dto.setUploadedAt(metadata.getUploadedAt());
-        dto.setLastModifiedAt(metadata.getLastModifiedAt());
-        return dto;
-    }
 }

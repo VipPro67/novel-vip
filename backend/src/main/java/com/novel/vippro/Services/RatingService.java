@@ -7,6 +7,7 @@ import com.novel.vippro.DTO.Rating.RatingSummaryDTO;
 import com.novel.vippro.DTO.Rating.RatingUpdateDTO;
 import com.novel.vippro.Exception.BadRequestException;
 import com.novel.vippro.Exception.ResourceNotFoundException;
+import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.Rating;
 import com.novel.vippro.Models.User;
@@ -39,12 +40,15 @@ public class RatingService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private Mapper mapper;
+
     public PageResponse<RatingDTO> getNovelRatings(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
         return new PageResponse<>(ratingRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
-                .map(this::convertToDTO));
+                .map(mapper::RatingtoDTO));
     }
 
     @Transactional
@@ -68,13 +72,13 @@ public class RatingService {
         Rating savedRating = ratingRepository.save(rating);
         updateNovelRating(novel);
 
-        return convertToDTO(savedRating);
+        return mapper.RatingtoDTO(savedRating);
     }
 
     public RatingDTO getUserRating(UUID novelId) {
         UUID userId = userService.getCurrentUserId();
         return ratingRepository.findByUserIdAndNovelId(userId, novelId)
-                .map(this::convertToDTO)
+                .map(mapper::RatingtoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
     }
 
@@ -120,20 +124,6 @@ public class RatingService {
         novelRepository.save(novel);
     }
 
-    private RatingDTO convertToDTO(Rating rating) {
-        RatingDTO dto = new RatingDTO();
-        dto.setId(rating.getId());
-        dto.setUserId(rating.getUser().getId());
-        dto.setUsername(rating.getUser().getUsername());
-        dto.setNovelId(rating.getNovel().getId());
-        dto.setNovelTitle(rating.getNovel().getTitle());
-        dto.setScore(rating.getScore());
-        dto.setReview(rating.getReview());
-        dto.setCreatedAt(rating.getCreatedAt());
-        dto.setUpdatedAt(rating.getUpdatedAt());
-        return dto;
-    }
-
     @Transactional
     public RatingDTO updateRating(UUID id, RatingUpdateDTO ratingDTO) {
         Rating rating = ratingRepository.findById(id)
@@ -151,7 +141,7 @@ public class RatingService {
         Rating updatedRating = ratingRepository.save(rating);
         updateNovelRating(rating.getNovel());
 
-        return convertToDTO(updatedRating);
+        return mapper.RatingtoDTO(updatedRating);
     }
 
     public PageResponse<RatingDTO> getUserRatings(UUID userId, Pageable pageable) {
@@ -159,12 +149,12 @@ public class RatingService {
             throw new ResourceNotFoundException("User", "id", userId);
         }
         return new PageResponse<>(ratingRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO));
+                .map(mapper::RatingtoDTO));
     }
 
     public RatingDTO getUserNovelRating(UUID novelId, UUID userId) {
         return ratingRepository.findByUserIdAndNovelId(userId, novelId)
-                .map(this::convertToDTO)
+                .map(mapper::RatingtoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
     }
 
@@ -194,13 +184,13 @@ public class RatingService {
 
         // Get latest rating
         ratingRepository.findFirstByNovelIdOrderByCreatedAtDesc(novelId)
-                .ifPresent(rating -> summary.setLatestRating(convertToDTO(rating)));
+                .ifPresent(rating -> summary.setLatestRating(mapper.RatingtoDTO(rating)));
 
         // Get current user's rating if authenticated
         try {
             UUID currentUserId = userService.getCurrentUserId();
             ratingRepository.findByUserIdAndNovelId(currentUserId, novelId)
-                    .ifPresent(rating -> summary.setUserRating(convertToDTO(rating)));
+                    .ifPresent(rating -> summary.setUserRating(mapper.RatingtoDTO(rating)));
         } catch (Exception e) {
             // User not authenticated, skip user rating
         }

@@ -18,7 +18,7 @@ export function MyRoleRequests() {
   const { currentPage, totalPages, handlePageChange, updateTotalPages, getPaginationParams } = usePagination({
     initialPage: 0,
     initialSize: 10,
-    initialSortBy: "requestedAt",
+    initialSortBy: "createAt",
     initialSortDir: "desc",
   })
 
@@ -156,7 +156,7 @@ export function MyRoleRequests() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(request.requestedAt).toLocaleDateString()}
+                          {new Date(request.createAt).toLocaleDateString()}
                         </span>
                       </TableCell>
                       <TableCell>

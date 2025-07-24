@@ -1,8 +1,12 @@
 package com.novel.vippro.Models;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -46,6 +50,14 @@ public class User {
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
+
+  @Column(nullable = false)
+  @CreationTimestamp
+  private LocalDateTime createdAt = LocalDateTime.now();
+
+  @Column(nullable = false)
+  @UpdateTimestamp
+  private LocalDateTime updatedAt = LocalDateTime.now();
 
   public User() {
   }

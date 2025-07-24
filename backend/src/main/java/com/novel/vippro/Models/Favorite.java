@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "favorites", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "novel_id" })
@@ -27,10 +30,10 @@ public class Favorite {
     private Novel novel;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @Column(nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

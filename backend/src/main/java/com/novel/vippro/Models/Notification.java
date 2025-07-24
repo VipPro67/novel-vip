@@ -5,6 +5,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Entity
 @Table(name = "notifications", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "title" })
@@ -31,8 +33,9 @@ public class Notification {
     @Column(nullable = false)
     private boolean read = false;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)

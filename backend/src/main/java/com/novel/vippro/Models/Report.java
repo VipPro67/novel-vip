@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "reports", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "reporter_id", "novel_id", "chapter_id", "comment_id" })
@@ -50,7 +53,12 @@ public class Report {
     private String adminResponse;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     private LocalDateTime resolvedAt;
 

@@ -1,6 +1,9 @@
 package com.novel.vippro.DTO.Chapter;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -13,6 +16,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Getter
+@Setter
 public class ChapterDetailDTO {
     private UUID id;
     private Integer chapterNumber;

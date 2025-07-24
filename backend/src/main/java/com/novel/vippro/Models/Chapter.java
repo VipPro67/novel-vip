@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "chapters", uniqueConstraints = @UniqueConstraint(columnNames = { "chapterNumber",
         "novel_id" }), indexes = {
@@ -50,9 +53,11 @@ public class Chapter {
     private FileMetadata audioFile;
 
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
+    @UpdateTimestamp
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PreUpdate

@@ -7,6 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "comments", indexes = {
         @Index(name = "idx_user_id", columnList = "user_id"),
@@ -43,10 +46,12 @@ public class Comment {
     private List<Comment> replies;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PrePersist
     public void onCreate() {

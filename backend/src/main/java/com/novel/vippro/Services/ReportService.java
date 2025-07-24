@@ -5,6 +5,7 @@ import com.novel.vippro.DTO.Report.ReportDTO;
 import com.novel.vippro.DTO.Report.ReportUpdateDTO;
 import com.novel.vippro.Exception.BadRequestException;
 import com.novel.vippro.Exception.ResourceNotFoundException;
+import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.Comment;
 import com.novel.vippro.Models.Novel;
@@ -42,25 +43,28 @@ public class ReportService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private Mapper mapper;
+
     public PageResponse<ReportDTO> getAllReports(Pageable pageable) {
         return new PageResponse<>(reportRepository.findAll(pageable)
-                .map(this::convertToDTO));
+                .map(mapper::ReporttoDTO));
     }
 
     public PageResponse<ReportDTO> getPendingReports(Pageable pageable) {
         return new PageResponse<>(
                 reportRepository.findByStatusOrderByCreatedAtDesc(Report.ReportStatus.PENDING, pageable)
-                        .map(this::convertToDTO));
+                        .map(mapper::ReporttoDTO));
     }
 
     public PageResponse<ReportDTO> getUserReports(UUID userId, Pageable pageable) {
         return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
-                .map(this::convertToDTO));
+                .map(mapper::ReporttoDTO));
     }
 
     public PageResponse<ReportDTO> getNovelReports(UUID novelId, Pageable pageable) {
         return new PageResponse<>(reportRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
-                .map(this::convertToDTO));
+                .map(mapper::ReporttoDTO));
     }
 
     @Transactional
@@ -109,7 +113,7 @@ public class ReportService {
             }
         }
 
-        return convertToDTO(reportRepository.save(report));
+        return mapper.ReporttoDTO(reportRepository.save(report));
     }
 
     @Transactional
@@ -121,42 +125,12 @@ public class ReportService {
         report.setAdminResponse(updateDTO.getAdminResponse());
         report.setResolvedAt(LocalDateTime.now());
 
-        return convertToDTO(reportRepository.save(report));
+        return mapper.ReporttoDTO(reportRepository.save(report));
     }
 
     public ReportDTO getReport(UUID id) {
         return reportRepository.findById(id)
-                .map(this::convertToDTO)
+                .map(mapper::ReporttoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
-    }
-
-    private ReportDTO convertToDTO(Report report) {
-        ReportDTO dto = new ReportDTO();
-        dto.setId(report.getId());
-        dto.setReporterId(report.getReporter().getId());
-        dto.setReporterUsername(report.getReporter().getUsername());
-
-        if (report.getNovel() != null) {
-            dto.setNovelId(report.getNovel().getId());
-            dto.setNovelTitle(report.getNovel().getTitle());
-        }
-
-        if (report.getChapter() != null) {
-            dto.setChapterId(report.getChapter().getId());
-            dto.setChapterTitle(report.getChapter().getTitle());
-        }
-
-        if (report.getComment() != null) {
-            dto.setCommentId(report.getComment().getId());
-        }
-
-        dto.setReason(report.getReason());
-        dto.setDescription(report.getDescription());
-        dto.setStatus(report.getStatus());
-        dto.setAdminResponse(report.getAdminResponse());
-        dto.setCreatedAt(report.getCreatedAt());
-        dto.setResolvedAt(report.getResolvedAt());
-
-        return dto;
     }
 }

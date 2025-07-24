@@ -46,11 +46,13 @@ public class FeatureRequest {
     @JoinTable(name = "feature_request_votes", joinColumns = @JoinColumn(name = "feature_request_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> voters = new HashSet<>();
 
+    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum FeatureRequestStatus {
         VOTING,

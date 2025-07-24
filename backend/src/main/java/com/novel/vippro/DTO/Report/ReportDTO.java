@@ -7,10 +7,15 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.novel.vippro.Models.Report.ReportStatus;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Getter
+@Setter
 public class ReportDTO {
     private UUID id;
     private UUID reporterId;

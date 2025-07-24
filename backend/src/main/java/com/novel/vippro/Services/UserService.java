@@ -56,7 +56,7 @@ public class UserService {
     @Cacheable(value = "users", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort.toString()")
     public PageResponse<UserDTO> getAllUsers(Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
-        return new PageResponse<>(userPage.map(this::convertToDTO));
+        return new PageResponse<>(userPage.map(mapper::UsertoUserDTO));
     }
 
     public User getCurrentUser() {
@@ -118,7 +118,7 @@ public class UserService {
     public UserDTO getUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-        return convertToDTO(user);
+        return mapper.UsertoUserDTO(user);
     }
 
     @Transactional
@@ -141,28 +141,10 @@ public class UserService {
             user.setAvatar(updateDTO.getAvatar());
         }
 
-        // Update email if provided and not already taken
-        // if (updateDTO.getEmail() != null && !updateDTO.getEmail().isEmpty()) {
-        // if (!user.getEmail().equals(updateDTO.getEmail()) &&
-        // userRepository.existsByEmail(updateDTO.getEmail())) {
-        // throw new BadRequestException("Email is already in use");
-        // }
-        // user.setEmail(updateDTO.getEmail());
-        // }
-
-        // Update password if provided
-        // if (updateDTO.getNewPassword() != null &&
-        // !updateDTO.getNewPassword().isEmpty()) {
-        // if (updateDTO.getCurrentPassword() == null ||
-        // !passwordEncoder.matches(updateDTO.getCurrentPassword(), user.getPassword()))
-        // {
-        // throw new BadRequestException("Current password is incorrect");
-        // }
-        // user.setPassword(passwordEncoder.encode(updateDTO.getNewPassword()));
-        // }
+        // ...existing code...
 
         User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
+        return mapper.UsertoUserDTO(updatedUser);
     }
 
     @Transactional
@@ -198,7 +180,7 @@ public class UserService {
         // Use the custom search method if search parameters are provided
         Page<User> userPage = userRepository.searchUsers(searchDTO.getUsername(), searchDTO.getEmail(),
                 searchDTO.getRole(), pageable);
-        return new PageResponse<>(userPage.map(this::convertToDTO));
+        return new PageResponse<>(userPage.map(mapper::UsertoUserDTO));
 
     }
 
@@ -237,7 +219,7 @@ public class UserService {
 
         user.setRoles(roles);
         User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
+        return mapper.UsertoUserDTO(updatedUser);
     }
 
     @Transactional
@@ -247,21 +229,5 @@ public class UserService {
             throw new ResourceNotFoundException("User", "id", userId);
         }
         userRepository.deleteById(userId);
-    }
-
-    private UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName());
-
-        // Convert roles to strings
-        Set<String> roleStrings = user.getRoles().stream()
-                .map(role -> role.getName().name().toLowerCase())
-                .collect(Collectors.toSet());
-
-        dto.setRoles(roleStrings);
-        return dto;
     }
 }

@@ -1,5 +1,6 @@
 package com.novel.vippro.Mapper;
 
+import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
@@ -7,6 +8,7 @@ import com.novel.vippro.DTO.Chapter.ChapterListDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
+import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Group.CreateGroupDTO;
 import com.novel.vippro.DTO.Group.GroupDTO;
@@ -17,291 +19,169 @@ import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelDetailDTO;
+import com.novel.vippro.DTO.Rating.RatingDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsUpdateDTO;
 import com.novel.vippro.DTO.ReadingHistory.ReadingHistoryDTO;
+import com.novel.vippro.DTO.Report.ReportDTO;
+import com.novel.vippro.DTO.Review.ReviewDTO;
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.User.UserDTO;
-import com.novel.vippro.Models.Category;
-import com.novel.vippro.Models.Chapter;
-import com.novel.vippro.Models.Comment;
-import com.novel.vippro.Models.FeatureRequest;
-import com.novel.vippro.Models.Genre;
-import com.novel.vippro.Models.Group;
-import com.novel.vippro.Models.GroupMember;
-import com.novel.vippro.Models.Message;
-import com.novel.vippro.Models.Notification;
-import com.novel.vippro.Models.Novel;
-import com.novel.vippro.Models.ReaderSettings;
-import com.novel.vippro.Models.ReadingHistory;
-import com.novel.vippro.Models.RoleApprovalRequest;
-import com.novel.vippro.Models.Tag;
-import com.novel.vippro.Models.User;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.novel.vippro.Models.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class Mapper {
-
-    @Autowired
-    private ModelMapper modelMapper;
-
+public interface Mapper {
     // Novel-related mappings
-    public NovelDTO NoveltoDTO(Novel novel) {
-        return modelMapper.map(novel, NovelDTO.class);
-    }
+    NovelDTO NoveltoDTO(Novel novel);
 
-    public NovelDetailDTO NoveltoNovelDetailDTO(Novel novel) {
-        return modelMapper.map(novel, NovelDetailDTO.class);
-    }
+    NovelDetailDTO NoveltoNovelDetailDTO(Novel novel);
 
-    public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {
-        return novels.stream()
-                .map(this::NoveltoDTO)
-                .collect(Collectors.toList());
-    }
+    List<NovelDTO> NovelListtoDTOList(List<Novel> novels);
 
-    public void updateNovelFromDTO(NovelDTO dto, Novel novel) {
-        modelMapper.map(dto, novel);
-    }
+    void updateNovelFromDTO(NovelDTO dto, Novel novel);
 
     // Chapter-related mappings
-    public ChapterDTO ChaptertoDTO(Chapter chapter) {
-        return modelMapper.map(chapter, ChapterDTO.class);
-    }
+    ChapterDTO ChaptertoDTO(Chapter chapter);
 
-    public ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter) {
-        ChapterDetailDTO chapterDetailDTO = modelMapper.map(chapter, ChapterDetailDTO.class);
-        chapterDetailDTO.setNovelId(chapter.getNovel().getId());
-        chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
-        return chapterDetailDTO;
-    }
+    ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
 
-    public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
-        return modelMapper.map(chapter, ChapterDTO.class);
-    }
+    ChapterDTO ChaptertoChapterDTO(Chapter chapter);
 
-    public ChapterListDTO ChaptertoChapterListDTO(Chapter chapter) {
-        ChapterListDTO chapterListDTO = modelMapper.map(chapter, ChapterListDTO.class);
-        chapterListDTO.setNovelId(chapter.getNovel().getId());
-        chapterListDTO.setNovelTitle(chapter.getNovel().getTitle());
-        return chapterListDTO;
-    }
+    ChapterListDTO ChaptertoChapterListDTO(Chapter chapter);
 
-    public List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters) {
-        return chapters.stream()
-                .map(this::ChaptertoDTO)
-                .collect(Collectors.toList());
-    }
+    List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters);
 
-    public void updateChapterFromDTO(ChapterDTO dto, Chapter chapter) {
-        modelMapper.map(dto, chapter);
-    }
+    void updateChapterFromDTO(ChapterDTO dto, Chapter chapter);
 
     // Category-related mappings
-    public CategoryDTO CategorytoDTO(Category category) {
-        return modelMapper.map(category, CategoryDTO.class);
-    }
+    CategoryDTO CategorytoDTO(Category category);
 
-    public Category DTOtoCategory(CategoryDTO categoryDTO) {
-        return modelMapper.map(categoryDTO, Category.class);
-    }
+    Category DTOtoCategory(CategoryDTO categoryDTO);
 
-    public CategoryDTO DTOtoCategoryDTO(Category category) {
-        return modelMapper.map(category, CategoryDTO.class);
-    }
+    List<CategoryDTO> CategoryListtoDTOList(List<Category> categories);
 
-    public List<CategoryDTO> CategoryListtoDTOList(List<Category> categories) {
-        return categories.stream()
-                .map(this::CategorytoDTO)
-                .collect(Collectors.toList());
-    }
-
-    public void updateCategoryFromDTO(CategoryDTO dto, Category category) {
-        modelMapper.map(dto, category);
-    }
+    void updateCategoryFromDTO(CategoryDTO dto, Category category);
 
     // User-related mappings
-    public UserDTO UsertoUserDTO(User user) {
-        return modelMapper.map(user, UserDTO.class);
-    }
+    UserDTO UsertoUserDTO(User user);
 
-    public User DTOtoUser(UserDTO userDTO) {
-        return modelMapper.map(userDTO, User.class);
-    }
+    User DTOtoUser(UserDTO userDTO);
 
-    public void updateUserFromDTO(UserDTO dto, User user) {
-        modelMapper.map(dto, user);
-    }
+    void updateUserFromDTO(UserDTO dto, User user);
 
     // Comment-related mappings
-    public CommentDTO CommenttoDTO(Comment comment) {
-        return modelMapper.map(comment, CommentDTO.class);
-    }
+    CommentDTO CommenttoDTO(Comment comment);
 
-    public void updateCommentFromDTO(CommentDTO dto, Comment comment) {
-        modelMapper.map(dto, comment);
-    }
+    void updateCommentFromDTO(CommentDTO dto, Comment comment);
 
     // ReaderSettings-related mappings
-    public ReaderSettingsDTO ReaderSettingsToReaderSettingsDTO(ReaderSettings readerSettings) {
-        return modelMapper.map(readerSettings, ReaderSettingsDTO.class);
-    }
+    ReaderSettingsDTO ReaderSettingsToReaderSettingsDTO(ReaderSettings readerSettings);
 
-    public void updateReaderSettingsFromDTO(ReaderSettingsUpdateDTO dto, ReaderSettings settings) {
-        modelMapper.map(dto, settings);
-    }
+    void updateReaderSettingsFromDTO(ReaderSettingsUpdateDTO dto, ReaderSettings settings);
 
     // FeatureRequest-related mappings
-    public FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request) {
-        return modelMapper.map(request, FeatureRequestDTO.class);
-    }
+    FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request);
 
-    public FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO) {
-        return modelMapper.map(requestDTO, FeatureRequest.class);
-    }
+    FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO);
 
-    public FeatureRequest CreateFeatureRequestDTOtoFeatureRequest(CreateFeatureRequestDTO requestDTO) {
-        return modelMapper.map(requestDTO, FeatureRequest.class);
-    }
+    FeatureRequest CreateFeatureRequestDTOtoFeatureRequest(CreateFeatureRequestDTO requestDTO);
 
-    public void updateFeatureRequestFromDTO(FeatureRequestDTO dto, FeatureRequest featureRequest) {
-        modelMapper.map(dto, featureRequest);
-    }
+    void updateFeatureRequestFromDTO(FeatureRequestDTO dto, FeatureRequest featureRequest);
 
     // Tag-related mappings
-    public TagDTO TagtoDTO(Tag tag) {
-        return modelMapper.map(tag, TagDTO.class);
-    }
+    TagDTO TagtoDTO(Tag tag);
 
-    public Tag DTOtoTag(TagDTO tagDTO) {
-        return modelMapper.map(tagDTO, Tag.class);
-    }
+    Tag DTOtoTag(TagDTO tagDTO);
 
-    public List<TagDTO> TagListtoDTOList(List<Tag> tags) {
-        return tags.stream()
-                .map(this::TagtoDTO)
-                .collect(Collectors.toList());
-    }
+    List<TagDTO> TagListtoDTOList(List<Tag> tags);
 
-    public void updateTagFromDTO(TagDTO dto, Tag tag) {
-        modelMapper.map(dto, tag);
-    }
+    void updateTagFromDTO(TagDTO dto, Tag tag);
 
     // Genre-related mappings
-    public GenreDTO GenretoDTO(Genre genre) {
-        return modelMapper.map(genre, GenreDTO.class);
-    }
+    GenreDTO GenretoDTO(Genre genre);
 
-    public Genre DTOtoGenre(GenreDTO genreDTO) {
-        return modelMapper.map(genreDTO, Genre.class);
-    }
+    Genre DTOtoGenre(GenreDTO genreDTO);
 
-    public List<GenreDTO> GenreListtoDTOList(List<Genre> genres) {
-        return genres.stream()
-                .map(this::GenretoDTO)
-                .collect(Collectors.toList());
-    }
+    List<GenreDTO> GenreListtoDTOList(List<Genre> genres);
 
-    public void updateGenreFromDTO(GenreDTO dto, Genre genre) {
-        modelMapper.map(dto, genre);
-    }
+    void updateGenreFromDTO(GenreDTO dto, Genre genre);
 
     // ReadingHistory-related mappings
-    public ReadingHistoryDTO ReadingHistorytoDTO(ReadingHistory readingHistory) {
-        return modelMapper.map(readingHistory, ReadingHistoryDTO.class);
-    }
+    ReadingHistoryDTO ReadingHistorytoDTO(ReadingHistory readingHistory);
 
-    public List<ReadingHistoryDTO> ReadingHistoryListtoDTOList(List<ReadingHistory> readingHistories) {
-        return readingHistories.stream()
-                .map(this::ReadingHistorytoDTO)
-                .collect(Collectors.toList());
-    }
+    List<ReadingHistoryDTO> ReadingHistoryListtoDTOList(List<ReadingHistory> readingHistories);
 
     // Notification-related mappings
-    public NotificationDTO NotificationtoDTO(Notification notification) {
-        return modelMapper.map(notification, NotificationDTO.class);
-    }
+    NotificationDTO NotificationtoDTO(Notification notification);
 
-    public void updateNotificationFromDTO(NotificationDTO dto, Notification notification) {
-        modelMapper.map(dto, notification);
-    }
+    void updateNotificationFromDTO(NotificationDTO dto, Notification notification);
 
     // GroupMember-related mappings
-    public GroupMemberDTO GroupMembertoDTO(GroupMember groupMember) {
-        return modelMapper.map(groupMember, GroupMemberDTO.class);
-    }
+    GroupMemberDTO GroupMembertoDTO(GroupMember groupMember);
 
-    public GroupMember DTOtoGroupMember(GroupMemberDTO groupMemberDTO) {
-        GroupMember groupMember = modelMapper.map(groupMemberDTO, GroupMember.class);
-        groupMember.setUser(new User());
-        groupMember.getUser().setId(groupMemberDTO.getUserId());
-        groupMember.setGroup(new Group());
-        groupMember.getGroup().setId(groupMemberDTO.getGroupId());
-        return groupMember;
-    }
+    GroupMember DTOtoGroupMember(GroupMemberDTO groupMemberDTO);
 
-    public void updateGroupMemberFromDTO(GroupMemberDTO dto, GroupMember groupMember) {
-        modelMapper.map(dto, groupMember);
-    }
+    void updateGroupMemberFromDTO(GroupMemberDTO dto, GroupMember groupMember);
 
     // Message-related mappings
-    public MessageDTO MessagetoDTO(Message message) {
-        MessageDTO messageDTO = modelMapper.map(message, MessageDTO.class);
-        messageDTO.setSenderId(message.getSender().getId());
-        if (message.getGroup() != null) {
-            messageDTO.setGroupId(message.getGroup().getId());
-        } else {
-            messageDTO.setReceiverId(message.getReceiver().getId());
-        }
-        return messageDTO;
-    }
+    MessageDTO MessagetoDTO(Message message);
 
-    public Message DTOtoMessage(MessageDTO messageDTO) {
-        return modelMapper.map(messageDTO, Message.class);
-    }
+    Message DTOtoMessage(MessageDTO messageDTO);
 
-    public Message CreateDTOtoMessage(CreateMessageDTO messageDTO) {
-        return modelMapper.map(messageDTO, Message.class);
-    }
+    Message CreateDTOtoMessage(CreateMessageDTO messageDTO);
 
-    public void updateMessageFromDTO(MessageDTO dto, Message message) {
-        modelMapper.map(dto, message);
-    }
+    void updateMessageFromDTO(MessageDTO dto, Message message);
 
     // Group-related mappings
-    public GroupDTO GroupToDTO(Group group) {
-        return modelMapper.map(group, GroupDTO.class);
-    }
+    GroupDTO GroupToDTO(Group group);
 
-    public Group DTOtoGroup(GroupDTO groupDTO) {
-        return modelMapper.map(groupDTO, Group.class);
-    }
+    Group DTOtoGroup(GroupDTO groupDTO);
 
-    public Group CreateDTOtoGroup(CreateGroupDTO groupDTO) {
-        return modelMapper.map(groupDTO, Group.class);
-    }
+    Group CreateDTOtoGroup(CreateGroupDTO groupDTO);
 
-    public void updateGroupFromDTO(UpdateGroupDTO dto, Group group) {
-        modelMapper.map(dto, group);
-    }
+    void updateGroupFromDTO(UpdateGroupDTO dto, Group group);
 
     // RoleApprovalRequest-related mappings
-    public RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest) {
-        return modelMapper.map(roleApprovalRequest, RoleApprovalDTO.class);
-    }
+    RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest);
 
-    public RoleApprovalRequest DTOtoRoleApprovalRequest(RoleApprovalDTO roleApprovalDTO) {
-        return modelMapper.map(roleApprovalDTO, RoleApprovalRequest.class);
-    }
+    RoleApprovalRequest DTOtoRoleApprovalRequest(RoleApprovalDTO roleApprovalDTO);
 
-    public void updateRoleApprovalRequestFromDTO(RoleApprovalDTO dto, RoleApprovalRequest roleApprovalRequest) {
-        modelMapper.map(dto, roleApprovalRequest);
-    }
+    void updateRoleApprovalRequestFromDTO(RoleApprovalDTO dto, RoleApprovalRequest roleApprovalRequest);
+
+    // Review-related mappings
+    ReviewDTO ReviewtoDTO(Review review);
+
+    Review DTOtoReview(ReviewDTO reviewDTO);
+
+    void updateReviewFromDTO(ReviewDTO dto, Review review);
+
+    // Report-related mappings
+    ReportDTO ReporttoDTO(Report report);
+
+    Report DTOtoReport(ReportDTO reportDTO);
+
+    void updateReportFromDTO(ReportDTO dto, Report report);
+
+    // Rating-related mappings
+    RatingDTO RatingtoDTO(Rating rating);
+
+    Rating DTOtoRating(RatingDTO ratingDTO);
+
+    void updateRatingFromDTO(RatingDTO dto, Rating rating);
+
+    // Bookmark-related mappings
+    BookmarkDTO BookmarktoDTO(Bookmark bookmark);
+
+    Bookmark DTOtoBookmark(BookmarkDTO bookmarkDTO);
+
+    void updateBookmarkFromDTO(BookmarkDTO dto, Bookmark bookmark);
+
+    // FileMetadata-related mappings
+    FileMetadataDTO FileMetadataToDTO(FileMetadata metadata);
+
+    FileMetadata DTOToFileMetadata(FileMetadataDTO dto);
+
+    void updateFileMetadataFromDTO(FileMetadataDTO dto, FileMetadata metadata);
 }

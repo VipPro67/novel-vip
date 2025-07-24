@@ -166,7 +166,7 @@ export interface RoleRequest {
   requestedRole: string
   reason: string
   status: "PENDING" | "APPROVED" | "REJECTED"
-  requestedAt: string
+  createAt: string
   reviewedAt?: string
   reviewedBy?: string
   reviewerUsername?: string
@@ -723,7 +723,7 @@ class ApiClient {
     // Set default values
     const page = params.page ?? 0
     const size = params.size ?? 10
-    const sortBy = params.sortBy ?? "requestedAt"
+    const sortBy = params.sortBy ?? "createAt"
     const sortDir = params.sortDir ?? "desc"
 
     // Add pagination parameters

@@ -4,6 +4,7 @@ import com.novel.vippro.DTO.Bookmark.BookmarkCreateDTO;
 import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.DTO.Bookmark.BookmarkUpdateDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
+import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Bookmark;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.Novel;
@@ -37,14 +38,17 @@ public class BookmarkService {
     @Autowired
     private ChapterRepository chapterRepository;
 
+    @Autowired
+    private Mapper mapper;
+
     public PageResponse<BookmarkDTO> getUserBookmarks(UUID userId, Pageable pageable) {
         return new PageResponse<>(bookmarkRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable)
-                .map(this::convertToDTO));
+                .map(mapper::BookmarktoDTO));
     }
 
     public List<BookmarkDTO> getNovelBookmarks(UUID novelId) {
         return bookmarkRepository.findByNovelId(novelId).stream()
-                .map(this::convertToDTO)
+                .map(mapper::BookmarktoDTO)
                 .toList();
     }
 
@@ -65,7 +69,7 @@ public class BookmarkService {
             // Update existing bookmark
             existingBookmark.setNote(bookmarkDTO.getNote());
             existingBookmark.setProgress(bookmarkDTO.getProgress());
-            return convertToDTO(bookmarkRepository.save(existingBookmark));
+            return mapper.BookmarktoDTO(bookmarkRepository.save(existingBookmark));
         }
 
         // Create new bookmark
@@ -76,7 +80,7 @@ public class BookmarkService {
         bookmark.setNote(bookmarkDTO.getNote());
         bookmark.setProgress(bookmarkDTO.getProgress());
 
-        return convertToDTO(bookmarkRepository.save(bookmark));
+        return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }
 
     @Transactional
@@ -87,7 +91,7 @@ public class BookmarkService {
         bookmark.setNote(bookmarkDTO.getNote());
         bookmark.setProgress(bookmarkDTO.getProgress());
 
-        return convertToDTO(bookmarkRepository.save(bookmark));
+        return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }
 
     @Transactional
@@ -96,20 +100,5 @@ public class BookmarkService {
             throw new ResourceNotFoundException("Bookmark", "id", id);
         }
         bookmarkRepository.deleteById(id);
-    }
-
-    private BookmarkDTO convertToDTO(Bookmark bookmark) {
-        BookmarkDTO dto = new BookmarkDTO();
-        dto.setId(bookmark.getId());
-        dto.setUserId(bookmark.getUser().getId());
-        dto.setNovelId(bookmark.getNovel().getId());
-        dto.setChapterId(bookmark.getChapter().getId());
-        dto.setNovelTitle(bookmark.getNovel().getTitle());
-        dto.setChapterTitle(bookmark.getChapter().getTitle());
-        dto.setNote(bookmark.getNote());
-        dto.setProgress(bookmark.getProgress());
-        dto.setCreatedAt(bookmark.getCreatedAt());
-        dto.setUpdatedAt(bookmark.getUpdatedAt());
-        return dto;
     }
 }

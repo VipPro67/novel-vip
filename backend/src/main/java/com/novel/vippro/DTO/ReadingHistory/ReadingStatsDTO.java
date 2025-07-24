@@ -1,6 +1,9 @@
 package com.novel.vippro.DTO.ReadingHistory;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -11,6 +14,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 
 @Data
+@Getter
+@Setter
 public class ReadingStatsDTO {
     private long totalNovelsRead;
     private long totalChaptersRead;

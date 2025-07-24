@@ -33,7 +33,7 @@ export function RoleApprovalManagement() {
   const { currentPage, totalPages, handlePageChange, updateTotalPages, getPaginationParams } = usePagination({
     initialPage: 0,
     initialSize: 10,
-    initialSortBy: "requestedAt",
+    initialSortBy: "createAt",
     initialSortDir: "desc",
   })
 
@@ -219,7 +219,7 @@ export function RoleApprovalManagement() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(request.requestedAt).toLocaleDateString()}
+                          {new Date(request.createAt).toLocaleDateString()}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -314,7 +314,7 @@ export function RoleApprovalManagement() {
               <div className="space-y-2">
                 <Label>Request Date</Label>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(selectedRequest.requestedAt).toLocaleString()}
+                  {new Date(selectedRequest.createAt).toLocaleString()}
                 </p>
               </div>
             </div>

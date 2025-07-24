@@ -2,8 +2,12 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.AllArgsConstructor;
+
+import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
@@ -46,9 +52,13 @@ public class ReadingHistory {
     @UpdateTimestamp
     private LocalDateTime lastReadAt;
 
-    @Column(name = "created_at")
+    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {

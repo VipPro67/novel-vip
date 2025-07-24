@@ -12,7 +12,7 @@ import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.ReviewRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Services.ReviewService;
-
+import com.novel.vippro.Mapper.Mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,13 +38,15 @@ public class ReviewService {
     private UserRepository userRepository;
     @Autowired
     private UserService userService;
+    @Autowired
+    private Mapper mapper;
 
     @Transactional(readOnly = true)
     @Cacheable(value = "reviews", key = "#novelId + '_' + #pageable")
     public PageResponse<ReviewDTO> getReviewsByNovel(UUID novelId, Pageable pageable) {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
-        return new PageResponse<>(reviewRepository.findByNovel(novel, pageable).map(this::toDTO));
+        return new PageResponse<>(reviewRepository.findByNovel(novel, pageable).map(mapper::ReviewtoDTO));
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +54,7 @@ public class ReviewService {
     public PageResponse<ReviewDTO> getReviewsByUser(UUID userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        return new PageResponse<>(reviewRepository.findByUser(user, pageable).map(this::toDTO));
+        return new PageResponse<>(reviewRepository.findByUser(user, pageable).map(mapper::ReviewtoDTO));
     }
 
     @Transactional
@@ -73,7 +75,7 @@ public class ReviewService {
         review.setRating(reviewDTO.getRating());
         review.setVerifiedPurchase(false);
 
-        return toDTO(reviewRepository.save(review));
+        return mapper.ReviewtoDTO(reviewRepository.save(review));
     }
 
     @Transactional
@@ -92,7 +94,7 @@ public class ReviewService {
         review.setRating(reviewDTO.getRating());
         review.setEdited(true);
 
-        return toDTO(reviewRepository.save(review));
+        return mapper.ReviewtoDTO(reviewRepository.save(review));
     }
 
     @Transactional
@@ -131,13 +133,13 @@ public class ReviewService {
         // Get latest review
         List<Review> latestReviews = reviewRepository.findLatestReviews(novel, PageRequest.of(0, 1));
         if (!latestReviews.isEmpty()) {
-            summary.setLatestReview(toDTO(latestReviews.get(0)));
+            summary.setLatestReview(mapper.ReviewtoDTO(latestReviews.get(0)));
         }
 
         // Get most helpful review
         List<Review> helpfulReviews = reviewRepository.findMostHelpfulReviews(novel, PageRequest.of(0, 1));
         if (!helpfulReviews.isEmpty()) {
-            summary.setMostHelpfulReview(toDTO(helpfulReviews.get(0)));
+            summary.setMostHelpfulReview(mapper.ReviewtoDTO(helpfulReviews.get(0)));
         }
 
         return summary;
@@ -157,25 +159,5 @@ public class ReviewService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
         review.setUnhelpfulVotes(review.getUnhelpfulVotes() + 1);
         reviewRepository.save(review);
-    }
-
-    private ReviewDTO toDTO(Review review) {
-        ReviewDTO dto = new ReviewDTO();
-        dto.setId(review.getId());
-        dto.setNovelId(review.getNovel().getId());
-        dto.setNovelTitle(review.getNovel().getTitle());
-        dto.setUserId(review.getUser().getId());
-        dto.setUsername(review.getUser().getUsername());
-        dto.setUserAvatar(review.getUser().getAvatar());
-        dto.setTitle(review.getTitle());
-        dto.setContent(review.getContent());
-        dto.setRating(review.getRating());
-        dto.setVerifiedPurchase(review.isVerifiedPurchase());
-        dto.setHelpfulVotes(review.getHelpfulVotes());
-        dto.setUnhelpfulVotes(review.getUnhelpfulVotes());
-        dto.setEdited(review.isEdited());
-        dto.setCreatedAt(review.getCreatedAt());
-        dto.setUpdatedAt(review.getUpdatedAt());
-        return dto;
     }
 }

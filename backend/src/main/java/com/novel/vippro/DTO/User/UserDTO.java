@@ -5,8 +5,12 @@ import java.util.Set;
 import java.util.UUID;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Getter
+@Setter
 public class UserDTO {
     private UUID id;
     private String username;

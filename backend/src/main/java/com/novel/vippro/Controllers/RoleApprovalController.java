@@ -83,7 +83,7 @@ public class RoleApprovalController {
         public ControllerResponse<PageResponse<RoleApprovalDTO>> getAllPendingRequests(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
-                        @RequestParam(defaultValue = "requestedAt") String sortBy,
+                        @RequestParam(defaultValue = "createAt") String sortBy,
                         @RequestParam(defaultValue = "asc") String sortDir) {
                 Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
                 Pageable pageable = PageRequest.of(page, size, sort);
