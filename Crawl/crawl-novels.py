@@ -18,7 +18,8 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class NovelCrawler:
@@ -45,7 +46,8 @@ class NovelCrawler:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
+        retry=retry_if_exception_type(
+            (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
     )
     async def fetch_page(self, session, url):
         logging.debug(f"Fetching URL: {url}")
@@ -53,15 +55,18 @@ class NovelCrawler:
         async with session.get(url, headers=self.headers, timeout=timeout) as response:
             response.raise_for_status()
             text = await response.text()
-            logging.debug(f"Response status code: {response.status}, content length: {len(text)}")
+            logging.debug(
+                f"Response status code: {response.status}, content length: {len(text)}")
             return text
 
     async def get_novel_info(self, session, list_url):
         try:
             html = await self.fetch_page(session, list_url)
             soup = BeautifulSoup(html, 'html.parser')
-            novel_items = soup.find_all('div', class_='row', itemtype='https://schema.org/Book')
-            logging.debug(f"Found {len(novel_items)} novel items on {list_url}")
+            novel_items = soup.find_all(
+                'div', class_='row', itemtype='https://schema.org/Book')
+            logging.debug(
+                f"Found {len(novel_items)} novel items on {list_url}")
 
             novel_data_list = []
             for item in novel_items:
@@ -82,7 +87,8 @@ class NovelCrawler:
                     chapter_link = item.select_one('.chapter-text')
                     total_chapters = 0
                     if chapter_link:
-                        chapter_text = chapter_link.find_parent('a').get_text(strip=True)
+                        chapter_text = chapter_link.find_parent(
+                            'a').get_text(strip=True)
                         match = re.search(r'Chương\s*(\d+)', chapter_text)
                         if match:
                             total_chapters = int(match.group(1))
@@ -117,14 +123,23 @@ class NovelCrawler:
             return None
 
     def insert_file_metadata(self, cursor, novel):
+        # Check if file metadata with the same URL already exists
+        select_query = "SELECT id FROM file_metadata WHERE file_url = %s LIMIT 1"
+        cursor.execute(select_query, (novel['cover_image'],))
+        existing = cursor.fetchone()
+
+        if existing:
+            return existing[0]  # Return existing file ID
+
+        # Insert new metadata
         file_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
         insert_file_query = """
             INSERT INTO file_metadata (
                 id, file_name, file_url, content_type, type,
                 public_id, uploaded_at, last_modified_at, size
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        now = datetime.now(timezone.utc)
         file_values = (
             file_id,
             f"{novel['slug']}.jpg",
@@ -149,45 +164,73 @@ class NovelCrawler:
         try:
             conn = self.db_pool.getconn()
             cursor = conn.cursor()
+
+            # Step 1: Insert file metadata and get cover image IDs
             for novel in novel_info_list:
                 file_id = self.insert_file_metadata(cursor, novel)
                 novel['cover_image_id'] = file_id
 
+            # Step 2: Prepare SQL insert query for novels
             insert_query = """
                 INSERT INTO novels (
-                    id, author, cover_image_id, created_at, description, rating, slug, status,
-                    title, title_normalized, total_chapters, updated_at, views, is_public
-                ) VALUES %s
+                    id,
+                    author,
+                    cover_image_id,
+                    created_at,
+                    description,
+                    rating,
+                    slug,
+                    status,
+                    title,
+                    title_normalized,
+                    total_chapters,
+                    updated_at,
+                    views,
+                    is_public
+                )
+                VALUES %s
                 ON CONFLICT (slug) DO NOTHING
                 RETURNING id
             """
-            values = [(
-                novel['id'],
-                novel['author'],
-                novel['cover_image_id'],
-                novel['created_at'],
-                novel['description'],
-                novel['rating'],
-                novel['slug'],
-                novel['status'],
-                novel['title'],
-                novel['title_normalized'],
-                novel['total_chapters'],
-                novel['updated_at'],
-                novel['views'],
-                True
-            ) for novel in novel_info_list]
 
+            # Step 3: Prepare values for batch insert
+            values = [
+                (
+                    novel['id'],
+                    novel['author'],
+                    novel['cover_image_id'],
+                    novel['created_at'],
+                    novel['description'],
+                    novel['rating'],
+                    novel['slug'],
+                    novel['status'],
+                    novel['title'],
+                    novel['title_normalized'],
+                    novel['total_chapters'],
+                    novel['updated_at'],
+                    novel['views'],
+                    True  # is_public
+                )
+                for novel in novel_info_list
+            ]
+
+            # Step 4: Execute batch insert
             from psycopg2.extras import execute_values
             execute_values(cursor, insert_query, values)
 
-            novel_ids = [row[0] for row in cursor.fetchall()] if cursor.description else []
+            # Step 5: Fetch inserted novel IDs
+            novel_ids = [row[0]
+                         for row in cursor.fetchall()] if cursor.description else []
             conn.commit()
 
+            # Step 6: Logging
             logging.info(f"Saved {len(novel_ids)} novels to database")
             for novel, novel_id in zip(novel_info_list, novel_ids):
-                logging.debug(f"Saved novel: {novel['title']} with ID: {novel_id}")
-            logging.warning(f"Skipped {len(novel_info_list) - len(novel_ids)} novels (possible duplicates)")
+                logging.debug(
+                    f"Saved novel: {novel['title']} with ID: {novel_id}")
+            logging.warning(
+                f"Skipped {len(novel_info_list) - len(novel_ids)} novels (possible duplicates)")
+
             return novel_ids
 
         except psycopg2.OperationalError as e:
@@ -215,7 +258,8 @@ class NovelCrawler:
                 try:
                     return f.read().strip()
                 except ValueError:
-                    logging.warning(f"Invalid checkpoint file {checkpoint_file}, starting from beginning")
+                    logging.warning(
+                        f"Invalid checkpoint file {checkpoint_file}, starting from beginning")
         return None
 
     def save_checkpoint(self, checkpoint_file, item):
@@ -229,18 +273,19 @@ class NovelCrawler:
         start_time = time.time()
 
         last_page = self.load_checkpoint(self.checkpoint_list_file)
-        start_page = int(last_page) + 1 if last_page and last_page.isdigit() else start_page
+        start_page = int(last_page) + \
+            1 if last_page and last_page.isdigit() else start_page
 
         async with aiohttp.ClientSession() as session:
             for page in range(start_page, max_pages + 1):
-                list_url = f"{self.base_url}/danh-sach/truyen-hot?page={page}"
+                list_url = f"{self.base_url}/danh-sach/truyen-hot/trang-{page}"
                 logging.info(f"Processing page {page}/{max_pages}")
 
                 novel_info_list = await self.get_novel_info(session, list_url)
                 if not novel_info_list:
-                    logging.warning(f"No novels found on page {page}, stopping")
+                    logging.warning(
+                        f"No novels found on page {page}, stopping")
                     break
-
                 novel_ids = self.save_to_postgresql(novel_info_list)
                 total_novels_saved += len(novel_ids)
 
@@ -248,23 +293,26 @@ class NovelCrawler:
                 await asyncio.sleep(self.rate_limit_delay)
 
         elapsed_time = time.time() - start_time
-        logging.info(f"Crawling completed: {total_novels_saved} novels saved, {total_details_updated} details updated in {elapsed_time:.2f} seconds")
+        logging.info(
+            f"Crawling completed: {total_novels_saved} novels saved, {total_details_updated} details updated in {elapsed_time:.2f} seconds")
         return total_novels_saved, total_details_updated
 
 
 def main():
     db_config = {
-        'dbname': os.getenv('PG_DBNAME'),
-        'user': os.getenv('PG_USER'),
-        'password': os.getenv('PG_PASSWORD'),
-        'host': os.getenv('PG_HOST'),
-        'port': os.getenv('PG_PORT')
+        'dbname': 'postgres',
+        'user': 'postgres.ijdorxaikoovmezfpdrz',
+        'password': 'qZPAgRYvQM5z4TR1',
+        'host': 'aws-0-ap-southeast-1.pooler.supabase.com',
+        'port': 5432,
+        'sslmode': 'require'
     }
 
     base_url = "https://truyenfull.vision"
     crawler = NovelCrawler(base_url, db_config)
 
-    total_novels, total_details = asyncio.run(crawler.crawl_novels(max_pages=15))
+    total_novels, total_details = asyncio.run(
+        crawler.crawl_novels(max_pages=1341))
     print(f"Total novels saved: {total_novels}")
     print(f"Total novel details updated: {total_details}")
 

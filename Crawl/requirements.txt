@@ -1,0 +1,9 @@
+aiohttp
+beautifulsoup4
+bleach
+cloudinary
+psycopg2-binary
+python-dotenv
+tenacity
+tqdm
+unidecode

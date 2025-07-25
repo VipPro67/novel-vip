@@ -215,7 +215,7 @@ public class NovelService {
         novel.setSlug(novelDTO.getSlug());
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
-        novel.setTitleNomalized(novelDTO.getTitle().toLowerCase());
+        novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
 
         // Update cover image if provided
         if (novelDTO.getCoverImage() != null) {

@@ -114,10 +114,9 @@ public class Novel {
 		}
 	}
 
-
-	private void normalizeFields() {
+	private void NormalizeFields() {
 		if (this.title != null) {
-			this.titleNomalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
+			this.titleNormalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
 					.replaceAll("\\p{M}", "")
 					.toUpperCase();
 		}

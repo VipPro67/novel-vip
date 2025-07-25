@@ -21,17 +21,9 @@ import concurrent.futures
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Verify environment variables
-required_vars = [
-    'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET',
-    'PG_DBNAME', 'PG_USER', 'PG_PASSWORD', 'PG_HOST', 'PG_PORT'
-]
-for var in required_vars:
-    if not os.getenv(var):
-        logging.error(f"Missing environment variable: {var}")
-        raise ValueError(f"Environment variable {var} is not set")
 
 class NovelChapterCrawler:
     def __init__(self, base_url, db_config):
@@ -52,7 +44,8 @@ class NovelChapterCrawler:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
+        retry=retry_if_exception_type(
+            (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
     )
     async def fetch_page(self, session, url):
         """Fetch a single page with retry logic."""
@@ -60,7 +53,8 @@ class NovelChapterCrawler:
         async with session.get(url, headers=self.headers, timeout=15) as response:
             response.raise_for_status()
             text = await response.text()
-            logging.debug(f"Response status code: {response.status}, content length: {len(text)}")
+            logging.debug(
+                f"Response status code: {response.status}, content length: {len(text)}")
             return text
 
     async def get_chapter_content(self, session, slug, chapter_num):
@@ -85,7 +79,8 @@ class NovelChapterCrawler:
             content_html = content_div.decode_contents()
 
             # Now clean the string HTML
-            cleaned_html = bleach.clean(content_html, tags=['div', 'p', 'span', 'img'], attributes={'img': ['src']}, strip=True)
+            cleaned_html = bleach.clean(content_html, tags=[
+                                        'div', 'p', 'span', 'img'], attributes={'img': ['src']}, strip=True)
 
             # Optional: assign cleaned_html to content if you need
             content = cleaned_html
@@ -97,7 +92,8 @@ class NovelChapterCrawler:
                 'chapter_num': chapter_num
             }
         except Exception as e:
-            logging.error(f"Failed to fetch chapter {chapter_num} for slug {slug}: {str(e)}")
+            logging.error(
+                f"Failed to fetch chapter {chapter_num} for slug {slug}: {str(e)}")
             return None
 
     def save_chapter_as_json(self, chapter, slug, title):
@@ -113,7 +109,8 @@ class NovelChapterCrawler:
         # Ensure the output directory exists
         os.makedirs(os.path.join(self.output_dir, slug), exist_ok=True)
         # Save to JSON file
-        file_path = os.path.join(self.output_dir, f'{slug}/chap-{chapter["chapter_num"]}.json')
+        file_path = os.path.join(
+            self.output_dir, f'{slug}/chap-{chapter["chapter_num"]}.json')
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         return file_path
@@ -121,9 +118,9 @@ class NovelChapterCrawler:
     def upload_file_to_cloudinary(self, file_path):
         """Upload a file to Cloudinary."""
         cloudinary.config(
-            cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-            api_key=os.getenv('CLOUDINARY_API_KEY'),
-            api_secret=os.getenv('CLOUDINARY_API_SECRET')
+            cloud_name='drpudphzv',
+            api_key='942584967114298',
+            api_secret='54KWkzHDwJ2dUsscUvzatdT61gY'
         )
         filename = os.path.basename(file_path)
         slug = os.path.dirname(file_path).split('/')[-1]
@@ -148,7 +145,8 @@ class NovelChapterCrawler:
         """Upload multiple files to Cloudinary concurrently."""
         uploaded_files = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(self.upload_file_to_cloudinary, file_path): file_path for file_path in file_paths}
+            futures = {executor.submit(
+                self.upload_file_to_cloudinary, file_path): file_path for file_path in file_paths}
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Uploading to Cloudinary"):
                 result = future.result()
                 if result:
@@ -176,9 +174,11 @@ class NovelChapterCrawler:
             values = []
             for chapter in chapters:
                 chapter_num = chapter['chapter_num']
-                uploaded_file = next((f for f in uploaded_files if f['chapter_num'] == chapter_num), None)
+                uploaded_file = next(
+                    (f for f in uploaded_files if f['chapter_num'] == chapter_num), None)
                 if not uploaded_file:
-                    logging.warning(f"No Cloudinary URL for chapter {chapter_num}")
+                    logging.warning(
+                        f"No Cloudinary URL for chapter {chapter_num}")
                     continue
 
                 values.append((
@@ -230,7 +230,8 @@ class NovelChapterCrawler:
                         slug, chapter_num = data.split(':')
                         return slug, int(chapter_num)
                 except ValueError:
-                    logging.warning(f"Invalid checkpoint file {self.checkpoint_file}, starting from beginning")
+                    logging.warning(
+                        f"Invalid checkpoint file {self.checkpoint_file}, starting from beginning")
         return None, 0
 
     def save_checkpoint(self, slug, chapter_num):
@@ -247,14 +248,15 @@ class NovelChapterCrawler:
         # Get all novels from the database
         conn = self.db_pool.getconn()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, slug, title, total_chapters FROM novels WHERE status = 'crawling'  ORDER BY total_chapters ASC LIMIT 1")
+        cursor.execute(
+            "SELECT id, slug, title, total_chapters FROM novels WHERE status = 'crawling'  ORDER BY total_chapters ASC LIMIT 1")
         novels = cursor.fetchall()
-        
+
         # Get last chapter in database
         last_chapter = 10
         if novels:
-            #cursor.execute("SELECT MAX(chapter_number) FROM chapters WHERE novel_id = %s", (novels[0][0],))
-            #last_chapter = cursor.fetchone()[0] or 0
+            # cursor.execute("SELECT MAX(chapter_number) FROM chapters WHERE novel_id = %s", (novels[0][0],))
+            # last_chapter = cursor.fetchone()[0] or 0
             logging.info(f"Last chapter in database: {last_chapter}")
         # Load checkpoint
         cursor.close()
@@ -263,7 +265,8 @@ class NovelChapterCrawler:
         last_chapter = 10
         start_index = 0
         if last_slug and any(n[1] == last_slug for n in novels):
-            start_index = next(i for i, n in enumerate(novels) if n[1] == last_slug)
+            start_index = next(i for i, n in enumerate(
+                novels) if n[1] == last_slug)
 
         async with aiohttp.ClientSession() as session:
             for i in range(start_index, len(novels)):
@@ -273,41 +276,50 @@ class NovelChapterCrawler:
                 # Determine chapter range
                 start_chapter = last_chapter + 1 if slug == last_slug else 1
                 end_chapter = total_chapters if total_chapters > 0 else self.default_max_chapters
-                logging.info(f"Crawling chapters {start_chapter} to {end_chapter} for {title}")
+                logging.info(
+                    f"Crawling chapters {start_chapter} to {end_chapter} for {title}")
 
                 chapters = []
                 for j in range(start_chapter, end_chapter + 1, self.max_concurrency):
-                    batch = range(j, min(j + self.max_concurrency, end_chapter + 1))
-                    tasks = [self.get_chapter_content(session, slug, chapter_num) for chapter_num in batch]
+                    batch = range(
+                        j, min(j + self.max_concurrency, end_chapter + 1))
+                    tasks = [self.get_chapter_content(
+                        session, slug, chapter_num) for chapter_num in batch]
                     results = await asyncio.gather(*tasks, return_exceptions=True)
-                    chapters.extend([result for result in results if result is not None])
+                    chapters.extend(
+                        [result for result in results if result is not None])
 
                     # Save checkpoint for the last chapter in the batch
                     if chapters:
                         self.save_checkpoint(slug, chapters[-1]['chapter_num'])
 
                 # Save chapters as JSON files
-                file_paths = [self.save_chapter_as_json(chapter, slug, title) for chapter in chapters]
+                file_paths = [self.save_chapter_as_json(
+                    chapter, slug, title) for chapter in chapters]
 
                 # Upload to Cloudinary
                 uploaded_files = await self.upload_files_to_cloudinary(file_paths)
 
                 # Save to PostgreSQL
-                saved_count = self.save_to_postgresql(chapters, uploaded_files, novel_id)
+                saved_count = self.save_to_postgresql(
+                    chapters, uploaded_files, novel_id)
                 total_chapters_saved += saved_count
 
         elapsed_time = time.time() - start_time
-        logging.info(f"Chapter crawling completed: {total_chapters_saved} chapters saved in {elapsed_time:.2f} seconds")
+        logging.info(
+            f"Chapter crawling completed: {total_chapters_saved} chapters saved in {elapsed_time:.2f} seconds")
         return total_chapters_saved
+
 
 def main():
     # Database configuration
     db_config = {
-        'dbname': os.getenv('PG_DBNAME'),
-        'user': os.getenv('PG_USER'),
-        'password': os.getenv('PG_PASSWORD'),
-        'host': os.getenv('PG_HOST'),
-        'port': os.getenv('PG_PORT')
+        'dbname': 'postgres',
+        'user': 'postgres.ijdorxaikoovmezfpdrz',
+        'password': 'qZPAgRYvQM5z4TR1',
+        'host': 'aws-0-ap-southeast-1.pooler.supabase.com',
+        'port': '5432',
+        'sslmode': 'require'
     }
 
     # Initialize crawler
@@ -317,6 +329,7 @@ def main():
     # Crawl chapters
     total_chapters = asyncio.run(crawler.crawl_chapters())
     print(f"Total chapters saved: {total_chapters}")
+
 
 if __name__ == "__main__":
     main()
