@@ -20,6 +20,7 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class NovelCrawler:
     def __init__(self, base_url, db_config):
         self.base_url = base_url
@@ -28,20 +29,17 @@ class NovelCrawler:
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5'
         }
-        self.rate_limit_delay = 0.2  # Delay between requests (seconds)
-        self.max_concurrency = 5  # Maximum concurrent HTTP requests
+        self.rate_limit_delay = 0.2
+        self.max_concurrency = 5
         self.db_pool = SimpleConnectionPool(1, 10, **db_config)
         self.checkpoint_list_file = 'checkpoint_list.txt'
         self.checkpoint_details_file = 'checkpoint_details.txt'
 
-    def clean_slug(self, title):
-        """Generate a clean slug from the title."""
-        slug = unidecode(title).lower()
-        slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
-        return slug
+    def __del__(self):
+        if self.db_pool:
+            self.db_pool.closeall()
 
     def normalize_title(self, title):
-        """Normalize title by removing diacritics and converting to lowercase."""
         return unidecode(title).lower()
 
     @retry(
@@ -50,183 +48,115 @@ class NovelCrawler:
         retry=retry_if_exception_type((aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
     )
     async def fetch_page(self, session, url):
-        """Fetch a single page with retry logic."""
         logging.debug(f"Fetching URL: {url}")
-        async with session.get(url, headers=self.headers, timeout=15) as response:
+        timeout = aiohttp.ClientTimeout(total=15)
+        async with session.get(url, headers=self.headers, timeout=timeout) as response:
             response.raise_for_status()
             text = await response.text()
             logging.debug(f"Response status code: {response.status}, content length: {len(text)}")
             return text
 
     async def get_novel_info(self, session, list_url):
-        """Extract novel information from a category page."""
         try:
             html = await self.fetch_page(session, list_url)
             soup = BeautifulSoup(html, 'html.parser')
-            novel_items = soup.find_all('div', class_='py-4 px-4 flex items-center gap-4 hover:bg-gray-50')
+            novel_items = soup.find_all('div', class_='row', itemtype='https://schema.org/Book')
             logging.debug(f"Found {len(novel_items)} novel items on {list_url}")
 
             novel_data_list = []
             for item in novel_items:
                 try:
-                    # Extract title and slug
-                    title_link = item.find('a', class_='text-[#14394d] font-medium hover:underline line-clamp-2')
-                    if not title_link:
-                        logging.warning("Title link not found in item")
+                    title_tag = item.select_one('.truyen-title a')
+                    if not title_tag:
                         continue
-                    title = title_link.get_text(strip=True).split('<span')[0].strip()
-                    if not title:
-                        logging.warning("Title is empty")
-                        continue
-                    title = title.replace('Hot', '').strip()
-                    title = title.replace('Full', '').strip()
-                    title = re.sub(r'\s+', ' ', title)
-                    slug = title_link['href'].strip('/').split('/')[-1]
-                    author = item.find('span', class_='italic text-sm').get_text(strip=True) if item.find('span', class_='italic text-sm') else 'Unknown'
-                    base_slug = self.clean_slug(title)
+                    title = title_tag.get_text(strip=True)
+                    slug = title_tag['href'].strip('/').split('/')[-1]
 
-                    # Extract cover image
-                    cover_img = item.find('img', class_='w-full h-full object-cover')
-                    cover_image = cover_img['src'] if cover_img else 'https://cdn.apptruyen.lol/images/public/default-image.jpg'
+                    author_tag = item.select_one('.author')
+                    author = (author_tag.get_text(strip=True).replace('✍', '').strip()
+                              if author_tag and author_tag.get_text(strip=True) else 'Unknown')
 
-                    # Extract status
-                    status = 'crawling'
-                    # Extract total chapters
-                    ###<div class="text-right text-sm font-semibold text-secondary"><a class="text-[#14394d] hover:underline" href="/doc-quyen-dich-thien-uyen/chuong-792">Chương 792</a></div>
+                    cover_div = item.select_one('.lazyimg')
+                    cover_image = cover_div['data-image'] if cover_div and 'data-image' in cover_div.attrs else 'https://cdn.apptruyen.lol/images/public/default-image.jpg'
+
+                    chapter_link = item.select_one('.chapter-text')
                     total_chapters = 0
-                    total_chapters_tag = item.find('div', class_='text-right text-sm font-semibold text-secondary')
-                    if total_chapters_tag:
-                        total_chapters_link = total_chapters_tag.find('a')
-                        if total_chapters_link:
-                            total_chapters_text = total_chapters_link.get_text(strip=True)
-                            match = re.search(r'Chương(\d+)', total_chapters_text)
-                            if match:
-                                total_chapters = int(match.group(1))
-
-                    # Extract status
+                    if chapter_link:
+                        chapter_text = chapter_link.find_parent('a').get_text(strip=True)
+                        match = re.search(r'Chương\s*(\d+)', chapter_text)
+                        if match:
+                            total_chapters = int(match.group(1))
 
                     novel_data = {
                         'id': str(uuid.uuid4()),
                         'title': title,
-                        'title_nomalized': self.normalize_title(title).replace('[dich] ', ''),
+                        'title_normalized': self.normalize_title(title).replace('[dich] ', ''),
                         'author': author,
                         'slug': slug,
                         'cover_image': cover_image,
                         'description': '',
-                        'status': status,
+                        'status': 'crawling',
                         'total_chapters': total_chapters,
                         'rating': 0.0,
                         'views': 0,
                         'created_at': datetime.now(timezone.utc),
                         'updated_at': datetime.now(timezone.utc)
                     }
+
                     novel_data_list.append(novel_data)
                     logging.debug(f"Added novel: {title}")
+
                 except Exception as e:
-                    logging.error(f"Error processing novel item on {list_url}: {e}")
+                    logging.error(f"Error processing novel item: {e}")
                     continue
 
-            logging.debug(f"Total novels extracted from {list_url}: {len(novel_data_list)}")
             return novel_data_list if novel_data_list else None
 
         except Exception as e:
             logging.error(f"Failed to process page {list_url}: {e}")
             return None
 
-    async def get_novel_details(self, session, slug):
-        """Extract detailed information from a novel's detail page."""
-        detail_url = f"{self.base_url}/{slug}"
-        try:
-            html = await self.fetch_page(session, detail_url)
-            soup = BeautifulSoup(html, 'html.parser')
-
-           # Extract author
-           # <div class="mt-4 text-sm flex flex-col gap-2"><p><strong>Tác giả:</strong> <!-- -->phong tiên</p><div class="flex flex-wrap items-baseline gap-1"><strong class="whitespace-nowrap">Thể loại:</strong> <a class="hover:underline" href="/the-loai/huyen-huyen">Huyền huyễn<!-- -->,</a><a class="hover:underline" href="/the-loai/tien-hiep">Tiên hiệp </a></div><p><strong>Trạng thái:</strong> <span class=" text-green-500 font-semibold">Full</span></p></div>#
-
-            author = 'Unknown'
-            author_tag = soup.find('strong', string=re.compile(r'Tác giả:'))
-            if author_tag:
-                # author parent tag
-                author_parent = author_tag.find_parent('p')
-                if author_parent:
-                    author = author_parent.get_text(strip=True).split(':')[-1].strip()
-            else:
-                author_tag = soup.find('p', string=re.compile(r'Tác giả:'))
-                if author_tag:
-                    author = author_tag.get_text(strip=True).split(':')[-1].strip()
-            # Extract genres (categories)
-            genres_container = soup.find('div', class_='flex flex-wrap items-baseline gap-1')
-            genres = []
-            if genres_container:
-                genre_links = genres_container.find_all('a', class_='hover:underline')
-                genres = [link.get_text(strip=True).rstrip(',') for link in genre_links]
-
-            # # Extract status
-            # status_tag = soup.find('p', string=re.compile(r'Trạng thái:'))
-            # status_text = status_tag.find('span').get_text(strip=True) if status_tag else 'updating'
-            # status = 'completed' if status_text.lower() == 'full' else 'updating'
-            status =  'crawling'
-            # Extract rating
-            # rating_tag = soup.find('span', class_='text-gray-600 ml-2 text-xs')
-            rating = 0.0
-            # if rating_tag:
-            #     rating_text = rating_tag.get_text(strip=True)
-            #     match = re.search(r'Đánh giá: (\d+\.?\d*)/10', rating_text)
-            #     if match:
-            #         rating = float(match.group(1))
-
-            # Your scraping code
-            description_container = soup.find('div', class_='mt-4 text-gray-700 space-y-3 text-sm')
-            description= ''
-
-            if description_container:
-                raw_html = str(description_container)
-
-                # Sanitize the HTML
-                allowed_tags = ['p', 'strong', 'em', 'ul', 'ol','li', 'br', 'a']
-                allowed_attrs = {
-                    'a': ['href', 'title'],
-                }
-
-                description= bleach.clean(raw_html, tags=allowed_tags, attributes=allowed_attrs, strip=True)
-
-            # Extract cover image
-            cover_img = soup.find('img', class_='object-cover')
-            cover_image = cover_img['src'] if cover_img else 'https://cdn.apptruyen.lol/images/public/default-image.jpg'
-
-            novel_details = {
-                'slug': slug,
-                'author': author,
-                'genres': genres,
-                'status': status,
-                'rating': rating,
-                'description': description,
-                'cover_image': cover_image,
-                'updated_at': datetime.now(timezone.utc)
-            }
-            logging.debug(f"Extracted details for novel: {slug}")
-            return novel_details
-
-        except Exception as e:
-            logging.error(f"Failed to process detail page {detail_url}: {e}")
-            return None
+    def insert_file_metadata(self, cursor, novel):
+        file_id = str(uuid.uuid4())
+        insert_file_query = """
+            INSERT INTO file_metadata (
+                id, file_name, file_url, content_type, type,
+                public_id, uploaded_at, last_modified_at, size
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        now = datetime.now(timezone.utc)
+        file_values = (
+            file_id,
+            f"{novel['slug']}.jpg",
+            novel['cover_image'],
+            'image/jpeg',
+            'image',
+            novel['slug'],
+            now,
+            now,
+            0
+        )
+        cursor.execute(insert_file_query, file_values)
+        return file_id
 
     def save_to_postgresql(self, novel_info_list):
-        """Save a batch of novels to PostgreSQL database."""
         if not novel_info_list:
             logging.warning("No novels to save")
-            return 0
+            return []
 
         conn = None
         cursor = None
         try:
             conn = self.db_pool.getconn()
             cursor = conn.cursor()
+            for novel in novel_info_list:
+                file_id = self.insert_file_metadata(cursor, novel)
+                novel['cover_image_id'] = file_id
 
             insert_query = """
                 INSERT INTO novels (
-                    id, author, cover_image, created_at, description, rating, slug, status,
-                    title, title_nomalized, total_chapters, updated_at, views
+                    id, author, cover_image_id, created_at, description, rating, slug, status,
+                    title, title_normalized, total_chapters, updated_at, views, is_public
                 ) VALUES %s
                 ON CONFLICT (slug) DO NOTHING
                 RETURNING id
@@ -234,22 +164,24 @@ class NovelCrawler:
             values = [(
                 novel['id'],
                 novel['author'],
-                novel['cover_image'],
+                novel['cover_image_id'],
                 novel['created_at'],
                 novel['description'],
                 novel['rating'],
                 novel['slug'],
                 novel['status'],
                 novel['title'],
-                novel['title_nomalized'],
+                novel['title_normalized'],
                 novel['total_chapters'],
                 novel['updated_at'],
-                novel['views']
+                novel['views'],
+                True
             ) for novel in novel_info_list]
 
             from psycopg2.extras import execute_values
             execute_values(cursor, insert_query, values)
-            novel_ids = [row[0] for row in cursor.fetchall()]
+
+            novel_ids = [row[0] for row in cursor.fetchall()] if cursor.description else []
             conn.commit()
 
             logging.info(f"Saved {len(novel_ids)} novels to database")
@@ -277,111 +209,7 @@ class NovelCrawler:
             if conn:
                 self.db_pool.putconn(conn)
 
-    def update_novel_details(self, novel_details_list, novel_ids):
-        """Update a batch of novels with detailed information and manage genres."""
-        if not novel_details_list:
-            logging.warning("No novel details to update")
-            return 0
-
-        conn = None
-        cursor = None
-        try:
-            conn = self.db_pool.getconn()
-            cursor = conn.cursor()
-
-            # Update novels
-            update_query = """
-                UPDATE novels
-                SET author = %s,
-                    cover_image = %s,
-                    description = %s,
-                    rating = %s,
-                    status = %s,
-                    updated_at = %s
-                WHERE slug = %s
-                RETURNING id
-            """
-            novel_values = [(
-                novel['author'],
-                novel['cover_image'],
-                novel['description'],
-                float(novel['rating']),
-                novel['status'],
-                novel['updated_at'],
-                novel['slug']
-            ) for novel in novel_details_list]
-
-            # Execute update query
-            updated_novel_ids = []
-            for values in novel_values:
-                cursor.execute(update_query, values)
-                updated_novel_id = cursor.fetchone()
-                if updated_novel_id:
-                    updated_novel_ids.append(updated_novel_id[0])
-
-            # Manage genres
-            for novel, novel_id in zip(novel_details_list, novel_ids):
-                if not novel['genres']:
-                    continue
-
-                for genre_name in novel['genres']:
-                    # Insert or get genre
-                    genre_query = """
-                        INSERT INTO genres (id, name, description)
-                        VALUES (%s, %s, %s)
-                        ON CONFLICT (name) DO NOTHING
-                        RETURNING id
-                    """
-                    genre_id = str(uuid.uuid4())
-                    cursor.execute(genre_query, (
-                        genre_id,
-                        genre_name,
-                        "Novel genre description"
-                    ))
-                    result = cursor.fetchone()
-                    if result:
-                        genre_id = result[0]
-                    else:
-                        # Genre already exists, fetch its ID
-                        cursor.execute("SELECT id FROM genres WHERE name = %s", (genre_name,))
-                        genre_id = cursor.fetchone()[0]
-
-                    # Link novel and genre
-                    novel_genre_query = """
-                        INSERT INTO novel_genres (novel_id, genre_id)
-                        VALUES (%s, %s)
-                        ON CONFLICT DO NOTHING
-                    """
-                    cursor.execute(novel_genre_query, (
-                        novel_id,
-                        genre_id
-                    ))
-
-            conn.commit()
-            logging.info(f"Updated {len(updated_novel_ids)} novels with details")
-            return len(updated_novel_ids)
-
-        except psycopg2.OperationalError as e:
-            logging.error(f"Database connection failed: {e}")
-            return 0
-        except psycopg2.IntegrityError as e:
-            logging.error(f"Database integrity error: {e}")
-            if conn:
-                conn.rollback()
-            return 0
-        except Exception as e:
-            logging.error(f"Failed to update novels: {e}")
-            if conn:
-                conn.rollback()
-            return 0
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                self.db_pool.putconn(conn)
-
     def load_checkpoint(self, checkpoint_file):
-        """Load the last processed item from checkpoint file."""
         if os.path.exists(checkpoint_file):
             with open(checkpoint_file, 'r') as f:
                 try:
@@ -391,23 +219,19 @@ class NovelCrawler:
         return None
 
     def save_checkpoint(self, checkpoint_file, item):
-        """Save the current item to checkpoint file."""
         with open(checkpoint_file, 'w') as f:
             f.write(str(item))
         logging.debug(f"Saved checkpoint to {checkpoint_file}: {item}")
 
     async def crawl_novels(self, start_page=1, max_pages=10):
-        """Crawl novel lists and details."""
         total_novels_saved = 0
         total_details_updated = 0
         start_time = time.time()
 
-        # Load checkpoint for list pages
         last_page = self.load_checkpoint(self.checkpoint_list_file)
         start_page = int(last_page) + 1 if last_page and last_page.isdigit() else start_page
 
         async with aiohttp.ClientSession() as session:
-            # Step 1: Crawl novel lists
             for page in range(start_page, max_pages + 1):
                 list_url = f"{self.base_url}/danh-sach/truyen-hot?page={page}"
                 logging.info(f"Processing page {page}/{max_pages}")
@@ -417,23 +241,8 @@ class NovelCrawler:
                     logging.warning(f"No novels found on page {page}, stopping")
                     break
 
-                # Save novels and get their IDs
                 novel_ids = self.save_to_postgresql(novel_info_list)
                 total_novels_saved += len(novel_ids)
-
-                # Step 2: Crawl details for this batch
-                novel_details_list = []
-                for i in range(0, len(novel_info_list), self.max_concurrency):
-                    batch = novel_info_list[i:i + self.max_concurrency]
-                    batch_slugs = [novel['slug'] for novel in batch]
-                    tasks = [self.get_novel_details(session, slug) for slug in batch_slugs]
-                    results = await asyncio.gather(*tasks, return_exceptions=True)
-                    novel_details_list.extend([result for result in results if result is not None])
-
-                # Update details and genres
-                if novel_details_list:
-                    updated_count = self.update_novel_details(novel_details_list, novel_ids[:len(novel_details_list)])
-                    total_details_updated += updated_count
 
                 self.save_checkpoint(self.checkpoint_list_file, page)
                 await asyncio.sleep(self.rate_limit_delay)
@@ -442,8 +251,8 @@ class NovelCrawler:
         logging.info(f"Crawling completed: {total_novels_saved} novels saved, {total_details_updated} details updated in {elapsed_time:.2f} seconds")
         return total_novels_saved, total_details_updated
 
+
 def main():
-    # Database configuration
     db_config = {
         'dbname': os.getenv('PG_DBNAME'),
         'user': os.getenv('PG_USER'),
@@ -452,14 +261,13 @@ def main():
         'port': os.getenv('PG_PORT')
     }
 
-    # Initialize crawler
     base_url = "https://truyenfull.vision"
     crawler = NovelCrawler(base_url, db_config)
 
-    # Run crawler
-    total_novels, total_details = asyncio.run(crawler.crawl_novels(max_pages=1))
+    total_novels, total_details = asyncio.run(crawler.crawl_novels(max_pages=15))
     print(f"Total novels saved: {total_novels}")
     print(f"Total novel details updated: {total_details}")
+
 
 if __name__ == "__main__":
     main()

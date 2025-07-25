@@ -26,7 +26,7 @@ public class Novel {
 	private String title;
 
 	@Column(nullable = false)
-	private String titleNomalized;
+	private String titleNormalized;
 
 	@Column(nullable = false, unique = true)
 	private String slug;
