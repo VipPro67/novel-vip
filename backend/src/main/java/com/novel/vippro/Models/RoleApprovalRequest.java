@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "role_approval_requests", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "role_id" })
@@ -24,10 +27,11 @@ public class RoleApprovalRequest {
     @Column(nullable = false)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
-    @Column(nullable = false)
-    private LocalDateTime createAt = LocalDateTime.now();
+    @CreationTimestamp
+	private LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
     private String processedBy;
 
@@ -74,11 +78,11 @@ public class RoleApprovalRequest {
     }
 
     public LocalDateTime getRequestDate() {
-        return createAt;
+        return createdAt;
     }
 
-    public void setRequestDate(LocalDateTime createAt) {
-        this.createAt = createAt;
+    public void setRequestDate(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public LocalDateTime getProcessedDate() {

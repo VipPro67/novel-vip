@@ -9,7 +9,6 @@ import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
-import com.novel.vippro.DTO.File.FileMetadataUpdateDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Group.CreateGroupDTO;
 import com.novel.vippro.DTO.Group.GroupDTO;
@@ -30,8 +29,6 @@ import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.User.UserDTO;
 import com.novel.vippro.Models.*;
-
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -271,6 +268,11 @@ public class MapperFacade implements Mapper {
 	@Override
 	public NotificationDTO NotificationtoDTO(Notification notification) {
 		return notificationMapper.NotificationtoDTO(notification);
+	}
+
+	@Override
+	public Notification DTOtoNotification(NotificationDTO notificationDTO) {
+		return notificationMapper.DTOtoNotification(notificationDTO);
 	}
 
 	@Override

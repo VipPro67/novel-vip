@@ -33,7 +33,7 @@ public class Message {
     private Boolean isRead = false;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
     @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 }

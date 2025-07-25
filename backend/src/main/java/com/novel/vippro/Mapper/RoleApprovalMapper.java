@@ -12,7 +12,11 @@ public class RoleApprovalMapper {
 	private ModelMapper modelMapper;
 
 	public RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest) {
-		return modelMapper.map(roleApprovalRequest, RoleApprovalDTO.class);
+		
+		RoleApprovalDTO dto = modelMapper.map(roleApprovalRequest, RoleApprovalDTO.class);
+		dto.setUserId(roleApprovalRequest.getUser().getId());
+		dto.setUsername(roleApprovalRequest.getUser().getUsername());
+		return dto;
 	}
 
 	public RoleApprovalRequest DTOtoRoleApprovalRequest(RoleApprovalDTO roleApprovalDTO) {

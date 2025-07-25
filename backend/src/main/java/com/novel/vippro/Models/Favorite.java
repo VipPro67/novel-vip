@@ -29,11 +29,9 @@ public class Favorite {
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 }

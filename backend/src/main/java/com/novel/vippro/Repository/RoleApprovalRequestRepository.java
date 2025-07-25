@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.novel.vippro.Models.Role;
 import com.novel.vippro.Models.RoleApprovalRequest;
 import com.novel.vippro.Models.User;
 
@@ -20,5 +21,6 @@ public interface RoleApprovalRequestRepository extends JpaRepository<RoleApprova
 
     List<RoleApprovalRequest> findByUser(User user);
 
-    Optional<RoleApprovalRequest> findByUserAndStatus(User user, String status);
+    @Query("SELECT r FROM RoleApprovalRequest r WHERE r.user = ?1 AND r.status = ?2 AND r.requestedRole = ?3")
+    Optional<RoleApprovalRequest> findByUserAndStatus(User user, String status, Role requestedRole);
 }

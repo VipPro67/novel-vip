@@ -34,10 +34,10 @@ public class Bookmark {
     private Integer progress; // Reading progress in percentage
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void onCreate() {

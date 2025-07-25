@@ -110,46 +110,17 @@ public class AuthService {
                     .body(new ControllerResponse<>(false, "Email is already in use!", null, 400));
         }
 
-        // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
-
-        // Always assign USER by default
+        User user = new User();
+        user.setUsername(signUpRequest.getUsername());
+        user.setEmail(signUpRequest.getEmail());
+        user.setPassword(encoder.encode(signUpRequest.getPassword()));
         Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(ERole.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         roles.add(userRole);
         user.setRoles(roles);
 
-        // Save the user with USER
         userRepository.save(user);
-
-        // If user requested additional roles (MOD or ADMIN), create approval requests
-        if (signUpRequest.getRole() != null && !signUpRequest.getRole().isEmpty()) {
-            for (String roleStr : signUpRequest.getRole()) {
-                ERole requestedRole = null;
-
-                switch (roleStr.toUpperCase()) {
-                    case "ADMIN":
-                        requestedRole = ERole.ADMIN;
-                        break;
-                    case "MOD":
-                        requestedRole = ERole.MODERATOR;
-                        break;
-                    case "USER":
-                        // Already assigned, skip
-                        continue;
-                    default:
-                        // Invalid role, skip
-                        continue;
-                }
-
-                if (requestedRole != null) {
-                    roleApprovalService.createRoleApprovalRequest(user, requestedRole);
-                }
-            }
-        }
 
         return ResponseEntity.ok(new ControllerResponse<>(true, "User registered successfully!",
                 "User registered successfully!", 200));

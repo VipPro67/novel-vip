@@ -82,11 +82,11 @@ public class Novel {
 
 	@Column(nullable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime createdAt;
 
 	@Column(nullable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime updatedAt = LocalDateTime.now();
+	private LocalDateTime updatedAt;
 
 	public void addCategory(Category category) {
 		if (this.categories == null) {
@@ -114,21 +114,6 @@ public class Novel {
 		}
 	}
 
-	@PrePersist
-	public void onCreate() {
-		if (this.id == null) {
-			this.id = UUID.randomUUID();
-		}
-		normalizeFields();
-		this.createdAt = LocalDateTime.now();
-		this.updatedAt = LocalDateTime.now();
-	}
-
-	@PreUpdate
-	public void onUpdate() {
-		normalizeFields();
-		this.updatedAt = LocalDateTime.now();
-	}
 
 	private void normalizeFields() {
 		if (this.title != null) {
@@ -136,9 +121,5 @@ public class Novel {
 					.replaceAll("\\p{M}", "")
 					.toUpperCase();
 		}
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 }

@@ -116,6 +116,8 @@ public interface Mapper {
     // Notification-related mappings
     NotificationDTO NotificationtoDTO(Notification notification);
 
+    Notification DTOtoNotification(NotificationDTO notificationDTO);
+
     void updateNotificationFromDTO(NotificationDTO dto, Notification notification);
 
     // GroupMember-related mappings

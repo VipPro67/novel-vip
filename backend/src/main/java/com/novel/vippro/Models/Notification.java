@@ -33,9 +33,8 @@ public class Notification {
     @Column(nullable = false)
     private boolean read = false;
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)

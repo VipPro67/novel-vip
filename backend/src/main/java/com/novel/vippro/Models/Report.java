@@ -52,13 +52,11 @@ public class Report {
 
     private String adminResponse;
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     private LocalDateTime resolvedAt;
 

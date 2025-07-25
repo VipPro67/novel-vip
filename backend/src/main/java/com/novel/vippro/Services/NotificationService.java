@@ -112,10 +112,4 @@ public class NotificationService {
     public void deleteAllUserNotifications(UUID userId) {
         notificationRepository.deleteByUserId(userId);
     }
-
-    @Transactional
-    public NotificationPreferencesDTO updatePreferences(NotificationPreferencesDTO preferences) {
-        // TODO: Implement notification preferences update logic
-        return preferences;
-    }
 }

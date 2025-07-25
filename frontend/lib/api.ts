@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://backend-production-eeef.up.railway.app"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
 export interface ApiResponse<T> {
   success: boolean
@@ -166,7 +166,7 @@ export interface RoleRequest {
   requestedRole: string
   reason: string
   status: "PENDING" | "APPROVED" | "REJECTED"
-  createAt: string
+  createdAt: string
   reviewedAt?: string
   reviewedBy?: string
   reviewerUsername?: string
@@ -723,7 +723,7 @@ class ApiClient {
     // Set default values
     const page = params.page ?? 0
     const size = params.size ?? 10
-    const sortBy = params.sortBy ?? "createAt"
+    const sortBy = params.sortBy ?? "createdAt"
     const sortDir = params.sortDir ?? "desc"
 
     // Add pagination parameters

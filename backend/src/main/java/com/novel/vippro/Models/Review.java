@@ -50,11 +50,9 @@ public class Review {
     @Column(name = "is_edited")
     private boolean isEdited = false;
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 }

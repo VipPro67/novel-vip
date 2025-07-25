@@ -31,13 +31,11 @@ public class Rating {
 
     private String review; // Optional review text
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void onCreate() {

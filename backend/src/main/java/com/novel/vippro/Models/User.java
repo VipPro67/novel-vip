@@ -16,56 +16,54 @@ import lombok.Data;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-    @UniqueConstraint(columnNames = "username"),
-    @UniqueConstraint(columnNames = "email")
+		@UniqueConstraint(columnNames = "username"),
+		@UniqueConstraint(columnNames = "email")
 }, indexes = {
-    @Index(name = "idx_username", columnList = "username"),
-    @Index(name = "idx_email", columnList = "email")
+		@Index(name = "idx_username", columnList = "username"),
+		@Index(name = "idx_email", columnList = "email")
 })
 @Data
 public class User {
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
 
-  @NotBlank
-  @Size(max = 20)
-  private String username;
+	@NotBlank
+	@Size(max = 20)
+	private String username;
 
-  @NotBlank
-  @Size(max = 50)
-  @Email
-  private String email;
+	@NotBlank
+	@Size(max = 50)
+	@Email
+	private String email;
 
-  @NotBlank
-  @Size(max = 120)
-  private String password;
+	@NotBlank
+	@Size(max = 120)
+	private String password;
 
-  @Size(max = 120)
-  private String fullName;
+	@Size(max = 120)
+	private String fullName;
 
-  @Size(max = 255)
-  private String avatar;
+	@Size(max = 255)
+	private String avatar;
 
-  @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-  private Set<Role> roles = new HashSet<>();
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+	private Set<Role> roles = new HashSet<>();
 
-  @Column(nullable = false)
-  @CreationTimestamp
-  private LocalDateTime createdAt = LocalDateTime.now();
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 
-  @Column(nullable = false)
-  @UpdateTimestamp
-  private LocalDateTime updatedAt = LocalDateTime.now();
+	@UpdateTimestamp
+	private LocalDateTime updatedAt;
 
-  public User() {
-  }
+	public User() {
+	}
 
-  public User(String username, String email, String password) {
-    this.username = username;
-    this.email = email;
-    this.password = password;
-  }
+	public User(String username, String email, String password) {
+		this.username = username;
+		this.email = email;
+		this.password = password;
+	}
 
 }

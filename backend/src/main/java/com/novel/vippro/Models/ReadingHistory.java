@@ -52,13 +52,11 @@ public class ReadingHistory {
     @UpdateTimestamp
     private LocalDateTime lastReadAt;
 
-    @Column(nullable = false)
     @CreationTimestamp
-    private LocalDateTime createdAt = LocalDateTime.now();
+     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @UpdateTimestamp
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {

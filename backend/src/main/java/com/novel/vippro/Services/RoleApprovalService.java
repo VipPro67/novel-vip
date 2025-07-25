@@ -44,8 +44,11 @@ public class RoleApprovalService {
     @Transactional
     public RoleApprovalDTO createRoleApprovalRequest(User user, ERole requestedRole) {
         // Check if user already has a pending request for this role
+
+        Role requestedRoleEntity = roleRepository.findByName(requestedRole)
+                .orElseThrow(() -> new RuntimeException("Error: Role not found"));
         Optional<RoleApprovalRequest> existingRequest = roleApprovalRequestRepository
-                .findByUserAndStatus(user, "PENDING");
+                .findByUserAndStatus(user, "PENDING", requestedRoleEntity);
 
         if (existingRequest.isPresent()) {
             throw new RuntimeException("Error: You already have a pending request for this role");

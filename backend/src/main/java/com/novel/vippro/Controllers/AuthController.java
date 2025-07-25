@@ -22,28 +22,28 @@ import com.novel.vippro.Services.AuthService;
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Authentication management APIs")
 public class AuthController {
-  @Autowired
-  AuthService authService;
+    @Autowired
+    AuthService authService;
 
-  @Operation(summary = "Authenticate user", description = "Authenticate a user with email and password and return JWT token")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Successfully authenticated", content = @Content(schema = @Schema(implementation = JwtResponse.class))),
-      @ApiResponse(responseCode = "401", description = "Invalid credentials"),
-      @ApiResponse(responseCode = "400", description = "Invalid input")
-  })
-  @PostMapping("/signin")
-  public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-    return authService.authenticateUser(loginRequest);
-  }
+    @Operation(summary = "Authenticate user", description = "Authenticate a user with email and password and return JWT token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully authenticated", content = @Content(schema = @Schema(implementation = JwtResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @PostMapping("/signin")
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        return authService.authenticateUser(loginRequest);
+    }
 
-  @Operation(summary = "Register new user", description = "Register a new user with basic information")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "User registered successfully"),
-      @ApiResponse(responseCode = "400", description = "Username/Email already exists or invalid input"),
-      @ApiResponse(responseCode = "500", description = "Server error during registration")
-  })
-  @PostMapping("/signup")
-  public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-    return authService.registerUser(signUpRequest);
-  }
+    @Operation(summary = "Register new user", description = "Register a new user with basic information")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Username/Email already exists or invalid input"),
+            @ApiResponse(responseCode = "500", description = "Server error during registration")
+    })
+    @PostMapping("/signup")
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+        return authService.registerUser(signUpRequest);
+    }
 }

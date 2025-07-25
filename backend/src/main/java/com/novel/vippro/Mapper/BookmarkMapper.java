@@ -2,10 +2,12 @@ package com.novel.vippro.Mapper;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.Models.Bookmark;
 
+@Component
 public class BookmarkMapper {
 
 	@Autowired

@@ -144,16 +144,4 @@ public class NotificationController {
                 return ControllerResponse.success(ControllerResponse.success("All notifications deleted", null));
         }
 
-        @Operation(summary = "Update notification preferences", description = "Update notification preferences for the current user")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Preferences updated successfully"),
-                        @ApiResponse(responseCode = "400", description = "Invalid preferences data"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @PutMapping("/preferences")
-        public ControllerResponse<NotificationPreferencesDTO> updatePreferences(
-                        @Parameter(description = "Updated preferences", required = true) @Valid @RequestBody NotificationPreferencesDTO preferences) {
-                NotificationPreferencesDTO updatedPreferences = notificationService.updatePreferences(preferences);
-                return ControllerResponse.success("Notification preferences updated", updatedPreferences);
-        }
 }

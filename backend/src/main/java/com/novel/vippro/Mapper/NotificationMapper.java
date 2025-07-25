@@ -18,4 +18,8 @@ public class NotificationMapper {
 	public void updateNotificationFromDTO(NotificationDTO dto, Notification notification) {
 		modelMapper.map(dto, notification);
 	}
+
+	public Notification DTOtoNotification(NotificationDTO notificationDTO) {
+		return modelMapper.map(notificationDTO, Notification.class);
+	}
 }
