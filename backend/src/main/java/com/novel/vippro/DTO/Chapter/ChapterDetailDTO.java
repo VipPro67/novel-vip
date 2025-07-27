@@ -36,18 +36,4 @@ public class ChapterDetailDTO {
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime updatedAt;
 
-    public ChapterDetailDTO() {
-    }
-
-    public ChapterDetailDTO(Chapter c, Novel n) {
-        this.id = c.getId();
-        this.chapterNumber = c.getChapterNumber();
-        this.title = c.getTitle();
-        this.novelId = n.getId();
-        this.novelTitle = n.getTitle();
-        this.jsonUrl = c.getJsonFile() != null ? c.getJsonFile().getFileUrl() : null;
-        this.audioUrl = c.getAudioFile() != null ? c.getAudioFile().getFileUrl() : null;
-        this.createdAt = c.getCreatedAt();
-        this.updatedAt = c.getUpdatedAt();
-    }
 }

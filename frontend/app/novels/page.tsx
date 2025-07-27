@@ -116,11 +116,10 @@ export default function NovelsPage() {
           {/* Content */}
           {loading ? (
             <div
-              className={`grid gap-6 ${
-                viewMode === "grid"
+              className={`grid gap-6 ${viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                   : "grid-cols-1"
-              }`}
+                }`}
             >
               {Array.from({ length: 20 }).map((_, i) => (
                 <Card key={i} className="animate-pulse">
@@ -139,18 +138,16 @@ export default function NovelsPage() {
             </div>
           ) : (
             <div
-              className={`grid gap-6 ${
-                viewMode === "grid"
+              className={`grid gap-6 ${viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                   : "grid-cols-1"
-              }`}
+                }`}
             >
               {novels.map((novel) => (
                 <NovelCard key={novel.id} novel={novel} />
               ))}
             </div>
           )}
-
           {/* Pagination */}
           <Pagination
             currentPage={currentPage}

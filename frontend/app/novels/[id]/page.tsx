@@ -205,7 +205,7 @@ export default function NovelDetailPage() {
               <CardContent className="p-6">
                 <div className="aspect-[3/4] relative mb-4">
                   <Image
-                    src={novel.coverImage || "/placeholder.svg?height=600&width=450"}
+                    src={novel.coverImage?.fileUrl || "/placeholder.svg?height=600&width=450"}
                     alt={novel.title}
                     fill
                     className="object-cover rounded-lg"
@@ -241,9 +241,8 @@ export default function NovelDetailPage() {
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <button key={rating} onClick={() => handleRating(rating)} className="p-1">
                           <Star
-                            className={`h-5 w-5 ${
-                              rating <= userRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                            }`}
+                            className={`h-5 w-5 ${rating <= userRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                              }`}
                           />
                         </button>
                       ))}

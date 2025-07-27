@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.novel.vippro.DTO.Category.CategoryDTO;
+import com.novel.vippro.DTO.File.FileMetadataDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,7 +18,7 @@ public class NovelDTO {
     private String title;
     private String description;
     private String author;
-    private String coverImage;
+    private FileMetadataDTO coverImage;
     private String status;
     private List<CategoryDTO> categories;
     private Integer totalChapters;

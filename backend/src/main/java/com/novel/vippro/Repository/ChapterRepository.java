@@ -18,9 +18,9 @@ public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
     Page<Chapter> findByNovelIdOrderByChapterNumberAsc(UUID novelId, Pageable pageable);
 
     @Query("SELECT c,n FROM Chapter c JOIN c.novel n WHERE c.novel.id = ?1 ORDER BY c.chapterNumber ASC")
-    List<ChapterDTO> findByNovelIdOrderByChapterNumberAsc(UUID novelId);
+    List<Chapter> findByNovelIdOrderByChapterNumberAsc(UUID novelId);
 
-    @Query("SELECT c, n FROM Chapter c JOIN c.novel n WHERE c.novel.id = ?1 AND c.chapterNumber = ?2 ")
-    ChapterDetailDTO findByNovelIdAndChapterNumber(UUID novelId, Integer chapterNumber);
+    @Query("SELECT c FROM Chapter c WHERE c.novel.id = ?1 AND c.chapterNumber = ?2 ")
+    Chapter findByNovelIdAndChapterNumber(UUID novelId, Integer chapterNumber);
 
 }

@@ -67,8 +67,13 @@ public class ChapterService {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
-        ChapterDetailDTO dto = chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
-        return dto;
+        Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
+                    novelId + " and " + chapterNumber);
+        }
+
+        return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
     @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-page-' + #pageable.pageNumber")
@@ -120,7 +125,15 @@ public class ChapterService {
     }
 
     public ChapterDetailDTO getChapterByNovelIdAndNumber(UUID novelId, Integer chapterNumber) {
-        return chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
+        if (!novelRepository.existsById(novelId)) {
+            throw new ResourceNotFoundException("Novel", "id", novelId);
+        }
+        Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
+                    novelId + " and " + chapterNumber);
+        }
+        return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
     public Map<String, Object> getChapterContent(Chapter chapter) {

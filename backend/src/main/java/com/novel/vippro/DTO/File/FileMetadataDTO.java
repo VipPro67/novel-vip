@@ -8,20 +8,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @Data
 public class FileMetadataDTO {
     private UUID id;
-    private String fileName;
     private String contentType;
-    private long size;
+    private String publicId;
+    private String fileUrl;
+    private LocalDateTime uploadedAt = LocalDateTime.now();
+    private LocalDateTime lastModifiedAt = LocalDateTime.now();
+    private String fileName;
     private String type;
-    @JsonProperty("uploadedAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime uploadedAt;
-    @JsonProperty("lastModifiedAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime lastModifiedAt;
+    private long size;
 }

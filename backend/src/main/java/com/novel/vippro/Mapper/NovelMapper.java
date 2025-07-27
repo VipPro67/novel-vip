@@ -17,7 +17,9 @@ public class NovelMapper {
 	private ModelMapper modelMapper;
 
 	public NovelDTO NoveltoDTO(Novel novel) {
-		return modelMapper.map(novel, NovelDTO.class);
+		NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
+
+		return novelDTO;
 	}
 
 	public NovelDetailDTO NoveltoNovelDetailDTO(Novel novel) {
