@@ -28,13 +28,25 @@ export interface Novel {
   title: string
   description: string
   author: string
-  coverImage?: string
+  coverImage?: FileMetadata
   status: string
   categories: Category[]
   totalChapters: number
   views: number
   rating: number
   updatedAt: string
+}
+/**FileMetadata(id=b9af3c27-d82c-4e60-9f1c-f9445d691b42, contentType=image/jpeg, publicId=khinh-ngu, fileUrl=https://static.truyenfull.vision/cover/o/eJzLyTDW1zUzzjVMLq6q9Aw00Q-rCMkoiKwMMzfx1HeEAr_8fH3dwDCfTDNv7-zKyBLLqlzvkIiMtETPxIq8gqqc8rwop3Jn53z9cjMD3QwLU13PZBMjACH9HQU=/khinh-ngu.jpg, uploadedAt=2025-07-25T14:54:32.123325, lastModifiedAt=2025-07-25T14:54:32.123325, fileName=khinh-ngu.jpg, type=image, size=0) */
+export interface FileMetadata {
+  id: string
+  contentType: string
+  publicId: string
+  fileUrl: string
+  uploadedAt: string
+  lastModifiedAt: string
+  fileName: string
+  type: "image" | "audio" | "video" | "document"
+  size: number
 }
 
 export interface Chapter {

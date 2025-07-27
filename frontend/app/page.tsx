@@ -44,12 +44,12 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background ">
       <Header />
 
       <main>
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20">
+        <section className="bg-gradient-to-r from-primary/10 to-secondary/10 py-20 text-white text-center margin-auto">
           <div className="container text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Discover Amazing Stories</h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

@@ -15,7 +15,7 @@ export function NovelCard({ novel }: NovelCardProps) {
       <Link href={`/novels/${novel.id}`}>
         <div className="aspect-[3/4] relative">
           <Image
-            src={novel.coverImage || "/placeholder.svg?height=400&width=300"}
+            src={novel.coverImage?.fileUrl || "/placeholder.svg?height=400&width=300"}
             alt={novel.title}
             fill
             className="object-cover"

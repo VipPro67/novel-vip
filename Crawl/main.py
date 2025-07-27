@@ -11,6 +11,7 @@ from uuid import uuid4
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 import cloudinary
+import cloudinary.api
 import cloudinary.uploader
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from dotenv import load_dotenv
@@ -33,7 +34,7 @@ class NovelChapterCrawler:
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5'
         }
-        self.rate_limit_delay = 0.1  # Delay between requests (seconds)
+        self.rate_limit_delay = 0.25  # Delay between requests (seconds)
         self.max_concurrency = 5  # Maximum concurrent HTTP requests
         self.db_pool = SimpleConnectionPool(1, 10, **db_config)
         self.output_dir = 'output'
@@ -59,23 +60,23 @@ class NovelChapterCrawler:
 
     async def get_chapter_content(self, session, slug, chapter_num):
         """Fetch content for a specific chapter."""
-        url = f"{self.base_url}/{slug}/chap-{chapter_num}"
+        url = f"{self.base_url}/{slug}/chuong-{chapter_num}"
         try:
             html = await self.fetch_page(session, url)
             soup = BeautifulSoup(html, 'html.parser')
 
             # Get title
-            title_tag = soup.find('h1', class_='text-lg text-center')
+            title_tag = soup.find('a', class_='chapter-title')
             if not title_tag:
                 raise ValueError("Chapter title not found")
             title = title_tag.text.strip()
 
             # Get content (HTML preserved)
-            content_div = soup.find('div', class_='flex flex-col gap-6')
+            content_div = soup.find('div', class_='chapter-c')
             if not content_div:
                 raise ValueError("Chapter content not found")
 
-            # Convert BeautifulSoup Tag to string first// argument can not of 'Tag' type, must be 'str'
+            # Convert BeautifulSoup Tag to string first
             content_html = content_div.decode_contents()
 
             # Now clean the string HTML
@@ -93,7 +94,8 @@ class NovelChapterCrawler:
             }
         except Exception as e:
             logging.error(
-                f"Failed to fetch chapter {chapter_num} for slug {slug}: {str(e)}")
+                f"Failed to fetch chapter {chapter_num} for slug {slug}: {str(e)}"
+                f"Failed to fetch from url: {url}")
             return None
 
     def save_chapter_as_json(self, chapter, slug, title):
@@ -116,16 +118,32 @@ class NovelChapterCrawler:
         return file_path
 
     def upload_file_to_cloudinary(self, file_path):
-        """Upload a file to Cloudinary."""
+        """Upload a file to Cloudinary if not already uploaded."""
         cloudinary.config(
             cloud_name='drpudphzv',
             api_key='942584967114298',
             api_secret='54KWkzHDwJ2dUsscUvzatdT61gY'
         )
+
         filename = os.path.basename(file_path)
         slug = os.path.dirname(file_path).split('/')[-1]
-        public_id = "novels/" + slug+"/chapters/" + filename
+        public_id = f"novels/{slug}/chapters/{filename}"
+
         try:
+            # Check if file already exists
+            try:
+                cloudinary.api.resource(public_id, resource_type="raw")
+                logging.info(f"File already exists on Cloudinary: {public_id}")
+                secure_url = f"https://res.cloudinary.com/drpudphzv/raw/upload/{public_id}"
+                return {
+                    'filename': filename,
+                    'json_url': secure_url,
+                    'chapter_num': int(filename.split('chap-')[-1].replace('.json', ''))
+                }
+            except cloudinary.exceptions.NotFound:
+                pass  # Proceed to upload if not found
+
+            # Upload if not found
             response = cloudinary.uploader.upload(
                 file_path,
                 resource_type="raw",
@@ -154,7 +172,6 @@ class NovelChapterCrawler:
         return uploaded_files
 
     def save_to_postgresql(self, chapters, uploaded_files, novel_id):
-        """Save chapters to PostgreSQL database."""
         if not chapters:
             logging.warning("No chapters to save")
             return 0
@@ -166,11 +183,15 @@ class NovelChapterCrawler:
             cursor = conn.cursor()
 
             insert_query = """
-            INSERT INTO chapters (id, audio_url, chapter_number, created_at, json_url, title, updated_at, views, novel_id)
+            INSERT INTO chapters (
+                id, audio_file_id, json_file_id, novel_id,
+                chapter_number, title, views, created_at, updated_at
+            )
             VALUES %s
             ON CONFLICT (novel_id, chapter_number) DO NOTHING
             RETURNING id
             """
+
             values = []
             for chapter in chapters:
                 chapter_num = chapter['chapter_num']
@@ -181,16 +202,36 @@ class NovelChapterCrawler:
                         f"No Cloudinary URL for chapter {chapter_num}")
                     continue
 
-                values.append((
-                    str(uuid4()),
-                    None,  # audio_url
-                    chapter_num,
-                    datetime.now(timezone.utc).isoformat(),
+                chapter_id = str(uuid4())
+                json_file_id = str(uuid4())
+                now = datetime.now(timezone.utc)
+
+                # Insert file metadata first
+                cursor.execute("""
+                    INSERT INTO file_metadata (
+                        id, file_name, file_url, content_type, type,
+                        public_id, uploaded_at, last_modified_at, size
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    json_file_id,
+                    uploaded_file['filename'],
                     uploaded_file['json_url'],
+                    'application/json',
+                    'json',
+                    f"novels/{novel_id}/chapters/{uploaded_file['filename']}",
+                    now, now, 0
+                ))
+
+                values.append((
+                    chapter_id,
+                    None,              # audio_file_id
+                    json_file_id,      # json_file_id
+                    novel_id,
+                    chapter_num,
                     chapter['title'],
-                    datetime.now(timezone.utc).isoformat(),
-                    0,  # views
-                    novel_id
+                    0,                 # views
+                    now,
+                    now
                 ))
 
             from psycopg2.extras import execute_values
@@ -201,14 +242,6 @@ class NovelChapterCrawler:
             logging.info(f"Saved {len(chapter_ids)} chapters to database")
             return len(chapter_ids)
 
-        except psycopg2.OperationalError as e:
-            logging.error(f"Database connection failed: {e}")
-            return 0
-        except psycopg2.IntegrityError as e:
-            logging.error(f"Database integrity error: {e}")
-            if conn:
-                conn.rollback()
-            return 0
         except Exception as e:
             logging.error(f"Failed to save chapters to database: {e}")
             if conn:
@@ -241,7 +274,7 @@ class NovelChapterCrawler:
         logging.debug(f"Saved checkpoint: {slug}:{chapter_num}")
 
     async def crawl_chapters(self):
-        """Crawl chapters for all novels in the database."""
+        """Crawl chapters for all novels in the database concurrently."""
         total_chapters_saved = 0
         start_time = time.time()
 
@@ -249,37 +282,40 @@ class NovelChapterCrawler:
         conn = self.db_pool.getconn()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, slug, title, total_chapters FROM novels WHERE status = 'crawling'  ORDER BY total_chapters ASC LIMIT 1")
+            "SELECT id, slug, title, total_chapters FROM novels WHERE status = 'crawling' AND total_chapters > 0 ORDER BY total_chapters ASC LIMIT 10")
         novels = cursor.fetchall()
-
-        # Get last chapter in database
-        last_chapter = 10
-        if novels:
-            # cursor.execute("SELECT MAX(chapter_number) FROM chapters WHERE novel_id = %s", (novels[0][0],))
-            # last_chapter = cursor.fetchone()[0] or 0
-            logging.info(f"Last chapter in database: {last_chapter}")
-        # Load checkpoint
         cursor.close()
         self.db_pool.putconn(conn)
-        last_slug, last_chapter = self.load_checkpoint()
-        last_chapter = 10
-        start_index = 0
-        if last_slug and any(n[1] == last_slug for n in novels):
-            start_index = next(i for i, n in enumerate(
-                novels) if n[1] == last_slug)
 
-        async with aiohttp.ClientSession() as session:
-            for i in range(start_index, len(novels)):
-                novel_id, slug, title, total_chapters = novels[i]
-                logging.info(f"Processing novel: {title} (slug: {slug})")
+        if not novels:
+            logging.info(
+                "No novels found in the database with status 'crawling'")
+            return 0
 
-                # Determine chapter range
-                start_chapter = last_chapter + 1 if slug == last_slug else 1
-                end_chapter = total_chapters if total_chapters > 0 else self.default_max_chapters
-                logging.info(
-                    f"Crawling chapters {start_chapter} to {end_chapter} for {title}")
+        async def process_novel(novel):
+            novel_id, slug, title, total_chapters = novel
+            logging.info(f"Processing novel: {title} (slug: {slug})")
 
-                chapters = []
+            # Get last chapter in database for this novel
+            conn = self.db_pool.getconn()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT MAX(chapter_number) FROM chapters WHERE novel_id = %s", (novel_id,))
+            last_chapter = cursor.fetchone()[0] or 0
+            cursor.close()
+            self.db_pool.putconn(conn)
+            logging.info(
+                f"Last chapter in database for {title}: {last_chapter}")
+
+            # Load checkpoint
+            last_slug, last_chapter_checkpoint = self.load_checkpoint()
+            start_chapter = last_chapter + 1 if slug == last_slug else 1
+            end_chapter = total_chapters if total_chapters > 0 else self.default_max_chapters
+            logging.info(
+                f"Crawling chapters {start_chapter} to {end_chapter} for {title}")
+
+            chapters = []
+            async with aiohttp.ClientSession() as session:
                 for j in range(start_chapter, end_chapter + 1, self.max_concurrency):
                     batch = range(
                         j, min(j + self.max_concurrency, end_chapter + 1))
@@ -293,17 +329,38 @@ class NovelChapterCrawler:
                     if chapters:
                         self.save_checkpoint(slug, chapters[-1]['chapter_num'])
 
-                # Save chapters as JSON files
-                file_paths = [self.save_chapter_as_json(
-                    chapter, slug, title) for chapter in chapters]
+            # Save chapters as JSON files
+            file_paths = [self.save_chapter_as_json(
+                chapter, slug, title) for chapter in chapters]
 
-                # Upload to Cloudinary
-                uploaded_files = await self.upload_files_to_cloudinary(file_paths)
+            # Upload to Cloudinary
+            uploaded_files = await self.upload_files_to_cloudinary(file_paths)
 
-                # Save to PostgreSQL
-                saved_count = self.save_to_postgresql(
-                    chapters, uploaded_files, novel_id)
-                total_chapters_saved += saved_count
+            # Save to PostgreSQL
+            conn = self.db_pool.getconn()
+            saved_count = self.save_to_postgresql(
+                chapters, uploaded_files, novel_id)
+
+            # Update novel status
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE novels SET status = 'updating' WHERE id = %s", (novel_id,))
+            conn.commit()
+            cursor.close()
+            self.db_pool.putconn(conn)
+
+            return saved_count
+
+        # Process novels concurrently
+        tasks = [process_novel(novel) for novel in novels]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Count total chapters saved
+        for result in results:
+            if isinstance(result, int):
+                total_chapters_saved += result
+            else:
+                logging.error(f"Error processing novel: {result}")
 
         elapsed_time = time.time() - start_time
         logging.info(
@@ -323,7 +380,7 @@ def main():
     }
 
     # Initialize crawler
-    base_url = "https://www.truyenfull.vision"
+    base_url = "https://truyenfull.vision"
     crawler = NovelChapterCrawler(base_url, db_config)
 
     # Crawl chapters

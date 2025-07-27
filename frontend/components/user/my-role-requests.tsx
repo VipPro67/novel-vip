@@ -33,6 +33,7 @@ export function MyRoleRequests() {
       const response = await api.getMyRoleRequests(paginationParams)
 
       if (response.success) {
+        console.log("Fetched role requests:", response.data.content)
         setRequests(response.data.content)
         updateTotalPages(response.data.totalPages)
       }
