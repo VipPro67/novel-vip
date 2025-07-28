@@ -70,7 +70,7 @@ public class Novel {
 	private Integer views;
 
 	@Column(nullable = false)
-	private Integer rating;
+	private Double rating;
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-chapters")
@@ -111,14 +111,6 @@ public class Novel {
 		}
 		if (categories != null) {
 			this.categories.addAll(categories);
-		}
-	}
-
-	private void NormalizeFields() {
-		if (this.title != null) {
-			this.titleNormalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-					.replaceAll("\\p{M}", "")
-					.toUpperCase();
 		}
 	}
 }
