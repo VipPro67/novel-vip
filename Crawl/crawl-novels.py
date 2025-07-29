@@ -1,3 +1,4 @@
+from psycopg2.extras import execute_values
 import re
 import uuid
 import logging
@@ -13,9 +14,10 @@ import unicodedata
 import os
 import bleach
 from dotenv import load_dotenv
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from psycopg2.extras import execute_values
-# Load environment variables
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
+import aiohttp
+
+
 load_dotenv()
 
 # Configure logging
@@ -43,25 +45,25 @@ class NovelCrawler:
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        wait=wait_exponential(multiplier=1, min=3, max=10),
         retry=retry_if_exception_type(
-            (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
+            (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError)),
+        before_sleep=before_sleep_log(logging, logging.WARNING)
     )
     async def fetch_page(self, session, url):
         timeout = aiohttp.ClientTimeout(total=15)
         async with session.get(url, headers=self.headers, timeout=timeout) as response:
             response.raise_for_status()
-            text = await response.text()
-            if response.status != 200:
-                logging.error(f"Failed to fetch {url}: {response.status}")
-                raise aiohttp.ClientError(f"HTTP error: {response.status}")
-            return text
-    def normalize_title(self,title: str):
+            return await response.text()
+    # Load environment variables
+
+    def normalize_title(self, title: str):
         nfkd = unicodedata.normalize('NFKD', title)
         no_accent = ''.join(c for c in nfkd if not unicodedata.combining(c))
         s = no_accent.lower()
         s = re.sub(r'\[.*?\]|\(.*?\)', '', s)
-        s = re.sub(r'\b(phần|phan|tap|tập|edit|fanfic|hệ thống|đồng nhân|dịch|truyện sắc|xuyên nhanh|trùng sinh|hệ thống)\b\s*\d*', '', s)
+        s = re.sub(
+            r'\b(phần|phan|tap|tập|edit|fanfic|hệ thống|đồng nhân|dịch|truyện sắc|xuyên nhanh|trùng sinh|hệ thống)\b\s*\d*', '', s)
         s = re.sub(r'[^a-z0-9\s]', '', s)
         return re.sub(r'\s+', ' ', s).strip()
 
@@ -325,7 +327,6 @@ class NovelCrawler:
                 genre_pairs
             )
 
-        
     def load_checkpoint(self, checkpoint_file):
         if os.path.exists(checkpoint_file):
             with open(checkpoint_file, 'r') as f:
@@ -364,12 +365,13 @@ class NovelCrawler:
                     logging.error(
                         f"Failed to fetch novels from page {page}, skipping")
                     continue
+
                 async def delayed_task(session, novel, delay):
                     await asyncio.sleep(delay)
                     return await self.get_novel_details(session, novel)
 
                 tasks = [
-                    delayed_task(session, novel, i * 0.075)  
+                    delayed_task(session, novel, i * 0.075)
                     for i, novel in enumerate(novel_info_list)
                 ]
                 await asyncio.gather(*tasks)
@@ -384,7 +386,8 @@ class NovelCrawler:
                         if isinstance(novel, dict) and novel.get('id') in novel_ids
                     ]
 
-                    self.save_categories_tags_geners(cursor, valid_novels, genre_cache)
+                    self.save_categories_tags_geners(
+                        cursor, valid_novels, genre_cache)
                     total_details_updated += len(valid_novels)
 
                     conn.commit()
