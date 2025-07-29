@@ -113,12 +113,4 @@ public class Novel {
 			this.categories.addAll(categories);
 		}
 	}
-
-	private void NormalizeFields() {
-		if (this.title != null) {
-			this.titleNormalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-					.replaceAll("\\p{M}", "")
-					.toUpperCase();
-		}
-	}
 }
