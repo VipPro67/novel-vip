@@ -3,15 +3,12 @@
 import { useState, useEffect } from "react"
 import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Header } from "@/components/layout/header"
 import { AuthGuard } from "@/components/auth/auth-guard"
-import { UserManagement } from "@/components/admin/user-management"
-import { NovelManagement } from "@/components/admin/novel-management"
-import { SystemAnalytics } from "@/components/admin/system-analytics"
 import { useAuth } from "@/components/providers/auth-provider"
 import { api } from "@/lib/api"
-import { RoleApprovalManagement } from "@/components/admin/role-approval-management"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default function AdminDashboard() {
   const { user, hasRole } = useAuth()
@@ -76,7 +73,7 @@ function AdminDashboardContent() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Dashboard Header */}
           <div>
@@ -167,31 +164,95 @@ function AdminDashboardContent() {
             </Card>
           </div>
 
-          {/* Management Tabs */}
-          <Tabs defaultValue="users" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="novels">Novel Management</TabsTrigger>
-              <TabsTrigger value="role-approvals">Role Approvals</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  User Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Manage user accounts, roles, and permissions</p>
+                <div className="space-y-2">
+                  <Link href="/admin/users" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Users
+                    </Button>
+                  </Link>
+                  <Link href="/admin/users/roles" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Role Approvals
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
 
-            <TabsContent value="users" className="space-y-4">
-              <UserManagement />
-            </TabsContent>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Content Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Manage novels, chapters, genres, and tags</p>
+                <div className="space-y-2">
+                  <Link href="/admin/novels" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Novels
+                    </Button>
+                  </Link>
+                  <Link href="/admin/chapters" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Chapters
+                    </Button>
+                  </Link>
+                  <Link href="/admin/genres" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Genres
+                    </Button>
+                  </Link>
+                  <Link href="/admin/tags" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Tags
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
 
-            <TabsContent value="novels" className="space-y-4">
-              <NovelManagement />
-            </TabsContent>
-
-            <TabsContent value="role-approvals" className="space-y-4">
-              <RoleApprovalManagement />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-4">
-              <SystemAnalytics />
-            </TabsContent>
-          </Tabs>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Analytics & Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">View analytics, reports, and system insights</p>
+                <div className="space-y-2">
+                  <Link href="/admin/analytics" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      System Analytics
+                    </Button>
+                  </Link>
+                  <Link href="/admin/reports" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Reports
+                    </Button>
+                  </Link>
+                  <Link href="/admin/comments" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Comment Moderation
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>

@@ -30,7 +30,16 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
+    @Query(value = """
+    SELECT * FROM novels 
+    WHERE to_tsvector('simple', title_normalized) @@ plainto_tsquery('simple', unaccent(:keyword))
+    ORDER BY ts_rank(to_tsvector('simple', title_normalized), plainto_tsquery('simple', unaccent(:keyword))) DESC
+    """,
+    countQuery = """
+    SELECT COUNT(*) FROM novels 
+    WHERE to_tsvector('simple', title_normalized) @@ plainto_tsquery('simple', unaccent(:keyword))
+    """,
+    nativeQuery = true)
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.views > 0 ORDER BY n.views DESC")

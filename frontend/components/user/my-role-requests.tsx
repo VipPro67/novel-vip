@@ -32,10 +32,10 @@ export function MyRoleRequests() {
       const paginationParams = getPaginationParams()
       const response = await api.getMyRoleRequests(paginationParams)
 
-      if (response.success) {
+      if (response.success && response.data?.content) {
         console.log("Fetched role requests:", response.data.content)
-        setRequests(response.data.content)
-        updateTotalPages(response.data.totalPages)
+        setRequests(response.data.content || [])
+        updateTotalPages(response.data.totalPages || 0)
       }
     } catch (error) {
       console.error("Failed to fetch role requests:", error)
@@ -132,7 +132,7 @@ export function MyRoleRequests() {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : requests.length === 0 ? (
+                ) : !requests || requests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">

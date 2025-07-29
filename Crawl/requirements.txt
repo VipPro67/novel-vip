@@ -7,3 +7,5 @@ python-dotenv
 tenacity
 tqdm
 unidecode
+lxml
+chardet

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
 
 export interface ApiResponse<T> {
   success: boolean
@@ -38,15 +38,15 @@ export interface Novel {
 }
 
 export interface FileMetadata {
-  id: string;
-  contentType: string;
-  publicId: string;
-  fileUrl: string;
-  uploadedAt: string;
-  lastModifiedAt: string;
-  fileName: string;
-  type: string;
-  size: number;
+  id: string
+  contentType: string
+  publicId: string
+  fileUrl: string
+  uploadedAt: string
+  lastModifiedAt: string
+  fileName: string
+  type: string
+  size: number
 }
 
 export interface Chapter {
@@ -78,10 +78,11 @@ export interface Comment {
   username: string
   novelId?: string
   chapterId?: string
-  parentId?: string
+  parentId?: string | null
   replies?: Comment[]
   createdAt: string
   updatedAt: string
+  edited?: boolean
 }
 
 export interface Bookmark {
@@ -213,7 +214,7 @@ class ApiClient {
     return this.token
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
     const headers: HeadersInit = {
       "Content-Type": "application/json",
@@ -345,6 +346,49 @@ class ApiClient {
     return this.request<Novel>(`/api/novels/${id}`)
   }
 
+  async createNovel(data: {
+    title: string
+    slug: string
+    description: string
+    author: string
+    coverImage?: string
+    status: string
+    categories: string[]
+    genres?: string[]
+    tags?: string[]
+  }) {
+    return this.request<Novel>("/api/novels", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateNovel(
+    id: string,
+    data: {
+      title: string
+      slug: string
+      description: string
+      author: string
+      coverImage?: string
+      status: string
+      categories: string[]
+      genres?: string[]
+      tags?: string[]
+    },
+  ) {
+    return this.request<Novel>(`/api/novels/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteNovel(id: string) {
+    return this.request<void>(`/api/novels/${id}`, {
+      method: "DELETE",
+    })
+  }
+
   async searchNovels(
     keyword: string,
     params: {
@@ -457,6 +501,43 @@ class ApiClient {
 
   async getChapterByNumber(novelId: string, chapterNumber: number) {
     return this.request<ChapterDetail>(`/api/chapters/novel/${novelId}/chapter/${chapterNumber}`)
+  }
+
+  async createChapter(data: {
+    title: string
+    chapterNumber: number
+    content: string
+    novelId: string
+  }) {
+    return this.request<Chapter>("/api/chapters", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateChapter(
+    id: string,
+    data: {
+      title: string
+      chapterNumber: number
+      content: string
+      novelId: string
+    },
+  ) {
+    return this.request<Chapter>(`/api/chapters/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteChapter(id: string) {
+    return this.request<void>(`/api/chapters/${id}`, {
+      method: "DELETE",
+    })
+  }
+
+  async getChapterJsonMetadata(chapterId: string) {
+    return this.request<FileMetadata>(`/api/chapters/${chapterId}/json-metadata`)
   }
 
   // Reading History endpoints
@@ -603,14 +684,47 @@ class ApiClient {
     return this.request<PageResponse<Comment>>(`/api/comments/novel/${novelId}?${searchParams}`)
   }
 
+  async getChapterComments(
+    chapterId: string,
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    return this.request<PageResponse<Comment>>(`/api/comments/chapter/${chapterId}?${searchParams}`)
+  }
+
   async addComment(data: {
     content: string
     novelId?: string
     chapterId?: string
+    parentId?: string
   }) {
     return this.request<Comment>("/api/comments", {
       method: "POST",
       body: JSON.stringify(data),
+    })
+  }
+
+  async updateComment(commentId: string, data: { content: string }) {
+    return this.request<Comment>(`/api/comments/${commentId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteComment(commentId: string) {
+    return this.request<void>(`/api/comments/${commentId}`, {
+      method: "DELETE",
     })
   }
 
@@ -775,6 +889,33 @@ class ApiClient {
     return this.request<RoleRequest>(`/api/role-approval/reject/${requestId}`, {
       method: "POST",
     })
+  }
+
+  // File upload method
+  async uploadFile(file: File, type?: string): Promise<ApiResponse<FileMetadata>> {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    if (type) {
+      formData.append("type", type)
+    }
+
+    const headers: HeadersInit = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(`${this.baseURL}/api/files/upload`, {
+      method: "POST",
+      headers,
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`)
+    }
+
+    return response.json()
   }
 }
 

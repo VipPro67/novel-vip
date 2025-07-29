@@ -9,11 +9,12 @@ from bs4 import BeautifulSoup
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 from unidecode import unidecode
+import unicodedata
 import os
 import bleach
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-
+from psycopg2.extras import execute_values
 # Load environment variables
 load_dotenv()
 
@@ -30,7 +31,7 @@ class NovelCrawler:
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5'
         }
-        self.rate_limit_delay = 0.2
+        self.rate_limit_delay = 0.1
         self.max_concurrency = 5
         self.db_pool = SimpleConnectionPool(1, 10, **db_config)
         self.checkpoint_list_file = 'checkpoint_list.txt'
@@ -40,9 +41,6 @@ class NovelCrawler:
         if self.db_pool:
             self.db_pool.closeall()
 
-    def normalize_title(self, title):
-        return unidecode(title).lower()
-
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -50,14 +48,22 @@ class NovelCrawler:
             (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError))
     )
     async def fetch_page(self, session, url):
-        logging.debug(f"Fetching URL: {url}")
         timeout = aiohttp.ClientTimeout(total=15)
         async with session.get(url, headers=self.headers, timeout=timeout) as response:
             response.raise_for_status()
             text = await response.text()
-            logging.debug(
-                f"Response status code: {response.status}, content length: {len(text)}")
+            if response.status != 200:
+                logging.error(f"Failed to fetch {url}: {response.status}")
+                raise aiohttp.ClientError(f"HTTP error: {response.status}")
             return text
+    def normalize_title(self,title: str):
+        nfkd = unicodedata.normalize('NFKD', title)
+        no_accent = ''.join(c for c in nfkd if not unicodedata.combining(c))
+        s = no_accent.lower()
+        s = re.sub(r'\[.*?\]|\(.*?\)', '', s)
+        s = re.sub(r'\b(phần|phan|tap|tập|edit|fanfic|hệ thống|đồng nhân|dịch|truyện sắc|xuyên nhanh|trùng sinh|hệ thống)\b\s*\d*', '', s)
+        s = re.sub(r'[^a-z0-9\s]', '', s)
+        return re.sub(r'\s+', ' ', s).strip()
 
     async def get_novel_info(self, session, list_url):
         try:
@@ -96,7 +102,7 @@ class NovelCrawler:
                     novel_data = {
                         'id': str(uuid.uuid4()),
                         'title': title,
-                        'title_normalized': self.normalize_title(title).replace('[dich] ', ''),
+                        'title_normalized': self.normalize_title(title),
                         'author': author,
                         'slug': slug,
                         'cover_image': cover_image,
@@ -121,6 +127,33 @@ class NovelCrawler:
         except Exception as e:
             logging.error(f"Failed to process page {list_url}: {e}")
             return None
+
+    async def get_novel_details(self, session, novel):
+        try:
+            detail_url = f"{self.base_url}/{novel['slug']}"
+            html = await self.fetch_page(session, detail_url)
+            soup = BeautifulSoup(html, 'html.parser')
+            description_tag = soup.select_one('.desc-text')
+            description = bleach.clean(
+                description_tag.get_text(strip=True) if description_tag else '', strip=True)
+            # Genre tags
+            genre_div = soup.find("h3", string="Thể loại:").find_parent("div")
+            genres = [a.text.strip() for a in genre_div.find_all("a")]
+            novel['genres'] = genres
+            # Extract rating
+            rating_value = soup.find(
+                "span", itemprop="ratingValue").text.strip()
+            # Update novel details
+            cover_image = soup.select_one('.book img')
+            novel['cover_image'] = cover_image['src'] if cover_image and 'src' in cover_image.attrs else novel['cover_image']
+            novel['description'] = description
+            novel['rating'] = round(
+                float(rating_value)/2, 2) if rating_value else 0.0
+            novel['status'] = 'active'
+            novel['updated_at'] = datetime.now(timezone.utc)
+            logging.debug(f"Fetched details for novel: {novel['title']}")
+        except Exception as e:
+            logging.error(f"Failed to fetch details for {novel['title']}: {e}")
 
     def insert_file_metadata(self, cursor, novel):
         # Check if file metadata with the same URL already exists
@@ -192,7 +225,6 @@ class NovelCrawler:
                 ON CONFLICT (slug) DO NOTHING
                 RETURNING id
             """
-
             # Step 3: Prepare values for batch insert
             values = [
                 (
@@ -213,7 +245,6 @@ class NovelCrawler:
                 )
                 for novel in novel_info_list
             ]
-
             # Step 4: Execute batch insert
             from psycopg2.extras import execute_values
             execute_values(cursor, insert_query, values)
@@ -230,9 +261,7 @@ class NovelCrawler:
                     f"Saved novel: {novel['title']} with ID: {novel_id}")
             logging.warning(
                 f"Skipped {len(novel_info_list) - len(novel_ids)} novels (possible duplicates)")
-
             return novel_ids
-
         except psycopg2.OperationalError as e:
             logging.error(f"Database connection failed: {e}")
             return []
@@ -252,6 +281,51 @@ class NovelCrawler:
             if conn:
                 self.db_pool.putconn(conn)
 
+    def save_categories_tags_geners(self, cursor, novel_list, genre_cache):
+        genre_pairs = []
+        new_genres = []
+
+        for novel in novel_list:
+            genres = novel.get('genres', [])
+            for genre in genres:
+                genre = genre.strip()
+                if not genre:
+                    continue
+
+                genre_lower = genre.lower()
+
+                if genre_lower in genre_cache:
+                    genre_id = genre_cache[genre_lower]
+                else:
+                    cursor.execute(
+                        "SELECT id FROM genres WHERE unaccent(lower(name)) = unaccent(lower(%s)) LIMIT 1",
+                        (genre,)
+                    )
+                    result = cursor.fetchone()
+                    if result:
+                        genre_id = result[0]
+                    else:
+                        genre_id = str(uuid.uuid4())
+                        new_genres.append((genre_id, genre))
+                    genre_cache[genre_lower] = genre_id
+
+                genre_pairs.append((novel['id'], genre_cache[genre_lower]))
+
+        if new_genres:
+            execute_values(
+                cursor,
+                "INSERT INTO genres (id, name) VALUES %s ON CONFLICT DO NOTHING",
+                new_genres
+            )
+
+        if genre_pairs:
+            execute_values(
+                cursor,
+                "INSERT INTO novel_genres (novel_id, genre_id) VALUES %s ON CONFLICT DO NOTHING",
+                genre_pairs
+            )
+
+        
     def load_checkpoint(self, checkpoint_file):
         if os.path.exists(checkpoint_file):
             with open(checkpoint_file, 'r') as f:
@@ -286,8 +360,37 @@ class NovelCrawler:
                     logging.warning(
                         f"No novels found on page {page}, stopping")
                     break
+                if novel_info_list is None:
+                    logging.error(
+                        f"Failed to fetch novels from page {page}, skipping")
+                    continue
+                async def delayed_task(session, novel, delay):
+                    await asyncio.sleep(delay)
+                    return await self.get_novel_details(session, novel)
+
+                tasks = [
+                    delayed_task(session, novel, i * 0.075)  
+                    for i, novel in enumerate(novel_info_list)
+                ]
+                await asyncio.gather(*tasks)
                 novel_ids = self.save_to_postgresql(novel_info_list)
                 total_novels_saved += len(novel_ids)
+                conn = self.db_pool.getconn()
+                genre_cache = {}
+                try:
+                    cursor = conn.cursor()
+                    valid_novels = [
+                        novel for novel in novel_info_list
+                        if isinstance(novel, dict) and novel.get('id') in novel_ids
+                    ]
+
+                    self.save_categories_tags_geners(cursor, valid_novels, genre_cache)
+                    total_details_updated += len(valid_novels)
+
+                    conn.commit()
+                    cursor.close()
+                finally:
+                    self.db_pool.putconn(conn)
 
                 self.save_checkpoint(self.checkpoint_list_file, page)
                 await asyncio.sleep(self.rate_limit_delay)
@@ -298,7 +401,7 @@ class NovelCrawler:
         return total_novels_saved, total_details_updated
 
 
-def main():
+async def main():
     db_config = {
         'dbname': 'postgres',
         'user': 'postgres.ijdorxaikoovmezfpdrz',
@@ -311,11 +414,11 @@ def main():
     base_url = "https://truyenfull.vision"
     crawler = NovelCrawler(base_url, db_config)
 
-    total_novels, total_details = asyncio.run(
-        crawler.crawl_novels(max_pages=1341))
+    total_novels, total_details = await crawler.crawl_novels(max_pages=1341)
     print(f"Total novels saved: {total_novels}")
     print(f"Total novel details updated: {total_details}")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
+# This code is designed to crawl novels from a specific website, extract their details, and save them to a PostgreSQL database.

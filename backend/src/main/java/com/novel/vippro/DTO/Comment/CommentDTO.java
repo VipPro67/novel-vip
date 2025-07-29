@@ -2,7 +2,6 @@ package com.novel.vippro.DTO.Comment;
 
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -19,7 +18,6 @@ public class CommentDTO {
     private UUID novelId;
     private UUID chapterId;
     private UUID parentId;
-    private List<CommentDTO> replies;
     @JsonProperty("createdAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)

@@ -70,7 +70,7 @@ public class Novel {
 	private Integer views;
 
 	@Column(nullable = false)
-	private Integer rating;
+	private Double rating;
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-chapters")

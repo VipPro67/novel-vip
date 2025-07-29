@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,10 @@ export default function LoginPage() {
   const { login } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Get the redirect URL from search params, default to homepage
+  const redirectTo = searchParams.get("redirect") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +37,8 @@ export default function LoginPage() {
           title: "Login successful",
           description: "Welcome back!",
         })
-        router.push("/")
+        // Redirect to the previous page or homepage
+        router.push(redirectTo)
       } else {
         toast({
           title: "Login failed",
@@ -106,7 +111,10 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
-            <Link href="/register" className="text-primary hover:underline">
+            <Link
+              href={`/register${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+              className="text-primary hover:underline"
+            >
               Sign up
             </Link>
           </div>

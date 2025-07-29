@@ -4,29 +4,77 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Star, Eye, BookOpen, MessageCircle, Bookmark, Play } from "lucide-react"
+import {
+  Heart,
+  Star,
+  Eye,
+  BookOpen,
+  MessageCircle,
+  Play,
+  Edit,
+  Trash2,
+  MoreVertical,
+  Reply,
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Loader2,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api, type Novel, type Chapter, type Comment } from "@/lib/api"
 
+interface CommentWithReplies extends Comment {
+  replies: CommentWithReplies[]
+  showReplies?: boolean
+}
+
 export default function NovelDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const { toast } = useToast()
   const [novel, setNovel] = useState<Novel | null>(null)
   const [chapters, setChapters] = useState<Chapter[]>([])
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<CommentWithReplies[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
   const [userRating, setUserRating] = useState(0)
   const [newComment, setNewComment] = useState("")
+  const [editingComment, setEditingComment] = useState<string | null>(null)
+  const [editContent, setEditContent] = useState("")
   const [loading, setLoading] = useState(true)
+
+  // Comment state
+  const [showComments, setShowComments] = useState(false)
+  const [commentsLoading, setCommentsLoading] = useState(false)
+  const [submittingComment, setSubmittingComment] = useState(false)
+  const [totalComments, setTotalComments] = useState(0)
+  const [commentsLoaded, setCommentsLoaded] = useState(false)
+
+  // Reply state
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyContent, setReplyContent] = useState("")
+  const [submittingReply, setSubmittingReply] = useState(false)
 
   useEffect(() => {
     if (params.id) {
@@ -35,11 +83,11 @@ export default function NovelDetailPage() {
   }, [params.id])
 
   const fetchNovelData = async () => {
+    setLoading(true)
     try {
-      const [novelResponse, chaptersResponse, commentsResponse] = await Promise.all([
+      const [novelResponse, chaptersResponse] = await Promise.all([
         api.getNovelById(params.id as string),
         api.getChaptersByNovel(params.id as string, { size: 50 }),
-        api.getNovelComments(params.id as string, { size: 10 }),
       ])
 
       if (novelResponse.success) {
@@ -47,9 +95,6 @@ export default function NovelDetailPage() {
       }
       if (chaptersResponse.success) {
         setChapters(chaptersResponse.data.content)
-      }
-      if (commentsResponse.success) {
-        setComments(commentsResponse.data.content)
       }
 
       if (isAuthenticated) {
@@ -75,8 +120,80 @@ export default function NovelDetailPage() {
       }
     } catch (error) {
       console.error("Failed to fetch novel data:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load novel data",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const organizeComments = (comments: Comment[]): CommentWithReplies[] => {
+    const commentMap = new Map<string, CommentWithReplies>()
+    const rootComments: CommentWithReplies[] = []
+
+    // First pass: create all comments with empty replies array
+    comments.forEach((comment) => {
+      commentMap.set(comment.id, {
+        ...comment,
+        replies: [],
+        showReplies: true,
+      })
+    })
+
+    // Second pass: organize into tree structure
+    comments.forEach((comment) => {
+      const commentWithReplies = commentMap.get(comment.id)!
+
+      if (comment.parentId) {
+        const parent = commentMap.get(comment.parentId)
+        if (parent) {
+          parent.replies.push(commentWithReplies)
+        }
+      } else {
+        rootComments.push(commentWithReplies)
+      }
+    })
+
+    return rootComments
+  }
+
+  const fetchNovelComments = async () => {
+    if (!novel || commentsLoaded) return
+
+    setCommentsLoading(true)
+    try {
+      const response = await api.getNovelComments(novel.id, {
+        page: 0,
+        size: 100,
+        sortBy: "createdAt",
+        sortDir: "asc",
+      })
+
+      if (response.success) {
+        const organizedComments = organizeComments(response.data.content)
+        setComments(organizedComments)
+        setTotalComments(response.data.totalElements)
+        setCommentsLoaded(true)
+      }
+    } catch (error) {
+      console.error("Failed to fetch comments:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load comments",
+        variant: "destructive",
+      })
+    } finally {
+      setCommentsLoading(false)
+    }
+  }
+
+  const handleShowComments = () => {
+    setShowComments(true)
+    if (!commentsLoaded) {
+      fetchNovelComments()
     }
   }
 
@@ -130,39 +247,390 @@ export default function NovelDetailPage() {
       return
     }
 
-    if (!newComment.trim()) return
+    if (!newComment.trim() || !novel) return
 
+    setSubmittingComment(true)
     try {
       const response = await api.addComment({
-        content: newComment,
-        novelId: params.id as string,
+        content: newComment.trim(),
+        novelId: novel.id,
       })
 
       if (response.success) {
-        setComments([response.data, ...comments])
+        const newCommentWithReplies: CommentWithReplies = {
+          ...response.data,
+          replies: [],
+          showReplies: true,
+        }
+        setComments([newCommentWithReplies, ...comments])
+        setTotalComments(totalComments + 1)
         setNewComment("")
-        toast({ title: "Comment added" })
+        toast({ title: "Comment added successfully" })
       }
     } catch (error) {
+      console.error("Failed to add comment:", error)
       toast({
         title: "Error",
         description: "Failed to add comment",
         variant: "destructive",
       })
+    } finally {
+      setSubmittingComment(false)
     }
+  }
+
+  const handleAddReply = async (parentId: string) => {
+    if (!isAuthenticated) {
+      router.push("/login")
+      return
+    }
+
+    if (!replyContent.trim() || !novel) return
+
+    setSubmittingReply(true)
+    try {
+      const response = await api.addComment({
+        content: replyContent.trim(),
+        novelId: novel.id,
+        parentId: parentId,
+      })
+
+      if (response.success) {
+        const newReply: CommentWithReplies = {
+          ...response.data,
+          replies: [],
+          showReplies: true,
+        }
+
+        // Add reply to the correct parent comment
+        const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+          return comments.map((comment) => {
+            if (comment.id === parentId) {
+              return {
+                ...comment,
+                replies: [...comment.replies, newReply],
+                showReplies: true,
+              }
+            }
+            if (comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateComments(comment.replies),
+              }
+            }
+            return comment
+          })
+        }
+
+        setComments(updateComments(comments))
+        setTotalComments(totalComments + 1)
+        setReplyContent("")
+        setReplyingTo(null)
+        toast({ title: "Reply added successfully" })
+      }
+    } catch (error) {
+      console.error("Failed to add reply:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add reply",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmittingReply(false)
+    }
+  }
+
+  const handleEditComment = (comment: CommentWithReplies) => {
+    setEditingComment(comment.id)
+    setEditContent(comment.content)
+  }
+
+  const handleSaveEdit = async (commentId: string) => {
+    if (!editContent.trim()) return
+
+    try {
+      const response = await api.updateComment(commentId, {
+        content: editContent.trim(),
+      })
+
+      if (response.success) {
+        const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+          return comments.map((comment) => {
+            if (comment.id === commentId) {
+              return { ...comment, ...response.data, edited: true }
+            }
+            if (comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateComments(comment.replies),
+              }
+            }
+            return comment
+          })
+        }
+
+        setComments(updateComments(comments))
+        setEditingComment(null)
+        setEditContent("")
+        toast({ title: "Comment updated successfully" })
+      }
+    } catch (error) {
+      console.error("Failed to update comment:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update comment",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await api.deleteComment(commentId)
+
+      const removeComment = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+        return comments.filter((comment) => {
+          if (comment.id === commentId) {
+            return false
+          }
+          if (comment.replies.length > 0) {
+            comment.replies = removeComment(comment.replies)
+          }
+          return true
+        })
+      }
+
+      setComments(removeComment(comments))
+      setTotalComments(totalComments - 1)
+      toast({ title: "Comment deleted successfully" })
+    } catch (error) {
+      console.error("Failed to delete comment:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete comment",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const toggleReplies = (commentId: string) => {
+    const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+      return comments.map((comment) => {
+        if (comment.id === commentId) {
+          return { ...comment, showReplies: !comment.showReplies }
+        }
+        if (comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateComments(comment.replies),
+          }
+        }
+        return comment
+      })
+    }
+
+    setComments(updateComments(comments))
   }
 
   const startReading = () => {
     if (chapters.length > 0) {
-      router.push(`/novels/${params.id}/chapters/${chapters[0].chapterNumber}`)
+      router.push(`/novels/${novel?.id}/chapters/${chapters[0].chapterNumber}`)
     }
+  }
+
+  const isCommentOwner = (comment: CommentWithReplies) => {
+    return user && comment.userId === user.id
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const renderComment = (comment: CommentWithReplies, depth = 0) => {
+    const maxDepth = 3
+    const isMaxDepth = depth >= maxDepth
+
+    return (
+      <div key={comment.id} className={`space-y-3 ${depth > 0 ? "ml-6 pl-4 border-l-2 border-muted" : ""}`}>
+        <div className="space-y-2">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{comment.username.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-sm">{comment.username}</span>
+                {comment.edited && (
+                  <Badge variant="secondary" className="text-xs">
+                    edited
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-muted-foreground">{formatDate(comment.updatedAt)}</span>
+              {isCommentOwner(comment) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleEditComment(comment)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this comment? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+
+          {editingComment === comment.id ? (
+            <div className="space-y-2">
+              <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="min-h-[80px]" />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingComment(null)
+                    setEditContent("")
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={() => handleSaveEdit(comment.id)} disabled={!editContent.trim()}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+              </div>
+
+              {/* Reply button and controls */}
+              <div className="flex items-center space-x-2">
+                {!isMaxDepth && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    className="text-xs"
+                  >
+                    <Reply className="mr-1 h-3 w-3" />
+                    Reply
+                  </Button>
+                )}
+
+                {comment.replies.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => toggleReplies(comment.id)} className="text-xs">
+                    {comment.showReplies ? (
+                      <>
+                        <ChevronUp className="mr-1 h-3 w-3" />
+                        Hide {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="mr-1 h-3 w-3" />
+                        Show {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              {/* Reply form */}
+              {replyingTo === comment.id && (
+                <div className="space-y-2 mt-3">
+                  <Textarea
+                    placeholder={`Reply to ${comment.username}...`}
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setReplyingTo(null)
+                        setReplyContent("")
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddReply(comment.id)}
+                      disabled={!replyContent.trim() || submittingReply}
+                    >
+                      {submittingReply ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Reply
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Render replies */}
+        {comment.showReplies && comment.replies.length > 0 && (
+          <div className="space-y-3">{comment.replies.map((reply) => renderComment(reply, depth + 1))}</div>
+        )}
+      </div>
+    )
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
@@ -184,7 +652,7 @@ export default function NovelDetailPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-8">
+        <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Novel not found</h1>
           </div>
@@ -197,7 +665,7 @@ export default function NovelDetailPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container py-8">
+      <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Novel Cover and Actions */}
           <div className="lg:col-span-1">
@@ -228,9 +696,14 @@ export default function NovelDetailPage() {
                       {isFavorite ? "Favorited" : "Favorite"}
                     </Button>
 
-                    <Button variant="outline" className="w-full bg-transparent">
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Bookmark
+                    <Button variant="outline" className="w-full bg-transparent" onClick={handleShowComments}>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Comments
+                      {totalComments > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                          {totalComments > 99 ? "99+" : totalComments}
+                        </Badge>
+                      )}
                     </Button>
                   </div>
 
@@ -241,8 +714,9 @@ export default function NovelDetailPage() {
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <button key={rating} onClick={() => handleRating(rating)} className="p-1">
                           <Star
-                            className={`h-5 w-5 ${rating <= userRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
+                            className={`h-5 w-5 ${
+                              rating <= userRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                            }`}
                           />
                         </button>
                       ))}
@@ -300,7 +774,9 @@ export default function NovelDetailPage() {
               <Tabs defaultValue="chapters" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="chapters">Chapters</TabsTrigger>
-                  <TabsTrigger value="comments">Comments</TabsTrigger>
+                  <TabsTrigger value="comments" onClick={() => !commentsLoaded && fetchNovelComments()}>
+                    Comments
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="chapters" className="space-y-4">
@@ -334,7 +810,8 @@ export default function NovelDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="comments" className="space-y-4">
-                  {isAuthenticated && (
+                  {/* Add Comment Form */}
+                  {isAuthenticated ? (
                     <Card>
                       <CardHeader>
                         <CardTitle>Add Comment</CardTitle>
@@ -345,39 +822,61 @@ export default function NovelDetailPage() {
                             placeholder="Share your thoughts about this novel..."
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
+                            className="min-h-[100px]"
                           />
-                          <Button onClick={handleCommentSubmit}>
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            Post Comment
+                          <Button onClick={handleCommentSubmit} disabled={!newComment.trim() || submittingComment}>
+                            {submittingComment ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Posting...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="mr-2 h-4 w-4" />
+                                Post Comment
+                              </>
+                            )}
                           </Button>
                         </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardContent className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">Please log in to comment</p>
+                        <Button asChild>
+                          <Link href="/login">Login</Link>
+                        </Button>
                       </CardContent>
                     </Card>
                   )}
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Comments ({comments.length})</CardTitle>
+                      <CardTitle>Comments ({totalComments})</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {comments.map((comment) => (
-                          <div key={comment.id} className="border-b pb-4 last:border-b-0">
-                            <div className="flex justify-between items-start mb-2">
-                              <p className="font-medium">{comment.username}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(comment.createdAt).toLocaleDateString()}
-                              </p>
+                      {commentsLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="animate-pulse space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="h-8 w-8 bg-muted rounded-full" />
+                                <div className="h-4 w-24 bg-muted rounded" />
+                                <div className="h-3 w-16 bg-muted rounded" />
+                              </div>
+                              <div className="h-16 bg-muted rounded" />
                             </div>
-                            <p className="text-muted-foreground">{comment.content}</p>
-                          </div>
-                        ))}
-                        {comments.length === 0 && (
-                          <p className="text-center text-muted-foreground py-8">
-                            No comments yet. Be the first to share your thoughts!
-                          </p>
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      ) : comments.length > 0 ? (
+                        <div className="space-y-6">{comments.map((comment) => renderComment(comment))}</div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -385,6 +884,78 @@ export default function NovelDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Comments Modal/Section */}
+        {showComments && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Novel Comments ({totalComments})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Add Comment Form */}
+              {isAuthenticated ? (
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder="Share your thoughts about this novel..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                  <div className="flex justify-end">
+                    <Button onClick={handleCommentSubmit} disabled={!newComment.trim() || submittingComment}>
+                      {submittingComment ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Post Comment
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-4">Please log in to comment</p>
+                  <Button asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Comments List */}
+              {commentsLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 bg-muted rounded-full" />
+                        <div className="h-4 w-24 bg-muted rounded" />
+                        <div className="h-3 w-16 bg-muted rounded" />
+                      </div>
+                      <div className="h-16 bg-muted rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : comments.length > 0 ? (
+                <div className="space-y-6">{comments.map((comment) => renderComment(comment))}</div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   )

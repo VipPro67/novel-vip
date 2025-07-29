@@ -3,69 +3,59 @@
 import type React from "react"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/components/providers/auth-provider"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface AuthGuardProps {
   children: React.ReactNode
-  requireAdmin?: boolean
+  requireRole?: string
+  fallback?: React.ReactNode
 }
 
-export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
-  const { isAuthenticated, hasRole, loading, user } = useAuth()
+export function AuthGuard({ children, requireRole, fallback }: AuthGuardProps) {
+  const { user, loading, isAuthenticated, hasRole } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!loading) {
-      console.log("AuthGuard check:", {
-        isAuthenticated,
-        user,
-        requireAdmin,
-        hasAdminRole: hasRole("ADMIN"),
-        userRoles: user?.roles,
-      })
-
       if (!isAuthenticated) {
-        console.log("Not authenticated, redirecting to login")
-        router.push("/login")
+        // Redirect to login with current page as redirect parameter
+        const redirectUrl = encodeURIComponent(pathname)
+        router.push(`/login?redirect=${redirectUrl}`)
         return
       }
 
-      if (requireAdmin && !hasRole("ADMIN")) {
-        console.log("Admin required but user does not have ADMIN role")
+      if (requireRole && !hasRole(requireRole)) {
+        // User doesn't have required role, redirect to home
         router.push("/")
         return
       }
     }
-  }, [isAuthenticated, hasRole, loading, requireAdmin, router, user])
+  }, [loading, isAuthenticated, hasRole, requireRole, router, pathname])
 
-  // Show loading while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  // Don't render children if not authenticated
-  if (!isAuthenticated) {
-    return null
-  }
-
-  // Don't render children if admin required but user is not admin
-  if (requireAdmin && !hasRole("ADMIN")) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">You don't have permission to access this page.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Required: ADMIN role | Your roles: {user?.roles.join(", ") || "None"}
-          </p>
+      fallback || (
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         </div>
-      </div>
+      )
     )
+  }
+
+  if (!isAuthenticated) {
+    return null // Will redirect in useEffect
+  }
+
+  if (requireRole && !hasRole(requireRole)) {
+    return null // Will redirect in useEffect
   }
 
   return <>{children}</>
