@@ -1,31 +1,33 @@
-from psycopg2.extras import execute_values
-import re
-import uuid
-import logging
-import time
 import asyncio
 import aiohttp
+import logging
+import os
+import json
+import time
+import bleach
 from datetime import datetime, timezone
 from bs4 import BeautifulSoup
+from uuid import uuid4
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
-from unidecode import unidecode
-import unicodedata
-import os
-import bleach
-from dotenv import load_dotenv
+import cloudinary
+import cloudinary.api
+import cloudinary.uploader
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, before_sleep_log
-import aiohttp
-
-
+from dotenv import load_dotenv
+from tqdm import tqdm
+import concurrent.futures
+from io import BytesIO
+import cloudinary.exceptions
+# Load environment variables
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-class NovelCrawler:
+class NovelChapterCrawler:
     def __init__(self, base_url, db_config):
         self.base_url = base_url
         self.headers = {
@@ -33,20 +35,20 @@ class NovelCrawler:
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5'
         }
-        self.rate_limit_delay = 0.1
-        self.max_concurrency = 5
+        self.rate_limit_delay = 0.25  # Delay between requests (seconds)
+        self.max_concurrency = 5  # Maximum concurrent HTTP requests
         self.db_pool = SimpleConnectionPool(1, 10, **db_config)
-        self.checkpoint_list_file = 'checkpoint_list.txt'
-        self.checkpoint_details_file = 'checkpoint_details.txt'
-
-    def __del__(self):
-        if self.db_pool:
-            self.db_pool.closeall()
+        self.output_dir = 'output'
+        os.makedirs(self.output_dir, exist_ok=True)
+        self.checkpoint_file = 'checkpoint_chapters.txt'
+        self.default_max_chapters = 50  # Fallback if total_chapters is 0
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=3, max=10),
+        stop=stop_after_attempt(8),
+        wait=wait_exponential(multiplier=1, min=1, max=100),
         retry=retry_if_exception_type(
+            (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError)),
+        before_sleep=before_sleep_log(logging, logging.WARNING)
             (aiohttp.ClientError, aiohttp.http_exceptions.HttpProcessingError)),
         before_sleep=before_sleep_log(logging, logging.WARNING)
     )
@@ -55,144 +57,97 @@ class NovelCrawler:
         async with session.get(url, headers=self.headers, timeout=timeout) as response:
             response.raise_for_status()
             return await response.text()
-    # Load environment variables
 
-    def normalize_title(self, title: str):
-        nfkd = unicodedata.normalize('NFKD', title)
-        no_accent = ''.join(c for c in nfkd if not unicodedata.combining(c))
-        s = no_accent.lower()
-        s = re.sub(r'\[.*?\]|\(.*?\)', '', s)
-        s = re.sub(
-            r'\b(phần|phan|tap|tập|edit|fanfic|hệ thống|đồng nhân|dịch|truyện sắc|xuyên nhanh|trùng sinh|hệ thống)\b\s*\d*', '', s)
-        s = re.sub(r'[^a-z0-9\s]', '', s)
-        return re.sub(r'\s+', ' ', s).strip()
-
-    async def get_novel_info(self, session, list_url):
+    async def get_chapter_content(self, session, slug, chapter_num):
+        """Fetch content for a specific chapter."""
+        url = f"{self.base_url}/{slug}/chuong-{chapter_num}"
         try:
-            html = await self.fetch_page(session, list_url)
+            html = await self.fetch_page(session, url)
             soup = BeautifulSoup(html, 'html.parser')
-            novel_items = soup.find_all(
-                'div', class_='row', itemtype='https://schema.org/Book')
-            logging.debug(
-                f"Found {len(novel_items)} novel items on {list_url}")
 
-            novel_data_list = []
-            for item in novel_items:
-                try:
-                    title_tag = item.select_one('.truyen-title a')
-                    if not title_tag:
-                        continue
-                    title = title_tag.get_text(strip=True)
-                    slug = title_tag['href'].strip('/').split('/')[-1]
+            # Get title
+            title_tag = soup.find('a', class_='chapter-title')
+            if not title_tag:
+                logging.info("Chapter title not found")
+                return None
+            title = title_tag.text.strip()
 
-                    author_tag = item.select_one('.author')
-                    author = (author_tag.get_text(strip=True).replace('✍', '').strip()
-                              if author_tag and author_tag.get_text(strip=True) else 'Unknown')
+            # Get content (HTML preserved)
+            content_div = soup.find('div', class_='chapter-c')
+            if not content_div:
+                logging.info("Chapter content not found")
+                return None
 
-                    cover_div = item.select_one('.lazyimg')
-                    cover_image = cover_div['data-image'] if cover_div and 'data-image' in cover_div.attrs else 'https://cdn.apptruyen.lol/images/public/default-image.jpg'
+            # Convert BeautifulSoup Tag to string first
+            content_html = content_div.decode_contents()
 
-                    chapter_link = item.select_one('.chapter-text')
-                    total_chapters = 0
-                    if chapter_link:
-                        chapter_text = chapter_link.find_parent(
-                            'a').get_text(strip=True)
-                        match = re.search(r'Chương\s*(\d+)', chapter_text)
-                        if match:
-                            total_chapters = int(match.group(1))
+            # Now clean the string HTML
+            cleaned_html = bleach.clean(content_html, tags=[
+                                        'div', 'p', 'span', 'img'], attributes={'img': ['src']}, strip=True)
 
-                    novel_data = {
-                        'id': str(uuid.uuid4()),
-                        'title': title,
-                        'title_normalized': self.normalize_title(title),
-                        'author': author,
-                        'slug': slug,
-                        'cover_image': cover_image,
-                        'description': '',
-                        'status': 'crawling',
-                        'total_chapters': total_chapters,
-                        'rating': 0.0,
-                        'views': 0,
-                        'created_at': datetime.now(timezone.utc),
-                        'updated_at': datetime.now(timezone.utc)
-                    }
-
-                    novel_data_list.append(novel_data)
-                    logging.debug(f"Added novel: {title}")
-
-                except Exception as e:
-                    logging.error(f"Error processing novel item: {e}")
-                    continue
-
-            return novel_data_list if novel_data_list else None
-
+            # Optional: assign cleaned_html to content if you need
+            content = cleaned_html
+            await asyncio.sleep(self.rate_limit_delay)
+            logging.info(f"Fetched chapter {chapter_num} for slug {slug}")
+            return {
+                'title': title,
+                'content': content,
+                'chapter_num': chapter_num
+            }
         except Exception as e:
-            logging.error(f"Failed to process page {list_url}: {e}")
+            logging.error(
+                f"Failed to fetch chapter {chapter_num} for slug {slug}: {str(e)}"
+                f"Failed to fetch from url: {url}")
             return None
-
-    async def get_novel_details(self, session, novel):
-        try:
-            detail_url = f"{self.base_url}/{novel['slug']}"
-            html = await self.fetch_page(session, detail_url)
-            soup = BeautifulSoup(html, 'html.parser')
-            description_tag = soup.select_one('.desc-text')
-            description = bleach.clean(
-                description_tag.get_text(strip=True) if description_tag else '', strip=True)
-            # Genre tags
-            genre_div = soup.find("h3", string="Thể loại:").find_parent("div")
-            genres = [a.text.strip() for a in genre_div.find_all("a")]
-            novel['genres'] = genres
-            # Extract rating
-            rating_value = soup.find(
-                "span", itemprop="ratingValue").text.strip()
-            # Update novel details
-            cover_image = soup.select_one('.book img')
-            novel['cover_image'] = cover_image['src'] if cover_image and 'src' in cover_image.attrs else novel['cover_image']
-            novel['description'] = description
-            novel['rating'] = round(
-                float(rating_value)/2, 2) if rating_value else 0.0
-            novel['status'] = 'active'
-            novel['updated_at'] = datetime.now(timezone.utc)
-            logging.debug(f"Fetched details for novel: {novel['title']}")
-        except Exception as e:
-            logging.error(f"Failed to fetch details for {novel['title']}: {e}")
-
-    def insert_file_metadata(self, cursor, novel):
-        # Check if file metadata with the same URL already exists
-        select_query = "SELECT id FROM file_metadata WHERE file_url = %s LIMIT 1"
-        cursor.execute(select_query, (novel['cover_image'],))
-        existing = cursor.fetchone()
-
-        if existing:
-            return existing[0]  # Return existing file ID
-
-        # Insert new metadata
-        file_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc)
-        insert_file_query = """
-            INSERT INTO file_metadata (
-                id, file_name, file_url, content_type, type,
-                public_id, uploaded_at, last_modified_at, size
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        file_values = (
-            file_id,
-            f"{novel['slug']}.jpg",
-            novel['cover_image'],
-            'image/jpeg',
-            'image',
-            novel['slug'],
-            now,
-            now,
-            0
+        
+    def upload_json_content_to_cloudinary(self, data, slug, chapter_num):
+        cloudinary.config(
+            cloud_name='drpudphzv',
+            api_key='942584967114298',
+            api_secret='54KWkzHDwJ2dUsscUvzatdT61gY'
         )
-        cursor.execute(insert_file_query, file_values)
-        return file_id
 
-    def save_to_postgresql(self, novel_info_list):
-        if not novel_info_list:
-            logging.warning("No novels to save")
-            return []
+        filename = f'chap-{chapter_num}.json'
+        public_id = f"novels/{slug}/chapters/{filename}"
+
+        # Check if file already exists
+        try:
+            cloudinary.api.resource(public_id, resource_type="raw")
+            logging.info(f"File already exists on Cloudinary: {public_id}")
+            return {
+                'filename': filename,
+                'json_url': f"https://res.cloudinary.com/drpudphzv/raw/upload/{public_id}",
+                'chapter_num': chapter_num
+            }
+        except cloudinary.exceptions.NotFound:
+            pass  # Continue to upload
+
+        # Upload new file
+        buffer = BytesIO()
+        json_str = json.dumps(data, ensure_ascii=False, indent=2)
+        buffer.write(json_str.encode('utf-8'))
+        buffer.seek(0)
+        try:
+            response = cloudinary.uploader.upload(
+                buffer,
+                resource_type="raw",
+                public_id=public_id
+            )
+            return {
+                'filename': filename,
+                'json_url': response['secure_url'],
+                'chapter_num': chapter_num
+            }
+        except Exception as e:
+            logging.error(f"Cloudinary upload failed for chap {chapter_num}: {e}")
+            return None
+        
+
+
+    def save_to_postgresql(self, chapters, uploaded_files, novel_id):
+        if not chapters:
+            logging.warning("No chapters to save")
+            return 0
 
         conn = None
         cursor = None
@@ -200,211 +155,213 @@ class NovelCrawler:
             conn = self.db_pool.getconn()
             cursor = conn.cursor()
 
-            # Step 1: Insert file metadata and get cover image IDs
-            for novel in novel_info_list:
-                file_id = self.insert_file_metadata(cursor, novel)
-                novel['cover_image_id'] = file_id
-
-            # Step 2: Prepare SQL insert query for novels
             insert_query = """
-                INSERT INTO novels (
-                    id,
-                    author,
-                    cover_image_id,
-                    created_at,
-                    description,
-                    rating,
-                    slug,
-                    status,
-                    title,
-                    title_normalized,
-                    total_chapters,
-                    updated_at,
-                    views,
-                    is_public
-                )
-                VALUES %s
-                ON CONFLICT (slug) DO NOTHING
-                RETURNING id
+            INSERT INTO chapters (
+                id, audio_file_id, json_file_id, novel_id,
+                chapter_number, title, views, created_at, updated_at
+            )
+            VALUES %s
+            ON CONFLICT (novel_id, chapter_number) DO NOTHING
+            RETURNING id
             """
-            # Step 3: Prepare values for batch insert
-            values = [
-                (
-                    novel['id'],
-                    novel['author'],
-                    novel['cover_image_id'],
-                    novel['created_at'],
-                    novel['description'],
-                    novel['rating'],
-                    novel['slug'],
-                    novel['status'],
-                    novel['title'],
-                    novel['title_normalized'],
-                    novel['total_chapters'],
-                    novel['updated_at'],
-                    novel['views'],
-                    True  # is_public
-                )
-                for novel in novel_info_list
-            ]
-            # Step 4: Execute batch insert
+
+            values = []
+            for chapter in chapters:
+                chapter_num = chapter['chapter_num']
+                uploaded_file = next(
+                    (f for f in uploaded_files if f['chapter_num'] == chapter_num), None)
+                if not uploaded_file:
+                    logging.warning(
+                        f"No Cloudinary URL for chapter {chapter_num}")
+                    continue
+
+                chapter_id = str(uuid4())
+                json_file_id = str(uuid4())
+                now = datetime.now(timezone.utc)
+
+                # Insert file metadata first
+                cursor.execute("""
+                    INSERT INTO file_metadata (
+                        id, file_name, file_url, content_type, type,
+                        public_id, uploaded_at, last_modified_at, size
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    json_file_id,
+                    uploaded_file['filename'],
+                    uploaded_file['json_url'],
+                    'application/json',
+                    'json',
+                    f"novels/{novel_id}/chapters/{uploaded_file['filename']}",
+                    now, now, 0
+                ))
+
+                values.append((
+                    chapter_id,
+                    None,              # audio_file_id
+                    json_file_id,      # json_file_id
+                    novel_id,
+                    chapter_num,
+                    chapter['title'],
+                    0,                 # views
+                    now,
+                    now
+                ))
+
             from psycopg2.extras import execute_values
             execute_values(cursor, insert_query, values)
-
-            # Step 5: Fetch inserted novel IDs
-            novel_ids = [row[0]
-                         for row in cursor.fetchall()] if cursor.description else []
+            chapter_ids = [row[0] for row in cursor.fetchall()]
             conn.commit()
 
-            # Step 6: Logging
-            logging.info(f"Saved {len(novel_ids)} novels to database")
-            for novel, novel_id in zip(novel_info_list, novel_ids):
-                logging.debug(
-                    f"Saved novel: {novel['title']} with ID: {novel_id}")
-            logging.warning(
-                f"Skipped {len(novel_info_list) - len(novel_ids)} novels (possible duplicates)")
-            return novel_ids
-        except psycopg2.OperationalError as e:
-            logging.error(f"Database connection failed: {e}")
-            return []
-        except psycopg2.IntegrityError as e:
-            logging.error(f"Database integrity error: {e}")
-            if conn:
-                conn.rollback()
-            return []
+            logging.info(f"Saved {len(chapter_ids)} chapters to database")
+            return len(chapter_ids)
+
         except Exception as e:
-            logging.error(f"Failed to save novels to database: {e}")
+            logging.error(f"Failed to save chapters to database: {e}")
             if conn:
                 conn.rollback()
-            return []
+            return 0
         finally:
             if cursor:
                 cursor.close()
             if conn:
                 self.db_pool.putconn(conn)
 
-    def save_categories_tags_geners(self, cursor, novel_list, genre_cache):
-        genre_pairs = []
-        new_genres = []
-
-        for novel in novel_list:
-            genres = novel.get('genres', [])
-            for genre in genres:
-                genre = genre.strip()
-                if not genre:
-                    continue
-
-                genre_lower = genre.lower()
-
-                if genre_lower in genre_cache:
-                    genre_id = genre_cache[genre_lower]
-                else:
-                    cursor.execute(
-                        "SELECT id FROM genres WHERE unaccent(lower(name)) = unaccent(lower(%s)) LIMIT 1",
-                        (genre,)
-                    )
-                    result = cursor.fetchone()
-                    if result:
-                        genre_id = result[0]
-                    else:
-                        genre_id = str(uuid.uuid4())
-                        new_genres.append((genre_id, genre))
-                    genre_cache[genre_lower] = genre_id
-
-                genre_pairs.append((novel['id'], genre_cache[genre_lower]))
-
-        if new_genres:
-            execute_values(
-                cursor,
-                "INSERT INTO genres (id, name) VALUES %s ON CONFLICT DO NOTHING",
-                new_genres
-            )
-
-        if genre_pairs:
-            execute_values(
-                cursor,
-                "INSERT INTO novel_genres (novel_id, genre_id) VALUES %s ON CONFLICT DO NOTHING",
-                genre_pairs
-            )
-
-    def load_checkpoint(self, checkpoint_file):
-        if os.path.exists(checkpoint_file):
-            with open(checkpoint_file, 'r') as f:
+    def load_checkpoint(self):
+        """Load the last processed novel slug and chapter from checkpoint file."""
+        if os.path.exists(self.checkpoint_file):
+            with open(self.checkpoint_file, 'r') as f:
                 try:
-                    return f.read().strip()
+                    data = f.read().strip()
+                    if data:
+                        slug, chapter_num = data.split(':')
+                        return slug, int(chapter_num)
                 except ValueError:
                     logging.warning(
-                        f"Invalid checkpoint file {checkpoint_file}, starting from beginning")
-        return None
+                        f"Invalid checkpoint file {self.checkpoint_file}, starting from beginning")
+        return None, 0
 
-    def save_checkpoint(self, checkpoint_file, item):
-        with open(checkpoint_file, 'w') as f:
-            f.write(str(item))
-        logging.debug(f"Saved checkpoint to {checkpoint_file}: {item}")
+    def save_checkpoint(self, slug, chapter_num):
+        """Save the current novel slug and chapter to checkpoint file."""
+        with open(self.checkpoint_file, 'w') as f:
+            f.write(f"{slug}:{chapter_num}")
+        logging.debug(f"Saved checkpoint: {slug}:{chapter_num}")
 
-    async def crawl_novels(self, start_page=1, max_pages=10):
-        total_novels_saved = 0
-        total_details_updated = 0
+    async def crawl_chapters(self,numtry):
+        """Crawl chapters for all novels in the database concurrently."""
+        total_chapters_saved = 0
         start_time = time.time()
 
-        last_page = self.load_checkpoint(self.checkpoint_list_file)
-        start_page = int(last_page) + \
-            1 if last_page and last_page.isdigit() else start_page
+        # Get all novels from the database
+        conn = self.db_pool.getconn()
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT n.id, n.slug, n.title, n.total_chapters
+            FROM novels n
+            LEFT JOIN chapters c ON n.id = c.novel_id
+            WHERE n.status != 'crawled' AND n.total_chapters > 0 AND n.status != 'ec ec'
+            GROUP BY n.id, n.slug, n.title, n.total_chapters
+            HAVING COUNT(c.id) < n.total_chapters
+            ORDER BY n.total_chapters ASC
+            LIMIT 1;
+            """)
+        novels = cursor.fetchall()
+        cursor.close()
+        self.db_pool.putconn(conn)
+        if not novels:
+            logging.info(
+                "All novels crawled")
+            return 0
 
-        async with aiohttp.ClientSession() as session:
-            for page in range(start_page, max_pages + 1):
-                list_url = f"{self.base_url}/danh-sach/truyen-hot/trang-{page}"
-                logging.info(f"Processing page {page}/{max_pages}")
+        async def process_novel(novel):
+            novel_id, slug, title, total_chapters = novel
+            
+            logging.info(f"Processing novel: {title} (slug: {slug})")
 
-                novel_info_list = await self.get_novel_info(session, list_url)
-                if not novel_info_list:
-                    logging.warning(
-                        f"No novels found on page {page}, stopping")
-                    break
-                if novel_info_list is None:
-                    logging.error(
-                        f"Failed to fetch novels from page {page}, skipping")
-                    continue
+            # Get all existing chapter numbers for the novel
+            conn = self.db_pool.getconn()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT chapter_number FROM chapters WHERE novel_id = %s", (novel_id,))
+            existing = {row[0] for row in cursor.fetchall()}
+            cursor.close()
+            self.db_pool.putconn(conn)
 
-                async def delayed_task(session, novel, delay):
-                    await asyncio.sleep(delay)
-                    return await self.get_novel_details(session, novel)
+            # Calculate missing chapters
+            all_chapters = set(range(1, total_chapters + 1))
+            missing_chapters = sorted(all_chapters - existing)
+            if not missing_chapters:
+                logging.info(f"No missing chapters for novel {title}")
+                return 0,novel_id
 
-                tasks = [
-                    delayed_task(session, novel, i * 0.075)
-                    for i, novel in enumerate(novel_info_list)
-                ]
-                await asyncio.gather(*tasks)
-                novel_ids = self.save_to_postgresql(novel_info_list)
-                total_novels_saved += len(novel_ids)
-                conn = self.db_pool.getconn()
-                genre_cache = {}
-                try:
-                    cursor = conn.cursor()
-                    valid_novels = [
-                        novel for novel in novel_info_list
-                        if isinstance(novel, dict) and novel.get('id') in novel_ids
-                    ]
+            chapters = []
+            async with aiohttp.ClientSession() as session:
+                for i in range(0, len(missing_chapters), self.max_concurrency):
+                    batch = missing_chapters[i:i + self.max_concurrency]
+                    tasks = [self.get_chapter_content(
+                        session, slug, chapter_num) for chapter_num in batch]
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+                    chapters.extend(
+                        [result for result in results if result is not None])
 
-                    self.save_categories_tags_geners(
-                        cursor, valid_novels, genre_cache)
-                    total_details_updated += len(valid_novels)
+                    # Save checkpoint for the last chapter in the batch
+                    if chapters:
+                        self.save_checkpoint(slug, chapters[-1]['chapter_num'])
 
-                    conn.commit()
-                    cursor.close()
-                finally:
-                    self.db_pool.putconn(conn)
+            # Save chapters as JSON files
+            uploaded_files = [
+                self.upload_json_content_to_cloudinary({
+                    'slug': slug,
+                    'title': title,
+                    'chapterNumber': chapter['chapter_num'],
+                    'chapterTitle': chapter['title'],
+                    'content': chapter['content'],
+                    'createdAt': datetime.now(timezone.utc).isoformat() + 'Z'
+                }, slug, chapter['chapter_num']) for chapter in chapters
+            ]
+            # Filter out failed uploads
+            uploaded_files = [file for file in uploaded_files if file]
 
-                self.save_checkpoint(self.checkpoint_list_file, page)
-                await asyncio.sleep(self.rate_limit_delay)
+            # Save to PostgreSQL
+            conn = self.db_pool.getconn()
+            saved_count = self.save_to_postgresql(
+                chapters, uploaded_files, novel_id)
+
+            # Update novel status
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE novels SET status = 'updating' WHERE id = %s", (novel_id,))
+            conn.commit()
+            cursor.close()
+            self.db_pool.putconn(conn)
+            return saved_count, novel_id
+
+        # Process novels concurrently
+        tasks = [process_novel(novel) for novel in novels]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Count total chapters saved
+        for result in results:
+            if isinstance(result, int):
+                total_chapters_saved += result
+            else:
+                logging.error(f"Error processing novel: {result}")
 
         elapsed_time = time.time() - start_time
         logging.info(
-            f"Crawling completed: {total_novels_saved} novels saved, {total_details_updated} details updated in {elapsed_time:.2f} seconds")
-        return total_novels_saved, total_details_updated
+            f"Chapter crawling completed: {total_chapters_saved} chapters saved in {elapsed_time:.2f} seconds")
+        return total_chapters_saved, novels[0][0]  # pass the current novel ID so we can track retries
 
+    def mark_as_skipped(self,novel_id):
+        conn = self.db_pool.getconn()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE novels SET status = 'ec ec' WHERE id = %s", (novel_id,))
+        conn.commit()
+        cursor.close()
+        self.db_pool.putconn(conn)
 
-async def main():
+def main():
+    base_url = "https://truyenfull.vision"
     db_config = {
         'dbname': 'postgres',
         'user': 'postgres.ijdorxaikoovmezfpdrz',
@@ -413,15 +370,29 @@ async def main():
         'port': 5432,
         'sslmode': 'require'
     }
+    crawler = NovelChapterCrawler(base_url, db_config)
+    retry_map = {}  # Track retry count per novel_id
 
-    base_url = "https://truyenfull.vision"
-    crawler = NovelCrawler(base_url, db_config)
-
-    total_novels, total_details = await crawler.crawl_novels(max_pages=1341)
-    print(f"Total novels saved: {total_novels}")
-    print(f"Total novel details updated: {total_details}")
+    try:
+        while True:
+            total_chapters, novel_id = asyncio.run(crawler.crawl_chapters(retry_map))
+            
+            if total_chapters == 0:
+                if novel_id:
+                    retry_map[novel_id] = retry_map.get(novel_id, 0) + 1
+                    if retry_map[novel_id] >= 5:
+                        crawler.mark_as_skipped(novel_id)
+                        logging.info(f"Novel {novel_id} marked as 'ec ec' after 5 retries.")
+                        del retry_map[novel_id]
+                else:
+                    logging.info("All novels crawled or no eligible novel found.")
+                    break
+            else:
+                logging.info("Sleeping before next novel...")
+                time.sleep(1)
+    except KeyboardInterrupt:
+        logging.info("Stopped by user.")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
-# This code is designed to crawl novels from a specific website, extract their details, and save them to a PostgreSQL database.
+    main()
