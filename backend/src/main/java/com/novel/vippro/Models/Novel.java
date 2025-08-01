@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.*;
+
+import org.hibernate.annotations.BatchSize;
+
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 
@@ -44,15 +47,18 @@ public class Novel {
 	@Column(nullable = false)
 	private String status; // ongoing, completed
 
-	@ManyToMany
+    @BatchSize(size = 20)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_categories", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
 	private Set<Category> categories = new HashSet<>();
-
-	@ManyToMany
+    
+    @BatchSize(size = 20)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
 	private Set<Tag> tags = new HashSet<>();
 
-	@ManyToMany
+    @BatchSize(size = 20)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private Set<Genre> genres = new HashSet<>();
 
@@ -70,7 +76,7 @@ public class Novel {
 	private Integer views;
 
 	@Column(nullable = false)
-	private Double rating;
+	private Integer rating;
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-chapters")
@@ -111,6 +117,14 @@ public class Novel {
 		}
 		if (categories != null) {
 			this.categories.addAll(categories);
+		}
+	}
+
+	private void NormalizeFields() {
+		if (this.title != null) {
+			this.titleNormalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
+					.replaceAll("\\p{M}", "")
+					.toUpperCase();
 		}
 	}
 }

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -19,56 +19,52 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const { register } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  // Get the redirect URL from search params, default to homepage
-  const redirectTo = searchParams.get("redirect") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  e.preventDefault()
 
-    if (password !== confirmPassword) {
+  if (password !== confirmPassword) {
+    toast({
+      title: "Password mismatch",
+      description: "Passwords do not match",
+      variant: "destructive",
+    })
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    const result = await register(username, email, password)
+
+    if (result?.success) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match",
-        variant: "destructive",
+        title: "Registration successful",
+        description: "Please sign in with your new account",
       })
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const success = await register(username, email, password)
-      if (success) {
-        toast({
-          title: "Registration successful",
-          description: "Please log in with your new account",
-        })
-        // Redirect to login with the same redirect parameter
-        router.push(`/login${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`)
-      } else {
-        toast({
-          title: "Registration failed",
-          description: "Please try again",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
+      router.push("/login")
+    } else {
       toast({
         title: "Registration failed",
-        description: "An error occurred. Please try again.",
+        description: result?.message || "Username or email already exists",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
+  } catch (error: any) {
+    toast({
+      title: "Registration failed",
+      description: error?.message || "An error occurred. Please try again.",
+      variant: "destructive",
+    })
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -78,7 +74,7 @@ export default function RegisterPage() {
             <BookOpen className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Join Novel VIP Pro today</CardDescription>
+          <CardDescription>Join Novel VIP Pro and start your reading journey</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,10 +83,12 @@ export default function RegisterPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter your username"
+                placeholder="Choose a username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                minLength={3}
+                maxLength={20}
               />
             </div>
 
@@ -112,10 +110,11 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
                 <Button
                   type="button"
@@ -131,25 +130,14 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
@@ -159,10 +147,7 @@ export default function RegisterPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <Link
-              href={`/login${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
-              className="text-primary hover:underline"
-            >
+            <Link href="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </div>

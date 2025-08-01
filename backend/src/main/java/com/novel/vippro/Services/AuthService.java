@@ -96,32 +96,67 @@ public class AuthService {
                     .body(new ControllerResponse<>(false, "An unexpected error occurred", null, 500));
         }
     }
+    private String normalizeEmail(String email) {
+        email = email.trim().toLowerCase();
+        String[] parts = email.split("@");
+        if (parts.length != 2) return email;
+    
+        String local = parts[0];
+        String domain = parts[1];
+    
+        if (domain.equals("gmail.com")) {
+            local = local.split("\\+")[0];
+            local = local.replace(".", "");
+        }
+    
+        return local + "@" + domain;
+    }
 
     public ResponseEntity<ControllerResponse<String>> registerUser(SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+        String username = signUpRequest.getUsername().trim();
+        String email = normalizeEmail(signUpRequest.getEmail());
+    
+        // Username validation: only letters and digits
+        if (!username.matches("^[a-zA-Z0-9]+$")) {
             return ResponseEntity
-                    .badRequest()
-                    .body(new ControllerResponse<>(false, "Username is already taken!", null, 400));
+                .badRequest()
+                .body(new ControllerResponse<>(false, "Username can only contain letters and numbers!", null, 400));
         }
-
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+    
+        // Email format validation
+        if (!email.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
             return ResponseEntity
-                    .badRequest()
-                    .body(new ControllerResponse<>(false, "Email is already in use!", null, 400));
+                .badRequest()
+                .body(new ControllerResponse<>(false, "Invalid email format!", null, 400));
         }
-
+    
+        // Check for duplicates
+        if (userRepository.existsByUsername(username)) {
+            return ResponseEntity
+                .badRequest()
+                .body(new ControllerResponse<>(false, "Username is already taken!", null, 400));
+        }
+    
+        if (userRepository.existsByEmail(email)) {
+            return ResponseEntity
+                .badRequest()
+                .body(new ControllerResponse<>(false, "Email is already in use!", null, 400));
+        }
+    
+        // Create user
         User user = new User();
-        user.setUsername(signUpRequest.getUsername());
-        user.setEmail(signUpRequest.getEmail());
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
+    
         Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(ERole.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         roles.add(userRole);
         user.setRoles(roles);
-
+    
         userRepository.save(user);
-
+    
         return ResponseEntity.ok(new ControllerResponse<>(true, "User registered successfully!",
                 "User registered successfully!", 200));
     }

@@ -13,5 +13,8 @@
 	"settings": {
 		"java.compile.nullAnalysis.mode": "automatic",
 		"java.configuration.updateBuildConfiguration": "automatic",
+		"editor.indentSize": "tabSize",
+		"editor.tabSize": 4,
+		"editor.detectIndentation": false,
 	}
 }

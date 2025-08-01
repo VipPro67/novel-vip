@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,41 +21,40 @@ export default function LoginPage() {
   const { login } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
-  const searchParams = useSearchParams()
-
-  // Get the redirect URL from search params, default to homepage
-  const redirectTo = searchParams.get("redirect") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
+  
     try {
-      const success = await login(email, password)
-      if (success) {
+      const response = await login(email, password)
+  
+      if (response?.success) {
         toast({
           title: "Login successful",
           description: "Welcome back!",
         })
-        // Redirect to the previous page or homepage
         router.push(redirectTo)
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid email or password",
+          description: response?.message || "Invalid email or password",
           variant: "destructive",
         })
       }
-    } catch (error) {
+    } catch (error: any) {
+      // If error has a JSON response from server
+      const message = error?.response?.data?.message || error.message || "An error occurred"
       toast({
         title: "Login failed",
-        description: "An error occurred. Please try again.",
+        description: message,
         variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -111,10 +110,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
-            <Link
-              href={`/register${redirectTo !== "/" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
-              className="text-primary hover:underline"
-            >
+            <Link href="/register" className="text-primary hover:underline">
               Sign up
             </Link>
           </div>

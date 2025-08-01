@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/novels")
-@Tag(name = "Novels", description = "Novel management APIs")
+@Tag(name = "Novels categories, genres, tags", description = "Novel management APIs")
 public class NovelManagementController {
 
     @Autowired

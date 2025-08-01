@@ -2,6 +2,7 @@ package com.novel.vippro.Repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +19,15 @@ import java.util.UUID;
 @Repository
 public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
+    @Query("SELECT n.id FROM Novel n")
+    Page<UUID> findAllIds(Pageable pageable);
+
+    @Query("SELECT n FROM Novel n WHERE n.id IN :ids")
+    @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
+    List<Novel> findAllByIdInWithGraph(@Param("ids") List<UUID> ids);
+
     @Query("SELECT n FROM Novel n WHERE n.id = :id")
+    @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
     Optional<Novel> findById(@Param("id") UUID id);
 
     @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
@@ -30,16 +39,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 
-    @Query(value = """
-    SELECT * FROM novels 
-    WHERE to_tsvector('simple', title_normalized) @@ plainto_tsquery('simple', unaccent(:keyword))
-    ORDER BY ts_rank(to_tsvector('simple', title_normalized), plainto_tsquery('simple', unaccent(:keyword))) DESC
-    """,
-    countQuery = """
-    SELECT COUNT(*) FROM novels 
-    WHERE to_tsvector('simple', title_normalized) @@ plainto_tsquery('simple', unaccent(:keyword))
-    """,
-    nativeQuery = true)
+    @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.views > 0 ORDER BY n.views DESC")

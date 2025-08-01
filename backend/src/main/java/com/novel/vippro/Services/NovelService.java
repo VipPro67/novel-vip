@@ -18,6 +18,7 @@ import com.novel.vippro.Security.JWT.AuthEntryPointJwt;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class NovelService {
@@ -54,6 +61,7 @@ public class NovelService {
     private CategoryRepository categoryRepository;
 
     @Cacheable(value = "novels", key = "#id")
+    @Transactional(readOnly = true)
     public NovelDTO getNovelById(UUID id) {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
@@ -61,49 +69,72 @@ public class NovelService {
     }
 
     @Cacheable(value = "novels", key = "'all-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getAllNovels(Pageable pageable) {
+        Page<UUID> idPage = novelRepository.findAllIds(pageable);
+        if (idPage.isEmpty()) {
+            return new PageResponse<>(Page.empty());
+        }
 
-        Page<Novel> novels = novelRepository.findAll(pageable);
-        return new PageResponse<>(novels.map(mapper::NoveltoDTO));
+        List<UUID> orderedIds = idPage.getContent();
+        List<Novel> novels = novelRepository.findAllByIdInWithGraph(orderedIds);
+
+        // preserve original order
+        Map<UUID, Novel> byId = novels.stream()
+                .collect(Collectors.toMap(Novel::getId, Function.identity(), (a, b) -> a, LinkedHashMap::new));
+        List<Novel> orderedNovels = orderedIds.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        Page<Novel> pageWithEntities = new PageImpl<>(orderedNovels, pageable, idPage.getTotalElements());
+        return new PageResponse<>(pageWithEntities.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'category-' + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getNovelsByCategory(UUID categoryId, Pageable pageable) {
         Page<Novel> novels = novelRepository.findByCategoriesId(categoryId, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'status-' + #status + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getNovelsByStatus(String status, Pageable pageable) {
         Page<Novel> novels = novelRepository.findByStatus(status, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> searchNovels(String keyword, Pageable pageable) {
         Page<Novel> novels = novelRepository.searchByKeyword(keyword, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'top-rated-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getTopRatedNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findAllByOrderByRatingDesc(pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'latest-updates-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getLatestUpdatedNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findAllByOrderByUpdatedAtDesc(pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'most-viewed-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getMostViewedNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findAllByOrderByViewsDesc(pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
     @Cacheable(value = "novels", key = "'hot-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getHotNovels(Pageable pageable) {
         Page<Novel> novels = novelRepository.findByMinimumRating(4, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));

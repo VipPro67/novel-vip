@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://backend-production-bb4e.up.railway.app"
 
 export interface ApiResponse<T> {
   success: boolean
