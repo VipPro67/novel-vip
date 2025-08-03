@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
+import com.novel.vippro.DTO.File.FileMetadataDTO;
 
 import lombok.Data;
 
@@ -18,9 +19,11 @@ public class NovelDetailDTO {
     private String title;
     private String description;
     private String author;
-    private String coverImage;
+    private FileMetadataDTO coverImage;
     private String status;
     private List<String> categories;
+    private List<String> tags;
+    private List<String> genres;
     private Integer totalChapters;
     private Integer views;
     private Integer rating;

@@ -23,25 +23,28 @@ public class NovelMapper {
 	public NovelDTO NoveltoDTO(Novel novel) {
 		NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
 		// if(novel.getCategories() != null) {
-		// 	novelDTO.setCategories(novel.getCategories().stream()
-		// 			.map(category -> new CategoryDTO(category.getId(), category.getName(), category.getDescription()))
-		// 			.collect(Collectors.toSet()));
+		// novelDTO.setCategories(novel.getCategories().stream()
+		// .map(category -> new CategoryDTO(category.getId(), category.getName(),
+		// category.getDescription()))
+		// .collect(Collectors.toSet()));
 		// }
 		// if(novel.getTags() != null) {
-		// 	novelDTO.setTags(novel.getTags().stream()
-		// 			.map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
-		// 			.collect(Collectors.toSet()));
+		// novelDTO.setTags(novel.getTags().stream()
+		// .map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
+		// .collect(Collectors.toSet()));
 		// }
 		// if(novel.getGenres() != null) {
-		// 	novelDTO.setGenres(novel.getGenres().stream()
-		// 			.map(genre -> new GenreDTO(genre.getId(), genre.getName(), genre.getDescription()))
-		// 			.collect(Collectors.toSet()));
+		// novelDTO.setGenres(novel.getGenres().stream()
+		// .map(genre -> new GenreDTO(genre.getId(), genre.getName(),
+		// genre.getDescription()))
+		// .collect(Collectors.toSet()));
 		// }
 		return novelDTO;
 	}
 
 	public NovelDetailDTO NoveltoNovelDetailDTO(Novel novel) {
-		return modelMapper.map(novel, NovelDetailDTO.class);
+		NovelDetailDTO novelDetailDTO = modelMapper.map(novel, NovelDetailDTO.class);
+		return novelDetailDTO;
 	}
 
 	public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {
