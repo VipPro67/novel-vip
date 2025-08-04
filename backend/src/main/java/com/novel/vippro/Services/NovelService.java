@@ -93,8 +93,22 @@ public class NovelService {
 
     @Cacheable(value = "novels", key = "'category-' + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public PageResponse<NovelDTO> getNovelsByCategory(UUID categoryId, Pageable pageable) {
-        Page<Novel> novels = novelRepository.findByCategoriesId(categoryId, pageable);
+    public PageResponse<NovelDTO> getNovelsByCategory(UUID category, Pageable pageable) {
+        Page<Novel> novels = novelRepository.findByCategoriesId(category, pageable);
+        return new PageResponse<>(novels.map(mapper::NoveltoDTO));
+    }
+    
+    @Cacheable(value = "novels", key = "'genre-' + #genre + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
+    public PageResponse<NovelDTO> getNovelsByGenre(UUID genre, Pageable pageable) {
+        Page<Novel> novels = novelRepository.findByGenresId(genre, pageable);
+        return new PageResponse<>(novels.map(mapper::NoveltoDTO));
+    }
+
+    @Cacheable(value = "novels", key = "'tag-' + #tag + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Transactional(readOnly = true)
+    public PageResponse<NovelDTO> getNovelsByTag(UUID tag, Pageable pageable) {
+        Page<Novel> novels = novelRepository.findByTagsId(tag, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
@@ -351,4 +365,5 @@ public class NovelService {
         Novel updatedNovel = novelRepository.save(novel);
         return mapper.NoveltoDTO(updatedNovel);
     }
+
 }

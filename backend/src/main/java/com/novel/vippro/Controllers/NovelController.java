@@ -72,6 +72,44 @@ public class NovelController {
         return ControllerResponse.success("Novel retrieved successfully", novel);
     }
 
+    @Operation(summary = "Get novels by genre", description = "Retrieves novels filtered by genre")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved novels"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
+    @GetMapping("/genre/{genre}")
+    public ControllerResponse<PageResponse<NovelDTO>> getNovelsByGenre(
+            @Parameter(description = "Category name or slug") @PathVariable UUID genre,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        PageResponse<NovelDTO> novels = novelService.getNovelsByGenre(genre, pageable);
+        return ControllerResponse.success("Novels retrieved successfully", novels);
+    }
+
+    @Operation(summary = "Get novels by tag", description = "Retrieves novels filtered by tag")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved novels"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
+    @GetMapping("/tag/{tag}")
+    public ControllerResponse<PageResponse<NovelDTO>> getNovelsByTag(
+            @Parameter(description = "Category name or slug") @PathVariable UUID tag,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        PageResponse<NovelDTO> novels = novelService.getNovelsByTag(tag, pageable);
+        return ControllerResponse.success("Novels retrieved successfully", novels);
+    }
+
     @Operation(summary = "Get novels by category", description = "Retrieves novels filtered by category")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved novels"),

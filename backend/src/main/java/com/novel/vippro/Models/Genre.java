@@ -17,9 +17,6 @@ public class Genre {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "genres")
-    private Set<Novel> novels = new HashSet<>();
-
     @Column(nullable = true)
     private String description;
 }

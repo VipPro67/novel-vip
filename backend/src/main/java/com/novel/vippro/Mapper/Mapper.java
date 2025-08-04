@@ -18,7 +18,6 @@ import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
-import com.novel.vippro.DTO.Novel.NovelDetailDTO;
 import com.novel.vippro.DTO.Rating.RatingDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsUpdateDTO;
@@ -35,8 +34,6 @@ import java.util.List;
 public interface Mapper {
     // Novel-related mappings
     NovelDTO NoveltoDTO(Novel novel);
-
-    NovelDetailDTO NoveltoNovelDetailDTO(Novel novel);
 
     List<NovelDTO> NovelListtoDTOList(List<Novel> novels);
 

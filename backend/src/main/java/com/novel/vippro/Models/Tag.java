@@ -17,9 +17,6 @@ public class Tag {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "tags")
-    private Set<Novel> novels = new HashSet<>();
-
     @Column(nullable = true)
     private String description;
 

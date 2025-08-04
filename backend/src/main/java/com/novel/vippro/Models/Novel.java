@@ -62,7 +62,8 @@ public class Novel {
 	@JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private Set<Genre> genres = new HashSet<>();
 
-	@ManyToOne
+    @BatchSize(size = 20)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "owner_id", referencedColumnName = "id")
 	private User owner;
 
@@ -120,11 +121,4 @@ public class Novel {
 		}
 	}
 
-	private void NormalizeFields() {
-		if (this.title != null) {
-			this.titleNormalized = Normalizer.normalize(this.title, Normalizer.Form.NFD)
-					.replaceAll("\\p{M}", "")
-					.toUpperCase();
-		}
-	}
 }

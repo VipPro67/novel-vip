@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Http name="LogstashHttp" url="http://localhost:5044" method="POST">
+      <JsonLayout complete="false" compact="true" eventEol="true" />
+      <Headers>
+        <Property name="Content-Type">application/json</Property>
+      </Headers>
+    </Http>
+
+    <File name="LocalFile" fileName="logs/app.log">
+      <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c: %m%n"/>
+    </File>
+  </Appenders>
+
+  <Loggers>
+    <Root level="info">
+      <AppenderRef ref="LogstashHttp"/>
+      <AppenderRef ref="LocalFile"/>
+    </Root>
+  </Loggers>
+</Configuration>

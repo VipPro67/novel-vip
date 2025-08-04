@@ -23,7 +23,6 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     Page<UUID> findAllIds(Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.id IN :ids")
-    @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
     List<Novel> findAllByIdInWithGraph(@Param("ids") List<UUID> ids);
 
     @Query("SELECT n FROM Novel n WHERE n.id = :id")
@@ -33,9 +32,15 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);
 
+    @Query("SELECT n FROM Novel n JOIN n.genres c WHERE c.id = :genreId")
+    Page<Novel> findByGenresId(@Param("genreId") UUID genreId, Pageable pageable);
+
+    @Query("SELECT n FROM Novel n JOIN n.tags c WHERE c.id = :tagId")
+    Page<Novel> findByTagsId(@Param("tagId") UUID tagId, Pageable pageable);
+
     @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.id = :categoryId")
     Page<Novel> findByCategoriesId(@Param("categoryId") UUID categoryId, Pageable pageable);
-
+    
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 

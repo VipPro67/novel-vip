@@ -18,7 +18,6 @@ import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
-import com.novel.vippro.DTO.Novel.NovelDetailDTO;
 import com.novel.vippro.DTO.Rating.RatingDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsUpdateDTO;
@@ -82,11 +81,6 @@ public class MapperFacade implements Mapper {
 	@Override
 	public NovelDTO NoveltoDTO(Novel novel) {
 		return novelMapper.NoveltoDTO(novel);
-	}
-
-	@Override
-	public NovelDetailDTO NoveltoNovelDetailDTO(Novel novel) {
-		return novelMapper.NoveltoNovelDetailDTO(novel);
 	}
 
 	@Override
