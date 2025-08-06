@@ -2,16 +2,27 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { api, type User } from "@/lib/api"
+import { api, ApiResponse, type User } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<AuthResponse>
   register: (username: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   loading: boolean
   isAuthenticated: boolean
   hasRole: (role: string) => boolean
+}
+interface AuthResponse {
+  success: boolean
+  message?: string
+  data?: {
+    accessToken?: string
+    id?: string
+    username?: string
+    email?: string
+    roles?: string[]
+  }
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -105,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       console.log("Attempting login...")
       const response = await api.login(email, password)
@@ -125,13 +136,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           console.log("Login - user data:", userData)
           setUser(userData)
-          return true
+          return response
         }
       }
-      return false
+      return response
     } catch (error) {
       console.error("Login failed:", error)
-      return false
+      return {
+        success: false,
+        message: "An error occurred",
+      }
     }
   }
 

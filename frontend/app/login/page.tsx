@@ -28,13 +28,12 @@ export default function LoginPage() {
   
     try {
       const response = await login(email, password)
-  
+        
       if (response?.success) {
         toast({
           title: "Login successful",
           description: "Welcome back!",
         })
-        router.push(redirectTo)
       } else {
         toast({
           title: "Login failed",
