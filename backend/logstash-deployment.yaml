@@ -22,17 +22,23 @@ spec:
       labels:
         io.kompose.service: logstash
     spec:
+      initContainers:
+        - name: wait-for-elasticsearch
+          image: curlimages/curl:7.83.1
+          command: ['sh', '-c', 'until curl -s -f http://elasticsearch:9200/_cluster/health; do echo waiting for elasticsearch; sleep 2; done;']
       containers:
         - env:
             - name: LS_JAVA_OPTS
-              value: -Xmx256m -Xms256m
+              value: -Xmx512m -Xms512m  # Increase memory
           image: docker.elastic.co/logstash/logstash:8.10.2
           livenessProbe:
-            exec:
-              command:
-                - curl -f http://localhost:9600/_node/pipelines?pretty || exit 1
-            failureThreshold: 5
+            httpGet:
+              path: /_node/pipelines
+              port: 9600
+            initialDelaySeconds: 90
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
           name: logstash
           ports:
             - containerPort: 5044
@@ -43,6 +49,13 @@ spec:
             - mountPath: /usr/share/logstash/pipeline
               name: logstash-cm0
               readOnly: true
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
       restartPolicy: Always
       volumes:
         - configMap:

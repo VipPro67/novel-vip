@@ -35,6 +35,7 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: docker
           image: backend:latest
+          imagePullPolicy: Never
           name: backend
           ports:
             - containerPort: 8081
