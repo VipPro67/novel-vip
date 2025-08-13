@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
   <Properties>
-    <Property name="LOGSTASH_URL">http://localhost:5044</Property>
+    <Property name="LOGSTASH_URL">http://logstash:5044</Property>
   </Properties>
   <Appenders>
     <Http name="LogstashHttp" url="${LOGSTASH_URL}" method="POST">
       <JsonLayout complete="false" compact="true" eventEol="true" />
-      <Headers>
-        <Property name="Content-Type">application/json</Property>
-      </Headers>
     </Http>
 
     <File name="LocalFile" fileName="logs/app.log">
