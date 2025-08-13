@@ -16,6 +16,8 @@ import com.novel.vippro.Mapper.Mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -79,7 +81,7 @@ public class ReviewService {
     }
 
     @Transactional
-    @Cacheable(value = "review", key = "#id")
+    @CachePut(value = "review", key = "#id")
     public ReviewDTO updateReview(UUID id, ReviewUpdateDTO reviewDTO) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
@@ -98,7 +100,7 @@ public class ReviewService {
     }
 
     @Transactional
-    @Cacheable(value = "review", key = "#id")
+    @CacheEvict(value = "review", key = "#id")
     public void deleteReview(UUID id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));

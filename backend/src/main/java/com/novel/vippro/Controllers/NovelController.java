@@ -6,6 +6,7 @@ import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
+import com.novel.vippro.Security.JWT.AuthTokenFilter;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.NovelService;
@@ -14,6 +15,8 @@ import jakarta.validation.Valid;
 
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +46,8 @@ public class NovelController {
     @Autowired
     private CommentService commentService;
 
+    private static final Logger logger = LoggerFactory.getLogger(NovelController.class);
+
     @Operation(summary = "Get all novels", description = "Retrieves a paginated list of all novels with sorting")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved novels"),
@@ -57,6 +62,7 @@ public class NovelController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getAllNovels(pageable);
+        logger.info("Retrieved {} novels", novels.getContent().size());
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
 

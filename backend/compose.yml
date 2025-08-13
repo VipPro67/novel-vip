@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     build:
@@ -17,6 +19,7 @@ services:
       - rabbitmq
       - elasticsearch
       - logstash
+
   redis:
     image: redis:latest
     ports:
@@ -24,10 +27,11 @@ services:
     volumes:
       - redis_data:/data
     command: ["redis-server", "--appendonly", "yes"]
+
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"       # AMQP (used by Spring Boot)
+      - "5672:5672"       # AMQP
       - "15672:15672"     # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: guest
@@ -43,23 +47,25 @@ services:
       POSTGRES_DB: novel_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false        # Disable HTTPS & auth
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
-      - "9200:9200"  # HTTP API
-      - "9300:9300"  # Transport API
+      - "9200:9200"
+      - "9300:9300"
     volumes:
       - es_data:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/ || exit 1"]
-      interval: 10s
-      retries: 5
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 40s
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.10.2
@@ -68,16 +74,15 @@ services:
       elasticsearch:
         condition: service_healthy
     ports:
-      - "5044:5044"  # Beats input (example)
-      - "5000:5000"  # TCP input (example)
+      - "5044:5044"
+      - "5000:5000"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
     environment:
       - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9600/_node/pipelines?pretty || exit 1"]
-      interval: 10s
-      retries: 5
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.monitoring.enabled=true
+      - xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.10.2
@@ -87,13 +92,8 @@ services:
         condition: service_healthy
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - XPACK_SECURITY_ENABLED=false
     ports:
       - "5601:5601"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
-      interval: 10s
-      retries: 5
 
 volumes:
   postgres_data: {}

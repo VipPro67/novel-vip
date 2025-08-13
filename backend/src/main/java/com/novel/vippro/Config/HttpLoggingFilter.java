@@ -35,7 +35,7 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
     String requestBody = getPayload(wrappedRequest.getContentAsByteArray(), request.getCharacterEncoding());
     String responseBody = getPayload(wrappedResponse.getContentAsByteArray(), response.getCharacterEncoding());
 
-    logger.info("HTTP {} {} from={} headers={} query={} payload={} | responseStatus={} duration={}ms responseBody={}",
+    logger.info("HTTP {} {} from={} headers={} query={} payload={} | responseStatus={} duration={}ms",
         request.getMethod(),
         request.getRequestURI(),
         request.getRemoteAddr(),
@@ -43,11 +43,9 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
         request.getQueryString(),
         requestBody,
         wrappedResponse.getStatus(),
-        duration,
-        responseBody
+        duration
     );
-
-    wrappedResponse.copyBodyToResponse(); // important to commit response
+    wrappedResponse.copyBodyToResponse();
   }
 
   private String getPayload(byte[] buf, String encoding) {
