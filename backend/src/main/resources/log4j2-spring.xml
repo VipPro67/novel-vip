@@ -5,16 +5,20 @@
   </Properties>
   <Appenders>
     <Http name="LogstashHttp" url="${LOGSTASH_URL}" method="POST">
-      <JsonLayout complete="false" compact="true" eventEol="true" />
+      <JsonLayout complete="true" compact="true" eventEol="true" properties="true" />
     </Http>
 
     <File name="LocalFile" fileName="logs/app.log">
       <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c: %m%n"/>
     </File>
-  </Appenders>
 
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c: %m%n"/>
+    </Console>
+  </Appenders>
   <Loggers>
     <Root level="info">
+      <AppenderRef ref="Console"/>
       <AppenderRef ref="LogstashHttp"/>
       <AppenderRef ref="LocalFile"/>
     </Root>

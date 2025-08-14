@@ -15,10 +15,10 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
     depends_on:
-      - postgres
-      - rabbitmq
       - elasticsearch
       - logstash
+    volumes:
+      - ~/.m2:/root/.m2
 
   redis:
     image: redis:latest
@@ -96,6 +96,7 @@ services:
       - "5601:5601"
 
 volumes:
+  
   postgres_data: {}
   es_data: {}
   redis_data: {}
