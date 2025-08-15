@@ -1,5 +1,6 @@
 package com.novel.vippro.Services;
 
+import com.novel.vippro.Config.RabbitMQConfig;
 import com.novel.vippro.DTO.Comment.CommentCreateDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Comment.CommentUpdateDTO;
@@ -15,6 +16,7 @@ import com.novel.vippro.Repository.CommentRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +42,9 @@ public class CommentService {
 
     @Autowired
     private Mapper mapper;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     public PageResponse<CommentDTO> getNovelComments(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
@@ -90,7 +95,10 @@ public class CommentService {
             comment.setChapter(chapter);
         }
 
-        return mapper.CommenttoDTO(commentRepository.save(comment));
+        Comment saved = commentRepository.save(comment);
+        CommentDTO dto = mapper.CommenttoDTO(saved);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
+        return dto;
     }
 
     @Transactional
@@ -139,7 +147,10 @@ public class CommentService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
         reply.setUser(user);
 
-        return mapper.CommenttoDTO(commentRepository.save(reply));
+        Comment saved = commentRepository.save(reply);
+        CommentDTO dto = mapper.CommenttoDTO(saved);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
+        return dto;
     }
 
 }

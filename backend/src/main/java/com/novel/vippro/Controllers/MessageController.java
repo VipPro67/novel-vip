@@ -11,6 +11,7 @@ import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Services.MessageService;
+import com.novel.vippro.Services.ChatService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,6 +26,9 @@ public class MessageController {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private ChatService chatService;
 
     @Operation(summary = "Get all messages")
     @GetMapping
@@ -58,7 +62,7 @@ public class MessageController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ControllerResponse<MessageDTO> createMessage(@RequestBody CreateMessageDTO messageDTO) {
-        return ControllerResponse.success("Message created successfully", messageService.createMessage(messageDTO));
+        return ControllerResponse.success("Message created successfully", chatService.sendToGroupOrDm(messageDTO));
     }
 
     @PutMapping("/{id}")
