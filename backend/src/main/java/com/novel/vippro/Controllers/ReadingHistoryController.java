@@ -90,6 +90,17 @@ public class ReadingHistoryController {
                 return ControllerResponse.success("Reading history recorded successfully", history);
         }
 
+        @PostMapping("/novel/{novelId}/chapter/{chapterId}/progress")
+        public ControllerResponse<ReadingHistoryDTO> updateReadingProgress(
+                        @PathVariable UUID novelId,
+                        @PathVariable UUID chapterId,
+                        @RequestParam Integer progress,
+                        @RequestParam(defaultValue = "0") Integer readingTime) {
+                ReadingHistoryDTO dto = readingHistoryService.updateReadingProgress(novelId, chapterId, progress,
+                                readingTime);
+                return ControllerResponse.success("Reading progress updated", dto);
+        }
+
         @Operation(summary = "Get last read chapter", description = "Get the last read chapter for a novel")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Last read chapter retrieved successfully"),

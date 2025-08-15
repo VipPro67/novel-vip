@@ -19,8 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.novel.vippro.Events.ReadingProgressEvent;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,6 +50,9 @@ public class ReadingHistoryService {
 
     @Autowired
     private Mapper mapper;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer progress,
@@ -80,7 +86,9 @@ public class ReadingHistoryService {
         history.setLastReadAt(LocalDateTime.now());
 
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
-        return mapper.ReadingHistorytoDTO(savedHistory);
+        ReadingHistoryDTO dto = mapper.ReadingHistorytoDTO(savedHistory);
+        eventPublisher.publishEvent(new ReadingProgressEvent(userId, dto));
+        return dto;
     }
 
     public PageResponse<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
