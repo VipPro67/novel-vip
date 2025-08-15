@@ -14,6 +14,7 @@ services:
       DATABASE_PASSWORD: novel_password
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
     depends_on:
       - elasticsearch
       - logstash
