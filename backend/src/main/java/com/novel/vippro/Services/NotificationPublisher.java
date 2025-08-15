@@ -20,5 +20,11 @@ public class NotificationPublisher {
                 NotificationDTO saved = notificationService.createNotification(notification);
                 messagingTemplate.convertAndSend("/topic/user." + saved.getUserId(), saved);
         }
+
+        @RabbitListener(queues = RabbitMQConfig.COMMENT_QUEUE)
+        public void handleCommentNotification(NotificationDTO notification) {
+                NotificationDTO saved = notificationService.createNotification(notification);
+                messagingTemplate.convertAndSend("/topic/user." + saved.getUserId(), saved);
+        }
 }
 

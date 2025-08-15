@@ -76,11 +76,19 @@ public class RatingService {
     }
 
     public RatingDTO getUserRating(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
-        return ratingRepository.findByUserIdAndNovelId(userId, novelId)
-                .map(mapper::RatingtoDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
+    UUID userId = userService.getCurrentUserId();
+    return ratingRepository.findByUserIdAndNovelId(userId, novelId)
+            .map(mapper::RatingtoDTO)
+            .orElseGet(() -> {
+                RatingDTO defaultRating = new RatingDTO();
+                defaultRating.setUserId(userId);
+                defaultRating.setNovelId(novelId);
+                defaultRating.setScore(0);
+                defaultRating.setReview("");
+                return defaultRating;
+            });
     }
+
 
     @Transactional
     public void deleteRating(UUID novelId) {

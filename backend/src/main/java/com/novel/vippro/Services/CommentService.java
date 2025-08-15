@@ -15,7 +15,10 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.CommentRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.JWT.AuthTokenFilter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +49,9 @@ public class CommentService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
+
+    @Transactional(readOnly = true)
     public PageResponse<CommentDTO> getNovelComments(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
@@ -54,6 +60,7 @@ public class CommentService {
                 .map(mapper::CommenttoDTO));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<CommentDTO> getChapterComments(UUID chapterId, Pageable pageable) {
         if (!chapterRepository.existsById(chapterId)) {
             throw new ResourceNotFoundException("Chapter", "id", chapterId);
@@ -95,9 +102,17 @@ public class CommentService {
             comment.setChapter(chapter);
         }
 
+        // Set parent comment if provided
+        if (commentDTO.getParentId() != null) {
+            Comment parentComment = commentRepository.findById(commentDTO.getParentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
+            comment.setParent(parentComment);
+        }
+
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
         rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
+        logger.info("Comment pushed to RabbitMQ: {}", dto);
         return dto;
     }
 

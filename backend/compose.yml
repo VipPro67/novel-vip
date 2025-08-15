@@ -31,9 +31,13 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    command: >
+      bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
+              rabbitmq-server"
     ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management UI
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management
+      - "61613:61613"   # STOMP
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
