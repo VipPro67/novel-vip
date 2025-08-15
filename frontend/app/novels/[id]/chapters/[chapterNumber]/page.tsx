@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Client } from "@stomp/stompjs"
 import { useParams, useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -62,7 +63,7 @@ export default function ChapterPage() {
     fetchChapter()
   }, [novelId, chapterNumber])
 
-  const fetchChapter = async () => {
+const fetchChapter = async () => {
     setLoading(true)
     setContentLoading(true)
     try {
@@ -128,6 +129,26 @@ export default function ChapterPage() {
       setContentLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!chapter) return
+    const client = new Client({
+      brokerURL: process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws",
+    })
+
+    client.onConnect = () => {
+      client.subscribe(`/topic/chapter.${chapter.id}`, (message) => {
+        const incoming: Comment = JSON.parse(message.body)
+        setComments((prev) => [incoming, ...prev])
+        setTotalComments((prev) => prev + 1)
+      })
+    }
+
+    client.activate()
+    return () => {
+      client.deactivate()
+    }
+  }, [chapter])
 
   const loadComments = async () => {
     if (!chapter || commentsLoaded) return
