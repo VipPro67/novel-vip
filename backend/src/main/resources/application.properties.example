@@ -42,4 +42,7 @@ spring.data.redis.ssl.enabled=
 spring.data.redis.timeout=
 
 spring.cache.type=
-spring.cache.redis.time-to-live= 
+spring.cache.redis.time-to-live=
+
+# Elasticsearch
+spring.elasticsearch.uris=

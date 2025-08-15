@@ -60,6 +60,9 @@ public class NovelService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private NovelSearchService novelSearchService;
+
     @Cacheable(value = "novels", key = "#id")
     @Transactional(readOnly = true)
     public NovelDTO getNovelById(UUID id) {
@@ -122,7 +125,10 @@ public class NovelService {
     @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @Transactional(readOnly = true)
     public PageResponse<NovelDTO> searchNovels(String keyword, Pageable pageable) {
-        Page<Novel> novels = novelRepository.searchByKeyword(keyword, pageable);
+        Page<Novel> novels = novelSearchService.search(keyword, pageable);
+        if (novels.isEmpty()) {
+            novels = novelRepository.searchByKeyword(keyword, pageable);
+        }
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
@@ -245,6 +251,7 @@ public class NovelService {
         logger.info("Saving novel: {}", novel);
         logger.info("Novel categories: {}", novel.getCategories());
         Novel savedNovel = novelRepository.save(novel);
+        novelSearchService.indexNovel(savedNovel);
 
         return mapper.NoveltoDTO(savedNovel);
     }
@@ -335,6 +342,7 @@ public class NovelService {
         }
 
         Novel updatedNovel = novelRepository.save(novel);
+        novelSearchService.indexNovel(updatedNovel);
         return mapper.NoveltoDTO(updatedNovel);
     }
 
@@ -344,6 +352,7 @@ public class NovelService {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
         novelRepository.delete(novel);
+        novelSearchService.deleteNovel(id);
     }
 
     @Transactional
