@@ -547,6 +547,22 @@ class ApiClient {
     })
   }
 
+  async updateReadingProgress(
+    novelId: string,
+    chapterId: string,
+    progress: number,
+    readingTime = 0,
+  ) {
+    const params = new URLSearchParams({
+      progress: progress.toString(),
+      readingTime: readingTime.toString(),
+    })
+    return this.request<ReadingHistory>(
+      `/api/reading-history/novel/${novelId}/chapter/${chapterId}/progress?${params}`,
+      { method: "POST" },
+    )
+  }
+
   async getReadingHistory(
     params: {
       page?: number
