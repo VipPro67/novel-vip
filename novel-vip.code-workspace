@@ -1,18 +1,15 @@
 {
 	"folders": [
-        {
-            "path": "backend"
-        },
-        {
-            "path": "frontend"
-        },
-        {
-            "path": "Crawl"
-        },
-        {
-            "path": ".devcontainer"
-        }
-    ],
+		{
+			"path": "backend"
+		},
+		{
+			"path": "frontend"
+		},
+		{
+			"path": "Crawl"
+		}
+	],
 	"settings": {
 		"java.compile.nullAnalysis.mode": "automatic",
 		"java.configuration.updateBuildConfiguration": "automatic",

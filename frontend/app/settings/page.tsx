@@ -64,7 +64,7 @@ function SettingsContent() {
                   <CardDescription>Manage your personal information</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Profile settings will be implemented here.</p>
+                  
                 </CardContent>
               </Card>
             </TabsContent>

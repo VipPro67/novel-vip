@@ -17,7 +17,7 @@ export default function SearchBar() {
 
   useEffect(() => {
     const client = new Client({
-      brokerURL: process.env.NEXT_PUBLIC_BACKEND_WS || 'ws://localhost:8080/ws',
+      brokerURL: process.env.NEXT_PUBLIC_BACKEND_WS || 'ws://localhost:8081/ws',
     });
 
     client.onConnect = () => {

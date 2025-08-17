@@ -133,7 +133,7 @@ const fetchChapter = async () => {
   useEffect(() => {
     if (!chapter) return
     const client = new Client({
-      brokerURL: process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080/ws",
+      brokerURL: process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081/ws",
     })
 
     client.onConnect = () => {
