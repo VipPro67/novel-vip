@@ -4,12 +4,17 @@ import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
+import com.novel.vippro.Models.Category;
+import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
+import com.novel.vippro.Models.NovelDocument;
+import com.novel.vippro.Models.Tag;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +45,28 @@ public class NovelMapper {
 		}
 		return novelDTO;
 	}
+
+    public static NovelDocument toDocument(Novel novel) {
+        NovelDocument doc = new NovelDocument();
+        doc.setId(novel.getId());
+        doc.setTitle(novel.getTitle());
+        doc.setDescription(novel.getDescription());
+        doc.setAuthor(novel.getAuthor());
+        doc.setStatus(novel.getStatus());
+        doc.setCategories(novel.getCategories()
+                .stream().map(Category::getName).collect(Collectors.toList()));
+        doc.setTags(novel.getTags()
+                .stream().map(Tag::getName).collect(Collectors.toList()));
+        doc.setGenres(novel.getGenres()
+                .stream().map(Genre::getName).collect(Collectors.toList()));
+        doc.setPublic(novel.isPublic());
+        doc.setTotalChapters(novel.getTotalChapters());
+        doc.setViews(novel.getViews());
+        doc.setRating(novel.getRating());
+        doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
+        doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
+        return doc;
+    }
 
 	public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {
 		return novels.stream()

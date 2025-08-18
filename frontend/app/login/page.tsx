@@ -34,6 +34,7 @@ export default function LoginPage() {
           title: "Login successful",
           description: "Welcome back!",
         })
+        router.push("/")
       } else {
         toast({
           title: "Login failed",

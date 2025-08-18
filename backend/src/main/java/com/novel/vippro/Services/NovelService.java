@@ -4,15 +4,18 @@ import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
+import com.novel.vippro.Mapper.NovelMapper;
 import com.novel.vippro.Models.Category;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
+import com.novel.vippro.Models.NovelDocument;
 import com.novel.vippro.Models.Tag;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.CategoryRepository;
 import com.novel.vippro.Repository.GenreRepository;
 import com.novel.vippro.Repository.NovelRepository;
+import com.novel.vippro.Repository.NovelSearchRepository;
 import com.novel.vippro.Repository.TagRepository;
 import com.novel.vippro.Security.JWT.AuthEntryPointJwt;
 
@@ -40,7 +43,7 @@ import java.util.stream.Collectors;
 @Service
 public class NovelService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
+    private static final Logger logger = LoggerFactory.getLogger(NovelService.class);
 
     @Autowired
     private NovelRepository novelRepository;
@@ -59,6 +62,34 @@ public class NovelService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private NovelSearchService novelSearchService;
+
+    @Autowired
+    private NovelSearchRepository novelSearchRepository;
+
+    @Transactional(readOnly = true)
+    public void reindexAllNovels() {
+        List<Novel> novels = novelRepository.findAll();
+        if (novels.isEmpty()) {
+            logger.info("No novels found to reindex.");
+            return;
+        }
+        logger.info("Reindexing {} novels...", novels.size());
+        List<NovelDocument> docs = novels.stream()
+            .map(NovelMapper::toDocument)
+            .toList();
+
+        int batchSize = 1000; // tune (500–2000 usually good)
+        for (int i = 0; i < docs.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, docs.size());
+            List<NovelDocument> batch = docs.subList(i, end);
+            novelSearchRepository.saveAll(batch);
+            logger.info("Indexed novels {} to {}", i + 1, end);
+        }
+        logger.info("Reindexing completed.");
+    }
 
     @Cacheable(value = "novels", key = "#id")
     @Transactional(readOnly = true)
@@ -93,7 +124,7 @@ public class NovelService {
 
     @Cacheable(value = "novels", key = "'category-' + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public PageResponse<NovelDTO> getNovelsByCategory(UUID category, Pageable pageable) {
+    public PageResponse<NovelDTO> getNovelsByCategory(UUID category, Pageable pageable) {  
         Page<Novel> novels = novelRepository.findByCategoriesId(category, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
@@ -122,7 +153,12 @@ public class NovelService {
     @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @Transactional(readOnly = true)
     public PageResponse<NovelDTO> searchNovels(String keyword, Pageable pageable) {
-        Page<Novel> novels = novelRepository.searchByKeyword(keyword, pageable);
+        logger.info("Searching novels with keyword: {}", keyword);
+        Page<Novel> novels = novelSearchService.search(keyword, pageable);
+        if (novels.isEmpty()) {
+            logger.info("No novels found for keyword: {}", keyword);
+            novels = novelRepository.searchByKeyword(keyword, pageable);
+        }
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
@@ -245,6 +281,7 @@ public class NovelService {
         logger.info("Saving novel: {}", novel);
         logger.info("Novel categories: {}", novel.getCategories());
         Novel savedNovel = novelRepository.save(novel);
+        novelSearchService.indexNovel(savedNovel);
 
         return mapper.NoveltoDTO(savedNovel);
     }
@@ -335,6 +372,7 @@ public class NovelService {
         }
 
         Novel updatedNovel = novelRepository.save(novel);
+        novelSearchService.indexNovel(updatedNovel);
         return mapper.NoveltoDTO(updatedNovel);
     }
 
@@ -344,6 +382,7 @@ public class NovelService {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
         novelRepository.delete(novel);
+        novelSearchService.deleteNovel(id);
     }
 
     @Transactional

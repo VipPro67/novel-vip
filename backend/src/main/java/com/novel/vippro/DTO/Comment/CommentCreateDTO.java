@@ -11,4 +11,5 @@ public class CommentCreateDTO {
 
     private UUID novelId;
     private UUID chapterId;
+    private UUID parentId; // Optional, for replies to other comments
 }
