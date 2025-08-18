@@ -69,41 +69,43 @@ public class NovelSearchService {
      * Search novels using Elasticsearch. Falls back to an empty page on failure.
      */
     public Page<Novel> search(String keyword, Pageable pageable) {
-        try {
-            // Build match query
-            NativeQuery searchQuery = NativeQuery.builder()
-                    .withQuery(q -> q.match(m -> m
-                            .field("title")
-                            .query(keyword)
-                            .fuzziness("AUTO")))
-                    .withPageable(pageable)
-                    .build();
+		try {
+			// Build match query exactly like Kibana
+			NativeQuery searchQuery = NativeQuery.builder()
+				.withQuery(q -> q.matchPhrase(m -> m
+					.field("title")
+					.query(keyword)
+				))
+				.withPageable(pageable)
+				.build();
 
-            SearchHits<NovelDocument> hits = elasticsearchOperations.search(searchQuery, NovelDocument.class);
+			SearchHits<NovelDocument> hits =
+				elasticsearchOperations.search(searchQuery, NovelDocument.class);
 
-            List<UUID> ids = hits.getSearchHits().stream()
-                    .map(hit -> hit.getContent().getId())
-                    .toList();
+			List<UUID> ids = hits.getSearchHits().stream()
+				.map(hit -> hit.getContent().getId())
+				.toList();
 
-            if (ids.isEmpty()) {
-                return Page.empty(pageable);
-            }
+			if (ids.isEmpty()) {
+				return Page.empty(pageable);
+			}
 
-            // Preserve order
-            List<Novel> novels = novelRepository.findAllById(ids);
-            Map<UUID, Novel> novelMap = novels.stream()
-                    .collect(Collectors.toMap(Novel::getId, Function.identity()));
+			// Preserve order
+			List<Novel> novels = novelRepository.findAllById(ids);
+			Map<UUID, Novel> novelMap = novels.stream()
+				.collect(Collectors.toMap(Novel::getId, Function.identity()));
 
-            List<Novel> ordered = ids.stream()
-                    .map(novelMap::get)
-                    .filter(Objects::nonNull)
-                    .toList();
+			List<Novel> ordered = ids.stream()
+				.map(novelMap::get)
+				.filter(Objects::nonNull)
+				.toList();
 
-            return new PageImpl<>(ordered, pageable, hits.getTotalHits());
-        } catch (Exception e) {
-            logger.error("Error searching novels", e);
-            return Page.empty(pageable);
-        }
-    }
+			return new PageImpl<>(ordered, pageable, hits.getTotalHits());
+		} catch (Exception e) {
+			logger.error("Error searching novels", e);
+			return Page.empty(pageable);
+		}
+	}
+
 }
 
