@@ -7,19 +7,23 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
+
 import org.springframework.stereotype.Service;
 
+import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Novel;
+import com.novel.vippro.Models.NovelDocument;
 import com.novel.vippro.Repository.NovelRepository;
-import com.novel.vippro.Search.NovelDocument;
 
 /**
  * Service layer for indexing and searching novels in Elasticsearch.
@@ -27,19 +31,23 @@ import com.novel.vippro.Search.NovelDocument;
 @Service
 public class NovelSearchService {
 
+    private static final Logger logger = LoggerFactory.getLogger(NovelSearchService.class);
+
     @Autowired
     private ElasticsearchOperations elasticsearchOperations;
 
     @Autowired
     private NovelRepository novelRepository;
 
+    @Autowired
+    private Mapper mapper;
+
     /**
      * Index a novel in Elasticsearch.
      */
     public void indexNovel(Novel novel) {
         try {
-            NovelDocument document = new NovelDocument(novel.getId(), novel.getTitle(), novel.getDescription(),
-                    novel.getAuthor());
+            NovelDocument document = mapper.NoveltoDocument(novel);
             elasticsearchOperations.save(document);
         } catch (Exception e) {
             // Elasticsearch may be unavailable; log and continue without failing.
@@ -62,13 +70,17 @@ public class NovelSearchService {
      */
     public Page<Novel> search(String keyword, Pageable pageable) {
         try {
-            Criteria criteria = new Criteria("title").matches(keyword)
-                    .or(new Criteria("description").matches(keyword))
-                    .or(new Criteria("author").matches(keyword));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            query.setPageable(pageable);
+            // Build match query
+            NativeQuery searchQuery = NativeQuery.builder()
+                    .withQuery(q -> q.match(m -> m
+                            .field("title")
+                            .query(keyword)
+                            .fuzziness("AUTO")))
+                    .withPageable(pageable)
+                    .build();
 
-            SearchHits<NovelDocument> hits = elasticsearchOperations.search(query, NovelDocument.class);
+            SearchHits<NovelDocument> hits = elasticsearchOperations.search(searchQuery, NovelDocument.class);
+
             List<UUID> ids = hits.getSearchHits().stream()
                     .map(hit -> hit.getContent().getId())
                     .toList();
@@ -77,6 +89,7 @@ public class NovelSearchService {
                 return Page.empty(pageable);
             }
 
+            // Preserve order
             List<Novel> novels = novelRepository.findAllById(ids);
             Map<UUID, Novel> novelMap = novels.stream()
                     .collect(Collectors.toMap(Novel::getId, Function.identity()));
@@ -84,11 +97,11 @@ public class NovelSearchService {
             List<Novel> ordered = ids.stream()
                     .map(novelMap::get)
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .toList();
 
             return new PageImpl<>(ordered, pageable, hits.getTotalHits());
         } catch (Exception e) {
-            // Elasticsearch may be unavailable; return empty page so caller can fallback.
+            logger.error("Error searching novels", e);
             return Page.empty(pageable);
         }
     }

@@ -88,6 +88,11 @@ public class MapperFacade implements Mapper {
 		return novelMapper.NovelListtoDTOList(novels);
 	}
 
+    @Override
+    public NovelDocument NoveltoDocument(Novel novel) {
+        return NovelMapper.toDocument(novel);
+    }
+
 	@Override
 	public void updateNovelFromDTO(NovelDTO dto, Novel novel) {
 		novelMapper.updateNovelFromDTO(dto, novel);

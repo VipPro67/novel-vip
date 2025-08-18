@@ -294,4 +294,11 @@ public class NovelController {
         NovelDTO updatedNovel = novelService.updateRating(id, rating);
         return ControllerResponse.success("Novel rating updated successfully", updatedNovel);
     }
+
+    @Operation(summary = "Reindex all novels", description = "Reindex all novels in the search repository", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/reindex")
+    public ControllerResponse<Void> reindexAllNovels() {
+        novelService.reindexAllNovels();
+        return ControllerResponse.success("All novels reindexed successfully", null);
+    }
 }

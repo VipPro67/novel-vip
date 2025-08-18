@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { NotificationBell } from "../ui/notification-bell"
 import { useAuth } from "@/components/providers/auth-provider"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useState } from "react"
@@ -99,6 +100,7 @@ export function Header() {
             </Button>
 
             <ThemeToggle />
+            {isAuthenticated && <NotificationBell />}
 
             {isAuthenticated ? (
               <DropdownMenu>

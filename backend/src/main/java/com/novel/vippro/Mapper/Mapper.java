@@ -35,6 +35,8 @@ public interface Mapper {
     // Novel-related mappings
     NovelDTO NoveltoDTO(Novel novel);
 
+    NovelDocument NoveltoDocument(Novel novel);
+
     List<NovelDTO> NovelListtoDTOList(List<Novel> novels);
 
     void updateNovelFromDTO(NovelDTO dto, Novel novel);
