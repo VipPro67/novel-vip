@@ -88,10 +88,10 @@ public class MapperFacade implements Mapper {
 		return novelMapper.NovelListtoDTOList(novels);
 	}
 
-    @Override
-    public NovelDocument NoveltoDocument(Novel novel) {
-        return NovelMapper.toDocument(novel);
-    }
+	@Override
+	public NovelDocument NoveltoDocument(Novel novel) {
+		return NovelMapper.toDocument(novel);
+	}
 
 	@Override
 	public void updateNovelFromDTO(NovelDTO dto, Novel novel) {
@@ -266,7 +266,9 @@ public class MapperFacade implements Mapper {
 	// Notification-related mappings
 	@Override
 	public NotificationDTO NotificationtoDTO(Notification notification) {
-		return notificationMapper.NotificationtoDTO(notification);
+		NotificationDTO dto = notificationMapper.NotificationtoDTO(notification);
+		dto.setUserId(notification.getUser().getId());
+		return dto;
 	}
 
 	@Override

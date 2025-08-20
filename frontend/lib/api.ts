@@ -820,7 +820,7 @@ class ApiClient {
   }
 
   async getUnreadNotificationCount() {
-    return this.request<number>("/api/notifications/unread/count");
+    return this.request<ApiResponse<number>>("/api/notifications/unread/count");
   }
 
   // Reader Settings endpoints

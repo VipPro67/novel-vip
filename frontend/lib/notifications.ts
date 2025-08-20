@@ -22,6 +22,7 @@ export function connectNotifications(
 
   client.onConnect = () => {
     client?.subscribe(`/topic/user.${userId}`, (message: IMessage) => {
+	  console.log("connect:/toppic/user.",userId)
       const notification: Notification = JSON.parse(message.body);
       onNotification(notification);
     });

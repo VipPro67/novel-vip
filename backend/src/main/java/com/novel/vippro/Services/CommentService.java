@@ -31,141 +31,141 @@ import java.util.UUID;
 @Service
 public class CommentService {
 
-    @Autowired
-    private CommentRepository commentRepository;
+	@Autowired
+	private CommentRepository commentRepository;
 
-    @Autowired
-    private NovelRepository novelRepository;
+	@Autowired
+	private NovelRepository novelRepository;
 
-    @Autowired
-    private ChapterRepository chapterRepository;
+	@Autowired
+	private ChapterRepository chapterRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+	@Autowired
+	private UserRepository userRepository;
 
-    @Autowired
-    private Mapper mapper;
+	@Autowired
+	private Mapper mapper;
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+	@Autowired
+	private RabbitTemplate rabbitTemplate;
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
+	private static final Logger logger = LoggerFactory.getLogger(CommentService.class);
 
-    @Transactional(readOnly = true)
-    public PageResponse<CommentDTO> getNovelComments(UUID novelId, Pageable pageable) {
-        if (!novelRepository.existsById(novelId)) {
-            throw new ResourceNotFoundException("Novel", "id", novelId);
-        }
-        return new PageResponse<>(commentRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
-                .map(mapper::CommenttoDTO));
-    }
+	@Transactional(readOnly = true)
+	public PageResponse<CommentDTO> getNovelComments(UUID novelId, Pageable pageable) {
+		if (!novelRepository.existsById(novelId)) {
+			throw new ResourceNotFoundException("Novel", "id", novelId);
+		}
+		return new PageResponse<>(commentRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
+				.map(mapper::CommenttoDTO));
+	}
 
-    @Transactional(readOnly = true)
-    public PageResponse<CommentDTO> getChapterComments(UUID chapterId, Pageable pageable) {
-        if (!chapterRepository.existsById(chapterId)) {
-            throw new ResourceNotFoundException("Chapter", "id", chapterId);
-        }
-        return new PageResponse<>(commentRepository.findByChapterIdOrderByCreatedAtDesc(chapterId, pageable)
-                .map(mapper::CommenttoDTO));
-    }
+	@Transactional(readOnly = true)
+	public PageResponse<CommentDTO> getChapterComments(UUID chapterId, Pageable pageable) {
+		if (!chapterRepository.existsById(chapterId)) {
+			throw new ResourceNotFoundException("Chapter", "id", chapterId);
+		}
+		return new PageResponse<>(commentRepository.findByChapterIdOrderByCreatedAtDesc(chapterId, pageable)
+				.map(mapper::CommenttoDTO));
+	}
 
-    public PageResponse<CommentDTO> getUserComments(UUID userId, Pageable pageable) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("User", "id", userId);
-        }
-        return new PageResponse<>(commentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(mapper::CommenttoDTO));
-    }
+	public PageResponse<CommentDTO> getUserComments(UUID userId, Pageable pageable) {
+		if (!userRepository.existsById(userId)) {
+			throw new ResourceNotFoundException("User", "id", userId);
+		}
+		return new PageResponse<>(commentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+				.map(mapper::CommenttoDTO));
+	}
 
-    @Transactional
-    public CommentDTO addComment(CommentCreateDTO commentDTO) {
-        Comment comment = new Comment();
-        comment.setContent(commentDTO.getContent());
+	@Transactional
+	public CommentDTO addComment(CommentCreateDTO commentDTO) {
+		Comment comment = new Comment();
+		comment.setContent(commentDTO.getContent());
 
-        // Get current user
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        comment.setUser(user);
+		// Get current user
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+		comment.setUser(user);
 
-        // Set novel if provided
-        if (commentDTO.getNovelId() != null) {
-            Novel novel = novelRepository.findById(commentDTO.getNovelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", commentDTO.getNovelId()));
-            comment.setNovel(novel);
-        }
+		// Set novel if provided
+		if (commentDTO.getNovelId() != null) {
+			Novel novel = novelRepository.findById(commentDTO.getNovelId())
+					.orElseThrow(() -> new ResourceNotFoundException("Novel", "id", commentDTO.getNovelId()));
+			comment.setNovel(novel);
+		}
 
-        // Set chapter if provided
-        if (commentDTO.getChapterId() != null) {
-            Chapter chapter = chapterRepository.findById(commentDTO.getChapterId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", commentDTO.getChapterId()));
-            comment.setChapter(chapter);
-        }
+		// Set chapter if provided
+		if (commentDTO.getChapterId() != null) {
+			Chapter chapter = chapterRepository.findById(commentDTO.getChapterId())
+					.orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", commentDTO.getChapterId()));
+			comment.setChapter(chapter);
+		}
 
-        // Set parent comment if provided
-        if (commentDTO.getParentId() != null) {
-            Comment parentComment = commentRepository.findById(commentDTO.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
-            comment.setParent(parentComment);
-        }
+		// Set parent comment if provided
+		if (commentDTO.getParentId() != null) {
+			Comment parentComment = commentRepository.findById(commentDTO.getParentId())
+					.orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
+			comment.setParent(parentComment);
+		}
 
-        Comment saved = commentRepository.save(comment);
-        CommentDTO dto = mapper.CommenttoDTO(saved);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
-        logger.info("Comment pushed to RabbitMQ: {}", dto);
-        return dto;
-    }
+		Comment saved = commentRepository.save(comment);
+		CommentDTO dto = mapper.CommenttoDTO(saved);
+		rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, saved);
+		logger.info("Comment pushed to RabbitMQ: {}", saved);
+		return dto;
+	}
 
-    @Transactional
-    public CommentDTO updateComment(UUID id, CommentUpdateDTO commentDTO) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
+	@Transactional
+	public CommentDTO updateComment(UUID id, CommentUpdateDTO commentDTO) {
+		Comment comment = commentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
 
-        // Verify ownership or admin rights here if needed
+		// Verify ownership or admin rights here if needed
 
-        comment.setContent(commentDTO.getContent());
-        return mapper.CommenttoDTO(commentRepository.save(comment));
-    }
+		comment.setContent(commentDTO.getContent());
+		return mapper.CommenttoDTO(commentRepository.save(comment));
+	}
 
-    @Transactional
-    public void deleteComment(UUID id) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
+	@Transactional
+	public void deleteComment(UUID id) {
+		Comment comment = commentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
 
-        // Verify ownership or admin rights here if needed
+		// Verify ownership or admin rights here if needed
 
-        commentRepository.delete(comment);
-    }
+		commentRepository.delete(comment);
+	}
 
-    public PageResponse<CommentDTO> getCommentReplies(UUID commentId, Pageable pageable) {
-        if (!commentRepository.existsById(commentId)) {
-            throw new ResourceNotFoundException("Comment", "id", commentId);
-        }
-        return new PageResponse<>(commentRepository.findByParentIdOrderByCreatedAtAsc(commentId, pageable)
-                .map(mapper::CommenttoDTO));
-    }
+	public PageResponse<CommentDTO> getCommentReplies(UUID commentId, Pageable pageable) {
+		if (!commentRepository.existsById(commentId)) {
+			throw new ResourceNotFoundException("Comment", "id", commentId);
+		}
+		return new PageResponse<>(commentRepository.findByParentIdOrderByCreatedAtAsc(commentId, pageable)
+				.map(mapper::CommenttoDTO));
+	}
 
-    @Transactional
-    public CommentDTO addReply(UUID parentId, CommentCreateDTO replyDTO) {
-        Comment parentComment = commentRepository.findById(parentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", parentId));
+	@Transactional
+	public CommentDTO addReply(UUID parentId, CommentCreateDTO replyDTO) {
+		Comment parentComment = commentRepository.findById(parentId)
+				.orElseThrow(() -> new ResourceNotFoundException("Comment", "id", parentId));
 
-        Comment reply = new Comment();
-        reply.setContent(replyDTO.getContent());
-        reply.setParent(parentComment);
-        reply.setNovel(parentComment.getNovel());
-        reply.setChapter(parentComment.getChapter());
+		Comment reply = new Comment();
+		reply.setContent(replyDTO.getContent());
+		reply.setParent(parentComment);
+		reply.setNovel(parentComment.getNovel());
+		reply.setChapter(parentComment.getChapter());
 
-        // Get current user
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        reply.setUser(user);
+		// Get current user
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+		reply.setUser(user);
 
-        Comment saved = commentRepository.save(reply);
-        CommentDTO dto = mapper.CommenttoDTO(saved);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
-        return dto;
-    }
+		Comment saved = commentRepository.save(reply);
+		CommentDTO dto = mapper.CommenttoDTO(saved);
+		rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, dto);
+		return dto;
+	}
 
 }

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Bell } from "lucide-react"
-import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
 import {
 	Popover,
@@ -12,43 +10,46 @@ import {
 } from "@/components/ui/popover"
 import { useNotifications } from "@/hooks/use-notifications"
 import { api, Notification } from "@/lib/api"
+import clsx from "clsx"
 
 export function NotificationBell() {
-	const { unreadCount, notifications: liveNotifications, setUnreadCount } =
-		useNotifications()
-	const [open, setOpen] = useState(false)
-	const [notifications, setNotifications] = useState<Notification[]>([])
+	const {
+		unreadCount,
+		notifications,
+		setNotifications,
+		refreshUnreadCount,
+		setUnreadCount,
+	} = useNotifications()
 
-	// Fetch notifications when popover is opened
+	const [open, setOpen] = useState(false)
+
+	// Fetch notifications when opened
 	useEffect(() => {
 		if (!open) return
-
-		api
-			.getNotifications({ page: 0, size: 20 })
-			.then((res) => {
-				if (res.success) {
-					setNotifications(res.data.content)
-				}
-			})
-			.catch((err) => console.error("Failed to fetch notifications", err))
-
-		api
-			.markAllNotificationsAsRead()
-			.then(() => setUnreadCount(0))
-			.catch((err) =>
-				console.error("Failed to mark notifications as read", err)
-			)
-	}, [open, setUnreadCount])
-
-	// Merge live notifications from websocket
-	useEffect(() => {
-		if (liveNotifications.length === 0) return
-		setNotifications((prev) => {
-			const existing = new Set(prev.map((n) => n.id))
-			const newOnes = liveNotifications.filter((n) => !existing.has(n.id))
-			return [...newOnes, ...prev]
+		api.getNotifications({ page: 0, size: 10 }).then((res) => {
+			if (res.success) {
+				setNotifications(res.data.content)
+			}
 		})
-	}, [liveNotifications])
+	}, [open, setNotifications])
+
+	// Mark all as read
+	const markAllRead = () => {
+		api.markAllNotificationsAsRead().then(() => {
+			setUnreadCount(0)
+			setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+		})
+	}
+
+	// Mark single notification as read
+	const markOneRead = (id: string) => {
+		api.markNotificationAsRead(id).then(() => {
+			setNotifications((prev) =>
+				prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+			)
+			refreshUnreadCount()
+		})
+	}
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -62,21 +63,38 @@ export function NotificationBell() {
 					)}
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-80 p-0" align="end">
-				<div className="max-h-60 overflow-y-auto">
+			<PopoverContent className="w-96 p-0" align="end">
+				<div className="flex items-center justify-between p-2 border-b">
+					<span className="font-medium text-sm">Notifications</span>
+					{notifications.length > 0 && unreadCount > 0 && (
+						<Button variant="ghost" size="sm" onClick={markAllRead}>
+							Mark all read
+						</Button>
+					)}
+				</div>
+
+				<div className="max-h-72 overflow-y-auto">
 					{notifications.length === 0 && (
-						<p className="p-4 text-sm text-muted-foreground">No notifications</p>
+						<p className="p-4 text-sm text-muted-foreground">
+							No notifications
+						</p>
 					)}
 					{notifications.map((n) => (
-						<div key={n.id} className="border-b p-4 last:border-b-0">
-							<p className="font-medium">{n.title}</p>
-							<p className="text-sm text-muted-foreground">{n.message}</p>
+						<div
+							key={n.id}
+							className={clsx(
+								"cursor-pointer border-b p-4 last:border-b-0",
+								!n.read && "bg-muted"
+							)}
+							onClick={() => markOneRead(n.id)}
+						>
+							<p className={clsx("text-sm", !n.read && "font-semibold")}>
+								{n.title}
+							</p>
+							<p className="text-xs text-muted-foreground">{n.message}</p>
 						</div>
 					))}
 				</div>
-				<Button variant="ghost" className="w-full" asChild>
-					<Link href="/notifications">View all</Link>
-				</Button>
 			</PopoverContent>
 		</Popover>
 	)

@@ -10,28 +10,28 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-    public static final String COMMENT_QUEUE = "comment.queue";
-    public static final String NOTIFICATION_QUEUE = "notifications";
-    @Bean
-    public Queue commentQueue() {
-        return new Queue(COMMENT_QUEUE, false);
-    }
+	public static final String COMMENT_QUEUE = "comment.queue";
+	public static final String NOTIFICATION_QUEUE = "notifications";
 
-    @Bean
-    public Queue notificationsQueue() {
-        return new Queue(NOTIFICATION_QUEUE, false); 
-    }
+	@Bean
+	public Queue commentQueue() {
+		return new Queue(COMMENT_QUEUE, false);
+	}
 
+	@Bean
+	public Queue notificationsQueue() {
+		return new Queue(NOTIFICATION_QUEUE, false);
+	}
 
-    @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
+	@Bean
+	public MessageConverter jsonMessageConverter() {
+		return new Jackson2JsonMessageConverter();
+	}
 
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter converter) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(converter);
-        return template;
-    }
+	@Bean
+	public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter converter) {
+		RabbitTemplate template = new RabbitTemplate(connectionFactory);
+		template.setMessageConverter(converter);
+		return template;
+	}
 }
