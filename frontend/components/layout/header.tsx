@@ -18,6 +18,7 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useState } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import SearchBar from "../ui/search-bar"
 
 export function Header() {
 	const { user, logout, isAuthenticated, hasRole } = useAuth()
@@ -72,23 +73,7 @@ export function Header() {
 					</nav>
 
 					{/* Search Bar */}
-					<div className="hidden lg:flex items-center space-x-2 flex-1 max-w-md mx-6">
-						<div className="relative w-full">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-							<Input
-								placeholder="Search novels..."
-								className="pl-10"
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										const query = (e.target as HTMLInputElement).value
-										if (query.trim()) {
-											router.push(`/search?q=${encodeURIComponent(query)}`)
-										}
-									}
-								}}
-							/>
-						</div>
-					</div>
+					<SearchBar />
 
 					{/* Right Side */}
 					<div className="flex items-center space-x-4">

@@ -22,4 +22,5 @@ public class NotificationDTO {
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
     private NotificationType type;
+    private String referenceId; 
 }

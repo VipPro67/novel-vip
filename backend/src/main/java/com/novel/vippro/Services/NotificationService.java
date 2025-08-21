@@ -2,6 +2,7 @@ package com.novel.vippro.Services;
 
 import com.novel.vippro.Config.RabbitMQConfig;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
+import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Notification;
 import com.novel.vippro.Models.User;
@@ -25,102 +26,102 @@ import java.util.UUID;
 @Service
 public class NotificationService {
 
-	@Autowired
-	private NotificationRepository notificationRepository;
-	@Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private UserService userService;
-	@Autowired
-	private Mapper mapper;
+    @Autowired
+    private NotificationRepository notificationRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private Mapper mapper;
 
-	@Autowired
-	private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
-	private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
-	@Transactional
-	public NotificationDTO createNotification(NotificationDTO notificationDTO) {
-		User user = userRepository.findById(notificationDTO.getUserId())
-				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+    @Transactional
+    public NotificationDTO createNotification(CreateNotificationDTO notificationDTO) {
+        User user = userRepository.findById(notificationDTO.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-		Notification notification = new Notification();
-		notification.setUser(user);
-		notification.setTitle(notificationDTO.getTitle());
-		notification.setMessage(notificationDTO.getMessage());
-		notification.setType(notificationDTO.getType());
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setTitle(notificationDTO.getTitle());
+        notification.setMessage(notificationDTO.getMessage());
+        notification.setType(notificationDTO.getType());
 
-		Notification saved = notificationRepository.save(notification);
-		NotificationDTO dto = mapper.NotificationtoDTO(saved);
-		rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, dto);
-		logger.info("Noti pushed to RabbitMQ: {}", dto);
-		return dto;
-	}
+        Notification saved = notificationRepository.save(notification);
+        NotificationDTO dto = mapper.NotificationtoDTO(saved);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, dto);
+        logger.info("Noti pushed to RabbitMQ: {}", dto);
+        return dto;
+    }
 
-	public PageResponse<NotificationDTO> getUserNotifications(Pageable pageable) {
-		UUID currentUserId = userService.getCurrentUserId();
-		PageResponse<NotificationDTO> response = new PageResponse<>(
-				notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable)
-						.map(mapper::NotificationtoDTO));
-		return response;
-	}
+    public PageResponse<NotificationDTO> getUserNotifications(Pageable pageable) {
+        UUID currentUserId = userService.getCurrentUserId();
+        PageResponse<NotificationDTO> response = new PageResponse<>(
+                notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable)
+                        .map(mapper::NotificationtoDTO));
+        return response;
+    }
 
-	public PageResponse<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable) {
-		return new PageResponse<>(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-				.map(mapper::NotificationtoDTO));
+    public PageResponse<NotificationDTO> getUserNotifications(UUID userId, Pageable pageable) {
+        return new PageResponse<>(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(mapper::NotificationtoDTO));
 
-	}
+    }
 
-	@Transactional
-	public NotificationDTO markAsRead(UUID notificationId) {
-		Notification notification = notificationRepository.findById(notificationId)
-				.orElseThrow(() -> new EntityNotFoundException("Notification not found"));
-		notification.setRead(true);
-		Notification savedNotification = notificationRepository.save(notification);
-		return mapper.NotificationtoDTO(savedNotification);
-	}
+    @Transactional
+    public NotificationDTO markAsRead(UUID notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new EntityNotFoundException("Notification not found"));
+        notification.setRead(true);
+        Notification savedNotification = notificationRepository.save(notification);
+        return mapper.NotificationtoDTO(savedNotification);
+    }
 
-	@Transactional
-	public void markAllAsRead() {
-		UUID currentUserId = userService.getCurrentUserId();
-		notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, Pageable.unpaged())
-				.forEach(notification -> {
-					notification.setRead(true);
-					notificationRepository.save(notification);
-				});
-	}
+    @Transactional
+    public void markAllAsRead() {
+        UUID currentUserId = userService.getCurrentUserId();
+        notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, Pageable.unpaged())
+                .forEach(notification -> {
+                    notification.setRead(true);
+                    notificationRepository.save(notification);
+                });
+    }
 
-	@Transactional
-	public void markAllAsRead(UUID userId) {
-		notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, Pageable.unpaged())
-				.forEach(notification -> {
-					notification.setRead(true);
-					notificationRepository.save(notification);
-				});
-	}
+    @Transactional
+    public void markAllAsRead(UUID userId) {
+        notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, Pageable.unpaged())
+                .forEach(notification -> {
+                    notification.setRead(true);
+                    notificationRepository.save(notification);
+                });
+    }
 
-	public long getUnreadNotificationsCount() {
-		UUID currentUserId = userService.getCurrentUserId();
-		return notificationRepository.countByUserIdAndReadFalse(currentUserId);
-	}
+    public long getUnreadNotificationsCount() {
+        UUID currentUserId = userService.getCurrentUserId();
+        return notificationRepository.countByUserIdAndReadFalse(currentUserId);
+    }
 
-	public long getUnreadCount(UUID userId) {
-		return notificationRepository.countByUserIdAndReadFalse(userId);
-	}
+    public long getUnreadCount(UUID userId) {
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
 
-	@Transactional
-	public void deleteNotification(UUID notificationId) {
-		notificationRepository.deleteById(notificationId);
-	}
+    @Transactional
+    public void deleteNotification(UUID notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
 
-	@Transactional
-	public void deleteAllNotifications() {
-		UUID currentUserId = userService.getCurrentUserId();
-		notificationRepository.deleteByUserId(currentUserId);
-	}
+    @Transactional
+    public void deleteAllNotifications() {
+        UUID currentUserId = userService.getCurrentUserId();
+        notificationRepository.deleteByUserId(currentUserId);
+    }
 
-	@Transactional
-	public void deleteAllUserNotifications(UUID userId) {
-		notificationRepository.deleteByUserId(userId);
-	}
+    @Transactional
+    public void deleteAllUserNotifications(UUID userId) {
+        notificationRepository.deleteByUserId(userId);
+    }
 }

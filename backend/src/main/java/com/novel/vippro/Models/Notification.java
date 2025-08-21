@@ -8,9 +8,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "notifications", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "title" })
-}, indexes = {
+@Table(name = "notifications", indexes = {
         @Index(name = "idx_user_id", columnList = "user_id"),
         @Index(name = "idx_title", columnList = "title")
 })
@@ -34,11 +32,14 @@ public class Notification {
     private boolean read = false;
 
     @CreationTimestamp
-     private LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
+
+    @Column
+    private String referenceId; 
 
     @PrePersist
     protected void onCreate() {

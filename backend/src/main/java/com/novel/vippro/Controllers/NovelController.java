@@ -10,9 +10,11 @@ import com.novel.vippro.Security.JWT.AuthTokenFilter;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.NovelService;
+import com.novel.vippro.Services.SuggestService;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -45,6 +47,9 @@ public class NovelController {
 
     @Autowired
     private CommentService commentService;
+
+    @Autowired
+    private SuggestService suggestService;
 
     private static final Logger logger = LoggerFactory.getLogger(NovelController.class);
 
@@ -300,5 +305,19 @@ public class NovelController {
     public ControllerResponse<Void> reindexAllNovels() {
         novelService.reindexAllNovels();
         return ControllerResponse.success("All novels reindexed successfully", null);
+    }
+
+    @Operation(summary = "Suggest titles", description = "Real-time suggestions for search box")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK")
+    })
+    @GetMapping("/suggest")
+    public List<String> suggest(
+            @Parameter(description = "partial keyword") @RequestParam("q") String q,
+            @Parameter(description = "max results") @RequestParam(value = "limit", defaultValue = "8") int limit
+    ) {
+        if (q == null || q.isBlank()) return List.of();
+        limit = Math.min(Math.max(1, limit), 20);
+        return suggestService.suggest(q.trim(), limit);
     }
 }
