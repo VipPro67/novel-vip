@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useSuggest } from "@/hooks/use-suggest";
+import { useSuggest, SuggestItem } from "@/hooks/use-suggest";
 
 export default function SearchBar() {
 	const router = useRouter();
@@ -20,15 +20,21 @@ export default function SearchBar() {
 		return () => window.removeEventListener("click", outside);
 	}, [setOpen]);
 
-	function go(q: string) {
+	function goToQuery(q: string) {
 		setOpen(false);
 		router.push(`/search?q=${encodeURIComponent(q)}`);
+	}
+
+	function goToItem(it: SuggestItem) {
+		setOpen(false);
+		if (it.id) router.push(`/novels/${it.id}`);
+		else goToQuery(it.title);
 	}
 
 	return (
 		<div className="hidden lg:flex items-center space-x-2 flex-1 max-w-md mx-6" ref={boxRef}>
 			<div className="relative w-full">
-				<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+				<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 				<Input
 					placeholder="Search novels..."
 					className="pl-10"
@@ -37,39 +43,55 @@ export default function SearchBar() {
 						const v = e.target.value;
 						setValue(v);
 						setQueryDebounced(v);
+						if (v.trim().length === 0) setOpen(false);
 					}}
-					onFocus={() => value && setOpen(true)}
+					onFocus={() => items.length && setOpen(true)}
 					onKeyDown={(e) => {
 						if (e.key === "Enter") {
-							if (open && items.length) return go(items[highlight]);
-							if (value.trim()) return go(value.trim());
+							if (open && items.length) return goToItem(items[highlight]);
+							if (value.trim()) return goToQuery(value.trim());
 						}
 						if (e.key === "ArrowDown" && open && items.length) {
-							e.preventDefault(); setHighlight((highlight + 1) % items.length);
+							e.preventDefault();
+							setHighlight((highlight + 1) % items.length);
 						}
 						if (e.key === "ArrowUp" && open && items.length) {
-							e.preventDefault(); setHighlight((highlight - 1 + items.length) % items.length);
+							e.preventDefault();
+							setHighlight((highlight - 1 + items.length) % items.length);
 						}
 						if (e.key === "Escape") setOpen(false);
 					}}
+					aria-autocomplete="list"
+					aria-expanded={open}
+					aria-controls="search-suggest"
+					role="combobox"
 				/>
 
 				{open && (
-					<div className="absolute z-50 mt-1 w-full rounded-xl bg-background border shadow-lg overflow-hidden">
+					<div
+						id="search-suggest"
+						className="absolute z-50 mt-1 w-full rounded-xl bg-background border shadow-lg overflow-hidden"
+						role="listbox"
+					>
 						{loading && items.length === 0 && (
 							<div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>
 						)}
+
 						{items.map((s, i) => (
 							<button
-								key={s + i}
-								className={`w-full text-left px-4 py-2 text-sm hover:bg-accent ${i === highlight ? "bg-accent" : ""}`}
+								key={`${s.id || s.title}-${i}`}
+								className={`w-full text-left px-4 py-2 text-sm hover:bg-accent ${i === highlight ? "bg-accent" : ""
+									}`}
+								role="option"
+								aria-selected={i === highlight}
 								onMouseEnter={() => setHighlight(i)}
 								onMouseDown={(e) => e.preventDefault()}
-								onClick={() => go(s)}
+								onClick={() => goToItem(s)}
 							>
-								{s}
+								{s.title}
 							</button>
 						))}
+
 						{!loading && items.length === 0 && (
 							<div className="px-4 py-2 text-sm text-muted-foreground">No suggestions</div>
 						)}
