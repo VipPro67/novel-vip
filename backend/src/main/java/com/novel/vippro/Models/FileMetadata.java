@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @Data
 @Entity

@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
-import com.novel.vippro.DTO.Notification.NotificationPreferencesDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.NotificationService;
@@ -27,7 +26,6 @@ import com.novel.vippro.Services.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

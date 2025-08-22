@@ -14,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,6 +67,45 @@ public class NovelMapper {
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
         doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
         return doc;
+    }
+    public static Novel DocumenttoNovel(NovelDocument doc) {
+        Novel n = new Novel();
+        n.setId(doc.getId());
+        n.setTitle(doc.getTitle());
+        n.setDescription(doc.getDescription());
+        n.setAuthor(doc.getAuthor());
+        n.setStatus(doc.getStatus());
+        n.setPublic(doc.isPublic());
+        n.setTotalChapters(doc.getTotalChapters());
+        n.setViews(doc.getViews());
+        n.setRating(doc.getRating());
+
+        // Timestamps: Instant -> LocalDateTime (UTC)
+        if (doc.getCreatedAt() != null) {
+            n.setCreatedAt(LocalDateTime.ofInstant(doc.getCreatedAt(), ZoneOffset.UTC));
+        }
+        if (doc.getUpdatedAt() != null) {
+            n.setUpdatedAt(LocalDateTime.ofInstant(doc.getUpdatedAt(), ZoneOffset.UTC));
+        }
+
+        // Categories, Tags, Genres
+        if (doc.getCategories() != null) {
+            n.setCategories(doc.getCategories().stream()
+                .map(name -> new Category(null, name, null))
+                .collect(Collectors.toSet()));
+        }
+        if (doc.getTags() != null) {
+            n.setTags(doc.getTags().stream()
+                .map(name -> new Tag(null, name, null))
+                .collect(Collectors.toSet()));
+        }
+        if (doc.getGenres() != null) {
+            n.setGenres(doc.getGenres().stream()
+                .map(name -> new Genre(null, name, null))
+                .collect(Collectors.toSet()));
+        }
+
+        return n; // detached (not managed by JPA)
     }
 
 	public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {

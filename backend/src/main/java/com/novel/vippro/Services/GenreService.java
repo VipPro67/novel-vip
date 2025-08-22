@@ -1,6 +1,5 @@
 package com.novel.vippro.Services;
 
-import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;

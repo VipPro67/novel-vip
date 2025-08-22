@@ -69,12 +69,4 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 			return "[unknown]";
 		}
 	}
-
-	private String getHeaders(HttpServletRequest request) {
-		var sb = new StringBuilder();
-		request.getHeaderNames().asIterator().forEachRemaining(name -> {
-			sb.append(name).append("=").append(request.getHeader(name)).append("; ");
-		});
-		return sb.toString();
-	}
 }

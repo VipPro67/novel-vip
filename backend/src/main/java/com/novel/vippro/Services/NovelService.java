@@ -17,7 +17,6 @@ import com.novel.vippro.Repository.GenreRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.NovelSearchRepository;
 import com.novel.vippro.Repository.TagRepository;
-import com.novel.vippro.Security.JWT.AuthEntryPointJwt;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

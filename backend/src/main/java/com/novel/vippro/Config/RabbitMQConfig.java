@@ -10,13 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
-	public static final String COMMENT_QUEUE = "comment.queue";
 	public static final String NOTIFICATION_QUEUE = "notifications";
-
-	@Bean
-	public Queue commentQueue() {
-		return new Queue(COMMENT_QUEUE, false);
-	}
 
 	@Bean
 	public Queue notificationsQueue() {

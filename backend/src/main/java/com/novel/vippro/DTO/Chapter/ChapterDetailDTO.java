@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.novel.vippro.Models.Chapter;
-import com.novel.vippro.Models.Novel;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

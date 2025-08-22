@@ -9,7 +9,6 @@ import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.Comment;
-import com.novel.vippro.Models.Notification;
 import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.User;
@@ -18,9 +17,6 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.CommentRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
-import com.novel.vippro.Security.JWT.AuthTokenFilter;
-
-import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -89,36 +85,30 @@ public class CommentService {
         Comment comment = new Comment();
         comment.setContent(commentDTO.getContent());
 
-        // Get current user
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
         comment.setUser(user);
 
-        // Set novel if provided
         if (commentDTO.getNovelId() != null) {
             Novel novel = novelRepository.findById(commentDTO.getNovelId())
                     .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", commentDTO.getNovelId()));
             comment.setNovel(novel);
         }
 
-        // Set chapter if provided
         if (commentDTO.getChapterId() != null) {
             Chapter chapter = chapterRepository.findById(commentDTO.getChapterId())
                     .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", commentDTO.getChapterId()));
             comment.setChapter(chapter);
         }
 
-        // Set parent comment if provided
         if (commentDTO.getParentId() != null) {
             Comment parentComment = commentRepository.findById(commentDTO.getParentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
             comment.setParent(parentComment);
-            // Notify parent comment author if current user is not the author
             if (!parentComment.getUser().getId().equals(user.getId())) {
                 CreateNotificationDTO notificationDTO = new CreateNotificationDTO();
                 notificationDTO.setUserId(parentComment.getUser().getId());
-                // title : username + " replied to your comment at novel/chapter"
                 notificationDTO.setTitle(user.getUsername() + " replied to your comment");
                 notificationDTO
                         .setMessage("You have a new reply on your comment: " + parentComment.getContent() + " at " +
@@ -131,7 +121,7 @@ public class CommentService {
 
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.COMMENT_QUEUE, saved);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, saved);
 
         logger.info("Comment pushed to RabbitMQ: {}", saved);
         return dto;

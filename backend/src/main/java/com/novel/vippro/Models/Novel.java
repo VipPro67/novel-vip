@@ -10,7 +10,6 @@ import java.util.*;
 
 import org.hibernate.annotations.BatchSize;
 
-import java.text.Normalizer;
 import java.time.LocalDateTime;
 
 @Entity
@@ -110,7 +109,7 @@ public class Novel {
 		// Don't call category.removeNovel(this) to avoid infinite recursion
 	}
 
-	public void setCategories(Set<Category> categories) {
+	public void setCategories(List<Category> categories) {
 		if (this.categories == null) {
 			this.categories = new HashSet<>();
 		} else {
@@ -120,5 +119,10 @@ public class Novel {
 			this.categories.addAll(categories);
 		}
 	}
+
+    public void setCategories(Object categories2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setCategories'");
+    }
 
 }

@@ -20,13 +20,5 @@ public class NotificationPublisher {
 		messagingTemplate.convertAndSend(
 				"/topic/user." + notification.getUserId(),
 				notification);
-	}
-
-	// Optional: listen to comment notifications separately
-	@RabbitListener(queues = RabbitMQConfig.COMMENT_QUEUE)
-	public void handleCommentNotification(NotificationDTO notification) {
-		messagingTemplate.convertAndSend(
-				"/topic/user." + notification.getUserId(),
-				notification);
-	}
+	} 
 }

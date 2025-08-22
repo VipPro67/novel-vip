@@ -54,7 +54,6 @@ public class NotificationService {
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = mapper.NotificationtoDTO(saved);
         rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, dto);
-        logger.info("Noti pushed to RabbitMQ: {}", dto);
         return dto;
     }
 

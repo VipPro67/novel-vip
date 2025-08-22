@@ -1,10 +1,12 @@
 package com.novel.vippro.Services;
 
+import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.Exception.BadRequestException;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Favorite;
+import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -36,6 +38,9 @@ public class FavoriteService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public PageResponse<NovelDTO> getUserFavorites(Pageable pageable) {
         UUID userId = userService.getCurrentUserId();
@@ -86,5 +91,28 @@ public class FavoriteService {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
         return favoriteRepository.countByNovelId(novelId);
+    }
+
+    @Transactional
+    public void notifyFavorites(UUID novelId) {
+        var favorites = favoriteRepository.findByNovelId(novelId);
+        if (favorites.isEmpty()) {
+            return; 
+        }
+        var novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
+        for (Favorite favorite : favorites) {
+            User user = favorite.getUser();
+            if (user != null) {
+                CreateNotificationDTO notificationDTO = new CreateNotificationDTO();
+                notificationDTO.setUserId(user.getId());
+                notificationDTO.setTitle("New Chapter Available");
+                notificationDTO.setMessage("A new chapter has been added to novel: " + novel.getTitle());
+                notificationDTO.setType(NotificationType.CHAPTER_UPDATE);
+                notificationDTO.setReferenceId(novelId);
+                notificationService.createNotification(notificationDTO);
+            }
+        }
+        
     }
 }

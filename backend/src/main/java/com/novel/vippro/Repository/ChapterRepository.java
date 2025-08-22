@@ -1,7 +1,5 @@
 package com.novel.vippro.Repository;
 
-import com.novel.vippro.DTO.Chapter.ChapterDTO;
-import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.Models.Chapter;
 
 import org.springframework.data.domain.Page;

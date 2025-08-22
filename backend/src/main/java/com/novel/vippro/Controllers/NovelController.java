@@ -6,7 +6,6 @@ import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
-import com.novel.vippro.Security.JWT.AuthTokenFilter;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.NovelService;

@@ -4,7 +4,6 @@ import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
-import com.novel.vippro.DTO.Chapter.ChapterListDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
@@ -47,8 +46,6 @@ public interface Mapper {
     ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
 
     ChapterDTO ChaptertoChapterDTO(Chapter chapter);
-
-    ChapterListDTO ChaptertoChapterListDTO(Chapter chapter);
 
     List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters);
 

@@ -2,7 +2,6 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
-import com.novel.vippro.DTO.Chapter.ChapterListDTO;
 import com.novel.vippro.Models.Chapter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +28,10 @@ public class ChapterMapper {
 	}
 
 	public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
-		return modelMapper.map(chapter, ChapterDTO.class);
-	}
-
-	public ChapterListDTO ChaptertoChapterListDTO(Chapter chapter) {
-		ChapterListDTO chapterListDTO = modelMapper.map(chapter, ChapterListDTO.class);
-		chapterListDTO.setNovelId(chapter.getNovel().getId());
-		chapterListDTO.setNovelTitle(chapter.getNovel().getTitle());
-		return chapterListDTO;
+		ChapterDTO dto = modelMapper.map(chapter, ChapterDTO.class);
+        dto.setNovelId(chapter.getNovel().getId());
+        dto.setNovelTitle(chapter.getNovel().getTitle());
+        return dto;
 	}
 
 	public List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters) {

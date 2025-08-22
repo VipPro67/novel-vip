@@ -52,8 +52,10 @@ public class Chapter {
     @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
     private FileMetadata audioFile;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @PreUpdate

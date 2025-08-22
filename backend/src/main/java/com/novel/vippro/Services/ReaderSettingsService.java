@@ -8,10 +8,8 @@ import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.ReaderSettingsRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Services.ReaderSettingsService;
-import com.novel.vippro.Services.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

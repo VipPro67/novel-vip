@@ -4,7 +4,6 @@ import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
-import com.novel.vippro.DTO.Chapter.ChapterListDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
@@ -112,11 +111,6 @@ public class MapperFacade implements Mapper {
 	@Override
 	public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
 		return chapterMapper.ChaptertoChapterDTO(chapter);
-	}
-
-	@Override
-	public ChapterListDTO ChaptertoChapterListDTO(Chapter chapter) {
-		return chapterMapper.ChaptertoChapterListDTO(chapter);
 	}
 
 	@Override
