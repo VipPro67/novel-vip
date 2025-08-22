@@ -39,7 +39,7 @@ public class Notification {
     private NotificationType type;
 
     @Column
-    private String referenceId; 
+    private UUID referenceId; 
 
     @PrePersist
     protected void onCreate() {

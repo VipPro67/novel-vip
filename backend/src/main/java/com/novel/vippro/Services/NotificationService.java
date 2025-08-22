@@ -50,7 +50,7 @@ public class NotificationService {
         notification.setTitle(notificationDTO.getTitle());
         notification.setMessage(notificationDTO.getMessage());
         notification.setType(notificationDTO.getType());
-
+        notification.setReferenceId(notificationDTO.getReferenceId());
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = mapper.NotificationtoDTO(saved);
         rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, dto);
