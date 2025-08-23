@@ -157,6 +157,7 @@ export interface Notification {
     | "LIKE"
     | "FOLLOW"
     | "MESSAGE";
+  referenceId?: string; 
   createdAt: string;
 }
 
@@ -236,9 +237,6 @@ class ApiClient {
       headers.Authorization = `Bearer ${this.token}`;
     }
 
-    console.log(`API Request: ${options.method || "GET"} ${url}`);
-    console.log("Headers:", headers);
-
     try {
       const response = await fetch(url, {
         ...options,
@@ -266,7 +264,6 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log("API Response Data:", data);
       return data;
     } catch (error) {
       console.error("API Request Error:", error);
