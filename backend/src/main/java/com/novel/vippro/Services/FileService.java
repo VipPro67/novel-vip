@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -46,8 +46,8 @@ public class FileService {
             metadata.setType(type);
             metadata.setPublicId(publicId);
             metadata.setFileUrl(fileUrl);
-            metadata.setUploadedAt(LocalDateTime.now());
-            metadata.setLastModifiedAt(LocalDateTime.now());
+            metadata.setUploadedAt(Instant.now());
+            metadata.setLastModifiedAt(Instant.now());
 
             metadata = fileMetadataRepository.save(metadata);
             return metadata;
@@ -108,7 +108,7 @@ public class FileService {
 
         metadata.setFileName(updateDTO.getFileName());
         metadata.setType(updateDTO.getType());
-        metadata.setLastModifiedAt(LocalDateTime.now());
+        metadata.setLastModifiedAt(Instant.now());
 
         metadata = fileMetadataRepository.save(metadata);
         return mapper.FileMetadataToDTO(metadata);

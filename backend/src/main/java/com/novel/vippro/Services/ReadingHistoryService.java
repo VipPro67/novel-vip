@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.novel.vippro.Events.ReadingProgressEvent;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -83,7 +83,7 @@ public class ReadingHistoryService {
             history.setReadingTime(history.getReadingTime() + readingTime);
         }
 
-        history.setLastReadAt(LocalDateTime.now());
+        history.setLastReadAt(Instant.now());
 
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         ReadingHistoryDTO dto = mapper.ReadingHistorytoDTO(savedHistory);
@@ -127,7 +127,7 @@ public class ReadingHistoryService {
         history.setProgress(0); // Initial progress
 
         history.setReadingTime(0); // Initial reading time
-        history.setLastReadAt(LocalDateTime.now());
+        history.setLastReadAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         return mapper.ReadingHistorytoDTO(savedHistory);
     }
@@ -176,7 +176,7 @@ public class ReadingHistoryService {
                 .getContent();
 
         long totalMinutes = 0;
-        LocalDateTime lastReadTime = null;
+        Instant lastReadTime = null;
 
         for (ReadingHistory entry : history) {
             if (lastReadTime == null) {

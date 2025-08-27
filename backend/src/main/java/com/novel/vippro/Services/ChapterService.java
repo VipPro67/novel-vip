@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -109,7 +109,7 @@ public class ChapterService {
         // Update total chapters and updated at
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() - 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
     }
@@ -220,13 +220,13 @@ public class ChapterService {
         jsonFile.setPublicId(publicId);
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
-        jsonFile.setUploadedAt(LocalDateTime.now());
+        jsonFile.setUploadedAt(Instant.now());
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() + 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
 
@@ -289,13 +289,13 @@ public class ChapterService {
         jsonFile.setSize(jsonContent.length());
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
-        jsonFile.setLastModifiedAt(LocalDateTime.now());
+        jsonFile.setLastModifiedAt(Instant.now());
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() + 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
         return chapterRepository.save(chapter);
@@ -335,7 +335,7 @@ public class ChapterService {
         audioFile.setFileName(chapter.getTitle());
         audioFile.setType("audio");
         audioFile.setSize(0);
-        audioFile.setUploadedAt(LocalDateTime.now());
+        audioFile.setUploadedAt(Instant.now());
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
 

@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.novel.vippro.DTO.Auth.LoginRequest;
+import com.novel.vippro.DTO.Auth.RefreshTokenRequest;
 import com.novel.vippro.DTO.Auth.SignupRequest;
+import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.JwtResponse;
 import com.novel.vippro.Services.AuthService;
 
@@ -45,5 +47,16 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         return authService.registerUser(signUpRequest);
+    }
+
+    @Operation(summary = "Refresh access token", description = "Refresh the access token using a valid refresh token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Access token refreshed successfully", content = @Content(schema = @Schema(implementation = JwtResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Invalid or expired refresh token"),
+            @ApiResponse(responseCode = "400", description = "Invalid input")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<ControllerResponse<JwtResponse>> refresh(@RequestBody RefreshTokenRequest req) {
+        return authService.refreshAccessToken(req);
     }
 }

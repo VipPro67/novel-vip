@@ -1,6 +1,6 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -29,6 +29,6 @@ public class GroupMember {
     private String displayName;
 
     @Column
-    private LocalDateTime joinedAt = LocalDateTime.now();
+    private Instant joinedAt = Instant.now();
 
 }

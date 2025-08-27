@@ -26,37 +26,75 @@ public class JwtUtils {
   @Value("${JWT_SECRET:VGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lZXJhdGlvbg==}")
   private String jwtSecret;
 
-  @Value("${JWT_EXPIRATION:86400000}")
+  @Value("${JWT_EXPIRATION:864000}")
   private int jwtExpirationMs;
 
-  public String generateJwtToken(Authentication authentication) {
+  @Value("${JWT_REFRESH_EXPIRATION:25920000}")
+  private int jwtRefreshExpirationMs;
 
+  // ====== ACCESS TOKEN (existing) ======
+  public String generateJwtToken(Authentication authentication) {
     UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-    // Add user infor, role, etc.
+
     Map<String, Object> claims = new HashMap<>();
     claims.put("userId", userPrincipal.getId());
     claims.put("email", userPrincipal.getEmail());
     claims.put("roles", userPrincipal.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList()));
+    claims.put("typ", "access");
 
     return Jwts.builder()
-        .setSubject((userPrincipal.getUsername()))
+        .setSubject(userPrincipal.getUsername())
         .addClaims(claims)
         .setIssuedAt(new Date())
-        .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
         .signWith(key(), SignatureAlgorithm.HS256)
         .compact();
   }
 
-  public Key getSigningKey() {
-    return key();
+  /** Generate an access token when you only have the username (e.g. refresh flow). */
+  public String generateAccessTokenFromUsername(String username) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("typ", "access");
+    return Jwts.builder()
+        .setSubject(username)
+        .addClaims(claims)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+        .signWith(key(), SignatureAlgorithm.HS256)
+        .compact();
   }
 
-  private Key key() {
-    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+  // ====== REFRESH TOKEN (new) ======
+  /** Generate a refresh token; subject is username. */
+  public String generateRefreshToken(String username) {
+    // keep claims minimal; include a 'typ' guard
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("typ", "refresh");
+    return Jwts.builder()
+        .setSubject(username)
+        .addClaims(claims)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + jwtRefreshExpirationMs))
+        .signWith(key(), SignatureAlgorithm.HS256)
+        .compact();
   }
 
+  /** Validate structure/signature/expiry AND ensure it's a refresh token. */
+  public boolean isRefreshToken(String token) {
+    try {
+      Claims c = Jwts.parserBuilder().setSigningKey(key()).build()
+          .parseClaimsJws(token).getBody();
+      Object typ = c.get("typ");
+      return "refresh".equals(typ);
+    } catch (JwtException | IllegalArgumentException e) {
+      logger.error("Refresh token invalid: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  // ====== Helpers ======
   public String getUserNameFromJwtToken(String token) {
     return Jwts.parserBuilder().setSigningKey(key()).build()
         .parseClaimsJws(token).getBody().getSubject();
@@ -64,8 +102,7 @@ public class JwtUtils {
 
   public boolean validateJwtToken(String authToken) {
     try {
-      Jwts.parserBuilder().setSigningKey(key()).build()
-          .parseClaimsJws(authToken);
+      Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
       return true;
     } catch (MalformedJwtException e) {
       logger.error("Invalid JWT token: {}", e.getMessage());
@@ -78,7 +115,22 @@ public class JwtUtils {
     } catch (Exception e) {
       logger.error("JWT token validation failed: {}", e.getMessage());
     }
-
     return false;
+  }
+
+  public Date getAccessTokenExpiryDate() {
+    return new Date(System.currentTimeMillis() + jwtExpirationMs);
+  }
+
+  public Date getRefreshTokenExpiryDate() {
+    return new Date(System.currentTimeMillis() + jwtRefreshExpirationMs);
+  }
+
+  public Key getSigningKey() {
+    return key();
+  }
+
+  private Key key() {
+    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
   }
 }

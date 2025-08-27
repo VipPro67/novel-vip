@@ -1,6 +1,6 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -55,10 +55,10 @@ public class User {
     private Set<Novel> ownedNovels = new HashSet<>();
 
 	@CreationTimestamp
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@UpdateTimestamp
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
 	public User() {
 	}

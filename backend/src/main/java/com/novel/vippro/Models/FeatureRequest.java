@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -47,10 +47,10 @@ public class FeatureRequest {
     private Set<User> voters = new HashSet<>();
 
     @CreationTimestamp
-     private LocalDateTime createdAt;
+     private Instant createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     public enum FeatureRequestStatus {
         VOTING,
@@ -62,7 +62,7 @@ public class FeatureRequest {
     // set timestamp for createdAt and updatedAt
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
     }
 }

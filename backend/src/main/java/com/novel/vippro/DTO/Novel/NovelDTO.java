@@ -4,13 +4,13 @@ import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +31,6 @@ public class NovelDTO {
     private Integer rating;
     @JsonProperty("updatedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime updatedAt;
+    @JsonDeserialize(using = InstantDeserializer.class)
+    private Instant updatedAt;
 }

@@ -2,7 +2,7 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,7 +32,7 @@ public class Notification {
     private boolean read = false;
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -43,6 +43,6 @@ public class Notification {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = Instant.now();
     }
 }

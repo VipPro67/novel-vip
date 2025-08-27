@@ -14,7 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,12 +80,12 @@ public class NovelMapper {
         n.setViews(doc.getViews());
         n.setRating(doc.getRating());
 
-        // Timestamps: Instant -> LocalDateTime (UTC)
+        // Timestamps: Instant -> Instant (UTC)
         if (doc.getCreatedAt() != null) {
-            n.setCreatedAt(LocalDateTime.ofInstant(doc.getCreatedAt(), ZoneOffset.UTC));
+            n.setCreatedAt(doc.getCreatedAt());
         }
         if (doc.getUpdatedAt() != null) {
-            n.setUpdatedAt(LocalDateTime.ofInstant(doc.getUpdatedAt(), ZoneOffset.UTC));
+            n.setUpdatedAt(doc.getUpdatedAt());
         }
 
         // Categories, Tags, Genres

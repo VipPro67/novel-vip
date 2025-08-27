@@ -2,7 +2,7 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,8 +30,8 @@ public class Favorite {
     private Novel novel;
 
     @CreationTimestamp
-     private LocalDateTime createdAt;
+     private Instant createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

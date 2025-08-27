@@ -1,7 +1,7 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,10 +28,10 @@ public class RoleApprovalRequest {
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
     @CreationTimestamp
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@UpdateTimestamp
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
     private String processedBy;
 
@@ -77,19 +77,19 @@ public class RoleApprovalRequest {
         this.status = status;
     }
 
-    public LocalDateTime getRequestDate() {
+    public Instant getRequestDate() {
         return createdAt;
     }
 
-    public void setRequestDate(LocalDateTime createdAt) {
+    public void setRequestDate(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getProcessedDate() {
+    public Instant getProcessedDate() {
         return updatedAt;
     }
 
-    public void setProcessedDate(LocalDateTime updatedAt) {
+    public void setProcessedDate(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
 

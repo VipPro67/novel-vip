@@ -1,6 +1,6 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -33,7 +33,7 @@ public class Message {
     private Boolean isRead = false;
 
     @Column(nullable = false)
-     private LocalDateTime createdAt;
+     private Instant createdAt;
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

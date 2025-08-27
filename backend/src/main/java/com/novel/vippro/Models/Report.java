@@ -2,7 +2,7 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -53,16 +53,16 @@ public class Report {
     private String adminResponse;
 
     @CreationTimestamp
-     private LocalDateTime createdAt;
+     private Instant createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    private LocalDateTime resolvedAt;
+    private Instant resolvedAt;
 
     @PrePersist
     public void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
     public enum ReportStatus {

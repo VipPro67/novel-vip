@@ -10,7 +10,7 @@ import java.util.*;
 
 import org.hibernate.annotations.BatchSize;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "novels", indexes = {
@@ -88,11 +88,11 @@ public class Novel {
 
 	@Column(nullable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime createdAt;
+	private Instant createdAt;
 
 	@Column(nullable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime updatedAt;
+	private Instant updatedAt;
 
 	public void addCategory(Category category) {
 		if (this.categories == null) {

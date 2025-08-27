@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -49,13 +49,13 @@ public class ReadingHistory {
 
     @Column(name = "last_read_at")
     @UpdateTimestamp
-    private LocalDateTime lastReadAt;
+    private Instant lastReadAt;
 
     @CreationTimestamp
-     private LocalDateTime createdAt;
+     private Instant createdAt;
 
     @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {

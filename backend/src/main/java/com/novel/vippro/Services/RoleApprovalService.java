@@ -1,6 +1,6 @@
 package com.novel.vippro.Services;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,7 +86,7 @@ public class RoleApprovalService {
 
         // Update request status
         request.setStatus("APPROVED");
-        request.setProcessedDate(LocalDateTime.now());
+        request.setProcessedDate(Instant.now());
         request.setProcessedBy(adminUsername);
         roleApprovalRequestRepository.save(request);
 
@@ -112,7 +112,7 @@ public class RoleApprovalService {
 
         // Update request status
         request.setStatus("REJECTED");
-        request.setProcessedDate(LocalDateTime.now());
+        request.setProcessedDate(Instant.now());
         request.setProcessedBy(adminUsername);
         request.setRejectionReason(reason);
         roleApprovalRequestRepository.save(request);
