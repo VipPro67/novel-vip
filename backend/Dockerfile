@@ -1,20 +1,16 @@
 # Stage 1: Build the application
-FROM maven:3.8.6-eclipse-temurin-17-alpine AS build
+FROM maven:3.8.6-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
-# Cache Maven dependencies
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -B
-
-# Copy project files and build the application
-COPY pom.xml .
+# Download dependencies first to cache them
+RUN mvn dependency:go-offline -B
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn package -DskipTests
+# Build the application, skipping tests
+RUN mvn clean package -DskipTests
 
 # Stage 2: Create the runtime image
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/novel-vippro-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8081
-ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
