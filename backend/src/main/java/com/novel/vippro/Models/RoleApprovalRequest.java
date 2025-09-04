@@ -1,20 +1,23 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+=======
+import lombok.Data;
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Entity
+@Data
 @Table(name = "role_approval_requests", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "role_id" })
 })
-public class RoleApprovalRequest {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class RoleApprovalRequest extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,12 +30,15 @@ public class RoleApprovalRequest {
     @Column(nullable = false)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
+<<<<<<< Updated upstream
     @CreationTimestamp
 	private Instant createdAt;
 
 	@UpdateTimestamp
 	private Instant updatedAt;
 
+=======
+>>>>>>> Stashed changes
     private String processedBy;
 
     private String rejectionReason;
@@ -45,6 +51,7 @@ public class RoleApprovalRequest {
         this.requestedRole = requestedRole;
     }
 
+<<<<<<< Updated upstream
     public UUID getId() {
         return id;
     }
@@ -108,4 +115,6 @@ public class RoleApprovalRequest {
     public void setRejectionReason(String rejectionReason) {
         this.rejectionReason = rejectionReason;
     }
+=======
+>>>>>>> Stashed changes
 }

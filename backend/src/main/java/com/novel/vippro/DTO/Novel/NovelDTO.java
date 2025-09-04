@@ -9,14 +9,16 @@ import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
+import com.novel.vippro.DTO.base.BaseDTO;
 
+<<<<<<< Updated upstream
 import java.time.Instant;
+=======
+>>>>>>> Stashed changes
 import java.util.Set;
-import java.util.UUID;
 
 @Data
-public class NovelDTO {
-    private UUID id;
+public class NovelDTO extends BaseDTO {
     private String title;
     private String description;
     private String author;
@@ -29,8 +31,11 @@ public class NovelDTO {
     private Integer totalChapters;
     private Integer views;
     private Integer rating;
+<<<<<<< Updated upstream
     @JsonProperty("updatedAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonDeserialize(using = InstantDeserializer.class)
     private Instant updatedAt;
+=======
+>>>>>>> Stashed changes
 }

@@ -2,10 +2,14 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+<<<<<<< Updated upstream
 import java.time.Instant;
+=======
+
+>>>>>>> Stashed changes
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "notifications", indexes = {
@@ -13,10 +17,7 @@ import org.hibernate.annotations.CreationTimestamp;
         @Index(name = "idx_title", columnList = "title")
 })
 @Data
-public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,9 +32,12 @@ public class Notification {
     @Column(nullable = false)
     private boolean read = false;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
     private Instant createdAt;
 
+=======
+>>>>>>> Stashed changes
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
@@ -41,8 +45,11 @@ public class Notification {
     @Column
     private UUID referenceId; 
 
+<<<<<<< Updated upstream
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
     }
+=======
+>>>>>>> Stashed changes
 }

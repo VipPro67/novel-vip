@@ -6,6 +6,10 @@ import lombok.Setter;
 
 import java.time.Duration;
 import java.time.Instant;
+<<<<<<< Updated upstream
+=======
+import java.time.LocalDateTime;
+>>>>>>> Stashed changes
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -29,7 +33,11 @@ public class ReadingStatsDTO {
     // Additional fields needed by the service
     @JsonProperty("lastReadAt")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+<<<<<<< Updated upstream
     @JsonDeserialize(using = InstantDeserializer.class)
+=======
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+>>>>>>> Stashed changes
     private Instant lastReadAt;
     private long minutesSpentReading;
     private double averageReadingTimePerChapter;

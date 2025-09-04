@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.*;
 
 import org.hibernate.annotations.BatchSize;
+import com.novel.vippro.Models.base.BaseEntity;
 
 import java.time.Instant;
 
@@ -19,10 +20,7 @@ import java.time.Instant;
 })
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Novel {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+public class Novel extends BaseEntity {
 
 	@Column(nullable = false)
 	private String title;
@@ -85,6 +83,7 @@ public class Novel {
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-comments")
 	private List<Comment> comments;
+<<<<<<< Updated upstream
 
 	@Column(nullable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -125,4 +124,6 @@ public class Novel {
         throw new UnsupportedOperationException("Unimplemented method 'setCategories'");
     }
 
+=======
+>>>>>>> Stashed changes
 }

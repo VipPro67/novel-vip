@@ -2,7 +2,7 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "reader_settings", uniqueConstraints = {
@@ -11,10 +11,7 @@ import java.util.UUID;
                 @Index(name = "idx_user_id", columnList = "user_id")
 })
 @Data
-public class ReaderSettings {
-        @Id
-        @GeneratedValue(strategy = GenerationType.UUID)
-        private UUID id;
+public class ReaderSettings extends BaseEntity {
 
         @OneToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "user_id", nullable = false, unique = true)

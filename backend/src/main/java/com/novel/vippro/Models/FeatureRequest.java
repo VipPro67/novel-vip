@@ -4,13 +4,16 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+<<<<<<< Updated upstream
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+=======
+>>>>>>> Stashed changes
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "feature_requests", indexes = {
@@ -20,20 +23,12 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeatureRequest {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class FeatureRequest extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User createdBy;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -46,12 +41,15 @@ public class FeatureRequest {
     @JoinTable(name = "feature_request_votes", joinColumns = @JoinColumn(name = "feature_request_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> voters = new HashSet<>();
 
+<<<<<<< Updated upstream
     @CreationTimestamp
      private Instant createdAt;
 
     @UpdateTimestamp
     private Instant updatedAt;
 
+=======
+>>>>>>> Stashed changes
     public enum FeatureRequestStatus {
         VOTING,
         PROCESSING,
@@ -59,10 +57,13 @@ public class FeatureRequest {
         REJECTED
     }
 
+<<<<<<< Updated upstream
     // set timestamp for createdAt and updatedAt
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
     }
+=======
+>>>>>>> Stashed changes
 }

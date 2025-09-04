@@ -8,6 +8,8 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.novel.vippro.Models.base.BaseEntity;
+
 @Entity
 @Table(name = "reports", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "reporter_id", "novel_id", "chapter_id", "comment_id" })
@@ -19,10 +21,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 })
 
 @Data
-public class Report {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Report extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
@@ -52,6 +51,7 @@ public class Report {
 
     private String adminResponse;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
      private Instant createdAt;
 
@@ -65,6 +65,10 @@ public class Report {
         this.createdAt = Instant.now();
     }
 
+=======
+    private LocalDateTime resolvedAt;
+
+>>>>>>> Stashed changes
     public enum ReportStatus {
         PENDING,
         RESOLVED,

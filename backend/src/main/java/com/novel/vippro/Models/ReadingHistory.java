@@ -7,11 +7,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 
-import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.UpdateTimestamp;
 
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
+=======
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Data
 @Getter
@@ -24,10 +29,7 @@ import java.util.UUID;
         @Index(name = "idx_novel_id", columnList = "novel_id"),
         @Index(name = "idx_chapter_id", columnList = "chapter_id")
 })
-public class ReadingHistory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class ReadingHistory extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -51,6 +53,7 @@ public class ReadingHistory {
     @UpdateTimestamp
     private Instant lastReadAt;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
      private Instant createdAt;
 
@@ -66,4 +69,6 @@ public class ReadingHistory {
             this.readingTime = 0;
         }
     }
+=======
+>>>>>>> Stashed changes
 }

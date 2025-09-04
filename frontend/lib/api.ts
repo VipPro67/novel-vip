@@ -529,7 +529,7 @@ class ApiClient {
   async createChapter(data: {
     title: string;
     chapterNumber: number;
-    content: string;
+    contentHtml: string;
     novelId: string;
   }) {
     return this.request<Chapter>("/api/chapters", {

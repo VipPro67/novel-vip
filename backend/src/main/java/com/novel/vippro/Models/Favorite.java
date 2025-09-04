@@ -2,11 +2,15 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+=======
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Entity
 @Table(name = "favorites", uniqueConstraints = {
@@ -16,11 +20,7 @@ import org.hibernate.annotations.UpdateTimestamp;
         @Index(name = "idx_novel_id", columnList = "novel_id")
 })
 @Data
-public class Favorite {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class Favorite extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -28,10 +28,13 @@ public class Favorite {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
+<<<<<<< Updated upstream
 
     @CreationTimestamp
      private Instant createdAt;
 
     @UpdateTimestamp
     private Instant updatedAt;
+=======
+>>>>>>> Stashed changes
 }

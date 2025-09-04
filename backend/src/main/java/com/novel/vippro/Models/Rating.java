@@ -2,21 +2,22 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+=======
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Entity
 @Table(name = "ratings", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "novel_id" })
 })
 @Data
-public class Rating {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Rating extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,6 +32,7 @@ public class Rating {
 
     private String review; // Optional review text
 
+<<<<<<< Updated upstream
     @CreationTimestamp
      private Instant createdAt;
 
@@ -47,4 +49,6 @@ public class Rating {
     public void onUpdate() {
         this.updatedAt = Instant.now();
     }
+=======
+>>>>>>> Stashed changes
 }

@@ -16,6 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
+<<<<<<< Updated upstream
+=======
+import java.time.LocalDateTime;
+>>>>>>> Stashed changes
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -46,8 +50,11 @@ public class FileService {
             metadata.setType(type);
             metadata.setPublicId(publicId);
             metadata.setFileUrl(fileUrl);
+<<<<<<< Updated upstream
             metadata.setUploadedAt(Instant.now());
             metadata.setLastModifiedAt(Instant.now());
+=======
+>>>>>>> Stashed changes
 
             metadata = fileMetadataRepository.save(metadata);
             return metadata;
@@ -108,7 +115,11 @@ public class FileService {
 
         metadata.setFileName(updateDTO.getFileName());
         metadata.setType(updateDTO.getType());
+<<<<<<< Updated upstream
         metadata.setLastModifiedAt(Instant.now());
+=======
+        metadata.setUpdatedAt(Instant.now());
+>>>>>>> Stashed changes
 
         metadata = fileMetadataRepository.save(metadata);
         return mapper.FileMetadataToDTO(metadata);

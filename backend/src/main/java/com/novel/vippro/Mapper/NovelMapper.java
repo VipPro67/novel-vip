@@ -91,17 +91,17 @@ public class NovelMapper {
         // Categories, Tags, Genres
         if (doc.getCategories() != null) {
             n.setCategories(doc.getCategories().stream()
-                .map(name -> new Category(null, name, null))
+                .map(name -> new Category(name))
                 .collect(Collectors.toSet()));
         }
         if (doc.getTags() != null) {
             n.setTags(doc.getTags().stream()
-                .map(name -> new Tag(null, name, null))
+                .map(name -> new Tag( name))
                 .collect(Collectors.toSet()));
         }
         if (doc.getGenres() != null) {
             n.setGenres(doc.getGenres().stream()
-                .map(name -> new Genre(null, name, null))
+                .map(name -> new Genre( name))
                 .collect(Collectors.toSet()));
         }
 

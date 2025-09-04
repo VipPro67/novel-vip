@@ -220,7 +220,11 @@ public class ChapterService {
         jsonFile.setPublicId(publicId);
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
+<<<<<<< Updated upstream
         jsonFile.setUploadedAt(Instant.now());
+=======
+        jsonFile.setCreatedAt(Instant.now());
+>>>>>>> Stashed changes
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
@@ -289,7 +293,11 @@ public class ChapterService {
         jsonFile.setSize(jsonContent.length());
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
+<<<<<<< Updated upstream
         jsonFile.setLastModifiedAt(Instant.now());
+=======
+        jsonFile.setUpdatedAt(Instant.now());
+>>>>>>> Stashed changes
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
@@ -335,7 +343,11 @@ public class ChapterService {
         audioFile.setFileName(chapter.getTitle());
         audioFile.setType("audio");
         audioFile.setSize(0);
+<<<<<<< Updated upstream
         audioFile.setUploadedAt(Instant.now());
+=======
+        audioFile.setUpdatedAt(Instant.now());
+>>>>>>> Stashed changes
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
 

@@ -1,18 +1,18 @@
 package com.novel.vippro.Models;
 
+<<<<<<< Updated upstream
 import java.time.Instant;
+=======
+>>>>>>> Stashed changes
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -23,10 +23,7 @@ import lombok.Data;
 		@Index(name = "idx_email", columnList = "email")
 })
 @Data
-public class User {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+public class User extends BaseEntity {
 
 	@NotBlank
 	@Size(max = 20)
@@ -54,12 +51,15 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Novel> ownedNovels = new HashSet<>();
 
+<<<<<<< Updated upstream
 	@CreationTimestamp
 	private Instant createdAt;
 
 	@UpdateTimestamp
 	private Instant updatedAt;
 
+=======
+>>>>>>> Stashed changes
 	public User() {
 	}
 

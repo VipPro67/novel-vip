@@ -2,8 +2,12 @@ package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
+=======
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Entity
 @Table(name = "bookmarks", indexes = {
@@ -12,10 +16,7 @@ import java.util.UUID;
         @Index(name = "idx_novel_id", columnList = "novel_id")
 })
 @Data
-public class Bookmark {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Bookmark extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,6 +32,7 @@ public class Bookmark {
 
     private String note;
 
+<<<<<<< Updated upstream
     private Integer progress; // Reading progress in percentage
 
     @Column(nullable = false)
@@ -49,4 +51,7 @@ public class Bookmark {
     public void onUpdate() {
         this.updatedAt = Instant.now();
     }
+=======
+    private Integer progress; 
+>>>>>>> Stashed changes
 }

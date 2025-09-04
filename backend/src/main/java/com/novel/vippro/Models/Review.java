@@ -3,11 +3,15 @@ package com.novel.vippro.Models;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+<<<<<<< Updated upstream
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
+=======
+import com.novel.vippro.Models.base.BaseEntity;
+>>>>>>> Stashed changes
 
 @Entity
 @Table(name = "reviews", indexes = {
@@ -16,10 +20,7 @@ import java.util.UUID;
 })
 @Data
 @NoArgsConstructor
-public class Review {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Review extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
@@ -50,9 +51,12 @@ public class Review {
     @Column(name = "is_edited")
     private boolean isEdited = false;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
      private Instant createdAt;
 
     @UpdateTimestamp
     private Instant updatedAt;
+=======
+>>>>>>> Stashed changes
 }

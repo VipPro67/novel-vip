@@ -4,23 +4,23 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "tags")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Tag {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Tag extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = true)
     private String description;
+
+    public Tag(String name) {
+        this.name = name;
+    }
 
 }

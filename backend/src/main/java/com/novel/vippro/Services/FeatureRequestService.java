@@ -38,7 +38,7 @@ public class FeatureRequestService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
                 FeatureRequest featureRequest = mapper.CreateFeatureRequestDTOtoFeatureRequest(requestDTO);
-                featureRequest.setCreatedBy(user);
+                featureRequest.setUpdatedBy(user.getId());
                 featureRequest.setStatus(FeatureRequest.FeatureRequestStatus.VOTING);
                 featureRequest.setVoteCount(0);
                 FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
@@ -78,7 +78,7 @@ public class FeatureRequestService {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-                if (featureRequest.getCreatedBy().getId().equals(userId)) {
+                if (featureRequest.getCreatedBy().equals(userId)) {
                         throw new AccessDeniedException("Cannot vote for your own feature request");
                 }
 
@@ -124,7 +124,7 @@ public class FeatureRequestService {
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
                 // Only allow deletion by creator or admin
-                if (!featureRequest.getCreatedBy().getId().equals(userId) &&
+                if (!featureRequest.getCreatedBy().equals(userId) &&
                                 !user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
                         throw new AccessDeniedException("Only creator or admin can delete feature request");
                 }

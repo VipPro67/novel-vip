@@ -6,12 +6,12 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+<<<<<<< Updated upstream
 import java.time.Instant;
+=======
+>>>>>>> Stashed changes
 import java.util.List;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "chapters", uniqueConstraints = @UniqueConstraint(columnNames = { "chapterNumber",
@@ -21,10 +21,7 @@ import org.hibernate.annotations.UpdateTimestamp;
         })
 @Data
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Chapter {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Chapter extends BaseEntity {
 
     @Column(nullable = false)
     private Integer chapterNumber;
@@ -52,6 +49,7 @@ public class Chapter {
     @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
     private FileMetadata audioFile;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
     private Instant createdAt;
 
@@ -63,4 +61,6 @@ public class Chapter {
         updatedAt = Instant.now();
     }
 
+=======
+>>>>>>> Stashed changes
 }

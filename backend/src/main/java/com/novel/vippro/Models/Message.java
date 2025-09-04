@@ -1,18 +1,19 @@
 package com.novel.vippro.Models;
 
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
 
+=======
+>>>>>>> Stashed changes
 import jakarta.persistence.*;
 import lombok.Data;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Data
 @Entity
 @Table(name = "messages")
-public class Message {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Message extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
@@ -32,8 +33,11 @@ public class Message {
     @Column(nullable = false)
     private Boolean isRead = false;
 
+<<<<<<< Updated upstream
     @Column(nullable = false)
      private Instant createdAt;
     @Column(nullable = false)
     private Instant updatedAt;
+=======
+>>>>>>> Stashed changes
 }

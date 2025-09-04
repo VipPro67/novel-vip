@@ -1,18 +1,19 @@
 package com.novel.vippro.Models;
 
+<<<<<<< Updated upstream
 import java.time.Instant;
 import java.util.UUID;
 
+=======
+>>>>>>> Stashed changes
 import jakarta.persistence.*;
 import lombok.Data;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Data
 @Entity
 @Table(name = "group_members")
-public class GroupMember {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class GroupMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,8 +28,11 @@ public class GroupMember {
 
     @Column
     private String displayName;
+<<<<<<< Updated upstream
 
     @Column
     private Instant joinedAt = Instant.now();
 
+=======
+>>>>>>> Stashed changes
 }

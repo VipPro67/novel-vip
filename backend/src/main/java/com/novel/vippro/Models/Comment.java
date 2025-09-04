@@ -3,12 +3,12 @@ package com.novel.vippro.Models;
 import jakarta.persistence.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+<<<<<<< Updated upstream
 import java.time.Instant;
+=======
+>>>>>>> Stashed changes
 import java.util.List;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "comments", indexes = {
@@ -17,11 +17,7 @@ import org.hibernate.annotations.UpdateTimestamp;
         @Index(name = "idx_chapter_id", columnList = "chapter_id")
 })
 @Data
-public class Comment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-
+public class Comment extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
@@ -45,6 +41,7 @@ public class Comment {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Comment> replies;
 
+<<<<<<< Updated upstream
     @CreationTimestamp
     private Instant createdAt;
 
@@ -61,4 +58,6 @@ public class Comment {
     public void onUpdate() {
         this.updatedAt = Instant.now();
     }
+=======
+>>>>>>> Stashed changes
 }
