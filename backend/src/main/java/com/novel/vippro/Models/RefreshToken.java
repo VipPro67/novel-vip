@@ -1,7 +1,9 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -13,7 +15,11 @@ import java.util.UUID;
         @Index(name = "idx_rt_token", columnList = "token", unique = true),
         @Index(name = "idx_rt_user", columnList = "user_id")
 })
-@Getter @Setter
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class RefreshToken {
 
     @Id

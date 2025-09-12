@@ -1,7 +1,12 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,14 +18,13 @@ import com.novel.vippro.Models.base.BaseEntity;
 @Entity
 @Table(name = "reports", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "reporter_id", "novel_id", "chapter_id", "comment_id" })
-}, indexes = {
-        @Index(name = "idx_reporter_id", columnList = "reporter_id"),
-        @Index(name = "idx_novel_id", columnList = "novel_id"),
-        @Index(name = "idx_chapter_id", columnList = "chapter_id"),
-        @Index(name = "idx_comment_id", columnList = "comment_id")
 })
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class Report extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,24 +55,8 @@ public class Report extends BaseEntity {
 
     private String adminResponse;
 
-<<<<<<< Updated upstream
-    @CreationTimestamp
-     private Instant createdAt;
-
-    @UpdateTimestamp
-    private Instant updatedAt;
-
     private Instant resolvedAt;
 
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = Instant.now();
-    }
-
-=======
-    private LocalDateTime resolvedAt;
-
->>>>>>> Stashed changes
     public enum ReportStatus {
         PENDING,
         RESOLVED,

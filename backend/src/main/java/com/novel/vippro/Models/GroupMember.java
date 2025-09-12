@@ -1,16 +1,18 @@
 package com.novel.vippro.Models;
 
-<<<<<<< Updated upstream
-import java.time.Instant;
-import java.util.UUID;
-
-=======
->>>>>>> Stashed changes
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.novel.vippro.Models.base.BaseEntity;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @Entity
 @Table(name = "group_members")
 public class GroupMember extends BaseEntity {
@@ -28,11 +30,4 @@ public class GroupMember extends BaseEntity {
 
     @Column
     private String displayName;
-<<<<<<< Updated upstream
-
-    @Column
-    private Instant joinedAt = Instant.now();
-
-=======
->>>>>>> Stashed changes
 }

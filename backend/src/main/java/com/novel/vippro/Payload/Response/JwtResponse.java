@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JwtResponse {
-  private String token;
+  private String accessToken;
   private String type = "Bearer";
   private UUID id;
   private String username;

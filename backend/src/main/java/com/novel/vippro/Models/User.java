@@ -1,9 +1,5 @@
 package com.novel.vippro.Models;
 
-<<<<<<< Updated upstream
-import java.time.Instant;
-=======
->>>>>>> Stashed changes
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,7 +7,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
@@ -22,7 +23,10 @@ import com.novel.vippro.Models.base.BaseEntity;
 		@Index(name = "idx_username", columnList = "username"),
 		@Index(name = "idx_email", columnList = "email")
 })
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class User extends BaseEntity {
 
 	@NotBlank
@@ -50,18 +54,6 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Novel> ownedNovels = new HashSet<>();
-
-<<<<<<< Updated upstream
-	@CreationTimestamp
-	private Instant createdAt;
-
-	@UpdateTimestamp
-	private Instant updatedAt;
-
-=======
->>>>>>> Stashed changes
-	public User() {
-	}
 
 	public User(String username, String email, String password) {
 		this.username = username;

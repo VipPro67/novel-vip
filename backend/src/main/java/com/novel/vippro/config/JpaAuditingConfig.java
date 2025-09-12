@@ -1,4 +1,4 @@
-package com.novel.vippro.config;
+package com.novel.vippro.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

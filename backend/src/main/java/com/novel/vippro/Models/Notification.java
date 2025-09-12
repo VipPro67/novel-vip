@@ -1,22 +1,23 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-<<<<<<< Updated upstream
-import java.time.Instant;
-=======
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
->>>>>>> Stashed changes
 import java.util.UUID;
 
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
-@Table(name = "notifications", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_title", columnList = "title")
-})
-@Data
+@Table(name = "notifications")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,24 +33,10 @@ public class Notification extends BaseEntity {
     @Column(nullable = false)
     private boolean read = false;
 
-<<<<<<< Updated upstream
-    @CreationTimestamp
-    private Instant createdAt;
-
-=======
->>>>>>> Stashed changes
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
     @Column
     private UUID referenceId; 
-
-<<<<<<< Updated upstream
-    @PrePersist
-    protected void onCreate() {
-        createdAt = Instant.now();
-    }
-=======
->>>>>>> Stashed changes
 }

@@ -1,10 +1,7 @@
 package com.novel.vippro.Services;
 
 import java.time.Instant;
-<<<<<<< Updated upstream
-=======
 import java.time.LocalDateTime;
->>>>>>> Stashed changes
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,11 +87,7 @@ public class RoleApprovalService {
 
         // Update request status
         request.setStatus("APPROVED");
-<<<<<<< Updated upstream
-        request.setProcessedDate(Instant.now());
-=======
         request.setUpdatedAt(Instant.now());
->>>>>>> Stashed changes
         request.setProcessedBy(adminUsername);
         roleApprovalRequestRepository.save(request);
 
@@ -120,12 +113,8 @@ public class RoleApprovalService {
 
         // Update request status
         request.setStatus("REJECTED");
-<<<<<<< Updated upstream
-        request.setProcessedDate(Instant.now());
-=======
         request.setUpdatedAt(Instant.now());
->>>>>>> Stashed changes
-        request.setProcessedBy(adminUsername);
+         request.setProcessedBy(adminUsername);
         request.setRejectionReason(reason);
         roleApprovalRequestRepository.save(request);
 

@@ -4,18 +4,14 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.novel.vippro.DTO.base.BaseDTO;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Data
 @Getter
 @Setter
-public class ChapterDetailDTO {
+public class ChapterDetailDTO extends BaseDTO {
     private UUID id;
     private Integer chapterNumber;
     private String title;
@@ -23,15 +19,4 @@ public class ChapterDetailDTO {
     private String novelTitle;
     private String jsonUrl;
     private String audioUrl;
-
-    @JsonProperty("createdAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant createdAt;
-
-    @JsonProperty("updatedAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant updatedAt;
-
 }

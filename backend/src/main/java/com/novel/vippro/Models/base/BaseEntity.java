@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -24,7 +23,7 @@ public abstract class BaseEntity implements Serializable {
     private UUID id;
 
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @LastModifiedDate
@@ -41,7 +40,7 @@ public abstract class BaseEntity implements Serializable {
 
     @Version
     @Column(name = "version")
-    private Long version;
+    private Long version = 0L;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;

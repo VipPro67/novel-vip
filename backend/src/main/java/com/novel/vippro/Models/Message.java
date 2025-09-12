@@ -1,16 +1,19 @@
 package com.novel.vippro.Models;
 
-<<<<<<< Updated upstream
-import java.time.Instant;
-import java.util.UUID;
-
-=======
->>>>>>> Stashed changes
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.novel.vippro.Models.base.BaseEntity;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @Entity
 @Table(name = "messages")
 public class Message extends BaseEntity {
@@ -32,12 +35,4 @@ public class Message extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean isRead = false;
-
-<<<<<<< Updated upstream
-    @Column(nullable = false)
-     private Instant createdAt;
-    @Column(nullable = false)
-    private Instant updatedAt;
-=======
->>>>>>> Stashed changes
 }

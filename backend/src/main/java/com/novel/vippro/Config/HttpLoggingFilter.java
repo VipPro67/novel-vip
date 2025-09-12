@@ -41,7 +41,10 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 		String queryString = request.getQueryString();
 		String fullUri = request.getRequestURI()
 				+ (queryString != null && !queryString.isEmpty() ? "?" + queryString : "");
-
+		if(fullUri.contains("/api/health") || fullUri.contains("/ws"))
+		{
+			return;
+		}
 		logger.info("{} {} {} {}ms",
 				request.getMethod(),
 				fullUri,

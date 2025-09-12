@@ -1,22 +1,23 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-<<<<<<< Updated upstream
-import java.time.Instant;
-import java.util.UUID;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-=======
 import com.novel.vippro.Models.base.BaseEntity;
->>>>>>> Stashed changes
 
 @Entity
 @Table(name = "ratings", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "novel_id" })
 })
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 public class Rating extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,24 +32,4 @@ public class Rating extends BaseEntity {
     private Integer score; // Rating score (1-5)
 
     private String review; // Optional review text
-
-<<<<<<< Updated upstream
-    @CreationTimestamp
-     private Instant createdAt;
-
-    @UpdateTimestamp
-    private Instant updatedAt;
-
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = Instant.now();
-    }
-=======
->>>>>>> Stashed changes
 }

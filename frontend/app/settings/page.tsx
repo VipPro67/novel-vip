@@ -97,7 +97,6 @@ function SettingsContent() {
                   <CardDescription>Customize the look and feel</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Appearance settings will be implemented here.</p>
                 </CardContent>
               </Card>
             </TabsContent>

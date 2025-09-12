@@ -66,6 +66,7 @@ public class AuthService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = jwtUtils.generateJwtToken(authentication);
+                logger.info("jwt",jwt);
             String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
 
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();

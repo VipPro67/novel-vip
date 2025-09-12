@@ -23,7 +23,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, UUID> {
     @Query("SELECT f FROM Favorite f WHERE f.user.id = ?1 AND f.novel.id = ?2")
     Optional<Favorite> findByUserIdAndNovelId(UUID userId, UUID novelId);
 
-    @Query("SELECT COUNT(f) FROM Favorite f WHERE f.user.id = ?1 AND f.novel.id = ?2")
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM Favorite f WHERE f.user.id = ?1 AND f.novel.id = ?2")
     boolean existsByUserIdAndNovelId(UUID userId, UUID novelId);
 
     @Query("SELECT COUNT(f) FROM Favorite f WHERE f.novel.id = ?1")

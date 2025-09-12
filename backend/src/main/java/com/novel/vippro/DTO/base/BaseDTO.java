@@ -1,7 +1,11 @@
 package com.novel.vippro.DTO.base;
 
+import java.time.Instant;
 import java.util.UUID;
 
+import lombok.Data;
+
+@Data
 public class BaseDTO {
     private UUID id;
     private Boolean isActive;
@@ -9,6 +13,6 @@ public class BaseDTO {
     private Long version;
     private UUID createdBy;
     private UUID updatedBy;
-    private String createdAt;
-    private String updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

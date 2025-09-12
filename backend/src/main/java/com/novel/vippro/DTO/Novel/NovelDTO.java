@@ -11,10 +11,6 @@ import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.base.BaseDTO;
 
-<<<<<<< Updated upstream
-import java.time.Instant;
-=======
->>>>>>> Stashed changes
 import java.util.Set;
 
 @Data
@@ -31,11 +27,4 @@ public class NovelDTO extends BaseDTO {
     private Integer totalChapters;
     private Integer views;
     private Integer rating;
-<<<<<<< Updated upstream
-    @JsonProperty("updatedAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant updatedAt;
-=======
->>>>>>> Stashed changes
 }

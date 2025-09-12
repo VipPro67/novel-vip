@@ -118,7 +118,8 @@ public class CommentService {
                 notificationService.createNotification(notificationDTO);
             }
         }
-
+        logger.info(comment.toString()
+        );
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
         return dto;

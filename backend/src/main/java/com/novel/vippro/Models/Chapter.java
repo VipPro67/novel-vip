@@ -1,25 +1,27 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-<<<<<<< Updated upstream
-import java.time.Instant;
-=======
->>>>>>> Stashed changes
 import java.util.List;
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "chapters", uniqueConstraints = @UniqueConstraint(columnNames = { "chapterNumber",
-        "novel_id" }), indexes = {
-                @Index(name = "idx_novel_id_chapter_number", columnList = "novel_id,chapterNumber"),
-                @Index(name = "idx_novel_id", columnList = "novel_id")
-        })
-@Data
+        "novel_id" }))
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Chapter extends BaseEntity {
 
@@ -48,19 +50,4 @@ public class Chapter extends BaseEntity {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
     private FileMetadata audioFile;
-
-<<<<<<< Updated upstream
-    @CreationTimestamp
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    private Instant updatedAt;
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = Instant.now();
-    }
-
-=======
->>>>>>> Stashed changes
 }

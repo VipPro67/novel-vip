@@ -3,12 +3,16 @@ package com.novel.vippro.Models;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "tags")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Tag extends BaseEntity {

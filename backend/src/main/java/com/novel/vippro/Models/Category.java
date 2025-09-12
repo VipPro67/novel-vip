@@ -5,16 +5,21 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "categories", indexes = {
         @Index(name = "idx_category_name", columnList = "name")
 })
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Category extends BaseEntity {
 
