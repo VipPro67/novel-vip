@@ -752,11 +752,21 @@ export default function NovelDetailPage() {
 								</div>
 
 								<div className="flex flex-wrap gap-2 mb-4">
-									{novel.categories.map((category) => (
+									{novel.categories?.map((category) => (
 										<Badge key={category.id} variant="outline">
 											{category.name}
 										</Badge>
 									))}
+                                    {novel.genres && novel.genres.map((genre) => (
+                                        <Badge key={genre.id} variant="outline">
+                                            {genre.name}
+                                        </Badge>
+                                    ))}
+                                    {novel.tags && novel.tags.map((tag) => (
+                                        <Badge key={tag.id} variant="outline">
+                                            {tag.name}
+                                        </Badge>
+                                    ))}
 								</div>
 							</div>
 

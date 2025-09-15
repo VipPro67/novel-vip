@@ -197,7 +197,7 @@ public class NovelService {
         novel.setSlug(novelDTO.getSlug());
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
-
+        novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
         // Set cover image if provided
         if (novelDTO.getCoverImage() != null) {
             try {
@@ -208,6 +208,7 @@ public class NovelService {
                 throw new RuntimeException("Failed to upload cover image", e);
             }
         }
+        
         novel.setStatus(novelDTO.getStatus());
 
         // Set default values

@@ -37,9 +37,12 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 	const [novel, setNovel] = useState<Novel | null>(null)
 	const [coverImage, setCoverImage] = useState<File | null>(null)
 	const [coverPreview, setCoverPreview] = useState<string>("")
-	const [newCategory, setNewCategory] = useState("")
-	const [newGenre, setNewGenre] = useState("")
-	const [newTag, setNewTag] = useState("")
+    const [newCategory, setNewCategory] = useState("")
+    const [newGenre, setNewGenre] = useState("")
+    const [newTag, setNewTag] = useState("")
+    const [categoryOptions, setCategoryOptions] = useState<string[]>([])
+    const [genreOptions, setGenreOptions] = useState<string[]>([])
+    const [tagOptions, setTagOptions] = useState<string[]>([])
 
 	const [formData, setFormData] = useState<NovelFormData>({
 		title: "",
@@ -52,9 +55,32 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 		tags: [],
 	})
 
-	useEffect(() => {
-		fetchNovel()
-	}, [params.id])
+    useEffect(() => {
+        fetchNovel()
+    }, [params.id])
+
+    // Load selectable options for categories, genres, and tags
+    useEffect(() => {
+        const fetchNames = async (path: string): Promise<string[]> => {
+            try {
+                const res = await api.request(path, { method: "GET" })
+                const list = Array.isArray(res?.data) ? res.data : []
+                return list.map((x: any) => x?.name).filter(Boolean)
+            } catch {
+                return []
+            }
+        }
+        ;(async () => {
+            const [genres, categories, tags] = await Promise.all([
+                fetchNames("/api/novels/genres"),
+                fetchNames("/api/novels/categories"),
+                fetchNames("/api/novels/tags"),
+            ])
+            setGenreOptions(genres)
+            setCategoryOptions(categories)
+            setTagOptions(tags)
+        })()
+    }, [])
 
 	const fetchNovel = async () => {
 		try {
@@ -62,19 +88,19 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 			if (response.success) {
 				const novelData = response.data
 				setNovel(novelData)
-				setFormData({
-					title: novelData.title,
-					slug: novelData.title
-						.toLowerCase()
-						.replace(/[^a-z0-9\s-]/g, "")
-						.replace(/\s+/g, "-"),
-					description: novelData.description,
-					author: novelData.author,
-					status: novelData.status,
-					categories: novelData.categories?.map((c) => c.name) || [],
-					genres: [],
-					tags: [],
-				})
+                setFormData({
+                    title: novelData.title,
+                    slug: novelData.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, "")
+                        .replace(/\s+/g, "-"),
+                    description: novelData.description,
+                    author: novelData.author,
+                    status: novelData.status,
+                    categories: novelData.categories?.map((c) => c.name) || [],
+                    genres: novelData.genres?.map((g) => g.name) || [],
+                    tags: novelData.tags?.map((t) => t.name) || [],
+                })
 				if (novelData.coverImage?.fileUrl) {
 					setCoverPreview(novelData.coverImage.fileUrl)
 				}
@@ -331,30 +357,25 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 											{/* Categories */}
 											<div className="space-y-2">
 												<Label>Categories</Label>
-												<div className="flex gap-2">
-													<Input
-														value={newCategory}
-														onChange={(e) => setNewCategory(e.target.value)}
-														placeholder="Add category"
-														onKeyPress={(e) => {
-															if (e.key === "Enter") {
-																e.preventDefault()
-																addToArray("categories", newCategory)
-																setNewCategory("")
-															}
-														}}
-													/>
-													<Button
-														type="button"
-														onClick={() => {
-															addToArray("categories", newCategory)
-															setNewCategory("")
-														}}
-														size="sm"
-													>
-														<Plus className="h-4 w-4" />
-													</Button>
-												</div>
+                                        <div>
+                                            <select
+                                                multiple
+                                                className="w-full border rounded-md p-2 min-h-[120px] bg-background"
+                                                value={formData.categories}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        categories: Array.from(e.currentTarget.selectedOptions, (o) => o.value),
+                                                    }))
+                                                }
+                                            >
+                                                {categoryOptions.map((name) => (
+                                                    <option key={name} value={name}>
+                                                        {name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 												<div className="flex flex-wrap gap-2">
 													{formData.categories.map((category) => (
 														<div
@@ -377,30 +398,25 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 											{/* Genres */}
 											<div className="space-y-2">
 												<Label>Genres</Label>
-												<div className="flex gap-2">
-													<Input
-														value={newGenre}
-														onChange={(e) => setNewGenre(e.target.value)}
-														placeholder="Add genre"
-														onKeyPress={(e) => {
-															if (e.key === "Enter") {
-																e.preventDefault()
-																addToArray("genres", newGenre)
-																setNewGenre("")
-															}
-														}}
-													/>
-													<Button
-														type="button"
-														onClick={() => {
-															addToArray("genres", newGenre)
-															setNewGenre("")
-														}}
-														size="sm"
-													>
-														<Plus className="h-4 w-4" />
-													</Button>
-												</div>
+                                        <div>
+                                            <select
+                                                multiple
+                                                className="w-full border rounded-md p-2 min-h-[120px] bg-background"
+                                                value={formData.genres}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        genres: Array.from(e.currentTarget.selectedOptions, (o) => o.value),
+                                                    }))
+                                                }
+                                            >
+                                                {genreOptions.map((name) => (
+                                                    <option key={name} value={name}>
+                                                        {name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 												<div className="flex flex-wrap gap-2">
 													{formData.genres.map((genre) => (
 														<div
@@ -424,28 +440,23 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 											<div className="space-y-2">
 												<Label>Tags</Label>
 												<div className="flex gap-2">
-													<Input
-														value={newTag}
-														onChange={(e) => setNewTag(e.target.value)}
-														placeholder="Add tag"
-														onKeyPress={(e) => {
-															if (e.key === "Enter") {
-																e.preventDefault()
-																addToArray("tags", newTag)
-																setNewTag("")
-															}
-														}}
-													/>
-													<Button
-														type="button"
-														onClick={() => {
-															addToArray("tags", newTag)
-															setNewTag("")
-														}}
-														size="sm"
-													>
-														<Plus className="h-4 w-4" />
-													</Button>
+                                            <select
+                                                multiple
+                                                className="w-full border rounded-md p-2 min-h-[120px] bg-background"
+                                                value={formData.tags}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        tags: Array.from(e.currentTarget.selectedOptions, (o) => o.value),
+                                                    }))
+                                                }
+                                            >
+                                                {tagOptions.map((name) => (
+                                                    <option key={name} value={name}>
+                                                        {name}
+                                                    </option>
+                                                ))}
+                                            </select>
 												</div>
 												<div className="flex flex-wrap gap-2">
 													{formData.tags.map((tag) => (

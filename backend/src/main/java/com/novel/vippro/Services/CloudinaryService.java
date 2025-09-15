@@ -81,4 +81,15 @@ public class CloudinaryService {
             throw new IllegalArgumentException("Unsupported content type: " + contentType);
         }
     }
+
+private String getSignedUrl(String publicId, String resourceType, int expirationInSeconds) {
+    long expiresAt = (System.currentTimeMillis() / 1000L) + expirationInSeconds;
+
+    return cloudinary.url()
+            .resourceType(resourceType)  
+            .signed(true)
+            .expiresAt(expiresAt)        
+            .generate(publicId);
+}
+
 }
