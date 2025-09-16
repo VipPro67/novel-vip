@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class FileService {
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private FileStorageService fileStorageService;
 
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
@@ -38,7 +38,7 @@ public class FileService {
     public FileMetadata uploadFile(MultipartFile file, String type) {
         try {
             String publicId = UUID.randomUUID().toString();
-            String fileUrl = cloudinaryService.uploadFile(file.getBytes(), publicId, file.getContentType());
+            String fileUrl = fileStorageService.uploadFile(file.getBytes(), publicId, file.getContentType());
 
             FileMetadata metadata = new FileMetadata();
             metadata.setFileName(file.getOriginalFilename());
@@ -66,7 +66,7 @@ public class FileService {
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));
 
         try {
-            byte[] fileContent = cloudinaryService.downloadFile(metadata.getPublicId());
+            byte[] fileContent = fileStorageService.downloadFile(metadata.getPublicId());
 
             FileDownloadDTO downloadDTO = new FileDownloadDTO();
             downloadDTO.setFileName(metadata.getFileName());
@@ -85,7 +85,7 @@ public class FileService {
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));
 
         try {
-            cloudinaryService.deleteFile(metadata.getPublicId());
+            fileStorageService.deleteFile(metadata.getPublicId());
             fileMetadataRepository.delete(metadata);
         } catch (IOException e) {
             throw new RuntimeException("Failed to delete file", e);

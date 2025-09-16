@@ -405,4 +405,12 @@ public class NovelService {
         return mapper.NoveltoDTO(updatedNovel);
     }
 
+    @Cacheable(value = "novels", key = "'slug-' + #slug")
+    @Transactional(readOnly = true)
+    public NovelDTO getNovelBySlug(String slug) {
+        Novel novel = novelRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "slug", slug));
+        return mapper.NoveltoDTO(novel);
+    }
+
 }

@@ -38,7 +38,7 @@ public class ChapterService {
     private NovelRepository novelRepository;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private FileStorageService fileStorageService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -208,7 +208,7 @@ public class ChapterService {
 
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
+            jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }
@@ -271,7 +271,7 @@ public class ChapterService {
 
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
+            jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }
@@ -345,4 +345,27 @@ public class ChapterService {
         return dto;
     }
 
+    public FileMetadata getChapterAudioMetadata(UUID id) {
+        Chapter chapter = getChapterById(id);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
+        FileMetadata audioFile = chapter.getAudioFile();
+        if (audioFile == null) {
+            throw new ResourceNotFoundException("Chapter audio file", "chapterId", id);
+        }
+        return audioFile;
+    }
+
+    public FileMetadata getChapterJsonMetadata(UUID id) {
+        Chapter chapter = getChapterById(id);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
+        FileMetadata jsonFile = chapter.getJsonFile();
+        if (jsonFile == null) {
+            throw new ResourceNotFoundException("Chapter json file", "chapterId", id);
+        }
+        return jsonFile;
+    }
 }

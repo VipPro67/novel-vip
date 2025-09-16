@@ -18,6 +18,7 @@ public class NovelDTO extends BaseDTO {
     private String title;
     private String description;
     private String author;
+    private String slug;
     @JsonProperty("coverImage")
     private FileMetadataDTO coverImage;
     private Set<CategoryDTO> categories;

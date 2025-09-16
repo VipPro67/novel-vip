@@ -4,7 +4,6 @@ import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.DTO.Chapter.UploadChapterResult;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
-import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -17,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -152,8 +152,7 @@ public class ChapterController {
     @GetMapping("/{id}/json-metadata")
     public ControllerResponse<FileMetadata> getChapterJsonMetadata(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
-        Chapter chapter = chapterService.getChapterById(id);
-        return ControllerResponse.success("JSON file metadata retrieved successfully", chapter.getJsonFile());
+            return ControllerResponse.success(chapterService.getChapterJsonMetadata(id));
     }
 
     @Operation(summary = "Get chapter audio file metadata", description = "Retrieve metadata for the audio file of a specific chapter")
@@ -164,8 +163,7 @@ public class ChapterController {
     @GetMapping("/{id}/audio-metadata")
     public ControllerResponse<FileMetadata> getChapterAudioMetadata(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
-        Chapter chapter = chapterService.getChapterById(id);
-        return ControllerResponse.success("Audio file metadata retrieved successfully", chapter.getAudioFile());
+            return ControllerResponse.success(chapterService.getChapterAudioMetadata(id));
     }
 
     @Operation(summary = "Upload a single chapter .txt", description = "Filename must start with the chapter number, e.g. 1.txt. First line is the title; remainder is the content.")

@@ -84,6 +84,13 @@ public class NovelController {
         return ControllerResponse.success("Novel retrieved successfully", novel);
     }
 
+    @GetMapping("/slug/{slug}")
+    public ControllerResponse<NovelDTO> getNovelBySlug(
+            @Parameter(description = "Novel slug") @PathVariable String slug) {
+        NovelDTO novel = novelService.getNovelBySlug(slug);
+        return ControllerResponse.success("Novel retrieved successfully", novel);
+    }
+
     @Operation(summary = "Get novels by genre", description = "Retrieves novels filtered by genre")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved novels"),

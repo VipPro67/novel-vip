@@ -7,18 +7,21 @@ import com.cloudinary.utils.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Map;
 
 @Service
-public class CloudinaryService {
+@Primary
+public class CloudinaryService implements FileStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudinaryService.class);
     @Autowired
     private Cloudinary cloudinary;
 
+    @Override
     public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
         Map<String, String> resourceType = determineResourceType(contentType);
         logger.info("Uploading file with publicId: {}, resourceType: {}", publicId, resourceType);
@@ -30,6 +33,7 @@ public class CloudinaryService {
         return (String) result.get("url");
     }
 
+    @Override
     public byte[] downloadFile(String publicId) throws IOException {
         try {
             ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
@@ -49,6 +53,7 @@ public class CloudinaryService {
         }
     }
 
+    @Override
     public void deleteFile(String publicId) throws IOException {
         try {
             ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
@@ -81,15 +86,4 @@ public class CloudinaryService {
             throw new IllegalArgumentException("Unsupported content type: " + contentType);
         }
     }
-
-private String getSignedUrl(String publicId, String resourceType, int expirationInSeconds) {
-    long expiresAt = (System.currentTimeMillis() / 1000L) + expirationInSeconds;
-
-    return cloudinary.url()
-            .resourceType(resourceType)  
-            .signed(true)
-            .expiresAt(expiresAt)        
-            .generate(publicId);
-}
-
 }
