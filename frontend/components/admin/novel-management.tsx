@@ -300,7 +300,7 @@ export function NovelManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/novels/${novel.id}`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/novels/${novel.slug}`)}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>

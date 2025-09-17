@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 COPY pom.xml .
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn package -DskipTests
+    mvn package -DskipTests 
 
 # Stage 2: Create the runtime image
 FROM eclipse-temurin:17-jre-alpine

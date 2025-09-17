@@ -20,13 +20,14 @@ export interface User {
     username: string;
     email: string;
     fullName?: string;
-    roles: string[];
+    roles: {id: string; name: string}[];
 }
 
 export interface Novel {
     id: string;
     title: string;
     description: string;
+    slug: string;
     author: string;
     coverImage?: FileMetadata;
     status: string;
@@ -201,9 +202,9 @@ export interface RoleRequest {
     reason: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
     createdAt: string;
-    reviewedAt?: string;
-    reviewedBy?: string;
-    reviewerUsername?: string;
+    updatedAt: string;
+    processedBy?: string;
+    rejectReason?: string;
 }
 
 class ApiClient {
@@ -371,6 +372,10 @@ class ApiClient {
 
     async getNovelById(id: string) {
         return this.request<Novel>(`/api/novels/${id}`);
+    }
+
+    async getNovelBySlug(slug: string) {
+        return this.request<Novel>(`/api/novels/slug/${slug}`);
     }
 
     async createNovel(data: {

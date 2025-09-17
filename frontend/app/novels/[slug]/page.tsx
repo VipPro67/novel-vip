@@ -19,6 +19,7 @@ import {
 	ChevronUp,
 	Send,
 	Loader2,
+	Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,6 +44,7 @@ import { Header } from "@/components/layout/header"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api, type Novel, type Chapter, type Comment } from "@/lib/api"
+import { formatRelativeTime } from "@/lib/utils"
 
 interface CommentWithReplies extends Comment {
 	replies: CommentWithReplies[]
@@ -51,6 +53,7 @@ interface CommentWithReplies extends Comment {
 
 export default function NovelDetailPage() {
 	const params = useParams()
+	const slug = params.slug as string | undefined
 	const router = useRouter()
 	const { isAuthenticated, user } = useAuth()
 	const { toast } = useToast()
@@ -78,30 +81,34 @@ export default function NovelDetailPage() {
 	const [submittingReply, setSubmittingReply] = useState(false)
 
 	useEffect(() => {
-		if (params.id) {
-			fetchNovelData()
+		if (slug) {
+			fetchNovelData(slug)
 		}
-	}, [params.id])
+	}, [slug])
 
-	const fetchNovelData = async () => {
+	const fetchNovelData = async (novelSlug: string) => {
 		setLoading(true)
 		try {
-			const [novelResponse, chaptersResponse] = await Promise.all([
-				api.getNovelById(params.id as string),
-				api.getChaptersByNovel(params.id as string, { size: 50 }),
-			])
+			const novelResponse = await api.getNovelBySlug(novelSlug)
 
-			if (novelResponse.success) {
-				setNovel(novelResponse.data)
+			if (!novelResponse.success) {
+				throw new Error(novelResponse.message || "Failed to load novel")
 			}
+
+			const novelData = novelResponse.data
+			setNovel(novelData)
+
+			const chaptersResponse = await api.getChaptersByNovel(novelData.id, { size: 50 })
 			if (chaptersResponse.success) {
 				setChapters(chaptersResponse.data.content)
+			} else {
+				setChapters([])
 			}
 
 			if (isAuthenticated) {
 				// Check favorite status
 				try {
-					const favoriteResponse = await api.checkFavoriteStatus(params.id as string)
+					const favoriteResponse = await api.checkFavoriteStatus(novelData.id)
 					if (favoriteResponse.success) {
 						setIsFavorite(favoriteResponse.data)
 					}
@@ -111,7 +118,7 @@ export default function NovelDetailPage() {
 
 				// Get user rating
 				try {
-					const ratingResponse = await api.getUserRating(params.id as string)
+					const ratingResponse = await api.getUserRating(novelData.id)
 					if (ratingResponse.success) {
 						setUserRating(ratingResponse.data.score)
 					}
@@ -204,13 +211,17 @@ export default function NovelDetailPage() {
 			return
 		}
 
+		if (!novel) {
+			return
+		}
+
 		try {
 			if (isFavorite) {
-				await api.removeFromFavorites(params.id as string)
+				await api.removeFromFavorites(novel.id)
 				setIsFavorite(false)
 				toast({ title: "Removed from favorites" })
 			} else {
-				await api.addToFavorites(params.id as string)
+				await api.addToFavorites(novel.id)
 				setIsFavorite(true)
 				toast({ title: "Added to favorites" })
 			}
@@ -229,8 +240,12 @@ export default function NovelDetailPage() {
 			return
 		}
 
+		if (!novel) {
+			return
+		}
+
 		try {
-			await api.rateNovel(params.id as string, rating)
+			await api.rateNovel(novel.id, rating)
 			setUserRating(rating)
 			toast({ title: "Rating submitted" })
 		} catch (error) {
@@ -435,7 +450,11 @@ export default function NovelDetailPage() {
 
 	const startReading = () => {
 		if (chapters.length > 0) {
-			router.push(`/novels/${novel?.id}/chapters/${chapters[0].chapterNumber}`)
+			const targetSlug = novel?.slug ?? slug
+			if (!targetSlug) {
+				return
+			}
+			router.push(`/novels/${targetSlug}/chapters/${chapters[0].chapterNumber}`)
 		}
 	}
 
@@ -443,14 +462,9 @@ export default function NovelDetailPage() {
 		return user && comment.userId === user.id
 	}
 
-	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-		})
+	const formatRelativeDate = (dateString: string) => {
+		const value = formatRelativeTime(dateString)
+		return value || "just now"
 	}
 
 	const renderComment = (comment: CommentWithReplies, depth = 0) => {
@@ -475,7 +489,7 @@ export default function NovelDetailPage() {
 							</div>
 						</div>
 						<div className="flex items-center space-x-2">
-							<span className="text-xs text-muted-foreground">{formatDate(comment.updatedAt)}</span>
+							<span className="text-xs text-muted-foreground">{formatRelativeDate(comment.updatedAt)}</span>
 							{isCommentOwner(comment) && (
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
@@ -744,11 +758,15 @@ export default function NovelDetailPage() {
 										<Eye className="h-4 w-4" />
 										<span>{novel.views.toLocaleString()} views</span>
 									</div>
-									<div className="flex items-center space-x-1">
-										<BookOpen className="h-4 w-4" />
-										<span>{novel.totalChapters} chapters</span>
-									</div>
-									<Badge variant="secondary">{novel.status}</Badge>
+								<div className="flex items-center space-x-1">
+									<BookOpen className="h-4 w-4" />
+									<span>{novel.totalChapters} chapters</span>
+								</div>
+								<div className="flex items-center space-x-1">
+									<Clock className="h-4 w-4" />
+									<span>Updated {formatRelativeDate(novel.updatedAt)}</span>
+								</div>
+								<Badge variant="secondary">{novel.status}</Badge>
 								</div>
 
 								<div className="flex flex-wrap gap-2 mb-4">
@@ -799,16 +817,16 @@ export default function NovelDetailPage() {
 												{chapters.map((chapter) => (
 													<Link
 														key={chapter.id}
-														href={`/novels/${novel.id}/chapters/${chapter.chapterNumber}`}
+														href={`/novels/${novel.slug}/chapters/${chapter.chapterNumber}`}
 														className="block p-3 rounded-lg border hover:bg-muted transition-colors"
 													>
 														<div className="flex justify-between items-center">
 															<div>
 																<p className="font-medium">
-																	Chapter {chapter.chapterNumber}: {chapter.title}
+																	{chapter.title}
 																</p>
 																<p className="text-sm text-muted-foreground">
-																	{new Date(chapter.updatedAt).toLocaleDateString()}
+																	Updated {formatRelativeDate(chapter.updatedAt)}
 																</p>
 															</div>
 														</div>

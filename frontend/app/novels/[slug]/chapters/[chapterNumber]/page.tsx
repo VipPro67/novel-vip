@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { api, type ChapterDetail, type Comment } from "@/lib/api"
+import { formatRelativeTime } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -41,8 +42,10 @@ export default function ChapterPage() {
   const router = useRouter()
   const { toast } = useToast()
 
-  const novelId = params.id as string
+  const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
+
+  const [novelId, setNovelId] = useState<string | null>(null)
 
   const [chapter, setChapter] = useState<ChapterDetail | null>(null)
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
@@ -76,6 +79,49 @@ export default function ChapterPage() {
   }
 
   useEffect(() => {
+    const resolveNovelId = async () => {
+      resetCommentState()
+      setChapter(null)
+      setChapterContent(null)
+      if (!slug) {
+        setNovelId(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        const response = await api.getNovelBySlug(slug)
+        if (response.success) {
+          setNovelId(response.data.id)
+        } else {
+          setNovelId(null)
+          setLoading(false)
+          toast({
+            title: "Error",
+            description: "Failed to load novel information",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to resolve novel by slug:", error)
+        setNovelId(null)
+        setLoading(false)
+        toast({
+          title: "Error",
+          description: "Failed to load novel information",
+          variant: "destructive",
+        })
+      }
+    }
+
+    resolveNovelId()
+  }, [slug])
+
+  useEffect(() => {
+    if (!novelId) {
+      return
+    }
     resetCommentState()
     fetchChapter()
   }, [novelId, chapterNumber])
@@ -84,6 +130,11 @@ export default function ChapterPage() {
     setLoading(true)
     setContentLoading(true)
     try {
+      if (!novelId) {
+        setLoading(false)
+        return
+      }
+
       const response = await api.getChapterByNumber(novelId, chapterNumber)
       if (response.success) {
         setChapter(response.data)
@@ -425,14 +476,9 @@ export default function ChapterPage() {
     setComments(updateComments(comments))
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+  const formatRelativeDate = (dateString: string) => {
+    const value = formatRelativeTime(dateString)
+    return value || "just now"
   }
 
   const renderComment = (comment: CommentWithReplies, depth = 0) => {
@@ -457,7 +503,7 @@ export default function ChapterPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-muted-foreground">{formatDate(comment.updatedAt)}</span>
+              <span className="text-xs text-muted-foreground">{formatRelativeDate(comment.updatedAt)}</span>
               {/* Assume all users can edit/delete for demo, add owner check if needed */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -610,8 +656,8 @@ export default function ChapterPage() {
 
   const navigateChapter = (direction: "prev" | "next") => {
     const newChapterNumber = direction === "prev" ? chapterNumber - 1 : chapterNumber + 1
-    if (newChapterNumber > 0) {
-      router.push(`/novels/${novelId}/chapters/${newChapterNumber}`)
+    if (newChapterNumber > 0 && slug) {
+      router.push(`/novels/${slug}/chapters/${newChapterNumber}`)
     }
   }
 
@@ -669,7 +715,6 @@ export default function ChapterPage() {
               </Button>
               <div>
                 <h1 className="font-semibold text-lg truncate max-w-md">{chapter.title}</h1>
-                <p className="text-sm text-muted-foreground">Chapter {chapter.chapterNumber}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
