@@ -1,7 +1,7 @@
 package com.novel.vippro.DTO.File;
 
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -13,8 +13,8 @@ public class FileMetadataDTO {
     private String contentType;
     private String publicId;
     private String fileUrl;
-    private LocalDateTime uploadedAt = LocalDateTime.now();
-    private LocalDateTime lastModifiedAt = LocalDateTime.now();
+    private Instant uploadedAt = Instant.now();
+    private Instant lastModifiedAt = Instant.now();
     private String fileName;
     private String type;
     private long size;

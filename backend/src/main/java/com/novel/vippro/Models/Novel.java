@@ -1,28 +1,28 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.*;
 
 import org.hibernate.annotations.BatchSize;
-
-import java.time.LocalDateTime;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
-@Table(name = "novels", indexes = {
-		@Index(name = "idx_novel_title", columnList = "title"),
-		@Index(name = "idx_novel_slug", columnList = "slug")
-})
-@Data
+@Table(name = "novels")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Novel {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+public class Novel extends BaseEntity {
 
 	@Column(nullable = false)
 	private String title;
@@ -85,44 +85,4 @@ public class Novel {
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-comments")
 	private List<Comment> comments;
-
-	@Column(nullable = false)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime createdAt;
-
-	@Column(nullable = false)
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime updatedAt;
-
-	public void addCategory(Category category) {
-		if (this.categories == null) {
-			this.categories = new HashSet<>();
-		}
-		this.categories.add(category);
-		// Don't call category.addNovel(this) to avoid infinite recursion
-	}
-
-	public void removeCategory(Category category) {
-		if (this.categories != null) {
-			this.categories.remove(category);
-		}
-		// Don't call category.removeNovel(this) to avoid infinite recursion
-	}
-
-	public void setCategories(List<Category> categories) {
-		if (this.categories == null) {
-			this.categories = new HashSet<>();
-		} else {
-			this.categories.clear();
-		}
-		if (categories != null) {
-			this.categories.addAll(categories);
-		}
-	}
-
-    public void setCategories(Object categories2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setCategories'");
-    }
-
 }

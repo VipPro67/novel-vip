@@ -1,22 +1,24 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
-@Table(name = "notifications", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_title", columnList = "title")
-})
-@Data
-public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Table(name = "notifications")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
+public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,18 +33,10 @@ public class Notification {
     @Column(nullable = false)
     private boolean read = false;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
     @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType type;
 
     @Column
     private UUID referenceId; 
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

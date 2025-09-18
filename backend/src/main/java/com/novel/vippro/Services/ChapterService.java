@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -38,7 +38,7 @@ public class ChapterService {
     private NovelRepository novelRepository;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private FileStorageService fileStorageService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -109,7 +109,7 @@ public class ChapterService {
         // Update total chapters and updated at
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() - 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
     }
@@ -208,7 +208,7 @@ public class ChapterService {
 
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
+            jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }
@@ -220,13 +220,13 @@ public class ChapterService {
         jsonFile.setPublicId(publicId);
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
-        jsonFile.setUploadedAt(LocalDateTime.now());
+        jsonFile.setCreatedAt(Instant.now());
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() + 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
 
@@ -271,7 +271,7 @@ public class ChapterService {
 
         String jsonUrl;
         try {
-            jsonUrl = cloudinaryService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
+            jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
         } catch (IOException e) {
             throw new RuntimeException("Error uploading chapter content to Cloudinary: " + e.getMessage(), e);
         }
@@ -289,13 +289,13 @@ public class ChapterService {
         jsonFile.setSize(jsonContent.length());
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
-        jsonFile.setLastModifiedAt(LocalDateTime.now());
+        jsonFile.setUpdatedAt(Instant.now());
         fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() + 1);
-            novel.setUpdatedAt(LocalDateTime.now());
+            novel.setUpdatedAt(Instant.now());
             novelRepository.save(novel);
         });
         return chapterRepository.save(chapter);
@@ -335,7 +335,7 @@ public class ChapterService {
         audioFile.setFileName(chapter.getTitle());
         audioFile.setType("audio");
         audioFile.setSize(0);
-        audioFile.setUploadedAt(LocalDateTime.now());
+        audioFile.setUpdatedAt(Instant.now());
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
 
@@ -345,4 +345,27 @@ public class ChapterService {
         return dto;
     }
 
+    public FileMetadata getChapterAudioMetadata(UUID id) {
+        Chapter chapter = getChapterById(id);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
+        FileMetadata audioFile = chapter.getAudioFile();
+        if (audioFile == null) {
+            throw new ResourceNotFoundException("Chapter audio file", "chapterId", id);
+        }
+        return audioFile;
+    }
+
+    public FileMetadata getChapterJsonMetadata(UUID id) {
+        Chapter chapter = getChapterById(id);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "id", id);
+        }
+        FileMetadata jsonFile = chapter.getJsonFile();
+        if (jsonFile == null) {
+            throw new ResourceNotFoundException("Chapter json file", "chapterId", id);
+        }
+        return jsonFile;
+    }
 }

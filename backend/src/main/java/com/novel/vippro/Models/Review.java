@@ -1,25 +1,22 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
-@Table(name = "reviews", indexes = {
-        @Index(name = "idx_novel_id", columnList = "novel_id"),
-        @Index(name = "idx_user_id", columnList = "user_id")
-})
-@Data
+@Table(name = "reviews")
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
-public class Review {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+
+public class Review extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
@@ -49,10 +46,4 @@ public class Review {
 
     @Column(name = "is_edited")
     private boolean isEdited = false;
-
-    @CreationTimestamp
-     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

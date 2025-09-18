@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/novels")
 @Tag(name = "Novels categories, genres, tags", description = "Novel management APIs")
 public class NovelManagementController {
@@ -28,6 +29,13 @@ public class NovelManagementController {
 
     @Autowired
     private GenreService genreService;
+
+    @GetMapping("/categories")
+    @Operation(summary = "Get all categories", description = "Retrieve a list of all categories")
+    public ControllerResponse<Iterable<CategoryDTO>> getAllCategories() {
+        Iterable<CategoryDTO> categories = categoryService.getAllCategories();
+        return ControllerResponse.success("Categories retrieved successfully", categories);
+    }
 
     @PostMapping("/categories")
     @Operation(summary = "Create category", description = "Create a new category")
@@ -50,6 +58,13 @@ public class NovelManagementController {
         return ControllerResponse.success("Category deleted successfully", null);
     }
 
+    @GetMapping("/tags")
+    @Operation(summary = "Get all tags", description = "Retrieve a list of all tags")
+    public ControllerResponse<Iterable<TagDTO>> getAllTags() {
+        Iterable<TagDTO> tags = tagService.getAllTags();
+        return ControllerResponse.success("Tags retrieved successfully", tags);
+    }
+
     @PostMapping("/tags")
     @Operation(summary = "Create tag", description = "Create a new tag")
     public ControllerResponse<TagDTO> createTag(@RequestBody TagDTO tagDTO) {
@@ -69,6 +84,13 @@ public class NovelManagementController {
     public ControllerResponse<Void> deleteTag(@PathVariable UUID id) {
         tagService.deleteTag(id);
         return ControllerResponse.success("Tag deleted successfully", null);
+    }
+
+    @GetMapping("/genres")
+    @Operation(summary = "Get all genres", description = "Retrieve a list of all genres")
+    public ControllerResponse<Iterable<GenreDTO>> getAllGenres() {
+        Iterable<GenreDTO> genres = genreService.getAllGenres();
+        return ControllerResponse.success("Genres retrieved successfully", genres);
     }
 
     @PostMapping("/genres")

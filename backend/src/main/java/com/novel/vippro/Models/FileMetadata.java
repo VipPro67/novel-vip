@@ -1,28 +1,28 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @Entity
 @Table(name = "file_metadata")
-public class FileMetadata {
-    @Id
-    @GeneratedValue(generator = "UUID")
-    private UUID id;
+public class FileMetadata extends BaseEntity {
     private String contentType;
     private String publicId;
     private String fileUrl;
-    private LocalDateTime uploadedAt = LocalDateTime.now();
-    private LocalDateTime lastModifiedAt = LocalDateTime.now();
     private String fileName;
     private String type;
     private long size;

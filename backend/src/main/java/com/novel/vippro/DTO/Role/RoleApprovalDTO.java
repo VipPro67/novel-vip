@@ -1,6 +1,6 @@
 package com.novel.vippro.DTO.Role;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import lombok.Data;
@@ -16,8 +16,8 @@ public class RoleApprovalDTO {
     private String username;
     private String requestedRole;
     private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     private String processedBy;
     private String rejectionReason;
 }

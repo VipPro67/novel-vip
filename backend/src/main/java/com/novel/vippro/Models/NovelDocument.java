@@ -5,6 +5,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import com.novel.vippro.DTO.File.FileMetadataDTO;
+
 import lombok.Data;
 
 import java.time.Instant;
@@ -23,6 +25,9 @@ public class NovelDocument {
 
     @Field(type = FieldType.Text)
     private String description;
+
+    @Field(type = FieldType.Text)
+    private String slug;
 
     @Field(type = FieldType.Keyword)
     private String author;
@@ -50,6 +55,9 @@ public class NovelDocument {
 
     @Field(type = FieldType.Integer)
     private Integer rating;
+
+    @Field(type = FieldType.Object)
+    private FileMetadataDTO coverImage;
 
     @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     private Instant createdAt;

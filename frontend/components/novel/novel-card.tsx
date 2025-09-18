@@ -12,7 +12,7 @@ interface NovelCardProps {
 export function NovelCard({ novel }: NovelCardProps) {
 	return (
 		<Card className="overflow-hidden hover:shadow-lg transition-shadow w-full">
-			<Link href={`/novels/${novel.id}`}>
+			<Link href={`/novels/${novel.slug}`}>
 				{/* Cover Image - Smaller on mobile */}
 				<div className="aspect-[3/4] sm:aspect-[2/3] md:aspect-[3/4] relative">
 					<Image

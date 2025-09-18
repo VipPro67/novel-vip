@@ -20,7 +20,7 @@ public class TextToSpeechService {
     private String googleCredentialsPath;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private FileStorageService fileStorageService;
 
     private static final Logger logger = LoggerFactory.getLogger(TextToSpeechService.class);
 
@@ -65,7 +65,7 @@ public class TextToSpeechService {
             String publicId = String.format("novels/%s/audios/chap-%d-audio", novelSlug, chapterNumber);
 
             // Upload the audio content to Cloudinary
-            return cloudinaryService.uploadFile(audioContents.toByteArray(), publicId, "audio/mpeg");
+            return fileStorageService.uploadFile(audioContents.toByteArray(), publicId, "audio/mpeg");
 
         } catch (IOException e) {
             e.printStackTrace();

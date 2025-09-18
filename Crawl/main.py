@@ -361,12 +361,11 @@ class NovelChapterCrawler:
 def main():
     base_url = "https://truyenfull.vision"
     db_config = {
-        'dbname': 'postgres',
-        'user': 'postgres.ijdorxaikoovmezfpdrz',
-        'password': 'qZPAgRYvQM5z4TR1',
-        'host': 'aws-0-ap-southeast-1.pooler.supabase.com',
-        'port': 5432,
-        'sslmode': 'require'
+        'dbname': 'novel_db',
+        'user': 'novel_user',
+        'password': 'novel_password',
+        'host': 'localhost',
+        'port': 5432
     }
     crawler = NovelChapterCrawler(base_url, db_config)
     retry_map = {}  # Track retry count per novel_id

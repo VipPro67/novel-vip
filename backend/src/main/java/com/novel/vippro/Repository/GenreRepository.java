@@ -6,11 +6,16 @@ import org.springframework.stereotype.Repository;
 
 import com.novel.vippro.Models.Genre;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface GenreRepository extends JpaRepository<Genre, UUID> {
+
+    @Query("SELECT g FROM Genre g order BY g.name ASC")
+    List<Genre> findAll();
+
     @Query("SELECT g FROM Genre g WHERE LOWER(g.name) = LOWER(:name)")
     Optional<Genre> findByNameIgnoreCase(String name);
 }

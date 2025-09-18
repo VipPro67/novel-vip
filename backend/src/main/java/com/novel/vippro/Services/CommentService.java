@@ -118,12 +118,10 @@ public class CommentService {
                 notificationService.createNotification(notificationDTO);
             }
         }
-
+        logger.info(comment.toString()
+        );
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, saved);
-
-        logger.info("Comment pushed to RabbitMQ: {}", saved);
         return dto;
     }
 

@@ -98,7 +98,7 @@ export function UserManagement() {
 
   const handleEditRoles = (user: User) => {
     setSelectedUser(user)
-    setUserRoles([...user.roles])
+    setUserRoles([...user.roles.map((role) => role.name)]) 
     setEditRolesDialog(true)
   }
 
@@ -245,8 +245,8 @@ export function UserManagement() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {user.roles.map((role) => (
-                            <Badge key={role} variant="secondary" className="text-xs">
-                              {role}
+                            <Badge key={role.id} variant="secondary" className="text-xs">
+                              {role.name}
                             </Badge>
                           ))}
                         </div>

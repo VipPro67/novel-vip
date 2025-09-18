@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSuggest, SuggestItem } from "@/hooks/use-suggest";
+import { api } from "@/lib/api";
 
 export default function SearchBar() {
 	const router = useRouter();
@@ -25,10 +26,21 @@ export default function SearchBar() {
 		router.push(`/search?q=${encodeURIComponent(q)}`);
 	}
 
-	function goToItem(it: SuggestItem) {
+	async function goToItem(it: SuggestItem) {
 		setOpen(false);
-		if (it.id) router.push(`/novels/${it.id}`);
-		else goToQuery(it.title);
+		if (it.id) {
+			try {
+				const response = await api.getNovelById(it.id);
+				if (response.success) {
+					router.push(`/novels/${response.data.slug}`);
+					return;
+				}
+			} catch (error) {
+				console.error("Failed to resolve novel from suggestion:", error);
+			}
+			return goToQuery(it.title);
+		}
+		goToQuery(it.title);
 	}
 
 	return (

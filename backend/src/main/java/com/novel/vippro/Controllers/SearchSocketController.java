@@ -16,6 +16,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import com.novel.vippro.DTO.Novel.NovelDTO;
+import com.novel.vippro.DTO.Novel.NovelSearchDTO;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.NovelService;
 
@@ -59,7 +60,9 @@ public class SearchSocketController {
 
         Future<?> task = executor.submit(() -> {
             Pageable pageable = PageRequest.of(0, 5); // limit suggestions
-            PageResponse<NovelDTO> page = novelService.searchNovels(query, pageable);
+            NovelSearchDTO searchDTO = new NovelSearchDTO();
+            searchDTO.setKeyword(query);
+            PageResponse<NovelDTO> page = novelService.searchNovels(searchDTO, pageable);
             messagingTemplate.convertAndSend("/topic/search", page.getContent());
         });
 

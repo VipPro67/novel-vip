@@ -25,7 +25,7 @@ export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
   const availableRoles = [
     { value: "AUTHOR", label: "Author", description: "Create and publish novels" },
     { value: "MODERATOR", label: "Moderator", description: "Moderate content and users" },
-    { value: "ADMIN", label: "Admin", description: "Full system administration" },
+    //{ value: "ADMIN", label: "Admin", description: "Full system administration" },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.novel.vippro.Events.ReadingProgressEvent;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -83,8 +84,7 @@ public class ReadingHistoryService {
             history.setReadingTime(history.getReadingTime() + readingTime);
         }
 
-        history.setLastReadAt(LocalDateTime.now());
-
+        history.setUpdatedAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         ReadingHistoryDTO dto = mapper.ReadingHistorytoDTO(savedHistory);
         eventPublisher.publishEvent(new ReadingProgressEvent(userId, dto));
@@ -127,7 +127,7 @@ public class ReadingHistoryService {
         history.setProgress(0); // Initial progress
 
         history.setReadingTime(0); // Initial reading time
-        history.setLastReadAt(LocalDateTime.now());
+        history.setUpdatedAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         return mapper.ReadingHistorytoDTO(savedHistory);
     }
@@ -176,11 +176,11 @@ public class ReadingHistoryService {
                 .getContent();
 
         long totalMinutes = 0;
-        LocalDateTime lastReadTime = null;
+        Instant lastReadTime = null;
 
         for (ReadingHistory entry : history) {
             if (lastReadTime == null) {
-                lastReadTime = entry.getLastReadAt();
+                lastReadTime = entry.getUpdatedAt();
                 stats.setLastReadAt(lastReadTime);
             }
             // Assume average reading time of 5 minutes per chapter if not specified
@@ -248,7 +248,7 @@ public class ReadingHistoryService {
                 .findFirst()
                 .ifPresent(history -> {
                     stats.setCurrentlyReading(history.getNovel().getTitle());
-                    stats.setLastReadAt(history.getLastReadAt());
+                    stats.setLastReadAt(history.getUpdatedAt());
                 });
 
         return stats;

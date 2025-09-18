@@ -1,18 +1,19 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -22,11 +23,11 @@ import lombok.Data;
 		@Index(name = "idx_username", columnList = "username"),
 		@Index(name = "idx_email", columnList = "email")
 })
-@Data
-public class User {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class User extends BaseEntity {
 
 	@NotBlank
 	@Size(max = 20)
@@ -53,15 +54,6 @@ public class User {
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Novel> ownedNovels = new HashSet<>();
-
-	@CreationTimestamp
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	private LocalDateTime updatedAt;
-
-	public User() {
-	}
 
 	public User(String username, String email, String password) {
 		this.username = username;

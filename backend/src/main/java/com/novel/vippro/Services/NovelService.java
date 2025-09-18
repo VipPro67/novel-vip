@@ -2,6 +2,7 @@ package com.novel.vippro.Services;
 
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
+import com.novel.vippro.DTO.Novel.NovelSearchDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Mapper.NovelMapper;
@@ -149,15 +150,37 @@ public class NovelService {
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
-    @Cacheable(value = "novels", key = "'search-' + #keyword + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
+    @Cacheable(value = "novels", key = "'search-' + (#searchDTO != null ? #searchDTO.cacheKey() : '') + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @Transactional(readOnly = true)
-    public PageResponse<NovelDTO> searchNovels(String keyword, Pageable pageable) {
-        logger.info("Searching novels with keyword: {}", keyword);
-        Page<Novel> novels = novelSearchService.search(keyword, pageable);
-        if (novels.isEmpty()) {
-            logger.info("No novels found for keyword: {}", keyword);
-            novels = novelRepository.searchByKeyword(keyword, pageable);
+    public PageResponse<NovelDTO> searchNovels(NovelSearchDTO searchDTO, Pageable pageable) {
+        NovelSearchDTO filters = searchDTO == null ? new NovelSearchDTO() : searchDTO.cleanedCopy();
+
+        if (!filters.hasFilters()) {
+            logger.info("Search requested without filters. Returning empty page.");
+            Page<Novel> emptyResult = Page.empty(pageable);
+            return new PageResponse<>(emptyResult.map(mapper::NoveltoDTO));
         }
+
+        logger.info("Searching novels with filters: {}", filters);
+        Page<Novel> novels = novelSearchService.search(filters, pageable);
+
+        if (novels.isEmpty()) {
+            logger.info("Elasticsearch search returned no results. Falling back to database query.");
+            novels = novelRepository.searchByCriteria(
+                    filters.getKeyword(),
+                    filters.getTitle(),
+                    filters.getAuthor(),
+                    filters.getCategory(),
+                    filters.getGenre(),
+                    filters.getTag(),
+                    pageable);
+
+            if (novels.isEmpty() && filters.getKeyword() != null) {
+                logger.info("No novels found using criteria. Falling back to keyword search for: {}", filters.getKeyword());
+                novels = novelRepository.searchByKeyword(filters.getKeyword(), pageable);
+            }
+        }
+
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
@@ -197,7 +220,7 @@ public class NovelService {
         novel.setSlug(novelDTO.getSlug());
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
-
+        novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
         // Set cover image if provided
         if (novelDTO.getCoverImage() != null) {
             try {
@@ -208,6 +231,7 @@ public class NovelService {
                 throw new RuntimeException("Failed to upload cover image", e);
             }
         }
+        
         novel.setStatus(novelDTO.getStatus());
 
         // Set default values
@@ -402,6 +426,14 @@ public class NovelService {
         novel.setRating(rating);
         Novel updatedNovel = novelRepository.save(novel);
         return mapper.NoveltoDTO(updatedNovel);
+    }
+
+    @Cacheable(value = "novels", key = "'slug-' + #slug")
+    @Transactional(readOnly = true)
+    public NovelDTO getNovelBySlug(String slug) {
+        Novel novel = novelRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "slug", slug));
+        return mapper.NoveltoDTO(novel);
     }
 
 }

@@ -1,18 +1,21 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+import com.novel.vippro.Models.base.BaseEntity;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @Entity
 @Table(name = "group_members")
-public class GroupMember {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class GroupMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,8 +30,4 @@ public class GroupMember {
 
     @Column
     private String displayName;
-
-    @Column
-    private LocalDateTime joinedAt = LocalDateTime.now();
-
 }

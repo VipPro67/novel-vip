@@ -1,18 +1,13 @@
 package com.novel.vippro.Models;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import jakarta.persistence.*;
 import lombok.Data;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Data
 @Entity
 @Table(name = "groups")
-public class Group {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Group extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -20,9 +15,4 @@ public class Group {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-     private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
 }

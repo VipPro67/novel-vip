@@ -7,27 +7,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 
-import org.hibernate.annotations.CreationTimestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
-@Data
 @Getter
 @Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "reading_history", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_novel_id", columnList = "novel_id"),
-        @Index(name = "idx_chapter_id", columnList = "chapter_id")
-})
-public class ReadingHistory {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Table(name = "reading_history")
+public class ReadingHistory extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -49,21 +42,5 @@ public class ReadingHistory {
 
     @Column(name = "last_read_at")
     @UpdateTimestamp
-    private LocalDateTime lastReadAt;
-
-    @CreationTimestamp
-     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.progress == null) {
-            this.progress = 0;
-        }
-        if (this.readingTime == null) {
-            this.readingTime = 0;
-        }
-    }
+    private Instant lastReadAt;
 }

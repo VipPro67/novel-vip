@@ -197,22 +197,9 @@ public class UserService {
             roles.add(userRole);
         } else {
             roleNames.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ADMIN)
-                                .orElseThrow(() -> new BadRequestException("Role not found"));
-                        roles.add(adminRole);
-                        break;
-                    case "mod":
-                        Role modRole = roleRepository.findByName(ERole.MODERATOR)
-                                .orElseThrow(() -> new BadRequestException("Role not found"));
-                        roles.add(modRole);
-                        break;
-                    default:
-                        Role userRole = roleRepository.findByName(ERole.USER)
-                                .orElseThrow(() -> new BadRequestException("Role not found"));
-                        roles.add(userRole);
-                }
+                Role foundRole = roleRepository.findByName(ERole.valueOf(role))
+                        .orElseThrow(() -> new BadRequestException("Role not found: " + role));
+                roles.add(foundRole);
             });
         }
 

@@ -1,9 +1,10 @@
 package com.novel.vippro.DTO.User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import com.novel.vippro.Models.Role;
 
 import lombok.Data;
 import lombok.Getter;
@@ -17,9 +18,9 @@ public class UserDTO {
     private String username;
     private String email;
     private String fullName;
-    private Set<String> roles = new HashSet<>();
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Set<Role> roles = new HashSet<>();
+    private Instant createdAt;
+    private Instant updatedAt;
     // Constructor for basic user info
     public UserDTO(UUID id, String username, String email, String fullName) {
         this.id = id;

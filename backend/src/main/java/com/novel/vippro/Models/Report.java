@@ -1,28 +1,31 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.Instant;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.novel.vippro.Models.base.BaseEntity;
+
 @Entity
 @Table(name = "reports", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "reporter_id", "novel_id", "chapter_id", "comment_id" })
-}, indexes = {
-        @Index(name = "idx_reporter_id", columnList = "reporter_id"),
-        @Index(name = "idx_novel_id", columnList = "novel_id"),
-        @Index(name = "idx_chapter_id", columnList = "chapter_id"),
-        @Index(name = "idx_comment_id", columnList = "comment_id")
 })
 
-@Data
-public class Report {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
+public class Report extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
@@ -52,18 +55,7 @@ public class Report {
 
     private String adminResponse;
 
-    @CreationTimestamp
-     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    private LocalDateTime resolvedAt;
-
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    private Instant resolvedAt;
 
     public enum ReportStatus {
         PENDING,

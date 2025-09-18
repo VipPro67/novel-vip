@@ -3,37 +3,27 @@ package com.novel.vippro.Models;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
-@Table(name = "feature_requests", indexes = {
-        @Index(name = "idx_user_id", columnList = "user_id"),
-        @Index(name = "idx_status", columnList = "status")
-})
-@Data
-@NoArgsConstructor
+@Table(name = "feature_requests")
+@Getter
+@Setter
 @AllArgsConstructor
-public class FeatureRequest {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@NoArgsConstructor
 
+public class FeatureRequest extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User createdBy;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -45,24 +35,10 @@ public class FeatureRequest {
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "feature_request_votes", joinColumns = @JoinColumn(name = "feature_request_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> voters = new HashSet<>();
-
-    @CreationTimestamp
-     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
     public enum FeatureRequestStatus {
         VOTING,
         PROCESSING,
         DONE,
         REJECTED
-    }
-
-    // set timestamp for createdAt and updatedAt
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
     }
 }

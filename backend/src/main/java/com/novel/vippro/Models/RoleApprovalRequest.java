@@ -1,20 +1,24 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @Table(name = "role_approval_requests", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user_id", "role_id" })
 })
-public class RoleApprovalRequest {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class RoleApprovalRequest extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,85 +31,11 @@ public class RoleApprovalRequest {
     @Column(nullable = false)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
-    @CreationTimestamp
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	private LocalDateTime updatedAt;
-
     private String processedBy;
 
     private String rejectionReason;
-
-    public RoleApprovalRequest() {
-    }
-
     public RoleApprovalRequest(User user, Role requestedRole) {
         this.user = user;
         this.requestedRole = requestedRole;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Role getRequestedRole() {
-        return requestedRole;
-    }
-
-    public void setRequestedRole(Role requestedRole) {
-        this.requestedRole = requestedRole;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getRequestDate() {
-        return createdAt;
-    }
-
-    public void setRequestDate(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getProcessedDate() {
-        return updatedAt;
-    }
-
-    public void setProcessedDate(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getProcessedBy() {
-        return processedBy;
-    }
-
-    public void setProcessedBy(String processedBy) {
-        this.processedBy = processedBy;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
-
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
     }
 }

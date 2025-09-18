@@ -161,17 +161,17 @@ export function MyRoleRequests() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {request.reviewedAt ? (
+                        {request.createdAt ? (
                           <span className="text-sm text-muted-foreground">
-                            {new Date(request.reviewedAt).toLocaleDateString()}
+                            {new Date(request.createdAt).toLocaleDateString()}
                           </span>
                         ) : (
                           <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {request.reviewerUsername ? (
-                          <span className="text-sm text-muted-foreground">{request.reviewerUsername}</span>
+                        {request.processedBy ? (
+                          <span className="text-sm text-muted-foreground">{request.processedBy}</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">-</span>
                         )}

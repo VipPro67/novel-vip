@@ -1,6 +1,7 @@
 package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Category.CategoryDTO;
+import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
@@ -14,7 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public class NovelMapper {
         NovelDocument doc = new NovelDocument();
         doc.setId(novel.getId());
         doc.setTitle(novel.getTitle());
+        doc.setSlug(novel.getSlug());
         doc.setDescription(novel.getDescription());
         doc.setAuthor(novel.getAuthor());
         doc.setStatus(novel.getStatus());
@@ -64,6 +66,14 @@ public class NovelMapper {
         doc.setTotalChapters(novel.getTotalChapters());
         doc.setViews(novel.getViews());
         doc.setRating(novel.getRating());
+        FileMetadataDTO coverImage = new FileMetadataDTO();
+        coverImage.setId(novel.getCoverImage().getId());
+        coverImage.setFileName(novel.getCoverImage().getFileName());
+        coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
+        coverImage.setContentType(novel.getCoverImage().getContentType());
+        coverImage.setSize(novel.getCoverImage().getSize());
+        
+        doc.setCoverImage(coverImage);
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
         doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
         return doc;
@@ -72,6 +82,7 @@ public class NovelMapper {
         Novel n = new Novel();
         n.setId(doc.getId());
         n.setTitle(doc.getTitle());
+        n.setSlug(doc.getSlug());
         n.setDescription(doc.getDescription());
         n.setAuthor(doc.getAuthor());
         n.setStatus(doc.getStatus());
@@ -80,28 +91,28 @@ public class NovelMapper {
         n.setViews(doc.getViews());
         n.setRating(doc.getRating());
 
-        // Timestamps: Instant -> LocalDateTime (UTC)
+        // Timestamps: Instant -> Instant (UTC)
         if (doc.getCreatedAt() != null) {
-            n.setCreatedAt(LocalDateTime.ofInstant(doc.getCreatedAt(), ZoneOffset.UTC));
+            n.setCreatedAt(doc.getCreatedAt());
         }
         if (doc.getUpdatedAt() != null) {
-            n.setUpdatedAt(LocalDateTime.ofInstant(doc.getUpdatedAt(), ZoneOffset.UTC));
+            n.setUpdatedAt(doc.getUpdatedAt());
         }
 
         // Categories, Tags, Genres
         if (doc.getCategories() != null) {
             n.setCategories(doc.getCategories().stream()
-                .map(name -> new Category(null, name, null))
+                .map(name -> new Category(name))
                 .collect(Collectors.toSet()));
         }
         if (doc.getTags() != null) {
             n.setTags(doc.getTags().stream()
-                .map(name -> new Tag(null, name, null))
+                .map(name -> new Tag( name))
                 .collect(Collectors.toSet()));
         }
         if (doc.getGenres() != null) {
             n.setGenres(doc.getGenres().stream()
-                .map(name -> new Genre(null, name, null))
+                .map(name -> new Genre( name))
                 .collect(Collectors.toSet()));
         }
 

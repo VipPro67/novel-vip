@@ -47,6 +47,30 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("""
+            SELECT DISTINCT n FROM Novel n
+            LEFT JOIN n.categories c
+            LEFT JOIN n.genres g
+            LEFT JOIN n.tags t
+            WHERE (:keyword IS NULL OR 
+                  CAST(n.titleNormalized AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%')
+                  OR CAST(n.description AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%')
+                  OR CAST(n.author AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%'))
+              AND (:title IS NULL OR CAST(n.title AS string) ILIKE CONCAT('%', CAST(:title AS string), '%'))
+              AND (:author IS NULL OR CAST(n.author AS string) ILIKE CONCAT('%', CAST(:author AS string), '%'))
+              AND (:category IS NULL OR CAST(c.name AS string) ILIKE CONCAT('%', CAST(:category AS string), '%'))
+              AND (:tag IS NULL OR CAST(t.name AS string) ILIKE CONCAT('%', CAST(:tag AS string), '%'))
+              AND (:genre IS NULL OR CAST(g.name AS string) ILIKE CONCAT('%', CAST(:genre AS string), '%'))
+            """)
+    Page<Novel> searchByCriteria(
+            @Param("keyword") String keyword,
+            @Param("title") String title,
+            @Param("author") String author,
+            @Param("category") String category,
+            @Param("genre") String genre,
+            @Param("tag") String tag,
+            Pageable pageable);
+
     @Query("SELECT n FROM Novel n WHERE n.views > 0 ORDER BY n.views DESC")
     Page<Novel> findAllByOrderByViewsDesc(Pageable pageable);
 
@@ -96,4 +120,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n ORDER BY n.updatedAt DESC")
     Page<Novel> findAllByOrderByUpdatedAtDesc(Pageable pageable);
+
+    @Query("SELECT n FROM Novel n WHERE n.slug = :slug")
+    Optional<Novel> findBySlug(String slug);
 }

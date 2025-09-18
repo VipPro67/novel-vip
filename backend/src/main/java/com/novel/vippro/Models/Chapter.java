@@ -1,30 +1,29 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity
 @Table(name = "chapters", uniqueConstraints = @UniqueConstraint(columnNames = { "chapterNumber",
-        "novel_id" }), indexes = {
-                @Index(name = "idx_novel_id_chapter_number", columnList = "novel_id,chapterNumber"),
-                @Index(name = "idx_novel_id", columnList = "novel_id")
-        })
-@Data
+        "novel_id" }))
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Chapter {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Chapter extends BaseEntity {
 
     @Column(nullable = false)
     private Integer chapterNumber;
@@ -51,16 +50,4 @@ public class Chapter {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
     private FileMetadata audioFile;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
 }

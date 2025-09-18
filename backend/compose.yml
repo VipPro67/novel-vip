@@ -7,22 +7,19 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
+    env_file:
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DATABASE_URL: jdbc:postgresql://postgres:5432/novel_db
-      DATABASE_USERNAME: novel_user
-      DATABASE_PASSWORD: novel_password
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
     depends_on:
       - elasticsearch
       - logstash
+      - kibana
       - postgres
       - redis
       - rabbitmq
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ] 
       interval: 30s
       timeout: 10s
       retries: 5

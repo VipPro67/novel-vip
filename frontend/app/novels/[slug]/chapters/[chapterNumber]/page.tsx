@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Client } from "@stomp/stompjs"
 import { useParams, useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2, MoreVertical, Edit, Trash2, Reply, ChevronDown, ChevronUp, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { api, type ChapterDetail, type Comment } from "@/lib/api"
+import { formatRelativeTime } from "@/lib/utils"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ChapterContent {
   title: string
@@ -19,13 +32,20 @@ interface ChapterContent {
   readingTime: number
 }
 
+interface CommentWithReplies extends Comment {
+  replies: CommentWithReplies[]
+  showReplies?: boolean
+}
+
 export default function ChapterPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
 
-  const novelId = params.id as string
+  const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
+
+  const [novelId, setNovelId] = useState<string | null>(null)
 
   const [chapter, setChapter] = useState<ChapterDetail | null>(null)
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
@@ -34,7 +54,7 @@ export default function ChapterPage() {
 
   // Comment states
   const [showComments, setShowComments] = useState(false)
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<CommentWithReplies[]>([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [totalComments, setTotalComments] = useState(0)
@@ -59,14 +79,62 @@ export default function ChapterPage() {
   }
 
   useEffect(() => {
+    const resolveNovelId = async () => {
+      resetCommentState()
+      setChapter(null)
+      setChapterContent(null)
+      if (!slug) {
+        setNovelId(null)
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        const response = await api.getNovelBySlug(slug)
+        if (response.success) {
+          setNovelId(response.data.id)
+        } else {
+          setNovelId(null)
+          setLoading(false)
+          toast({
+            title: "Error",
+            description: "Failed to load novel information",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error("Failed to resolve novel by slug:", error)
+        setNovelId(null)
+        setLoading(false)
+        toast({
+          title: "Error",
+          description: "Failed to load novel information",
+          variant: "destructive",
+        })
+      }
+    }
+
+    resolveNovelId()
+  }, [slug])
+
+  useEffect(() => {
+    if (!novelId) {
+      return
+    }
     resetCommentState()
     fetchChapter()
   }, [novelId, chapterNumber])
 
-const fetchChapter = async () => {
+  const fetchChapter = async () => {
     setLoading(true)
     setContentLoading(true)
     try {
+      if (!novelId) {
+        setLoading(false)
+        return
+      }
+
       const response = await api.getChapterByNumber(novelId, chapterNumber)
       if (response.success) {
         setChapter(response.data)
@@ -150,6 +218,33 @@ const fetchChapter = async () => {
     }
   }, [chapter])
 
+  const organizeComments = (comments: Comment[]): CommentWithReplies[] => {
+    const commentMap = new Map<string, CommentWithReplies>()
+    const rootComments: CommentWithReplies[] = []
+
+    comments.forEach((comment) => {
+      commentMap.set(comment.id, {
+        ...comment,
+        replies: [],
+        showReplies: true,
+      })
+    })
+
+    comments.forEach((comment) => {
+      const commentWithReplies = commentMap.get(comment.id)!
+      if (comment.parentId) {
+        const parent = commentMap.get(comment.parentId)
+        if (parent) {
+          parent.replies.push(commentWithReplies)
+        }
+      } else {
+        rootComments.push(commentWithReplies)
+      }
+    })
+
+    return rootComments
+  }
+
   const loadComments = async () => {
     if (!chapter || commentsLoaded) return
 
@@ -157,13 +252,14 @@ const fetchChapter = async () => {
     try {
       const response = await api.getChapterComments(chapter.id, {
         page: 0,
-        size: 50,
+        size: 100,
         sortBy: "createdAt",
-        sortDir: "desc",
+        sortDir: "asc",
       })
 
       if (response.success) {
-        setComments(response.data.content || [])
+        const organizedComments = organizeComments(response.data.content || [])
+        setComments(organizedComments)
         setTotalComments(response.data.totalElements || 0)
         setCommentsLoaded(true)
       }
@@ -180,10 +276,10 @@ const fetchChapter = async () => {
   }
 
   const handleShowComments = () => {
-    if (!showComments && !commentsLoaded) {
+    setShowComments(!showComments)
+    if (!commentsLoaded && !showComments) {
       loadComments()
     }
-    setShowComments(!showComments)
   }
 
   const handleAddComment = async () => {
@@ -197,7 +293,12 @@ const fetchChapter = async () => {
       })
 
       if (response.success) {
-        setComments((prev) => [response.data, ...prev])
+        const newCommentWithReplies: CommentWithReplies = {
+          ...response.data,
+          replies: [],
+          showReplies: true,
+        }
+        setComments([newCommentWithReplies, ...comments])
         setTotalComments((prev) => prev + 1)
         setNewComment("")
         toast({
@@ -217,7 +318,7 @@ const fetchChapter = async () => {
     }
   }
 
-  const handleReply = async (parentId: string) => {
+  const handleAddReply = async (parentId: string) => {
     if (!replyContent.trim() || !chapter) return
 
     setSubmittingComment(true)
@@ -229,18 +330,32 @@ const fetchChapter = async () => {
       })
 
       if (response.success) {
-        // Add reply to the parent comment
-        setComments((prev) =>
-          prev.map((comment) => {
+        const newReply: CommentWithReplies = {
+          ...response.data,
+          replies: [],
+          showReplies: true,
+        }
+
+        const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+          return comments.map((comment) => {
             if (comment.id === parentId) {
               return {
                 ...comment,
-                replies: [...(comment.replies || []), response.data],
+                replies: [...comment.replies, newReply],
+                showReplies: true,
+              }
+            }
+            if (comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateComments(comment.replies),
               }
             }
             return comment
-          }),
-        )
+          })
+        }
+
+        setComments(updateComments(comments))
         setTotalComments((prev) => prev + 1)
         setReplyContent("")
         setReplyingTo(null)
@@ -261,7 +376,12 @@ const fetchChapter = async () => {
     }
   }
 
-  const handleEditComment = async (commentId: string) => {
+  const handleEditComment = (comment: CommentWithReplies) => {
+    setEditingComment(comment.id)
+    setEditContent(comment.content)
+  }
+
+  const handleSaveEdit = async (commentId: string) => {
     if (!editContent.trim()) return
 
     try {
@@ -270,20 +390,22 @@ const fetchChapter = async () => {
       })
 
       if (response.success) {
-        // Update comment in the list
-        const updateCommentInList = (comments: Comment[]): Comment[] => {
+        const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
           return comments.map((comment) => {
             if (comment.id === commentId) {
-              return { ...comment, content: editContent.trim(), edited: true }
+              return { ...comment, ...response.data, edited: true }
             }
-            if (comment.replies) {
-              return { ...comment, replies: updateCommentInList(comment.replies) }
+            if (comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateComments(comment.replies),
+              }
             }
             return comment
           })
         }
 
-        setComments((prev) => updateCommentInList(prev))
+        setComments(updateComments(comments))
         setEditingComment(null)
         setEditContent("")
         toast({
@@ -306,20 +428,19 @@ const fetchChapter = async () => {
       const response = await api.deleteComment(commentId)
 
       if (response.success) {
-        // Remove comment from the list
-        const removeCommentFromList = (comments: Comment[]): Comment[] => {
+        const removeComment = (comments: CommentWithReplies[]): CommentWithReplies[] => {
           return comments.filter((comment) => {
             if (comment.id === commentId) {
               return false
             }
-            if (comment.replies) {
-              comment.replies = removeCommentFromList(comment.replies)
+            if (comment.replies.length > 0) {
+              comment.replies = removeComment(comment.replies)
             }
             return true
           })
         }
 
-        setComments((prev) => removeCommentFromList(prev))
+        setComments(removeComment(comments))
         setTotalComments((prev) => prev - 1)
         toast({
           title: "Success",
@@ -336,119 +457,198 @@ const fetchChapter = async () => {
     }
   }
 
-  const renderComment = (comment: Comment, depth = 0) => {
-    const isEditing = editingComment === comment.id
-    const isReplying = replyingTo === comment.id
+  const toggleReplies = (commentId: string) => {
+    const updateComments = (comments: CommentWithReplies[]): CommentWithReplies[] => {
+      return comments.map((comment) => {
+        if (comment.id === commentId) {
+          return { ...comment, showReplies: !comment.showReplies }
+        }
+        if (comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: updateComments(comment.replies),
+          }
+        }
+        return comment
+      })
+    }
+
+    setComments(updateComments(comments))
+  }
+
+  const formatRelativeDate = (dateString: string) => {
+    const value = formatRelativeTime(dateString)
+    return value || "just now"
+  }
+
+  const renderComment = (comment: CommentWithReplies, depth = 0) => {
+    const maxDepth = 3
+    const isMaxDepth = depth >= maxDepth
 
     return (
-      <div key={comment.id} className={`${depth > 0 ? "ml-8 border-l-2 border-muted pl-4" : ""}`}>
-        <div className="flex space-x-3 mb-4">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={`/placeholder-user.jpg`} />
-            <AvatarFallback>{comment.username.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 space-y-2">
+      <div key={comment.id} className={`space-y-3 ${depth > 0 ? "ml-6 pl-4 border-l-2 border-muted" : ""}`}>
+        <div className="space-y-2">
+          <div className="flex items-start justify-between">
             <div className="flex items-center space-x-2">
-              <span className="font-medium text-sm">{comment.username}</span>
-              <span className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString()}</span>
-              {comment.edited && (
-                <Badge variant="secondary" className="text-xs">
-                  Edited
-                </Badge>
-              )}
-            </div>
-
-            {isEditing ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Edit your comment..."
-                  className="min-h-[80px]"
-                />
-                <div className="flex space-x-2">
-                  <Button size="sm" onClick={() => handleEditComment(comment.id)}>
-                    Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingComment(null)
-                      setEditContent("")
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{comment.username.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-sm">{comment.username}</span>
+                {comment.edited && (
+                  <Badge variant="secondary" className="text-xs">
+                    edited
+                  </Badge>
+                )}
               </div>
-            ) : (
-              <>
-                <p className="text-sm">{comment.content}</p>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="ghost" onClick={() => setReplyingTo(isReplying ? null : comment.id)}>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-muted-foreground">{formatRelativeDate(comment.updatedAt)}</span>
+              {/* Assume all users can edit/delete for demo, add owner check if needed */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleEditComment(comment)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this comment? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {editingComment === comment.id ? (
+            <div className="space-y-2">
+              <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="min-h-[80px]" />
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingComment(null)
+                    setEditContent("")
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={() => handleSaveEdit(comment.id)} disabled={!editContent.trim()}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+              </div>
+
+              {/* Reply button and controls */}
+              <div className="flex items-center space-x-2">
+                {!isMaxDepth && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    className="text-xs"
+                  >
+                    <Reply className="mr-1 h-3 w-3" />
                     Reply
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditingComment(comment.id)
-                      setEditContent(comment.content)
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDeleteComment(comment.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </>
-            )}
+                )}
 
-            {isReplying && (
-              <div className="space-y-2 mt-2">
-                <Textarea
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder="Write a reply..."
-                  className="min-h-[80px]"
-                />
-                <div className="flex space-x-2">
-                  <Button size="sm" onClick={() => handleReply(comment.id)} disabled={submittingComment}>
-                    {submittingComment ? (
+                {comment.replies.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => toggleReplies(comment.id)} className="text-xs">
+                    {comment.showReplies ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Posting...
+                        <ChevronUp className="mr-1 h-3 w-3" />
+                        Hide {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
                       </>
                     ) : (
-                      "Post Reply"
+                      <>
+                        <ChevronDown className="mr-1 h-3 w-3" />
+                        Show {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+                      </>
                     )}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setReplyingTo(null)
-                      setReplyContent("")
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {/* Reply form */}
+              {replyingTo === comment.id && (
+                <div className="space-y-2 mt-3">
+                  <Textarea
+                    placeholder={`Reply to ${comment.username}...`}
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setReplyingTo(null)
+                        setReplyContent("")
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddReply(comment.id)}
+                      disabled={!replyContent.trim() || submittingComment}
+                    >
+                      {submittingComment ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Reply
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Render replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="space-y-4">{comment.replies.map((reply) => renderComment(reply, depth + 1))}</div>
+        {comment.showReplies && comment.replies.length > 0 && (
+          <div className="space-y-3">{comment.replies.map((reply) => renderComment(reply, depth + 1))}</div>
         )}
       </div>
     )
@@ -456,8 +656,8 @@ const fetchChapter = async () => {
 
   const navigateChapter = (direction: "prev" | "next") => {
     const newChapterNumber = direction === "prev" ? chapterNumber - 1 : chapterNumber + 1
-    if (newChapterNumber > 0) {
-      router.push(`/novels/${novelId}/chapters/${newChapterNumber}`)
+    if (newChapterNumber > 0 && slug) {
+      router.push(`/novels/${slug}/chapters/${newChapterNumber}`)
     }
   }
 
@@ -515,7 +715,6 @@ const fetchChapter = async () => {
               </Button>
               <div>
                 <h1 className="font-semibold text-lg truncate max-w-md">{chapter.title}</h1>
-                <p className="text-sm text-muted-foreground">Chapter {chapter.chapterNumber}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -590,7 +789,7 @@ const fetchChapter = async () => {
               {showComments ? "Hide Comments" : "Show Comments"}
               {totalComments > 0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {totalComments}
+                  {totalComments > 99 ? "99+" : totalComments}
                 </Badge>
               )}
             </Button>
@@ -615,7 +814,10 @@ const fetchChapter = async () => {
                             Posting...
                           </>
                         ) : (
-                          "Post Comment"
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Post Comment
+                          </>
                         )}
                       </Button>
                     </div>

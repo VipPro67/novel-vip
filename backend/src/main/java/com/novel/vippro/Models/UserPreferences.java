@@ -1,15 +1,19 @@
 package com.novel.vippro.Models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "user_preferences", uniqueConstraints = @UniqueConstraint(columnNames = "user_id"))
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
 public class UserPreferences {
     @Id
