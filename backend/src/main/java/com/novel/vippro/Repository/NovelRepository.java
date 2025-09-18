@@ -47,6 +47,26 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+    @Query("""
+            SELECT DISTINCT n FROM Novel n
+            LEFT JOIN n.categories c
+            LEFT JOIN n.genres g
+            WHERE (:keyword IS NULL OR LOWER(n.titleNormalized) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(n.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(n.author) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:title IS NULL OR LOWER(n.title) LIKE LOWER(CONCAT('%', :title, '%')))
+              AND (:author IS NULL OR LOWER(n.author) LIKE LOWER(CONCAT('%', :author, '%')))
+              AND (:category IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :category, '%')))
+              AND (:genre IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :genre, '%')))
+            """)
+    Page<Novel> searchByCriteria(
+            @Param("keyword") String keyword,
+            @Param("title") String title,
+            @Param("author") String author,
+            @Param("category") String category,
+            @Param("genre") String genre,
+            Pageable pageable);
+
     @Query("SELECT n FROM Novel n WHERE n.views > 0 ORDER BY n.views DESC")
     Page<Novel> findAllByOrderByViewsDesc(Pageable pageable);
 

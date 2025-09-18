@@ -3,6 +3,7 @@ package com.novel.vippro.Controllers;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
+import com.novel.vippro.DTO.Novel.NovelSearchDTO;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
@@ -166,20 +167,20 @@ public class NovelController {
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
 
-    @Operation(summary = "Search novels", description = "Search novels by keyword in title and description")
+    @Operation(summary = "Search novels", description = "Search novels by combining keyword, title, author, category, or genre filters")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Search completed successfully")
     })
     @GetMapping("/search")
     public ControllerResponse<PageResponse<NovelDTO>> searchNovels(
-            @Parameter(description = "Search keyword") @RequestParam String keyword,
+            @Parameter(description = "Search filters") @ModelAttribute NovelSearchDTO searchDTO,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Items per page") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "updatedAt") String sortBy,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String sortDir) {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        PageResponse<NovelDTO> novels = novelService.searchNovels(keyword, pageable);
+        PageResponse<NovelDTO> novels = novelService.searchNovels(searchDTO, pageable);
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
 

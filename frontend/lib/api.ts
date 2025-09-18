@@ -422,24 +422,39 @@ class ApiClient {
     }
 
     async searchNovels(
-        keyword: string,
         params: {
+            keyword?: string;
+            title?: string;
+            author?: string;
+            category?: string;
+            genre?: string;
             page?: number;
             size?: number;
             sortBy?: string;
             sortDir?: string;
         } = {}
     ) {
-        const searchParams = new URLSearchParams({ keyword });
+        const searchParams = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined) {
-                searchParams.append(key, value.toString());
+            if (value !== undefined && value !== null) {
+                const stringValue = value.toString().trim();
+                if (stringValue.length > 0) {
+                    searchParams.append(key, stringValue);
+                }
             }
         });
 
         return this.request<PageResponse<Novel>>(
-            `/api/novels/search?${searchParams}`
+            `/api/novels/search?${searchParams.toString()}`
         );
+    }
+
+    async getCategories() {
+        return this.request<Category[]>("/api/novels/categories");
+    }
+
+    async getGenres() {
+        return this.request<Genre[]>("/api/novels/genres");
     }
 
     async getNovelsByCategory(
