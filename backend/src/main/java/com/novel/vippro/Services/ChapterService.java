@@ -78,6 +78,21 @@ public class ChapterService {
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
+     @Cacheable(value = "chapters", key = "'novel-slug-' + #slug + '-chapter-' + #chapterNumber")
+    public ChapterDetailDTO getChapterByNumber2DTO(String slug, Integer chapterNumber) {
+        Novel novel = novelRepository.findBySlugWithGraph(slug);
+        if (novel == null) {
+            throw new ResourceNotFoundException("Novel", "slug", slug);
+        }
+        Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novel.getId(), chapterNumber);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
+                    novel.getId() + " and " + chapterNumber);
+        }
+
+        return mapper.ChaptertoChapterDetailDTO(chapter);
+    }
+
     @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-page-' + #pageable.pageNumber")
     public PageResponse<ChapterDTO> getChaptersByNovelDTO(UUID novelId, Pageable pageable) {
         Page<Chapter> chapters = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable);

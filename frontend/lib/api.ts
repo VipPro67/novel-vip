@@ -566,6 +566,14 @@ class ApiClient {
         );
     }
 
+    async getChapterByNumber2(slug: string, chapterNumber: number) {
+        return this.request<ChapterDetail>(
+            `/api/chapters/novel/slug/${slug}/chapter/${chapterNumber}`
+        );
+    }
+
+
+
     async createChapter(data: {
         title: string;
         chapterNumber: number;

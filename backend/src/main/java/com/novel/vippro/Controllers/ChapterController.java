@@ -70,6 +70,20 @@ public class ChapterController {
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
+    }
+
+    @Operation(summary = "Get chapter by number 2", description = "Get a specific chapter by its number within a novel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Chapter retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Chapter or novel not found"),
+            @ApiResponse(responseCode = "400", description = "Error retrieving chapter content")
+    })
+    @GetMapping("/novel/slug/{slug}/chapter/{chapterNumber}")
+    public ControllerResponse<ChapterDetailDTO> getChapterByNumber2(
+            @Parameter(description = "Novel slug", required = true) @PathVariable String slug,
+            @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
+        ChapterDetailDTO chapter = chapterService.getChapterByNumber2DTO(slug, chapterNumber);
+        return ControllerResponse.success("Chapter retrieved successfully", chapter);
 
     }
 

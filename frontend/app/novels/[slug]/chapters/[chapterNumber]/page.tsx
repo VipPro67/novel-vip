@@ -45,8 +45,6 @@ export default function ChapterPage() {
   const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
 
-  const [novelId, setNovelId] = useState<string | null>(null)
-
   const [chapter, setChapter] = useState<ChapterDetail | null>(null)
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
   const [loading, setLoading] = useState(true)
@@ -79,63 +77,23 @@ export default function ChapterPage() {
   }
 
   useEffect(() => {
-    const resolveNovelId = async () => {
-      resetCommentState()
-      setChapter(null)
-      setChapterContent(null)
-      if (!slug) {
-        setNovelId(null)
-        setLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        const response = await api.getNovelBySlug(slug)
-        if (response.success) {
-          setNovelId(response.data.id)
-        } else {
-          setNovelId(null)
-          setLoading(false)
-          toast({
-            title: "Error",
-            description: "Failed to load novel information",
-            variant: "destructive",
-          })
-        }
-      } catch (error) {
-        console.error("Failed to resolve novel by slug:", error)
-        setNovelId(null)
-        setLoading(false)
-        toast({
-          title: "Error",
-          description: "Failed to load novel information",
-          variant: "destructive",
-        })
-      }
-    }
-
-    resolveNovelId()
-  }, [slug])
-
-  useEffect(() => {
-    if (!novelId) {
+    if (!slug || isNaN(chapterNumber) || chapterNumber <= 0) {
       return
     }
     resetCommentState()
     fetchChapter()
-  }, [novelId, chapterNumber])
+  }, [slug, chapterNumber])
 
   const fetchChapter = async () => {
     setLoading(true)
     setContentLoading(true)
     try {
-      if (!novelId) {
+      if (!slug) {
         setLoading(false)
         return
       }
 
-      const response = await api.getChapterByNumber(novelId, chapterNumber)
+      const response = await api.getChapterByNumber2(slug, chapterNumber)
       if (response.success) {
         setChapter(response.data)
         await fetchChapterContent(response.data)

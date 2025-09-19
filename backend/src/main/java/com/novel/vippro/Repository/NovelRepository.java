@@ -29,6 +29,10 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
     Optional<Novel> findById(@Param("id") UUID id);
 
+    @Query("SELECT n FROM Novel n WHERE n.slug = :slug")
+    @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
+    Novel findBySlugWithGraph(@Param("slug") String slug);
+
     @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);
 
