@@ -613,6 +613,10 @@ class ApiClient {
         );
     }
 
+    async getChapterAudio(chapterId: string) {
+        return this.request<ChapterDetail>(`/api/chapters/${chapterId}/audio`);
+    }
+
     // Reading History endpoints
     async addReadingHistory(chapterId: string) {
         return this.request<ReadingHistory>(

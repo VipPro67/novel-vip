@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Client } from "@stomp/stompjs"
 import { useParams, useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2, MoreVertical, Edit, Trash2, Reply, ChevronDown, ChevronUp, Send } from "lucide-react"
+import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2, MoreVertical, Edit, Trash2, Reply, ChevronDown, ChevronUp, Send, RefreshCw, AlertCircle, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,9 @@ export default function ChapterPage() {
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [contentLoading, setContentLoading] = useState(false)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [audioLoading, setAudioLoading] = useState(false)
+  const [audioError, setAudioError] = useState<string | null>(null)
 
   // Comment states
   const [showComments, setShowComments] = useState(false)
@@ -87,6 +90,9 @@ export default function ChapterPage() {
   const fetchChapter = async () => {
     setLoading(true)
     setContentLoading(true)
+    setAudioUrl(null)
+    setAudioError(null)
+    setAudioLoading(false)
     try {
       if (!slug) {
         setLoading(false)
@@ -155,6 +161,55 @@ export default function ChapterPage() {
       setContentLoading(false)
     }
   }
+
+  const fetchChapterAudio = useCallback(
+    async (chapterId: string | undefined) => {
+      if (!chapterId) {
+        return
+      }
+
+      setAudioLoading(true)
+      setAudioError(null)
+      try {
+        const response = await api.getChapterAudio(chapterId)
+        if (response.success && response.data.audioUrl) {
+          setAudioUrl(response.data.audioUrl)
+          setChapter((prev) => {
+            if (prev && prev.id === response.data.id) {
+              return { ...prev, audioUrl: response.data.audioUrl }
+            }
+            return prev
+          })
+        } else {
+          setAudioError("Audio is not available yet. Please try again shortly.")
+        }
+      } catch (error) {
+        console.error("Failed to load chapter audio:", error)
+        setAudioError("Failed to load audio. Please try again.")
+      } finally {
+        setAudioLoading(false)
+      }
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (!chapter) {
+      setAudioUrl(null)
+      setAudioError(null)
+      setAudioLoading(false)
+      return
+    }
+
+    if (chapter.audioUrl) {
+      setAudioUrl(chapter.audioUrl)
+      setAudioError(null)
+      setAudioLoading(false)
+      return
+    }
+
+    fetchChapterAudio(chapter.id)
+  }, [chapter, fetchChapterAudio])
 
   useEffect(() => {
     if (!chapter) return
@@ -631,6 +686,64 @@ export default function ChapterPage() {
     return { __html: sanitizedContent }
   }
 
+  const renderAudioSection = () => {
+    if (!chapter) {
+      return null
+    }
+
+    if (audioLoading) {
+      return (
+        <div className="flex items-center space-x-3 rounded-lg border border-muted p-4">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Preparing audio...</span>
+        </div>
+      )
+    }
+
+    if (audioUrl) {
+      return (
+        <div className="space-y-3 rounded-lg border border-muted p-4">
+          <div className="flex items-center space-x-2">
+            <Volume2 className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Listen to this chapter</h2>
+          </div>
+          <audio controls preload="none" className="w-full">
+            <source src={audioUrl} type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+          <p className="text-xs text-muted-foreground">
+            Press play to listen while you read. Audio is generated automatically from the chapter content.
+          </p>
+        </div>
+      )
+    }
+
+    if (audioError) {
+      return (
+        <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
+            <div>
+              <p className="text-sm font-medium text-destructive">Audio unavailable</p>
+              <p className="text-xs text-muted-foreground">{audioError}</p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => fetchChapterAudio(chapter.id)}
+            className="self-start md:self-auto"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try again
+          </Button>
+        </div>
+      )
+    }
+
+    return null
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -692,39 +805,42 @@ export default function ChapterPage() {
         <div className="max-w-4xl mx-auto">
           <Card>
             <CardContent className="p-8">
-              {contentLoading ? (
-                <div className="animate-pulse space-y-4">
-                  {Array.from({ length: 15 }).map((_, i) => (
-                    <div key={i} className="h-4 bg-muted rounded"></div>
-                  ))}
-                </div>
-              ) : chapterContent ? (
-                <div className="prose prose-lg dark:prose-invert max-w-none">
-                  <h1 className="text-3xl font-bold mb-6">{chapterContent.title}</h1>
-                  {/* Render HTML content safely */}
-                  <div
-                    className="chapter-content leading-relaxed text-base"
-                    dangerouslySetInnerHTML={renderHtmlContent(chapterContent.content)}
-                    style={{
-                      lineHeight: "1.8",
-                      fontSize: "16px",
-                      color: "inherit",
-                    }}
-                  />
-                  {chapterContent.wordCount && (
-                    <div className="mt-8 pt-4 border-t text-sm text-muted-foreground">
-                      <p>Word count: {chapterContent.wordCount.toLocaleString()}</p>
-                      {chapterContent.readingTime && (
-                        <p>Estimated reading time: {chapterContent.readingTime} minutes</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">Chapter content not available</p>
-                </div>
-              )}
+              <div className="space-y-6">
+                {renderAudioSection()}
+                {contentLoading ? (
+                  <div className="animate-pulse space-y-4">
+                    {Array.from({ length: 15 }).map((_, i) => (
+                      <div key={i} className="h-4 bg-muted rounded"></div>
+                    ))}
+                  </div>
+                ) : chapterContent ? (
+                  <div className="prose prose-lg dark:prose-invert max-w-none">
+                    <h1 className="text-3xl font-bold mb-6">{chapterContent.title}</h1>
+                    {/* Render HTML content safely */}
+                    <div
+                      className="chapter-content leading-relaxed text-base"
+                      dangerouslySetInnerHTML={renderHtmlContent(chapterContent.content)}
+                      style={{
+                        lineHeight: "1.8",
+                        fontSize: "16px",
+                        color: "inherit",
+                      }}
+                    />
+                    {chapterContent.wordCount && (
+                      <div className="mt-8 pt-4 border-t text-sm text-muted-foreground">
+                        <p>Word count: {chapterContent.wordCount.toLocaleString()}</p>
+                        {chapterContent.readingTime && (
+                          <p>Estimated reading time: {chapterContent.readingTime} minutes</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Chapter content not available</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 

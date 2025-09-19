@@ -19,8 +19,11 @@ cloudinary.cloud.name=
 cloudinary.api.key=
 cloudinary.api.secret=
 
-#Google
-google.cerdentials.path =
+# Text to Speech (ElevenLabs)
+elevenlabs.api.key=
+elevenlabs.voice.id=
+elevenlabs.model.id=
+elevenlabs.base.url=
 
 # Supabase Properties
 supabase.url=

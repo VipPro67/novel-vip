@@ -339,7 +339,7 @@ public class ChapterService {
                     textToConvert,
                     chapter.getNovel().getSlug(),
                     chapter.getChapterNumber());
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             throw new RuntimeException("Error generating audio for chapter: " + e.getMessage(), e);
         }
 
