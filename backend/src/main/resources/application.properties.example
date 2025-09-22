@@ -19,7 +19,16 @@ cloudinary.cloud.name=
 cloudinary.api.key=
 cloudinary.api.secret=
 
-# Text to Speech (ElevenLabs)
+# Text to Speech
+texttospeech.provider=
+
+# OpenAI Edge TTS
+openai.edge.tts.api-key=
+openai.edge.tts.base-url=
+openai.edge.tts.response-format=
+openai.edge.tts.speed=
+
+# ElevenLabs TTS
 elevenlabs.api.key=
 elevenlabs.voice.id=
 elevenlabs.model.id=

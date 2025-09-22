@@ -13,31 +13,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-@Service("elevenLabsTTS")
-@ConditionalOnProperty(name = "texttospeech.provider", havingValue = "elevenlabs")
-public class ElevenLabsTextToSpeechService implements TextToSpeechService {
+@Service("openAiEdgeTTS")
+@ConditionalOnProperty(name = "texttospeech.provider", havingValue = "openai-edge", matchIfMissing = true)
+public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ElevenLabsTextToSpeechService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpenAiEdgeTextToSpeechService.class);
 
-    private static final String DEFAULT_MODEL = "eleven_monolingual_v1";
     private static final String AUDIO_CONTENT_TYPE = "audio/mpeg";
+    private static final String DEFAULT_RESPONSE_FORMAT = "mp3";
+    private static final double DEFAULT_SPEED = 1.0;
 
     private final FileStorageService fileStorageService;
     private final HttpClient httpClient;
 
-    @Value("${elevenlabs.api.key:}")
+    @Value("${openai.edge.tts.api-key:}")
     private String apiKey;
 
-    @Value("${elevenlabs.voice.id:}")
-    private String voiceId;
-
-    @Value("${elevenlabs.model.id:}")
-    private String modelId;
-
-    @Value("${elevenlabs.base.url:https://api.elevenlabs.io}")
+    @Value("${openai.edge.tts.base-url:http://localhost:5050}")
     private String baseUrl;
 
-    public ElevenLabsTextToSpeechService(FileStorageService fileStorageService) {
+    @Value("${openai.edge.tts.response-format:mp3}")
+    private String responseFormat;
+
+    @Value("${openai.edge.tts.speed:1.0}")
+    private double speed;
+
+    public OpenAiEdgeTextToSpeechService(FileStorageService fileStorageService) {
         this.fileStorageService = fileStorageService;
         this.httpClient = HttpClient.newHttpClient();
     }
@@ -49,18 +50,15 @@ public class ElevenLabsTextToSpeechService implements TextToSpeechService {
         String requestBody = buildRequestBody(text);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(buildSynthesisUrl()))
+                .header("Authorization", "Bearer " + apiKey)
                 .header("Accept", AUDIO_CONTENT_TYPE)
-                .header("xi-api-key", apiKey)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                 .build();
 
         HttpResponse<byte[]> response;
         try {
-            logger.debug("Sending TTS request to ElevenLabs: URL={}, Body={}", request.uri(), requestBody);
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-            logger.debug("Received TTS response: Status={}, BodyLength={}", response.statusCode(),
-                    response.body() != null ? response.body().length : 0);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Text-to-speech request interrupted", e);
@@ -78,28 +76,24 @@ public class ElevenLabsTextToSpeechService implements TextToSpeechService {
 
     private void validateConfiguration() {
         if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("ElevenLabs API key is not configured.");
-        }
-        if (voiceId == null || voiceId.isBlank()) {
-            throw new IllegalStateException("ElevenLabs voice id is not configured.");
+            throw new IllegalStateException("OpenAI Edge TTS API key is not configured.");
         }
     }
 
     private String buildSynthesisUrl() {
-        String base = (baseUrl == null ? "https://api.elevenlabs.io" : baseUrl).trim();
-        base = base.replaceAll("/+$", "");        // drop trailing slashes
-        if (base.endsWith("/v1")) base = base.substring(0, base.length() - 3); // drop /v1
-        return base + "/v1/text-to-speech/" + voiceId;
+        String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return normalizedBaseUrl + "/v1/audio/speech";
     }
-
 
     private String buildRequestBody(String text) {
         String sanitizedText = text == null ? "" : text.trim();
-        String effectiveModelId = (modelId == null || modelId.isBlank()) ? DEFAULT_MODEL : modelId;
+        String format = (responseFormat == null || responseFormat.isBlank()) ? DEFAULT_RESPONSE_FORMAT : responseFormat;
+        double effectiveSpeed = speed <= 0 ? DEFAULT_SPEED : speed;
+
         return "{" +
-                "\"text\":" + escapeJson(sanitizedText) +
-                ",\"model_id\":\"" + effectiveModelId + "\"" +
-                ",\"voice_settings\":{\"stability\":0.5,\"similarity_boost\":0.75}" +
+                "\"input\":" + escapeJson(sanitizedText) +
+                ",\"response_format\":" + escapeJson(format) +
+                ",\"speed\":" + effectiveSpeed +
                 "}";
     }
 

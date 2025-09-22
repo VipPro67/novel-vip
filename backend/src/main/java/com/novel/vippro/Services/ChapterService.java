@@ -2,6 +2,7 @@ package com.novel.vippro.Services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
+import com.novel.vippro.Config.HttpLoggingFilter;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
@@ -14,7 +15,10 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.FileMetadataRepository;
 import com.novel.vippro.Repository.NovelRepository;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -49,6 +53,7 @@ public class ChapterService {
     private RestTemplate restTemplate;
 
     @Autowired
+    @Qualifier("openAiEdgeTTS")
     private TextToSpeechService textToSpeechService;
 
     @Autowired
@@ -56,6 +61,8 @@ public class ChapterService {
 
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
+
+    private static final Logger logger = LogManager.getLogger(ChapterService.class);
 
     @Cacheable(value = "chapters", key = "#id")
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
@@ -78,7 +85,7 @@ public class ChapterService {
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
-     @Cacheable(value = "chapters", key = "'novel-slug-' + #slug + '-chapter-' + #chapterNumber")
+    @Cacheable(value = "chapters", key = "'novel-slug-' + #slug + '-chapter-' + #chapterNumber")
     public ChapterDetailDTO getChapterByNumber2DTO(String slug, Integer chapterNumber) {
         Novel novel = novelRepository.findBySlugWithGraph(slug);
         if (novel == null) {
@@ -150,6 +157,9 @@ public class ChapterService {
             throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
                     novelId + " and " + chapterNumber);
         }
+        logger.info("chapter audio file: {}", chapter.getAudioFile().getId());
+        logger.info("chapter json file: {}", chapter.getJsonFile().getId());
+
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
@@ -347,7 +357,7 @@ public class ChapterService {
         audioFile.setPublicId(chapter.getNovel().getSlug() + "-" + chapter.getChapterNumber() + ".mp3");
         audioFile.setContentType("audio/mpeg");
         audioFile.setFileUrl(audioUrl);
-        audioFile.setFileName(chapter.getTitle());
+        audioFile.setFileName("chap-" + chapter.getChapterNumber() + "-audio.mp3");
         audioFile.setType("audio");
         audioFile.setSize(0);
         audioFile.setUpdatedAt(Instant.now());

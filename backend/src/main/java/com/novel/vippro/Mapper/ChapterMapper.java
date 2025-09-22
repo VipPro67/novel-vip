@@ -24,6 +24,14 @@ public class ChapterMapper {
 		ChapterDetailDTO chapterDetailDTO = modelMapper.map(chapter, ChapterDetailDTO.class);
 		chapterDetailDTO.setNovelId(chapter.getNovel().getId());
 		chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
+        if(chapter.getAudioFile()!=null)
+        {
+            chapterDetailDTO.setAudioUrl(chapter.getAudioFile().getFileUrl());
+        }
+        if(chapter.getJsonFile()!=null)
+        {
+            chapterDetailDTO.setJsonUrl(chapter.getJsonFile().getFileUrl());
+        }
 		return chapterDetailDTO;
 	}
 

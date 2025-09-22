@@ -111,7 +111,6 @@ public class ChapterController {
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
         ChapterDetailDTO chapter = chapterService.createChapterAudio(id);
         return ControllerResponse.success("Chapter audio retrieved successfully", chapter);
-
     }
 
     @Operation(summary = "Create new chapter", description = "Create a new chapter for a novel", security = @SecurityRequirement(name = "bearerAuth"))

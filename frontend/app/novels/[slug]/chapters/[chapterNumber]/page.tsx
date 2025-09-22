@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/components/providers/auth-provider"
 import { api, type ChapterDetail, type Comment } from "@/lib/api"
 import { formatRelativeTime } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -41,6 +42,7 @@ export default function ChapterPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
+  const { isAuthenticated, loading: authLoading } = useAuth()
 
   const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
@@ -101,9 +103,12 @@ export default function ChapterPage() {
 
       const response = await api.getChapterByNumber2(slug, chapterNumber)
       if (response.success) {
-        setChapter(response.data)
-        await fetchChapterContent(response.data)
+        const chapterData = response.data
+        setChapter(chapterData)
+        await fetchChapterContent(chapterData)
+        setAudioUrl(chapterData.audioUrl ?? null)
       } else {
+        setContentLoading(false)
         toast({
           title: "Error",
           description: "Failed to load chapter",
@@ -117,6 +122,7 @@ export default function ChapterPage() {
         description: "Failed to load chapter",
         variant: "destructive",
       })
+      setContentLoading(false)
     } finally {
       setLoading(false)
     }
@@ -124,34 +130,26 @@ export default function ChapterPage() {
 
   const fetchChapterContent = async (chapterData: ChapterDetail) => {
     try {
-      // First get the JSON metadata
-      const metadataResponse = await api.getChapterJsonMetadata(chapterData.id)
-
-      if (metadataResponse.success && metadataResponse.data.fileUrl) {
-        // Then fetch the actual content from the file URL
-        const contentResponse = await fetch(metadataResponse.data.fileUrl)
-        if (contentResponse.ok) {
-          const content = await contentResponse.json()
-          setChapterContent(content)
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to load chapter content",
-            variant: "destructive",
-          })
-        }
-      } else {
-        // Fallback to jsonUrl if available
-        if (chapterData.jsonUrl) {
-          const response = await fetch(chapterData.jsonUrl)
-          if (response.ok) {
-            const content = await response.json()
-            setChapterContent(content)
-          }
-        }
+      if (!chapterData.jsonUrl) {
+        setChapterContent(null)
+        toast({
+          title: "Content unavailable",
+          description: "This chapter does not have any content yet.",
+          variant: "destructive",
+        })
+        return
       }
+
+      const response = await fetch(chapterData.jsonUrl)
+      if (!response.ok) {
+        throw new Error("Failed to fetch chapter content")
+      }
+
+      const content = await response.json()
+      setChapterContent(content)
     } catch (error) {
       console.error("Failed to fetch chapter content:", error)
+      setChapterContent(null)
       toast({
         title: "Error",
         description: "Failed to load chapter content",
@@ -162,36 +160,33 @@ export default function ChapterPage() {
     }
   }
 
-  const fetchChapterAudio = useCallback(
-    async (chapterId: string | undefined) => {
-      if (!chapterId) {
-        return
-      }
+  const handleGenerateAudio = useCallback(async () => {
+    if (!chapter?.id) {
+      return
+    }
 
-      setAudioLoading(true)
-      setAudioError(null)
-      try {
-        const response = await api.getChapterAudio(chapterId)
-        if (response.success && response.data.audioUrl) {
-          setAudioUrl(response.data.audioUrl)
-          setChapter((prev) => {
-            if (prev && prev.id === response.data.id) {
-              return { ...prev, audioUrl: response.data.audioUrl }
-            }
-            return prev
-          })
-        } else {
-          setAudioError("Audio is not available yet. Please try again shortly.")
-        }
-      } catch (error) {
-        console.error("Failed to load chapter audio:", error)
-        setAudioError("Failed to load audio. Please try again.")
-      } finally {
-        setAudioLoading(false)
+    setAudioLoading(true)
+    setAudioError(null)
+    try {
+      const response = await api.getChapterAudio(chapter.id)
+      if (response.success && response.data.audioUrl) {
+        setAudioUrl(response.data.audioUrl)
+        setChapter((prev) => {
+          if (prev && prev.id === response.data.id) {
+            return { ...prev, audioUrl: response.data.audioUrl }
+          }
+          return prev
+        })
+      } else {
+        setAudioError("Audio is not available yet. Please try again shortly.")
       }
-    },
-    []
-  )
+    } catch (error) {
+      console.error("Failed to generate audio:", error)
+      setAudioError("Failed to generate audio. Please try again.")
+    } finally {
+      setAudioLoading(false)
+    }
+  }, [chapter?.id])
 
   useEffect(() => {
     if (!chapter) {
@@ -204,12 +199,10 @@ export default function ChapterPage() {
     if (chapter.audioUrl) {
       setAudioUrl(chapter.audioUrl)
       setAudioError(null)
-      setAudioLoading(false)
-      return
+    } else {
+      setAudioUrl(null)
     }
-
-    fetchChapterAudio(chapter.id)
-  }, [chapter, fetchChapterAudio])
+  }, [chapter])
 
   useEffect(() => {
     if (!chapter) return
@@ -691,6 +684,8 @@ export default function ChapterPage() {
       return null
     }
 
+    const canGenerateAudio = !authLoading && isAuthenticated
+
     if (audioLoading) {
       return (
         <div className="flex items-center space-x-3 rounded-lg border border-muted p-4">
@@ -728,20 +723,53 @@ export default function ChapterPage() {
               <p className="text-xs text-muted-foreground">{audioError}</p>
             </div>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => fetchChapterAudio(chapter.id)}
-            className="self-start md:self-auto"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Try again
-          </Button>
+          {canGenerateAudio ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGenerateAudio}
+              className="self-start md:self-auto"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
+          ) : (
+            !authLoading && (
+              <p className="text-xs text-muted-foreground">Sign in to generate an audio version for this chapter.</p>
+            )
+          )}
         </div>
       )
     }
 
-    return null
+    return (
+      <div className="flex flex-col gap-3 rounded-lg border border-muted p-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start space-x-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">Audio not available yet</p>
+            <p className="text-xs text-muted-foreground">
+              {authLoading
+                ? "Checking audio availability..."
+                : canGenerateAudio
+                  ? "Generate an audio version for this chapter."
+                  : "Sign in to generate an audio version for this chapter."}
+            </p>
+          </div>
+        </div>
+        {canGenerateAudio && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleGenerateAudio}
+            className="self-start md:self-auto"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Generate audio
+          </Button>
+        )}
+      </div>
+    )
   }
 
   if (loading) {

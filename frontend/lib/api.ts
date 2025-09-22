@@ -612,7 +612,12 @@ class ApiClient {
             `/api/chapters/${chapterId}/json-metadata`
         );
     }
-
+    
+    async getChapterAudioMetadata(chapterId: string) {
+        return this.request<FileMetadata>(
+            `/api/chapters/${chapterId}/audio-metadata`
+        );
+    }
     async getChapterAudio(chapterId: string) {
         return this.request<ChapterDetail>(`/api/chapters/${chapterId}/audio`);
     }

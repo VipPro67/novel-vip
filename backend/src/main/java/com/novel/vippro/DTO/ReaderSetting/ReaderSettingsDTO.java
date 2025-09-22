@@ -20,4 +20,9 @@ public class ReaderSettingsDTO {
     private Boolean showChapterTitle;
     private Boolean showTime;
     private Boolean showBattery;
+    private String textColor;
+    private String backgroundColor;
+    private Boolean audioEnabled;
+    private Boolean audioAutoNextChapter;
+    private Double audioSpeed;
 }

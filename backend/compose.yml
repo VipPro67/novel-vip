@@ -118,7 +118,15 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
-
+  texttospeech:
+    build:
+      context: ../tts
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"
+    env_file:
+      - ../tts/.env
+    
 volumes:
   postgres_data: {}
   es_data: {}

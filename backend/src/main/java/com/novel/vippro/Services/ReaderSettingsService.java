@@ -74,6 +74,11 @@ public class ReaderSettingsService {
         settings.setShowChapterTitle(true);
         settings.setShowTime(true);
         settings.setShowBattery(true);
+        settings.setTextColor("#000000");
+        settings.setBackgroundColor("#FFFFFF");
+        settings.setAudioEnabled(false);
+        settings.setAudioAutoNextChapter(false);
+        settings.setAudioSpeed(1.0);
 
         ReaderSettings savedSettings = readerSettingsRepository.save(settings);
         return mapper.ReaderSettingsToReaderSettingsDTO(savedSettings);
