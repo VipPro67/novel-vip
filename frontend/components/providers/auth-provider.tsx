@@ -162,6 +162,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     console.log("Logging out...")
     api.clearToken()
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("readerSettings")
+    }
     setUser(null)
   }
 
@@ -191,3 +194,4 @@ export function useAuth() {
   }
   return context
 }
+

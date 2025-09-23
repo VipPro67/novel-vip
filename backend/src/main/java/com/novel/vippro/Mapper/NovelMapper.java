@@ -10,9 +10,11 @@ import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NovelDocument;
 import com.novel.vippro.Models.Tag;
+import com.novel.vippro.Services.FileStorageService;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -25,6 +27,10 @@ public class NovelMapper {
 
 	@Autowired
 	private ModelMapper modelMapper;
+
+    @Autowired
+    @Qualifier("s3FileStorageService")
+    private FileStorageService fileStorageService;
 
 	public NovelDTO NoveltoDTO(Novel novel) {
 		NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
@@ -48,7 +54,7 @@ public class NovelMapper {
 		return novelDTO;
 	}
 
-    public static NovelDocument toDocument(Novel novel) {
+    public NovelDocument toDocument(Novel novel) {
         NovelDocument doc = new NovelDocument();
         doc.setId(novel.getId());
         doc.setTitle(novel.getTitle());
@@ -69,7 +75,7 @@ public class NovelMapper {
         FileMetadataDTO coverImage = new FileMetadataDTO();
         coverImage.setId(novel.getCoverImage().getId());
         coverImage.setFileName(novel.getCoverImage().getFileName());
-        coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
+        coverImage.setFileUrl(fileStorageService.generateFileUrl(novel.getCoverImage().getPublicId(), 360));
         coverImage.setContentType(novel.getCoverImage().getContentType());
         coverImage.setSize(novel.getCoverImage().getSize());
         

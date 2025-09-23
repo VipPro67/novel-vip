@@ -1,21 +1,19 @@
 package com.novel.vippro.Services;
 
-import com.novel.vippro.Config.RabbitMQConfig;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Notification;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
+import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Repository.NotificationRepository;
 import com.novel.vippro.Repository.UserRepository;
-import com.novel.vippro.Services.NotificationService;
 
 import jakarta.persistence.EntityNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,7 +34,7 @@ public class NotificationService {
     private Mapper mapper;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MessagePublisher messagePublisher;
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
@@ -53,7 +51,7 @@ public class NotificationService {
         notification.setReferenceId(notificationDTO.getReferenceId());
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = mapper.NotificationtoDTO(saved);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.NOTIFICATION_QUEUE, dto);
+        messagePublisher.publishNotification(dto);
         return dto;
     }
 

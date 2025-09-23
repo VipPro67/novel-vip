@@ -89,7 +89,7 @@ public class MapperFacade implements Mapper {
 
 	@Override
 	public NovelDocument NoveltoDocument(Novel novel) {
-		return NovelMapper.toDocument(novel);
+		return novelMapper.toDocument(novel);
 	}
 
 	@Override

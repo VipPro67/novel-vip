@@ -185,12 +185,17 @@ export interface ReaderSettings {
     marginSize: number;
     paragraphSpacing: number;
     autoScroll: boolean;
-    autoScrollSpeed: boolean;
+    autoScrollSpeed: number;
     keepScreenOn: boolean;
     showProgress: boolean;
     showChapterTitle: boolean;
     showTime: boolean;
     showBattery: boolean;
+    textColor: string;
+    backgroundColor: string;
+    audioEnabled: boolean;
+    audioAutoNextChapter: boolean;
+    audioSpeed: number;
 }
 
 export interface RoleRequest {
@@ -1044,3 +1049,4 @@ class ApiClient {
 }
 
 export const api = new ApiClient(API_BASE_URL);
+

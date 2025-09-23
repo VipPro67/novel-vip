@@ -12,7 +12,17 @@ public class ReviewMapper {
 	private ModelMapper modelMapper;
 
 	public ReviewDTO ReviewtoDTO(Review review) {
-		return modelMapper.map(review, ReviewDTO.class);
+		ReviewDTO dto = modelMapper.map(review, ReviewDTO.class);
+        if(review.getNovel() != null) {
+            dto.setNovelId(review.getNovel().getId());
+            dto.setNovelTitle(review.getNovel().getTitle());
+        }
+        if(review.getUser() != null) {
+            dto.setUserId(review.getUser().getId());
+            dto.setUsername(review.getUser().getUsername());
+            dto.setUserAvatar(review.getUser().getAvatar());
+        }
+        return dto;
 	}
 
 	public Review DTOtoReview(ReviewDTO reviewDTO) {

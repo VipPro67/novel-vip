@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import type { CSSProperties } from "react"
 import { Client } from "@stomp/stompjs"
 import { useParams, useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2, MoreVertical, Edit, Trash2, Reply, ChevronDown, ChevronUp, Send, RefreshCw, AlertCircle, Volume2 } from "lucide-react"
@@ -11,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useReaderSettings } from "@/components/providers/reader-settings-provider"
 import { api, type ChapterDetail, type Comment } from "@/lib/api"
 import { formatRelativeTime } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -43,6 +45,8 @@ export default function ChapterPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { isAuthenticated, loading: authLoading } = useAuth()
+  const { settings: readerSettings } = useReaderSettings()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
@@ -54,6 +58,35 @@ export default function ChapterPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioLoading, setAudioLoading] = useState(false)
   const [audioError, setAudioError] = useState<string | null>(null)
+
+  const cardContentStyle = useMemo<CSSProperties>(() => {
+    if (!readerSettings) {
+      return {}
+    }
+
+    return {
+      padding: `${readerSettings.marginSize ?? 20}px`,
+      backgroundColor: readerSettings.backgroundColor ?? undefined,
+      color: readerSettings.textColor ?? undefined,
+    }
+  }, [readerSettings])
+
+  const chapterTypographyStyle = useMemo<CSSProperties & Record<string, string | number>>(() => {
+    const style: CSSProperties & Record<string, string | number> = {
+      lineHeight: readerSettings?.lineHeight ?? 1.8,
+      fontSize: `${readerSettings?.fontSize ?? 16}px`,
+      color: readerSettings?.textColor ?? "inherit",
+      fontFamily: readerSettings?.fontFamily ?? "inherit",
+    }
+
+    style["--paragraph-spacing"] = `${readerSettings?.paragraphSpacing ?? 10}px`
+    return style
+  }, [readerSettings])
+  useEffect(() => {
+    if (audioRef.current && readerSettings?.audioSpeed) {
+      audioRef.current.playbackRate = readerSettings.audioSpeed
+    }
+  }, [audioUrl, readerSettings?.audioSpeed])
 
   // Comment states
   const [showComments, setShowComments] = useState(false)
@@ -684,6 +717,10 @@ export default function ChapterPage() {
       return null
     }
 
+    if (readerSettings && !readerSettings.audioEnabled) {
+      return null
+    }
+
     const canGenerateAudio = !authLoading && isAuthenticated
 
     if (audioLoading) {
@@ -702,7 +739,22 @@ export default function ChapterPage() {
             <Volume2 className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Listen to this chapter</h2>
           </div>
-          <audio controls preload="none" className="w-full">
+          <audio
+            ref={(element) => {
+              audioRef.current = element
+              if (element && readerSettings?.audioSpeed) {
+                element.playbackRate = readerSettings.audioSpeed
+              }
+            }}
+            controls
+            preload="none"
+            className="w-full"
+            onEnded={() => {
+              if (readerSettings?.audioAutoNextChapter) {
+                navigateChapter("next")
+              }
+            }}
+          >
             <source src={audioUrl} type="audio/mpeg" />
             Your browser does not support the audio element.
           </audio>
@@ -832,7 +884,7 @@ export default function ChapterPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Card>
-            <CardContent className="p-8">
+            <CardContent className="p-8" style={cardContentStyle}>
               <div className="space-y-6">
                 {renderAudioSection()}
                 {contentLoading ? (
@@ -848,11 +900,7 @@ export default function ChapterPage() {
                     <div
                       className="chapter-content leading-relaxed text-base"
                       dangerouslySetInnerHTML={renderHtmlContent(chapterContent.content)}
-                      style={{
-                        lineHeight: "1.8",
-                        fontSize: "16px",
-                        color: "inherit",
-                      }}
+                      style={chapterTypographyStyle}
                     />
                     {chapterContent.wordCount && (
                       <div className="mt-8 pt-4 border-t text-sm text-muted-foreground">
@@ -959,12 +1007,12 @@ export default function ChapterPage() {
       {/* Custom CSS for chapter content */}
       <style jsx>{`
         .chapter-content p {
-          margin-bottom: 1.2em;
+          margin-bottom: var(--paragraph-spacing, 1.2em);
           text-align: justify;
         }
         
         .chapter-content div {
-          margin-bottom: 1em;
+          margin-bottom: var(--paragraph-spacing, 1em);
         }
         
         .chapter-content strong,
@@ -999,3 +1047,4 @@ export default function ChapterPage() {
     </div>
   )
 }
+

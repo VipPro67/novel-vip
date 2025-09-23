@@ -3,23 +3,25 @@ package com.novel.vippro.Services;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Map;
 
-@Service
-@Primary
+@Service("cloudinaryService")
+@ConditionalOnProperty(name = "storage.provider", havingValue = "cloudinary")
 public class CloudinaryService implements FileStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudinaryService.class);
-    @Autowired
-    private Cloudinary cloudinary;
+
+    private final Cloudinary cloudinary;
+
+    public CloudinaryService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
 
     @Override
     public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
@@ -30,7 +32,8 @@ public class CloudinaryService implements FileStorageService {
                 "resource_type", resourceType.get("resourceType"),
                 "public_id", publicId));
 
-        return (String) result.get("url");
+        Object url = result.get("secure_url");
+        return url != null ? url.toString() : (String) result.get("url");
     }
 
     @Override
@@ -45,8 +48,9 @@ public class CloudinaryService implements FileStorageService {
                     .resourceType(resourceType)
                     .generate(publicId);
 
-            // Here you would implement the actual download logic
-            // This is a placeholder - you'll need to implement the actual download logic
+            // Here you would implement the actual download logic.
+            // This remains a placeholder that callers should override with HTTP download logic if needed.
+            logger.warn("downloadFile is not fully implemented. Generated URL: {}", url);
             return new byte[0];
         } catch (Exception e) {
             throw new IOException("Failed to download file from Cloudinary", e);
@@ -65,7 +69,7 @@ public class CloudinaryService implements FileStorageService {
             Map<String, Object> result = cloudinary.uploader().destroy(publicId,
                     ObjectUtils.asMap("resource_type", resourceType));
 
-            if (!(Boolean) result.get("result").equals("ok")) {
+            if (!"ok".equals(result.get("result"))) {
                 throw new IOException("Failed to delete file from Cloudinary");
             }
         } catch (Exception e) {
@@ -84,6 +88,23 @@ public class CloudinaryService implements FileStorageService {
             return Map.of("resourceType", "raw", "format", contentType.substring(6));
         } else {
             throw new IllegalArgumentException("Unsupported content type: " + contentType);
+        }
+    }
+
+    @Override
+    public String generateFileUrl(String publicId, int expirationInSeconds){
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .generate(publicId);
+        } catch (Exception e) {
+            logger.error("Failed to generate file URL from Cloudinary", e);
+            return null;
         }
     }
 }

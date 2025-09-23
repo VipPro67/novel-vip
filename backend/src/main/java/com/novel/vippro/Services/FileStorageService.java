@@ -12,4 +12,6 @@ public interface FileStorageService {
     byte[] downloadFile(String publicId) throws IOException;
 
     void deleteFile(String publicId) throws IOException;
+
+    String generateFileUrl(String publicId, int expirationInSeconds);
 }

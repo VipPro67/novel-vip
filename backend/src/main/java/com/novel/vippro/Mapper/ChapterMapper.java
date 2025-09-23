@@ -3,8 +3,11 @@ package com.novel.vippro.Mapper;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.Models.Chapter;
+import com.novel.vippro.Services.FileStorageService;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,6 +19,10 @@ public class ChapterMapper {
 	@Autowired
 	private ModelMapper modelMapper;
 
+	@Autowired
+	@Qualifier("s3FileStorageService")
+	private FileStorageService fileStorageService;
+
 	public ChapterDTO ChaptertoDTO(Chapter chapter) {
 		return modelMapper.map(chapter, ChapterDTO.class);
 	}
@@ -26,11 +33,11 @@ public class ChapterMapper {
 		chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
         if(chapter.getAudioFile()!=null)
         {
-            chapterDetailDTO.setAudioUrl(chapter.getAudioFile().getFileUrl());
+            chapterDetailDTO.setAudioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 360));
         }
         if(chapter.getJsonFile()!=null)
         {
-            chapterDetailDTO.setJsonUrl(chapter.getJsonFile().getFileUrl());
+            chapterDetailDTO.setJsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 360));
         }
 		return chapterDetailDTO;
 	}
