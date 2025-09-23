@@ -18,6 +18,8 @@ novel.app.jwtExpirationMs=
 cloudinary.cloud.name=
 cloudinary.api.key=
 cloudinary.api.secret=
+storage.provider =${STORAGE_PROVIDER:s3}
+
 
 # Text to Speech
 texttospeech.provider=
@@ -58,3 +60,13 @@ spring.cache.redis.time-to-live=
 
 # Elasticsearch
 spring.elasticsearch.uris=
+# File Storage Provider
+storage.provider=cloudinary
+
+# AWS S3 Properties
+aws.s3.bucket=
+aws.s3.region=
+aws.s3.access-key=
+aws.s3.secret-key=
+aws.s3.endpoint=
+aws.s3.path-style-access=

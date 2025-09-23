@@ -42,6 +42,7 @@ public class ChapterService {
     private NovelRepository novelRepository;
 
     @Autowired
+    @Qualifier("s3FileStorageService")
     private FileStorageService fileStorageService;
 
     @Autowired
@@ -81,7 +82,6 @@ public class ChapterService {
             throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
                     novelId + " and " + chapterNumber);
         }
-
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 

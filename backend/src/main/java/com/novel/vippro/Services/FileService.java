@@ -9,6 +9,7 @@ import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Repository.FileMetadataRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class FileService {
 
     @Autowired
+    @Qualifier("s3FileStorageService")
     private FileStorageService fileStorageService;
 
     @Autowired
