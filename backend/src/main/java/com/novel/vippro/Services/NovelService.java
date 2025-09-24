@@ -30,6 +30,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,10 +78,11 @@ public class NovelService {
             return;
         }
         logger.info("Reindexing {} novels...", novels.size());
-        List<NovelDocument> docs = novels.stream()
-            .map(NovelMapper::toDocument)
-            .toList();
-
+        List<NovelDocument> docs = new ArrayList<>();
+        for (Novel novel : novels) {
+            NovelDocument doc = mapper.NoveltoDocument(novel);
+            docs.add(doc);
+        }
         int batchSize = 1000; // tune (500–2000 usually good)
         for (int i = 0; i < docs.size(); i += batchSize) {
             int end = Math.min(i + batchSize, docs.size());
