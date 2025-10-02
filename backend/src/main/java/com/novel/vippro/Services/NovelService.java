@@ -78,7 +78,7 @@ public class NovelService {
         }
         logger.info("Reindexing {} novels...", novels.size());
         List<NovelDocument> docs = novels.stream()
-            .map(NovelMapper::toDocument)
+            .map(mapper::NoveltoDocument)
             .toList();
 
         int batchSize = 1000; // tune (500–2000 usually good)
