@@ -354,7 +354,7 @@ public class ChapterService {
         }
 
         FileMetadata audioFile = new FileMetadata();
-        audioFile.setPublicId(chapter.getNovel().getSlug() + "-" + chapter.getChapterNumber() + ".mp3");
+        audioFile.setPublicId("novels/"+chapter.getNovel().getSlug() + "/audios/" + "chap-" + chapter.getChapterNumber() + "-audio.mp3");
         audioFile.setContentType("audio/mpeg");
         audioFile.setFileUrl(audioUrl);
         audioFile.setFileName("chap-" + chapter.getChapterNumber() + "-audio.mp3");
@@ -363,9 +363,7 @@ public class ChapterService {
         audioFile.setUpdatedAt(Instant.now());
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
-
         chapterRepository.save(chapter);
-
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
         return dto;
     }

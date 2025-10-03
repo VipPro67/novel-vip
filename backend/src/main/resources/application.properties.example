@@ -58,8 +58,12 @@ spring.data.redis.timeout=
 spring.cache.type=
 spring.cache.redis.time-to-live=
 
-# Elasticsearch
+# Search
+search.provider=
+search.index=
+search.base-uri=
 spring.elasticsearch.uris=
+
 # File Storage Provider
 storage.provider=cloudinary
 
@@ -70,3 +74,4 @@ aws.s3.access-key=
 aws.s3.secret-key=
 aws.s3.endpoint=
 aws.s3.path-style-access=
+

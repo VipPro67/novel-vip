@@ -10,13 +10,11 @@ import com.novel.vippro.Models.Category;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
-import com.novel.vippro.Models.NovelDocument;
 import com.novel.vippro.Models.Tag;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.CategoryRepository;
 import com.novel.vippro.Repository.GenreRepository;
 import com.novel.vippro.Repository.NovelRepository;
-import com.novel.vippro.Repository.NovelSearchRepository;
 import com.novel.vippro.Repository.TagRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,11 +62,7 @@ public class NovelService {
     private CategoryRepository categoryRepository;
 
     @Autowired
-    private NovelSearchService novelSearchService;
-
-    @Autowired
-    private NovelSearchRepository novelSearchRepository;
-
+    private SearchService searchService;
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
         List<Novel> novels = novelRepository.findAll();
@@ -78,21 +71,16 @@ public class NovelService {
             return;
         }
         logger.info("Reindexing {} novels...", novels.size());
-        List<NovelDocument> docs = new ArrayList<>();
+        int processed = 0;
         for (Novel novel : novels) {
-            NovelDocument doc = mapper.NoveltoDocument(novel);
-            docs.add(doc);
+            searchService.indexNovel(novel);
+            processed++;
+            if (processed % 200 == 0) {
+                logger.info("Indexed {} novels...", processed);
+            }
         }
-        int batchSize = 1000; // tune (500–2000 usually good)
-        for (int i = 0; i < docs.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, docs.size());
-            List<NovelDocument> batch = docs.subList(i, end);
-            novelSearchRepository.saveAll(batch);
-            logger.info("Indexed novels {} to {}", i + 1, end);
-        }
-        logger.info("Reindexing completed.");
+        logger.info("Reindexing completed. {} novels reindexed.", processed);
     }
-
     @Cacheable(value = "novels", key = "#id")
     @Transactional(readOnly = true)
     public NovelDTO getNovelById(UUID id) {
@@ -164,7 +152,7 @@ public class NovelService {
         }
 
         logger.info("Searching novels with filters: {}", filters);
-        Page<Novel> novels = novelSearchService.search(filters, pageable);
+        Page<Novel> novels = searchService.search(filters, pageable);
 
         if (novels.isEmpty()) {
             logger.info("Elasticsearch search returned no results. Falling back to database query.");
@@ -306,7 +294,7 @@ public class NovelService {
         logger.info("Saving novel: {}", novel);
         logger.info("Novel categories: {}", novel.getCategories());
         Novel savedNovel = novelRepository.save(novel);
-        novelSearchService.indexNovel(savedNovel);
+        searchService.indexNovel(savedNovel);
 
         return mapper.NoveltoDTO(savedNovel);
     }
@@ -397,7 +385,7 @@ public class NovelService {
         }
 
         Novel updatedNovel = novelRepository.save(novel);
-        novelSearchService.indexNovel(updatedNovel);
+        searchService.indexNovel(updatedNovel);
         return mapper.NoveltoDTO(updatedNovel);
     }
 
@@ -407,7 +395,7 @@ public class NovelService {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
         novelRepository.delete(novel);
-        novelSearchService.deleteNovel(id);
+        searchService.deleteNovel(id);
     }
 
     @Transactional

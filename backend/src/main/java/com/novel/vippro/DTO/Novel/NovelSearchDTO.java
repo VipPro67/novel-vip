@@ -14,7 +14,6 @@ public class NovelSearchDTO {
     private String genre;
     private String tag;
 
-
     public boolean hasFilters() {
         return Stream.of(keyword, title, author, category, genre, tag)
                 .anyMatch(value -> value != null && !value.trim().isEmpty());
@@ -29,38 +28,27 @@ public class NovelSearchDTO {
     }
 
     public String normalizedKeyword() {
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            return keyword.trim();
-        }
-        return null;
+        return normalize(keyword);
     }
 
     public String normalizedTitle() {
-        if (title != null && !title.trim().isEmpty()) {
-            return title.trim();
-        }
-        return null;
+        return normalize(title);
     }
 
     public String normalizedAuthor() {
-        if (author != null && !author.trim().isEmpty()) {
-            return author.trim();
-        }
-        return null;
+        return normalize(author);
     }
 
     public String normalizedCategory() {
-        if (category != null && !category.trim().isEmpty()) {
-            return category.trim();
-        }
-        return null;
+        return normalize(category);
     }
 
     public String normalizedGenre() {
-        if (genre != null && !genre.trim().isEmpty()) {
-            return genre.trim();
-        }
-        return null;
+        return normalize(genre);
+    }
+
+    public String normalizedTag() {
+        return normalize(tag);
     }
 
     public NovelSearchDTO cleanedCopy() {
@@ -70,6 +58,14 @@ public class NovelSearchDTO {
         copy.setAuthor(normalizedAuthor());
         copy.setCategory(normalizedCategory());
         copy.setGenre(normalizedGenre());
+        copy.setTag(normalizedTag());
         return copy;
+    }
+
+    private String normalize(String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            return value.trim();
+        }
+        return null;
     }
 }

@@ -1,0 +1,32 @@
+filebeat.inputs:
+  - type: filestream
+    id: novel-backend-log
+    enabled: true
+    paths:
+      - /var/log/app/app.log
+    fields:
+      service.name: novel-vip-backend
+    fields_under_root: true
+    ignore_older: 72h
+
+processors:
+  - add_host_metadata: ~
+  - add_fields:
+      target: ''
+      fields:
+        environment: ${SPRING_PROFILES_ACTIVE:docker}
+
+setup.template.enabled: true
+setup.template.name: "${FILEBEAT_TEMPLATE:novel-backend-logs}"
+setup.template.pattern: "${FILEBEAT_TEMPLATE_PATTERN:novel-backend-logs-*}"
+setup.ilm.enabled: false
+
+output.elasticsearch:
+  hosts: ["${FILEBEAT_OUTPUT_HOST:http://opensearch:9200}"]
+  username: "${FILEBEAT_USERNAME:vippro67}"
+  password: "${FILEBEAT_PASSWORD:123123}"
+  index: "${FILEBEAT_INDEX:novel-backend-logs}"
+  ssl.enabled: false
+
+logging.to_files: false
+logging.to_stdout: true

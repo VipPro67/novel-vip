@@ -11,7 +11,7 @@ import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.NovelService;
 import com.novel.vippro.Services.SuggestService;
-import com.novel.vippro.Services.SuggestService.SuggestItemDTO;
+import com.novel.vippro.DTO.Novel.SearchSuggestion;
 
 import jakarta.validation.Valid;
 
@@ -311,7 +311,7 @@ public class NovelController {
             @ApiResponse(responseCode = "200", description = "OK")
     })
     @GetMapping("/suggest")
-    public List<SuggestItemDTO> suggest(
+    public List<SearchSuggestion> suggest(
             @Parameter(description = "partial keyword") @RequestParam("q") String q,
             @Parameter(description = "max results") @RequestParam(value = "limit", defaultValue = "8") int limit) {
         if (q == null || q.isBlank())
