@@ -71,15 +71,8 @@ public class NovelService {
             return;
         }
         logger.info("Reindexing {} novels...", novels.size());
-        int processed = 0;
-        for (Novel novel : novels) {
-            searchService.indexNovel(novel);
-            processed++;
-            if (processed % 200 == 0) {
-                logger.info("Indexed {} novels...", processed);
-            }
-        }
-        logger.info("Reindexing completed. {} novels reindexed.", processed);
+            searchService.indexNovels(novels);
+        logger.info("Reindexing completed. {} novels reindexed.", novels.size());
     }
     @Cacheable(value = "novels", key = "#id")
     @Transactional(readOnly = true)
@@ -168,6 +161,8 @@ public class NovelService {
             if (novels.isEmpty() && filters.getKeyword() != null) {
                 logger.info("No novels found using criteria. Falling back to keyword search for: {}", filters.getKeyword());
                 novels = novelRepository.searchByKeyword(filters.getKeyword(), pageable);
+                searchService.indexNovels(novels.getContent());
+                logger.info("Reindexing completed. {} novels reindexed.", novels.getTotalElements());
             }
         }
 
@@ -294,7 +289,8 @@ public class NovelService {
         logger.info("Saving novel: {}", novel);
         logger.info("Novel categories: {}", novel.getCategories());
         Novel savedNovel = novelRepository.save(novel);
-        searchService.indexNovel(savedNovel);
+        List<Novel> novelsToIndex = List.of(savedNovel);
+        searchService.indexNovels(novelsToIndex);
 
         return mapper.NoveltoDTO(savedNovel);
     }
@@ -385,7 +381,8 @@ public class NovelService {
         }
 
         Novel updatedNovel = novelRepository.save(novel);
-        searchService.indexNovel(updatedNovel);
+        List<Novel> novelsToIndex = List.of(updatedNovel);
+        searchService.indexNovels(novelsToIndex);
         return mapper.NoveltoDTO(updatedNovel);
     }
 

@@ -13,14 +13,14 @@ public class RabbitMQConfig {
 	public static final String NOTIFICATION_QUEUE = "notifications";
     
 	public static final String COMMENT_QUEUE = "comments";
-	@Bean
-	public Queue notificationsQueue() {
-		return new Queue(NOTIFICATION_QUEUE, false);
-	}
+ @Bean
+    public Queue notificationsQueue() {
+        return new Queue(NOTIFICATION_QUEUE, true, false, false);
+    }
 
     @Bean
     public Queue commentsQueue() {
-        return new Queue(COMMENT_QUEUE, false);
+        return new Queue(COMMENT_QUEUE, true, false, false);
     }
 
 	@Bean

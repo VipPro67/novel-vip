@@ -72,6 +72,7 @@ public class ChapterService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-chapter-' + #chapterNumber")
     public ChapterDetailDTO getChapterByNumberDTO(UUID novelId, Integer chapterNumber) {
         if (!novelRepository.existsById(novelId)) {
@@ -85,6 +86,7 @@ public class ChapterService {
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "chapters", key = "'novel-slug-' + #slug + '-chapter-' + #chapterNumber")
     public ChapterDetailDTO getChapterByNumber2DTO(String slug, Integer chapterNumber) {
         Novel novel = novelRepository.findBySlugWithGraph(slug);
@@ -100,6 +102,7 @@ public class ChapterService {
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "chapters", key = "'novel-' + #novelId + '-page-' + #pageable.pageNumber")
     public PageResponse<ChapterDTO> getChaptersByNovelDTO(UUID novelId, Pageable pageable) {
         Page<Chapter> chapters = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable);
@@ -136,6 +139,7 @@ public class ChapterService {
         });
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<Chapter> getChaptersByNovel(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
@@ -143,11 +147,13 @@ public class ChapterService {
         return new PageResponse<>(chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId, pageable));
     }
 
+    @Transactional(readOnly = true)
     public Chapter getChapterById(UUID id) {
         return chapterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", id));
     }
 
+    @Transactional(readOnly = true)
     public ChapterDetailDTO getChapterByNovelIdAndNumber(UUID novelId, Integer chapterNumber) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);

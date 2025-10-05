@@ -1,7 +1,9 @@
 package com.novel.vippro.Services;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,10 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.api.gax.rpc.NotFoundException;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
 import com.novel.vippro.DTO.Novel.SearchSuggestion;
 import com.novel.vippro.Mapper.Mapper;
@@ -35,6 +40,7 @@ import com.novel.vippro.Mapper.NovelMapper;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NovelDocument;
 
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -43,41 +49,71 @@ import lombok.RequiredArgsConstructor;
 public class OpenSearchSearchService implements SearchService {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenSearchSearchService.class);
-
     private static final String DEFAULT_INDEX = "novels";
+    
     private static final String SUGGEST_NAME = "title_suggest";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final Mapper mapper;
 
-    @Value("${search.base-uri:http://opensearch:9200}")
-    private String baseUri;
+    @Value("${search.full-uri:https://compassionate-dougla-1h9hh5eb.us-east-1.bonsaisearch.net}")
+    private String fullUri;
 
     @Value("${search.index:" + DEFAULT_INDEX + "}")
     private String indexName;
 
+    @Value("${search.username:}")
+    private String username;
+
+    @Value("${search.password:}")
+    private String password;
+
     private URI uri(String path) {
-        String normalizedBase = baseUri.endsWith("/") ? baseUri.substring(0, baseUri.length() - 1) : baseUri;
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
-        return URI.create(normalizedBase + normalizedPath);
+        return URI.create(fullUri + normalizedPath);
     }
 
     @Override
-    public void indexNovel(Novel novel) {
+    @Transactional
+    public void indexNovels(List<Novel> novels) {
         try {
-            NovelDocument document = mapper.NoveltoDocument(novel);
-            if (document.getId() == null) {
-                document.setId(novel.getId());
+            StringBuilder bulkRequest = new StringBuilder();
+
+            for (Novel novel : novels) {
+                NovelDocument document = mapper.NoveltoDocument(novel);
+                if (document.getId() == null) {
+                    document.setId(novel.getId());
+                }
+
+                // 1️⃣ Bulk metadata line (action + metadata)
+                bulkRequest.append("{\"index\":{\"_index\":\"")
+                        .append(indexName)
+                        .append("\",\"_id\":\"")
+                        .append(document.getId())
+                        .append("\"}}\n");
+
+                // 2️⃣ Document JSON line
+                bulkRequest.append(objectMapper.writeValueAsString(document))
+                        .append("\n");
             }
-            String json = objectMapper.writeValueAsString(document);
-            URI uri = uri(String.format("/%s/_doc/%s", indexName, document.getId()));
-            RequestEntity<String> request = RequestEntity.put(uri)
+
+            URI uri = uri("/_bulk");
+
+            RequestEntity<String> request = RequestEntity
+                    .post(uri)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(json);
+                    .header(HttpHeaders.AUTHORIZATION,
+                            "Basic " + Base64.getEncoder()
+                                    .encodeToString((username + ":" + password)
+                                    .getBytes(StandardCharsets.UTF_8)))
+                    .body(bulkRequest.toString());
+
             restTemplate.exchange(request, String.class);
+            logger.info("✅ Indexed {} novels successfully in bulk.", novels.size());
+
         } catch (Exception e) {
-            logger.error("Failed to index novel {} in OpenSearch", novel.getId(), e);
+            logger.error("❌ Bulk index failed for {} novels", novels.size(), e);
         }
     }
 
@@ -85,7 +121,10 @@ public class OpenSearchSearchService implements SearchService {
     public void deleteNovel(UUID id) {
         try {
             URI uri = uri(String.format("/%s/_doc/%s", indexName, id));
-            RequestEntity<Void> request = RequestEntity.delete(uri).build();
+            RequestEntity<Void> request = RequestEntity
+                    .delete(uri)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)))
+                    .build();
             restTemplate.exchange(request, String.class);
         } catch (Exception e) {
             logger.error("Failed to delete novel {} from OpenSearch", id, e);
@@ -164,8 +203,8 @@ public class OpenSearchSearchService implements SearchService {
             URI uri = uri(String.format("/%s/_search", indexName));
             RequestEntity<String> request = RequestEntity.post(uri)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)))
                     .body(objectMapper.writeValueAsString(body));
-
             ResponseEntity<String> response = restTemplate.exchange(request, String.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 logger.warn("OpenSearch search returned non-success status: {}", response.getStatusCode());
@@ -200,7 +239,12 @@ public class OpenSearchSearchService implements SearchService {
 
             long total = extractTotalHits(root.path("hits").path("total"));
             return new PageImpl<>(items, pageable, total);
-        } catch (Exception e) {
+        }
+        catch (NotFoundException e) {
+            logger.warn("OpenSearch index '{}' not found: {}", indexName, e.getMessage());
+            return Page.empty(pageable);
+        }
+        catch (Exception e) {
             logger.error("OpenSearch query failed", e);
             return Page.empty(pageable);
         }
@@ -233,6 +277,7 @@ public class OpenSearchSearchService implements SearchService {
             URI uri = uri(String.format("/%s/_search", indexName));
             RequestEntity<String> request = RequestEntity.post(uri)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)))
                     .body(objectMapper.writeValueAsString(body));
 
             ResponseEntity<String> response = restTemplate.exchange(request, String.class);
@@ -292,8 +337,8 @@ public class OpenSearchSearchService implements SearchService {
             URI uri = uri(String.format("/%s/_search", indexName));
             RequestEntity<String> request = RequestEntity.post(uri)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)))
                     .body(objectMapper.writeValueAsString(body));
-
             ResponseEntity<String> response = restTemplate.exchange(request, String.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 return List.of();
@@ -345,6 +390,7 @@ public class OpenSearchSearchService implements SearchService {
             URI uri = uri(String.format("/%s/_search", indexName));
             RequestEntity<String> request = RequestEntity.post(uri)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8)))
                     .body(objectMapper.writeValueAsString(body));
 
             ResponseEntity<String> response = restTemplate.exchange(request, String.class);
@@ -387,6 +433,3 @@ public class OpenSearchSearchService implements SearchService {
         return totalNode.path("value").asLong(0);
     }
 }
-
-
-

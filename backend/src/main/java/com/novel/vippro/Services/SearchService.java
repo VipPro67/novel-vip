@@ -15,7 +15,7 @@ import com.novel.vippro.Models.Novel;
  */
 public interface SearchService {
 
-    void indexNovel(Novel novel);
+    void indexNovels(List<Novel> novel);
 
     void deleteNovel(UUID id);
 

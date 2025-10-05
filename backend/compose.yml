@@ -12,10 +12,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
-      - ${SEARCH_PROVIDER:-opensearch}
-      - postgres
-      - redis
-      - rabbitmq
+      # - ${SEARCH_PROVIDER:-opensearch}
+      # - postgres
+      # - redis
+      # - rabbitmq
       - texttospeech
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ] 
@@ -61,16 +61,16 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
-  postgres:
-    image: postgres:16
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: novel_user
-      POSTGRES_PASSWORD: novel_password
-      POSTGRES_DB: novel_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:16
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: novel_user
+  #     POSTGRES_PASSWORD: novel_password
+  #     POSTGRES_DB: novel_db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
   elasticsearch:
     profiles:
@@ -105,46 +105,42 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
-  opensearch:
-    profiles:
-      - opensearch
-    image: opensearchproject/opensearch:2.13.0
-    environment:
-      - discovery.type=single-node
-      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
-      - bootstrap.memory_lock=true
-      - plugins.security.disabled=true
-      - plugins.security.ssl.http.enabled=false
-      - plugins.security.ssl.transport.enabled=false
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    ports:
-      - "9200:9200"
-      - "9600:9600"
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
-      interval: 20s
-      timeout: 10s
-      retries: 20
-      start_period: 40s
+  # opensearch:
+  #   image: opensearchproject/opensearch:2.13.0
+  #   environment:
+  #     - discovery.type=single-node
+  #     - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
+  #     - bootstrap.memory_lock=true
+  #     - plugins.security.disabled=true
+  #     - plugins.security.ssl.http.enabled=false
+  #     - plugins.security.ssl.transport.enabled=false
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   ports:
+  #     - "9200:9200"
+  #     - "9600:9600"
+  #   volumes:
+  #     - opensearch_data:/usr/share/opensearch/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+  #     interval: 20s
+  #     timeout: 10s
+  #     retries: 20
+  #     start_period: 40s
 
-  opensearch-dashboards:
-    profiles:
-      - opensearch
-    image: opensearchproject/opensearch-dashboards:2.13.0
-    depends_on:
-      opensearch:
-        condition: service_healthy
-    environment:
-      - OPENSEARCH_HOSTS=http://opensearch:9200
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
-    ports:
-      - "5601:5601"
+  # opensearch-dashboards:
+  #   image: opensearchproject/opensearch-dashboards:2.13.0
+  #   depends_on:
+  #     opensearch:
+  #       condition: service_healthy
+  #   environment:
+  #     - OPENSEARCH_HOSTS=http://opensearch:9200
+  #     - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+  #   ports:
+  #     - "5601:5601"
 
   filebeat:
     profiles:

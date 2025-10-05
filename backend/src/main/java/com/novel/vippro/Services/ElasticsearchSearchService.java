@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.units.qual.m;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,12 +57,16 @@ public class ElasticsearchSearchService implements SearchService {
     private final ElasticsearchClient elasticsearchClient;
 
     @Override
-    public void indexNovel(Novel novel) {
-        try {
-            NovelDocument document = mapper.NoveltoDocument(novel);
-            elasticsearchOperations.save(document);
-        } catch (Exception e) {
-            logger.error("Failed to index novel {}", novel.getId(), e);
+    public void indexNovels(List<Novel> novel) {
+        for (Novel n : novel) {
+            try {
+                NovelDocument doc = mapper.NoveltoDocument(n);
+                if (doc != null) {
+                    elasticsearchOperations.save(doc);
+                }
+            } catch (Exception e) {
+                logger.error("Failed to index novel {}: {}", n.getId(), e.getMessage());
+            }
         }
     }
 
