@@ -5,18 +5,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    network_mode: host
     ports:
       - "8081:8081"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-    depends_on:
+    #depends_on:
       # - ${SEARCH_PROVIDER:-opensearch}
       # - postgres
       # - redis
       # - rabbitmq
-      - texttospeech
+      #- texttospeech
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ] 
       interval: 30s
@@ -27,39 +28,39 @@ services:
       - ~/.m2:/root/.m2
       - app_logs:/app/logs
 
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      REACT_EDITOR: atom
-      NEXT_PUBLIC_API_URL: http://localhost:8081
-      NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
-    depends_on:
-      - backend
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     REACT_EDITOR: atom
+  #     NEXT_PUBLIC_API_URL: http://localhost:8081
+  #     NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
+  #   depends_on:
+  #     - backend
 
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: [ "redis-server", "--appendonly", "yes" ]
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   command: [ "redis-server", "--appendonly", "yes" ]
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    command: >
-      bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
-              rabbitmq-server"
-    ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management
-      - "61613:61613" # STOMP
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   command: >
+  #     bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
+  #             rabbitmq-server"
+  #   ports:
+  #     - "5672:5672" # AMQP
+  #     - "15672:15672" # Management
+  #     - "61613:61613" # STOMP
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: guest
+  #     RABBITMQ_DEFAULT_PASS: guest
 
   # postgres:
   #   image: postgres:16
@@ -72,39 +73,39 @@ services:
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
 
-  elasticsearch:
-    profiles:
-      - elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false # Disable HTTPS & auth
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
-      interval: 20s
-      timeout: 10s
-      retries: 20
-      start_period: 40s
+  # elasticsearch:
+  #   profiles:
+  #     - elasticsearch
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+  #   container_name: elasticsearch
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false # Disable HTTPS & auth
+  #     - ES_JAVA_OPTS=-Xms1g -Xmx1g
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   volumes:
+  #     - es_data:/usr/share/elasticsearch/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+  #     interval: 20s
+  #     timeout: 10s
+  #     retries: 20
+  #     start_period: 40s
 
-  kibana:
-    profiles:
-      - elasticsearch
-    image: docker.elastic.co/kibana/kibana:8.10.2
-    container_name: kibana
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
+  # kibana:
+  #   profiles:
+  #     - elasticsearch
+  #   image: docker.elastic.co/kibana/kibana:8.10.2
+  #   container_name: kibana
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   ports:
+  #     - "5601:5601"
   # opensearch:
   #   image: opensearchproject/opensearch:2.13.0
   #   environment:
@@ -142,35 +143,35 @@ services:
   #   ports:
   #     - "5601:5601"
 
-  filebeat:
-    profiles:
-      - opensearch
-      - elasticsearch
-    image: docker.elastic.co/beats/filebeat:8.10.2
-    user: root
-    command: ["--strict.perms=false"]
-    depends_on:
-      backend:
-        condition: service_started
-    volumes:
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - app_logs:/var/log/app
-    environment:
-      FILEBEAT_OUTPUT_HOST: ${FILEBEAT_OUTPUT_HOST:-http://opensearch:9200}
-      FILEBEAT_USERNAME: ${FILEBEAT_USERNAME:-vippro67}
-      FILEBEAT_PASSWORD: ${FILEBEAT_PASSWORD:-123123}
-      FILEBEAT_INDEX: ${FILEBEAT_INDEX:-novel-backend-logs}
-      FILEBEAT_TEMPLATE: ${FILEBEAT_TEMPLATE:-novel-backend-logs}
-      FILEBEAT_TEMPLATE_PATTERN: ${FILEBEAT_TEMPLATE_PATTERN:-novel-backend-logs-*}
+  # filebeat:
+  #   profiles:
+  #     - opensearch
+  #     - elasticsearch
+  #   image: docker.elastic.co/beats/filebeat:8.10.2
+  #   user: root
+  #   command: ["--strict.perms=false"]
+  #   depends_on:
+  #     backend:
+  #       condition: service_started
+  #   volumes:
+  #     - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+  #     - app_logs:/var/log/app
+  #   environment:
+  #     FILEBEAT_OUTPUT_HOST: ${FILEBEAT_OUTPUT_HOST:-http://opensearch:9200}
+  #     FILEBEAT_USERNAME: ${FILEBEAT_USERNAME:-vippro67}
+  #     FILEBEAT_PASSWORD: ${FILEBEAT_PASSWORD:-123123}
+  #     FILEBEAT_INDEX: ${FILEBEAT_INDEX:-novel-backend-logs}
+  #     FILEBEAT_TEMPLATE: ${FILEBEAT_TEMPLATE:-novel-backend-logs}
+  #     FILEBEAT_TEMPLATE_PATTERN: ${FILEBEAT_TEMPLATE_PATTERN:-novel-backend-logs-*}
 
-  texttospeech:
-    build:
-      context: ../tts
-      dockerfile: Dockerfile
-    ports:
-      - "5050:5050"
-    env_file:
-      - ../tts/.env
+  # texttospeech:
+  #   build:
+  #     context: ../tts
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5050:5050"
+  #   env_file:
+  #     - ../tts/.env
     
 volumes:
   postgres_data: {}

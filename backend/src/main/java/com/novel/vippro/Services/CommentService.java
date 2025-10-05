@@ -1,6 +1,5 @@
 package com.novel.vippro.Services;
 
-import com.novel.vippro.Config.RabbitMQConfig;
 import com.novel.vippro.DTO.Comment.CommentCreateDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Comment.CommentUpdateDTO;
@@ -17,9 +16,9 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.CommentRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Messaging.MessagePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,7 +46,7 @@ public class CommentService {
     private Mapper mapper;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
+    private MessagePublisher messagePublisher;
 
     @Autowired
     private NotificationService notificationService;
@@ -122,6 +121,7 @@ public class CommentService {
         );
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
+        messagePublisher.publishComment(dto);
         return dto;
     }
 
