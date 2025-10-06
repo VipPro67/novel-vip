@@ -19,9 +19,9 @@ A modern novel management and reading platform built with a focus on performance
 
 ## Deployment
 
--**Backend**: https://13-213-96-98.sslip.io/swagger-ui/index.html
+- **Backend**: https://13-213-96-98.sslip.io/swagger-ui/index.html
 
---**Frontend**: https://novel-vip.vercel.app/
+- **Frontend**: https://novel-vip.vercel.app/
 
 ## Contact
 
