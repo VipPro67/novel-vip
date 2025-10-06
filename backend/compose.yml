@@ -11,124 +11,180 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - elasticsearch
-      - logstash
-      - kibana
-      - postgres
-      - redis
-      - rabbitmq
+    restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ] 
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
     volumes:
       - ~/.m2:/root/.m2
+      - app_logs:/app/logs
 
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      REACT_EDITOR: atom
-      NEXT_PUBLIC_API_URL: http://localhost:8081
-      NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - backend
 
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: [ "redis-server", "--appendonly", "yes" ]
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     REACT_EDITOR: atom
+  #     NEXT_PUBLIC_API_URL: http://localhost:8081
+  #     NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
+  #   depends_on:
+  #     - backend
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    command: >
-      bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
-              rabbitmq-server"
-    ports:
-      - "5672:5672" # AMQP
-      - "15672:15672" # Management
-      - "61613:61613" # STOMP
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+  # redis:
+  #   image: redis:latest
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   command: [ "redis-server", "--appendonly", "yes" ]
 
-  postgres:
-    image: postgres:16
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: novel_user
-      POSTGRES_PASSWORD: novel_password
-      POSTGRES_DB: novel_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   command: >
+  #     bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
+  #             rabbitmq-server"
+  #   ports:
+  #     - "5672:5672" # AMQP
+  #     - "15672:15672" # Management
+  #     - "61613:61613" # STOMP
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: guest
+  #     RABBITMQ_DEFAULT_PASS: guest
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false # Disable HTTPS & auth
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
-      interval: 20s
-      timeout: 10s
-      retries: 20
-      start_period: 40s
+  # postgres:
+  #   image: postgres:16
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: novel_user
+  #     POSTGRES_PASSWORD: novel_password
+  #     POSTGRES_DB: novel_db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.10.2
-    container_name: logstash
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    ports:
-      - "5044:5044"
-      - "5000:5000"
-    volumes:
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-    environment:
-      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - xpack.monitoring.enabled=true
-      - xpack.monitoring.elasticsearch.hosts=http://elasticsearch:9200
+  # elasticsearch:
+  #   profiles:
+  #     - elasticsearch
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+  #   container_name: elasticsearch
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false # Disable HTTPS & auth
+  #     - ES_JAVA_OPTS=-Xms1g -Xmx1g
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   volumes:
+  #     - es_data:/usr/share/elasticsearch/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+  #     interval: 20s
+  #     timeout: 10s
+  #     retries: 20
+  #     start_period: 40s
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.10.2
-    container_name: kibana
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-  texttospeech:
-    build:
-      context: ../tts
-      dockerfile: Dockerfile
-    ports:
-      - "5050:5050"
-    env_file:
-      - ../tts/.env
+  # kibana:
+  #   profiles:
+  #     - elasticsearch
+  #   image: docker.elastic.co/kibana/kibana:8.10.2
+  #   container_name: kibana
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   ports:
+  #     - "5601:5601"
+  # opensearch:
+  #   image: opensearchproject/opensearch:2.13.0
+  #   environment:
+  #     - discovery.type=single-node
+  #     - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
+  #     - bootstrap.memory_lock=true
+  #     - plugins.security.disabled=true
+  #     - plugins.security.ssl.http.enabled=false
+  #     - plugins.security.ssl.transport.enabled=false
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   ports:
+  #     - "9200:9200"
+  #     - "9600:9600"
+  #   volumes:
+  #     - opensearch_data:/usr/share/opensearch/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+  #     interval: 20s
+  #     timeout: 10s
+  #     retries: 20
+  #     start_period: 40s
+
+  # opensearch-dashboards:
+  #   image: opensearchproject/opensearch-dashboards:2.13.0
+  #   depends_on:
+  #     opensearch:
+  #       condition: service_healthy
+  #   environment:
+  #     - OPENSEARCH_HOSTS=http://opensearch:9200
+  #     - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+  #   ports:
+  #     - "5601:5601"
+
+  # filebeat:
+  #   profiles:
+  #     - opensearch
+  #     - elasticsearch
+  #   image: docker.elastic.co/beats/filebeat:8.10.2
+  #   user: root
+  #   command: ["--strict.perms=false"]
+  #   depends_on:
+  #     backend:
+  #       condition: service_started
+  #   volumes:
+  #     - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+  #     - app_logs:/var/log/app
+  #   environment:
+  #     FILEBEAT_OUTPUT_HOST: ${FILEBEAT_OUTPUT_HOST:-http://opensearch:9200}
+  #     FILEBEAT_USERNAME: ${FILEBEAT_USERNAME:-vippro67}
+  #     FILEBEAT_PASSWORD: ${FILEBEAT_PASSWORD:-123123}
+  #     FILEBEAT_INDEX: ${FILEBEAT_INDEX:-novel-backend-logs}
+  #     FILEBEAT_TEMPLATE: ${FILEBEAT_TEMPLATE:-novel-backend-logs}
+  #     FILEBEAT_TEMPLATE_PATTERN: ${FILEBEAT_TEMPLATE_PATTERN:-novel-backend-logs-*}
+
+  # texttospeech:
+  #   build:
+  #     context: ../tts
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5050:5050"
+  #   env_file:
+  #     - ../tts/.env
     
 volumes:
   postgres_data: {}
   es_data: {}
+  opensearch_data: {}
   redis_data: {}
-  logstash_data: {}
+  app_logs: {}
+  caddy_data: {}
+  caddy_config: {}

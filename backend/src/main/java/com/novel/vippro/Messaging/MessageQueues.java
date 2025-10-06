@@ -1,0 +1,13 @@
+package com.novel.vippro.Messaging;
+
+/**
+ * Centralizes queue names so RabbitMQ and ActiveMQ stay aligned.
+ */
+public final class MessageQueues {
+
+    public static final String NOTIFICATION = "notifications";
+    public static final String COMMENT = "comments";
+
+    private MessageQueues() {
+    }
+}

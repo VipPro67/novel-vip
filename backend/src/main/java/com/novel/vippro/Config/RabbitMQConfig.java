@@ -5,22 +5,24 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.novel.vippro.Messaging.MessageQueues;
+
 @Configuration
+@ConditionalOnProperty(name = "app.messaging.provider", havingValue = "rabbitmq", matchIfMissing = true)
 public class RabbitMQConfig {
-	public static final String NOTIFICATION_QUEUE = "notifications";
-    
-	public static final String COMMENT_QUEUE = "comments";
-	@Bean
-	public Queue notificationsQueue() {
-		return new Queue(NOTIFICATION_QUEUE, false);
-	}
+
+    @Bean
+    public Queue notificationsQueue() {
+        return new Queue(MessageQueues.NOTIFICATION, true, false, false);
+    }
 
     @Bean
     public Queue commentsQueue() {
-        return new Queue(COMMENT_QUEUE, false);
+        return new Queue(MessageQueues.COMMENT, true, false, false);
     }
 
 	@Bean
