@@ -5,21 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    network_mode: host
     ports:
       - "8081:8081"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-    #depends_on:
-      # - ${SEARCH_PROVIDER:-opensearch}
-      # - postgres
-      # - redis
-      # - rabbitmq
-      #- texttospeech
+    restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ] 
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -27,6 +21,19 @@ services:
     volumes:
       - ~/.m2:/root/.m2
       - app_logs:/app/logs
+
+  caddy:
+    image: caddy:2.8
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
 
   # frontend:
   #   build:
@@ -179,8 +186,5 @@ volumes:
   opensearch_data: {}
   redis_data: {}
   app_logs: {}
-
-
-
-
-
+  caddy_data: {}
+  caddy_config: {}
