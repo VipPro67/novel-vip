@@ -24,7 +24,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
             cd /home/ubuntu/novel-vip/backend   # <-- change this path
-            git pull origin main || git clone https://github.com/<your-username>/novel-vip.git .
+            git pull origin main || git clone https://github.com/VipPro67/novel-vip.git .
             docker compose down
             docker compose up -d --build
           EOF
