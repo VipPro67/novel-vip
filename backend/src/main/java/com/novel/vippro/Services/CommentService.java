@@ -21,11 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class CommentService {
@@ -84,9 +88,17 @@ public class CommentService {
         Comment comment = new Comment();
         comment.setContent(commentDTO.getContent());
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("User must be authenticated to comment");
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetailsImpl currentUser)) {
+            throw new AccessDeniedException("Authenticated user not found");
+        }
+        UUID currentUserId = currentUser.getId();
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUserId));
         comment.setUser(user);
 
         if (commentDTO.getNovelId() != null) {
@@ -115,12 +127,14 @@ public class CommentService {
                                         : "Chapter: " + comment.getChapter().getTitle()));
                 notificationDTO.setType(NotificationType.COMMENT);
                 notificationService.createNotification(notificationDTO);
+
             }
         }
         logger.info(comment.toString()
         );
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
+
         messagePublisher.publishComment(dto);
         return dto;
     }

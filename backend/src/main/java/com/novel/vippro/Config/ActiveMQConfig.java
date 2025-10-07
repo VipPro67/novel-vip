@@ -83,14 +83,6 @@ public class ActiveMQConfig {
     }
 
     @Bean
-    public MappingJackson2MessageConverter jacksonJmsMessageConverter() {
-        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setTargetType(MessageType.TEXT);
-        converter.setTypeIdPropertyName("_type");
-        return converter;
-    }
-
-    @Bean
     public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(ActiveMQConnectionFactory connectionFactory,
             MappingJackson2MessageConverter converter) {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
@@ -99,15 +91,6 @@ public class ActiveMQConfig {
         factory.setMessageConverter(converter);
         return factory;
     }
-
-    @Bean
-    public JmsTemplate jmsTemplate(ActiveMQConnectionFactory connectionFactory,
-            MappingJackson2MessageConverter converter) {
-        JmsTemplate template = new JmsTemplate(connectionFactory);
-        template.setMessageConverter(converter);
-        template.setPubSubDomain(false);
-        return template;
-}
 
     private static String resolveEnv(String key, String fallback) {
         String value = System.getenv(key);

@@ -1,16 +1,12 @@
 package com.novel.vippro.DTO.Bookmark;
 
 import lombok.Data;
-import java.time.Instant;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.novel.vippro.DTO.base.BaseDTO;
 
 @Data
-public class BookmarkDTO {
+public class BookmarkDTO extends BaseDTO {
     private UUID id;
     private UUID userId;
     private UUID chapterId;
@@ -19,12 +15,4 @@ public class BookmarkDTO {
     private String novelTitle;
     private String note;
     private Integer progress;
-    @JsonProperty("createdAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant createdAt;
-    @JsonProperty("updatedAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant updatedAt;
 }

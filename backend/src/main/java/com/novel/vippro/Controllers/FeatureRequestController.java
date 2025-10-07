@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,11 +42,10 @@ public class FeatureRequestController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PostMapping
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FeatureRequestDTO> createFeatureRequest(
-                        @Parameter(description = "Feature request details", required = true) @Valid @RequestBody CreateFeatureRequestDTO requestDTO,
-                        Authentication authentication) {
-                UUID userId = UUID.fromString(authentication.getName());
-                FeatureRequestDTO createdRequest = featureRequestService.createFeatureRequest(requestDTO, userId);
+                        @Parameter(description = "Feature request details", required = true) @Valid @RequestBody CreateFeatureRequestDTO requestDTO) {
+                FeatureRequestDTO createdRequest = featureRequestService.createFeatureRequest(requestDTO);
                 return ControllerResponse.success("Feature request created successfully", createdRequest);
         }
 
@@ -56,6 +56,7 @@ public class FeatureRequestController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @GetMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FeatureRequestDTO> getFeatureRequest(
                         @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
                         Authentication authentication) {
@@ -108,6 +109,7 @@ public class FeatureRequestController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PostMapping("/{id}/vote")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FeatureRequestDTO> voteForFeatureRequest(
                         @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
                         Authentication authentication) {
@@ -124,6 +126,7 @@ public class FeatureRequestController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @PutMapping("/{id}/status")
+        @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<FeatureRequestDTO> updateFeatureRequestStatus(
                         @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
                         @Parameter(description = "New status (VOTING, PROCESSING, DONE, REJECTED)", required = true) @RequestParam FeatureRequest.FeatureRequestStatus newStatus,

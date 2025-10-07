@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+import com.novel.vippro.DTO.base.BaseDTO;
 import com.novel.vippro.Models.FeatureRequest;
 import com.novel.vippro.Models.User;
 
@@ -16,7 +17,7 @@ import com.novel.vippro.Models.User;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeatureRequestDTO {
+public class FeatureRequestDTO extends BaseDTO {
     private String title;
     private String description;
     private UUID userId;
