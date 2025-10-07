@@ -13,7 +13,11 @@ public class FeatureRequestMapper {
 	private ModelMapper modelMapper;
 
 	public FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request) {
-		return modelMapper.map(request, FeatureRequestDTO.class);
+		FeatureRequestDTO dto = modelMapper.map(request, FeatureRequestDTO.class);
+        dto.setUserId(request.getRequester().getId());
+        dto.setFullName(request.getRequester().getFullName());
+        dto.setUsername(request.getRequester().getUsername());
+        return dto;
 	}
 
 	public FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO) {

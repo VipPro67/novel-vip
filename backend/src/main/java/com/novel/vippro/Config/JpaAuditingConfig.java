@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.novel.vippro.Models.User;
+import com.novel.vippro.Security.UserDetailsImpl;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +25,9 @@ public class JpaAuditingConfig {
             }
             
             Object principal = authentication.getPrincipal();
+            if (principal instanceof UserDetailsImpl) {
+                return Optional.of(((UserDetailsImpl) principal).getId());
+            }
             if (principal instanceof User) {
                 return Optional.of(((User) principal).getId());
             }

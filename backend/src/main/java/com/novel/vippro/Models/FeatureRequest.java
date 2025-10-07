@@ -30,6 +30,9 @@ public class FeatureRequest extends BaseEntity {
     private FeatureRequestStatus status = FeatureRequestStatus.VOTING;
 
     @Column(nullable = false)
+    private User requester;
+
+    @Column(nullable = false)
     private Integer voteCount = 0;
 
     @ManyToMany(fetch = FetchType.LAZY)

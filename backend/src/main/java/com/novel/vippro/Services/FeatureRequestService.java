@@ -2,6 +2,7 @@ package com.novel.vippro.Services;
 
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
+import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.FeatureRequest;
 import com.novel.vippro.Models.User;
@@ -16,10 +17,14 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class FeatureRequestService {
@@ -34,15 +39,24 @@ public class FeatureRequestService {
         private Mapper mapper;
 
         @Transactional
-        public FeatureRequestDTO createFeatureRequest(CreateFeatureRequestDTO requestDTO, UUID userId) {
-                User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-                FeatureRequest featureRequest = mapper.CreateFeatureRequestDTOtoFeatureRequest(requestDTO);
-                featureRequest.setUpdatedBy(user.getId());
-                featureRequest.setStatus(FeatureRequest.FeatureRequestStatus.VOTING);
-                featureRequest.setVoteCount(0);
-                FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
-                return mapper.RequesttoRequestDTO(savedRequest);
+        public FeatureRequestDTO createFeatureRequest(CreateFeatureRequestDTO requestDTO) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                throw new AccessDeniedException("User must be authenticated to create feature request");
+            }
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof UserDetailsImpl currentUser)) {
+                throw new AccessDeniedException("Authenticated user not found");
+            }
+            UUID requesterId = currentUser.getId();
+            User user = userRepository.findById(requesterId)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", requesterId));
+            FeatureRequest featureRequest = mapper.CreateFeatureRequestDTOtoFeatureRequest(requestDTO);
+            featureRequest.setRequester(user);
+            featureRequest.setStatus(FeatureRequest.FeatureRequestStatus.VOTING);
+            featureRequest.setVoteCount(0);
+            FeatureRequest savedRequest = featureRequestRepository.save(featureRequest);
+            return mapper.RequesttoRequestDTO(savedRequest);
         }
 
         @Cacheable(value = "featureRequests", key = "#id")
@@ -52,7 +66,7 @@ public class FeatureRequestService {
 
                 boolean hasVoted = featureRequestRepository.hasUserVoted(id,
                                 userRepository.findById(userId).orElseThrow());
-
+                
                 return mapper.RequesttoRequestDTO(featureRequest);
         }
 
