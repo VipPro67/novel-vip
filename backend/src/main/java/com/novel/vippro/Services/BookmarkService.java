@@ -14,6 +14,7 @@ import com.novel.vippro.Repository.BookmarkRepository;
 import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,8 @@ public class BookmarkService {
     @Autowired
     private Mapper mapper;
 
-    public PageResponse<BookmarkDTO> getUserBookmarks(UUID userId, Pageable pageable) {
+    public PageResponse<BookmarkDTO> getUserBookmarks(Pageable pageable) {
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         return new PageResponse<>(bookmarkRepository.findByUserIdOrderByUpdatedAtDesc(userId, pageable)
                 .map(mapper::BookmarktoDTO));
     }
@@ -53,7 +55,8 @@ public class BookmarkService {
     }
 
     @Transactional
-    public BookmarkDTO createBookmark(UUID userId, BookmarkCreateDTO bookmarkDTO) {
+    public BookmarkDTO createBookmark(BookmarkCreateDTO bookmarkDTO) {
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 

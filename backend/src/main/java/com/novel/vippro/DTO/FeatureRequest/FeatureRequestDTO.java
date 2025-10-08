@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import com.novel.vippro.DTO.base.BaseDTO;
 import com.novel.vippro.Models.FeatureRequest;
-import com.novel.vippro.Models.User;
 
 @Data
 @Getter
@@ -25,16 +24,4 @@ public class FeatureRequestDTO extends BaseDTO {
     private String fullName;
     private FeatureRequest.FeatureRequestStatus status;
     private Integer voteCount;
-    private boolean hasVoted;
-
-    public FeatureRequestDTO(FeatureRequest featureRequest, User user) {
-        this.title = featureRequest.getTitle();
-        this.description = featureRequest.getDescription();
-        this.userId = user.getId();
-        this.username = user.getUsername();
-        this.fullName = user.getFullName();
-        this.status = featureRequest.getStatus();
-        this.voteCount = featureRequest.getVoteCount();
-        this.hasVoted = featureRequest.getVoters().contains(user);
-    }
 }

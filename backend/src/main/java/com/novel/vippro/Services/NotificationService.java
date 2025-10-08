@@ -9,6 +9,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Repository.NotificationRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -56,9 +57,9 @@ public class NotificationService {
     }
 
     public PageResponse<NotificationDTO> getUserNotifications(Pageable pageable) {
-        UUID currentUserId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         PageResponse<NotificationDTO> response = new PageResponse<>(
-                notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable)
+                notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
                         .map(mapper::NotificationtoDTO));
         return response;
     }
@@ -80,8 +81,8 @@ public class NotificationService {
 
     @Transactional
     public void markAllAsRead() {
-        UUID currentUserId = userService.getCurrentUserId();
-        notificationRepository.findByUserIdOrderByCreatedAtDesc(currentUserId, Pageable.unpaged())
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, Pageable.unpaged())
                 .forEach(notification -> {
                     notification.setRead(true);
                     notificationRepository.save(notification);
@@ -98,8 +99,8 @@ public class NotificationService {
     }
 
     public long getUnreadNotificationsCount() {
-        UUID currentUserId = userService.getCurrentUserId();
-        return notificationRepository.countByUserIdAndReadFalse(currentUserId);
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        return notificationRepository.countByUserIdAndReadFalse(userId);
     }
 
     public long getUnreadCount(UUID userId) {
@@ -113,8 +114,8 @@ public class NotificationService {
 
     @Transactional
     public void deleteAllNotifications() {
-        UUID currentUserId = userService.getCurrentUserId();
-        notificationRepository.deleteByUserId(currentUserId);
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        notificationRepository.deleteByUserId(userId);
     }
 
     @Transactional

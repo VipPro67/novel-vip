@@ -4,9 +4,9 @@ import com.novel.vippro.DTO.Auth.ChangePasswordDTO;
 import com.novel.vippro.DTO.User.UserDTO;
 import com.novel.vippro.DTO.User.UserSearchDTO;
 import com.novel.vippro.DTO.User.UserUpdateDTO;
-import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.UserService;
 
 import org.springframework.data.domain.PageRequest;
@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -67,10 +65,7 @@ public class UserController {
         @GetMapping("/profile")
         @PreAuthorize("hasRole('USER')")
         public ControllerResponse<UserDTO> getUserProfile() {
-                UUID userId = userService.getCurrentUserId();
-                if (userId == null) {
-                        throw new ResourceNotFoundException("User", "id", null);
-                }
+                UUID userId = UserDetailsImpl.getCurrentUserId();
                 UserDTO userDTO = userService.getUserProfile(userId);
                 return ControllerResponse.success("User profile retrieved successfully", userDTO);
         }

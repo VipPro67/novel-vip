@@ -17,6 +17,7 @@ import com.novel.vippro.Models.GroupMember;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.GroupMemberRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class GroupMemberService {
@@ -43,8 +44,8 @@ public class GroupMemberService {
     }
 
     public GroupMemberDTO addGroupMember(UUID groupId, GroupMemberDTO groupMemberDTO) {
-        GroupMember currentUserGroupMember = groupMemberRepository.findByUserIdAndGroupId(
-                userService.getCurrentUser().getId(), groupId);
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        GroupMember currentUserGroupMember = groupMemberRepository.findByUserIdAndGroupId(currentUserId, groupId);
         if (currentUserGroupMember == null || !currentUserGroupMember.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to add members to this group");
         }
@@ -67,8 +68,8 @@ public class GroupMemberService {
 
     @CacheEvict(value = "groupMembers", key = "#groupId")
     public void removeGroupMember(UUID groupId, UUID userId) {
-        GroupMember currentUserGroupMember = groupMemberRepository.findByUserIdAndGroupId(
-                userService.getCurrentUser().getId(), groupId);
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        GroupMember currentUserGroupMember = groupMemberRepository.findByUserIdAndGroupId(currentUserId, groupId);
         if (currentUserGroupMember == null || !currentUserGroupMember.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to remove members from this group");
         }
@@ -81,8 +82,8 @@ public class GroupMemberService {
 
     @CacheEvict(value = "groupMembers", key = "#groupId")
     public void leaveGroup(UUID groupId) {
-        GroupMember existingGroupMember = groupMemberRepository.findByUserIdAndGroupId(
-                userService.getCurrentUser().getId(), groupId);
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        GroupMember existingGroupMember = groupMemberRepository.findByUserIdAndGroupId(currentUserId, groupId);
         if (existingGroupMember == null) {
             throw new RuntimeException("You are not a member of this group");
         }

@@ -2,7 +2,6 @@ package com.novel.vippro.Services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
-import com.novel.vippro.Config.HttpLoggingFilter;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
@@ -30,7 +29,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 @Service
 public class ChapterService {

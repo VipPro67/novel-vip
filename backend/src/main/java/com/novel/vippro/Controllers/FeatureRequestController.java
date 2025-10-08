@@ -20,7 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -58,10 +57,8 @@ public class FeatureRequestController {
         @GetMapping("/{id}")
         @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FeatureRequestDTO> getFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
-                        Authentication authentication) {
-                UUID userId = UUID.fromString(authentication.getName());
-                FeatureRequestDTO request = featureRequestService.getFeatureRequest(id, userId);
+                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+                FeatureRequestDTO request = featureRequestService.getFeatureRequest(id);
                 return ControllerResponse.success("Feature request retrieved successfully", request);
         }
 
@@ -111,10 +108,8 @@ public class FeatureRequestController {
         @PostMapping("/{id}/vote")
         @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FeatureRequestDTO> voteForFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
-                        Authentication authentication) {
-                UUID userId = UUID.fromString(authentication.getName());
-                FeatureRequestDTO updatedRequest = featureRequestService.voteForFeatureRequest(id, userId);
+                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+                FeatureRequestDTO updatedRequest = featureRequestService.voteForFeatureRequest(id);
                 return ControllerResponse.success("Vote recorded successfully", updatedRequest);
         }
 
@@ -129,11 +124,8 @@ public class FeatureRequestController {
         @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<FeatureRequestDTO> updateFeatureRequestStatus(
                         @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
-                        @Parameter(description = "New status (VOTING, PROCESSING, DONE, REJECTED)", required = true) @RequestParam FeatureRequest.FeatureRequestStatus newStatus,
-                        Authentication authentication) {
-                UUID userId = UUID.fromString(authentication.getName());
-                FeatureRequestDTO updatedRequest = featureRequestService.updateFeatureRequestStatus(id, newStatus,
-                                userId);
+                        @Parameter(description = "New status (VOTING, PROCESSING, DONE, REJECTED)", required = true) @RequestParam FeatureRequest.FeatureRequestStatus newStatus) {
+                FeatureRequestDTO updatedRequest = featureRequestService.updateFeatureRequestStatus(id, newStatus);
                 return ControllerResponse.success("Status updated successfully", updatedRequest);
         }
 
@@ -146,10 +138,8 @@ public class FeatureRequestController {
         })
         @DeleteMapping("/{id}")
         public ControllerResponse<Void> deleteFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
-                        Authentication authentication) {
-                UUID userId = UUID.fromString(authentication.getName());
-                featureRequestService.deleteFeatureRequest(id, userId);
+                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+                featureRequestService.deleteFeatureRequest(id);
                 return ControllerResponse.success("Feature request deleted successfully", null);
         }
 }

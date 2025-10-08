@@ -13,6 +13,7 @@ import com.novel.vippro.Models.Report;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.*;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -41,9 +42,6 @@ public class ReportService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private Mapper mapper;
 
     public PageResponse<ReportDTO> getAllReports(Pageable pageable) {
@@ -69,7 +67,7 @@ public class ReportService {
 
     @Transactional
     public ReportDTO createReport(ReportCreateDTO reportDTO) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         User reporter = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
@@ -132,5 +130,12 @@ public class ReportService {
         return reportRepository.findById(id)
                 .map(mapper::ReporttoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
+    }
+
+    public PageResponse<ReportDTO> getMyReport(Pageable pageable) {        
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
+                .map(mapper::ReporttoDTO));
+
     }
 }

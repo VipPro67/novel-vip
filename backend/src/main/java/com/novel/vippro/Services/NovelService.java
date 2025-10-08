@@ -5,7 +5,6 @@ import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
-import com.novel.vippro.Mapper.NovelMapper;
 import com.novel.vippro.Models.Category;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Genre;

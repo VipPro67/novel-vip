@@ -10,6 +10,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.RatingRepository;
 import com.novel.vippro.Repository.UserPreferencesRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,7 +32,8 @@ public class RecommendationService {
 
         @Transactional(readOnly = true)
         public PageResponse<Novel> getPersonalizedRecommendations(Pageable pageable) {
-                User currentUser = userService.getCurrentUser();
+                UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+                User currentUser = userService.getUserById(currentUserId);
                 UserPreferences preferences = userPreferencesRepository.findByUser(currentUser)
                                 .orElseGet(() -> createDefaultPreferences(currentUser));
 

@@ -1,6 +1,5 @@
 package com.novel.vippro.DTO.User;
 
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
