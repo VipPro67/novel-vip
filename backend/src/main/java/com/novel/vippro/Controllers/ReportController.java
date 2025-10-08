@@ -140,6 +140,18 @@ public class ReportController {
                 return ControllerResponse.success("Report status updated successfully", report);
         }
 
+        @GetMapping("/my-reports")
+        @PreAuthorize("hasRole('ADMIN') or @reportService.isReportOwner(#id)")
+        public ControllerResponse<PageResponse<ReportDTO>> getMyReport( @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+                PageResponse<ReportDTO> reports = reportService.getMyReport(pageable);
+
+                return ControllerResponse.success("Novel reports retrieved successfully", reports);                
+        }
+
         @Operation(summary = "Get report", description = "Get details of a specific report")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Report retrieved successfully"),
@@ -153,4 +165,6 @@ public class ReportController {
                 ReportDTO report = reportService.getReport(id);
                 return ControllerResponse.success("Report retrieved successfully", report);
         }
+
+
 }

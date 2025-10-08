@@ -131,4 +131,11 @@ public class ReportService {
                 .map(mapper::ReporttoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
     }
+
+    public PageResponse<ReportDTO> getMyReport(Pageable pageable) {        
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
+                .map(mapper::ReporttoDTO));
+
+    }
 }
