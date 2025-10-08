@@ -11,15 +11,12 @@ import org.springframework.stereotype.Service;
 
 import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
-import com.novel.vippro.Models.User;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class ChatService {
     @Autowired
     private MessageService messageService;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -40,8 +37,8 @@ public class ChatService {
     public MessageDTO sendDirect(UUID receiverId, CreateMessageDTO dto) {
         dto.setReceiverId(receiverId);
         MessageDTO saved = messageService.createMessage(dto);
-        User current = userService.getCurrentUser();
-        String channel = formatDmChannel(current.getId(), receiverId);
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        String channel = formatDmChannel(currentUserId, receiverId);
         messagingTemplate.convertAndSend("/topic/dm." + channel, saved);
         return saved;
     }

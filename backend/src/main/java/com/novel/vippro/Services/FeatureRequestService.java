@@ -17,8 +17,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,15 +38,7 @@ public class FeatureRequestService {
 
         @Transactional
         public FeatureRequestDTO createFeatureRequest(CreateFeatureRequestDTO requestDTO) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                throw new AccessDeniedException("User must be authenticated to create feature request");
-            }
-            Object principal = authentication.getPrincipal();
-            if (!(principal instanceof UserDetailsImpl currentUser)) {
-                throw new AccessDeniedException("Authenticated user not found");
-            }
-            UUID requesterId = currentUser.getId();
+            UUID requesterId = UserDetailsImpl.getCurrentUserId();
             User user = userRepository.findById(requesterId)
             .orElseThrow(() -> new ResourceNotFoundException("User", "id", requesterId));
             FeatureRequest featureRequest = mapper.CreateFeatureRequestDTOtoFeatureRequest(requestDTO);
@@ -60,13 +50,9 @@ public class FeatureRequestService {
         }
 
         @Cacheable(value = "featureRequests", key = "#id")
-        public FeatureRequestDTO getFeatureRequest(UUID id, UUID userId) {
+        public FeatureRequestDTO getFeatureRequest(UUID id) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
-
-                boolean hasVoted = featureRequestRepository.hasUserVoted(id,
-                                userRepository.findById(userId).orElseThrow());
-                
                 return mapper.RequesttoRequestDTO(featureRequest);
         }
 
@@ -85,10 +71,11 @@ public class FeatureRequestService {
 
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
-        public FeatureRequestDTO voteForFeatureRequest(UUID id, UUID userId) {
+        public FeatureRequestDTO voteForFeatureRequest(UUID id) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
 
+                UUID userId = UserDetailsImpl.getCurrentUserId();
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -110,10 +97,10 @@ public class FeatureRequestService {
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
         public FeatureRequestDTO updateFeatureRequestStatus(
-                        UUID id, FeatureRequest.FeatureRequestStatus newStatus, UUID userId) {
+                        UUID id, FeatureRequest.FeatureRequestStatus newStatus) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
-
+                UUID userId = UserDetailsImpl.getCurrentUserId();
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -130,10 +117,10 @@ public class FeatureRequestService {
 
         @Transactional
         @CacheEvict(value = "featureRequests", allEntries = true)
-        public void deleteFeatureRequest(UUID id, UUID userId) {
+        public void deleteFeatureRequest(UUID id) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
-
+                UUID userId = UserDetailsImpl.getCurrentUserId();
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 

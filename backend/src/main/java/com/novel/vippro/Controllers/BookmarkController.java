@@ -6,8 +6,6 @@ import com.novel.vippro.DTO.Bookmark.BookmarkUpdateDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.BookmarkService;
-import com.novel.vippro.Services.UserService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,9 +34,6 @@ public class BookmarkController {
         @Autowired
         private BookmarkService bookmarkService;
 
-        @Autowired
-        private UserService userService;
-
         @Operation(summary = "Get user bookmarks", description = "Get all bookmarks for the current user")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Bookmarks retrieved successfully"),
@@ -48,9 +43,8 @@ public class BookmarkController {
         public ControllerResponse<PageResponse<BookmarkDTO>> getUserBookmarks(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
-                UUID userId = userService.getCurrentUserId();
                 Pageable pageable = PageRequest.of(page, size);
-                PageResponse<BookmarkDTO> bookmarks = bookmarkService.getUserBookmarks(userId, pageable);
+                PageResponse<BookmarkDTO> bookmarks = bookmarkService.getUserBookmarks( pageable);
                 return ControllerResponse.success("Bookmarks retrieved successfully", bookmarks);
         }
 
@@ -77,8 +71,7 @@ public class BookmarkController {
         @PostMapping
         public ControllerResponse<BookmarkDTO> createBookmark(
                         @Parameter(description = "Bookmark details", required = true) @Valid @RequestBody BookmarkCreateDTO bookmarkDTO) {
-                UUID userId = userService.getCurrentUserId();
-                BookmarkDTO createdBookmark = bookmarkService.createBookmark(userId, bookmarkDTO);
+                BookmarkDTO createdBookmark = bookmarkService.createBookmark( bookmarkDTO);
                 return ControllerResponse.success("Bookmark created successfully", createdBookmark);
         }
 

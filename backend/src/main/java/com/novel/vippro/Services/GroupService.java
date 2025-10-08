@@ -20,6 +20,7 @@ import com.novel.vippro.Models.GroupMember;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.GroupMemberRepository;
 import com.novel.vippro.Repository.GroupRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.GroupService;
 
 import jakarta.transaction.Transactional;
@@ -60,7 +61,8 @@ public class GroupService {
         Group group = mapper.CreateDTOtoGroup(groupDTO);
         group = groupRepository.save(group);
         groupRepository.flush();
-        User user = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User user = userService.getUserById(currentUserId);
         GroupMember groupMember = new GroupMember();
         groupMember.setGroup(group);
         groupMember.setUser(user);

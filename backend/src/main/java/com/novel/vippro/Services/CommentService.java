@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,16 +85,7 @@ public class CommentService {
     public CommentDTO addComment(CommentCreateDTO commentDTO) {
         Comment comment = new Comment();
         comment.setContent(commentDTO.getContent());
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException("User must be authenticated to comment");
-        }
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof UserDetailsImpl currentUser)) {
-            throw new AccessDeniedException("Authenticated user not found");
-        }
-        UUID currentUserId = currentUser.getId();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUserId));
         comment.setUser(user);
@@ -144,7 +133,10 @@ public class CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
 
-        // Verify ownership or admin rights here if needed
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        if (!comment.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("You do not have permission to edit this comment");
+        }
 
         comment.setContent(commentDTO.getContent());
         return mapper.CommenttoDTO(commentRepository.save(comment));
@@ -155,7 +147,10 @@ public class CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", id));
 
-        // Verify ownership or admin rights here if needed
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        if (!comment.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("You do not have permission to delete this comment");
+        }
 
         commentRepository.delete(comment);
     }

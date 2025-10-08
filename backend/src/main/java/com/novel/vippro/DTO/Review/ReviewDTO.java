@@ -1,6 +1,5 @@
 package com.novel.vippro.DTO.Review;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

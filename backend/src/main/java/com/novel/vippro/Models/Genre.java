@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.Data;
 import lombok.Getter;
 
 import com.novel.vippro.Models.base.BaseEntity;

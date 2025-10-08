@@ -14,6 +14,7 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.ReadingHistoryRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.novel.vippro.Events.ReadingProgressEvent;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,9 +47,6 @@ public class ReadingHistoryService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private Mapper mapper;
 
     @Autowired
@@ -58,7 +55,7 @@ public class ReadingHistoryService {
     @Transactional
     public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer progress,
             Integer readingTime) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
@@ -92,7 +89,7 @@ public class ReadingHistoryService {
     }
 
     public PageResponse<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         Page<ReadingHistory> historyPage = readingHistoryRepository
                 .findByUserIdOrderByLastReadAtDesc(userId, pageable);
         return new PageResponse<>(
@@ -111,7 +108,7 @@ public class ReadingHistoryService {
 
     @Transactional
     public ReadingHistoryDTO addReadingHistory(UUID chapterId) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", chapterId));
@@ -133,7 +130,7 @@ public class ReadingHistoryService {
     }
 
     public ReadingHistoryDTO getLastReadChapter(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         ReadingHistory history = readingHistoryRepository
                 .findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reading history", "novelId", novelId));
@@ -150,12 +147,12 @@ public class ReadingHistoryService {
 
     @Transactional
     public void clearReadingHistory() {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         readingHistoryRepository.deleteByUserId(userId);
     }
 
     public List<NovelDTO> getRecentlyRead(int limit) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         return readingHistoryRepository.findRecentlyReadNovels(userId, PageRequest.of(0, limit))
                 .stream()
                 .map(history -> mapper.NoveltoDTO(history.getNovel()))
@@ -163,7 +160,7 @@ public class ReadingHistoryService {
     }
 
     public ReadingStatsDTO getReadingStats() {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         ReadingStatsDTO stats = new ReadingStatsDTO();
 
         // Get total chapters and novels read
@@ -222,7 +219,7 @@ public class ReadingHistoryService {
     }
 
     public ReadingStatsDTO getUserReadingStats() {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         ReadingStatsDTO stats = new ReadingStatsDTO();
 
         // Calculate basic stats
@@ -256,7 +253,7 @@ public class ReadingHistoryService {
 
     @Transactional
     public ReadingHistoryDTO updateReadingProgress(UUID chapterId, Integer progress) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", chapterId));

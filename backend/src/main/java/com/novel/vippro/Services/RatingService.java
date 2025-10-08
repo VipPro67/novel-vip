@@ -15,6 +15,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.RatingRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -38,9 +39,6 @@ public class RatingService {
     private UserRepository userRepository;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private Mapper mapper;
 
     public PageResponse<RatingDTO> getNovelRatings(UUID novelId, Pageable pageable) {
@@ -53,7 +51,7 @@ public class RatingService {
 
     @Transactional
     public RatingDTO rateNovel(UUID novelId, RatingCreateDTO ratingDTO) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
@@ -76,7 +74,7 @@ public class RatingService {
     }
 
     public RatingDTO getUserRating(UUID novelId) {
-    UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
     return ratingRepository.findByUserIdAndNovelId(userId, novelId)
             .map(mapper::RatingtoDTO)
             .orElseGet(() -> {
@@ -92,7 +90,7 @@ public class RatingService {
 
     @Transactional
     public void deleteRating(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
+            UUID userId = UserDetailsImpl.getCurrentUserId();
 
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
@@ -138,8 +136,8 @@ public class RatingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rating", "id", id));
 
         // Verify ownership
-        UUID currentUserId = userService.getCurrentUserId();
-        if (!rating.getUser().getId().equals(currentUserId)) {
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        if (!rating.getUser().getId().equals(userId)) {
             throw new BadRequestException("Not authorized to update this rating");
         }
 
@@ -196,8 +194,8 @@ public class RatingService {
 
         // Get current user's rating if authenticated
         try {
-            UUID currentUserId = userService.getCurrentUserId();
-            ratingRepository.findByUserIdAndNovelId(currentUserId, novelId)
+            UUID userId = UserDetailsImpl.getCurrentUserId();
+            ratingRepository.findByUserIdAndNovelId(userId, novelId)
                     .ifPresent(rating -> summary.setUserRating(mapper.RatingtoDTO(rating)));
         } catch (Exception e) {
             // User not authenticated, skip user rating

@@ -13,6 +13,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.FavoriteRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -37,20 +38,17 @@ public class FavoriteService {
     private Mapper mapper;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private NotificationService notificationService;
 
     public PageResponse<NovelDTO> getUserFavorites(Pageable pageable) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         return new PageResponse<>(favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
                 .map(favorite -> mapper.NoveltoDTO(favorite.getNovel())));
     }
 
     @Transactional
     public void addToFavorites(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
         // Check if already favorited
         if (favoriteRepository.existsByUserIdAndNovelId(userId, novelId)) {
@@ -72,7 +70,7 @@ public class FavoriteService {
 
     @Transactional
     public void removeFromFavorites(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
         if (!favoriteRepository.existsByUserIdAndNovelId(userId, novelId)) {
             throw new ResourceNotFoundException("Favorite not found");
@@ -82,7 +80,7 @@ public class FavoriteService {
     }
 
     public boolean isFavorite(UUID novelId) {
-        UUID userId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         return favoriteRepository.existsByUserIdAndNovelId(userId, novelId);
     }
 

@@ -7,6 +7,7 @@ import com.novel.vippro.Models.ReaderSettings;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.ReaderSettingsRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ReaderSettingsService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -27,25 +28,23 @@ public class ReaderSettingsService {
     @Autowired
     private Mapper mapper;
     @Autowired
-    private UserService userService;
-    @Autowired
     private UserRepository userRepository;
 
     public ReaderSettingsDTO getUserSettings() {
-        UUID currentUserId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
-        ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
-                .orElseGet(() -> createDefaultSettings(currentUserId));
+        ReaderSettings settings = readerSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> createDefaultSettings(userId));
 
         return mapper.ReaderSettingsToReaderSettingsDTO(settings);
     }
 
     @Transactional
     public ReaderSettingsDTO updateSettings(ReaderSettingsUpdateDTO settingsDTO) {
-        UUID currentUserId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
-        ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
-                .orElseGet(() -> createDefaultSettings(currentUserId));
+        ReaderSettings settings = readerSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> createDefaultSettings(userId));
 
         mapper.updateReaderSettingsFromDTO(settingsDTO, settings);
 
@@ -55,10 +54,10 @@ public class ReaderSettingsService {
 
     @Transactional
     public ReaderSettingsDTO resetSettings() {
-        UUID currentUserId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
-        ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
-                .orElseGet(() -> createDefaultSettings(currentUserId));
+        ReaderSettings settings = readerSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> createDefaultSettings(userId));
 
         // Reset to default values
         settings.setFontSize(16);
@@ -94,10 +93,10 @@ public class ReaderSettingsService {
 
     @Transactional
     public ReaderSettingsDTO applyTheme(String themeId) {
-        UUID currentUserId = userService.getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
 
-        ReaderSettings settings = readerSettingsRepository.findByUserId(currentUserId)
-                .orElseGet(() -> createDefaultSettings(currentUserId));
+        ReaderSettings settings = readerSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> createDefaultSettings(userId));
 
         settings.setTheme(themeId);
 

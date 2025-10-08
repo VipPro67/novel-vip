@@ -22,7 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,35 +57,10 @@ public class UserService {
         return new PageResponse<>(userPage.map(mapper::UsertoUserDTO));
     }
 
-    public User getCurrentUser() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-                SecurityContextHolder.getContext().getAuthentication().getPrincipal() == null) {
-            return null;
-        }
-        UserDetailsImpl user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user.getId() == null) {
-            return null;
-        }
-        return userRepository.findById(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", user.getId()));
-    }
-
     @Cacheable(value = "users", key = "#id")
     public User getUserById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-    }
-
-    public UUID getCurrentUserId() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null ||
-                SecurityContextHolder.getContext().getAuthentication().getPrincipal() == null) {
-            return null;
-        }
-        UserDetailsImpl user = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user.getId() == null) {
-            return null;
-        }
-        return user.getId();
     }
 
     @Cacheable(value = "users", key = "#username")
@@ -123,7 +97,7 @@ public class UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#updateDTO.id")
     public UserDTO updateUserProfile(UserUpdateDTO updateDTO) {
-        UUID userId = getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         if (userId == null) {
             throw new ResourceNotFoundException("User", "id", null);
         }
@@ -153,7 +127,7 @@ public class UserService {
         if (!changePasswordDTO.isPasswordMatching()) {
             throw new BadRequestException("New password and confirm password do not match");
         }
-        UUID userId = getCurrentUserId();
+        UUID userId = UserDetailsImpl.getCurrentUserId();
         if (userId == null) {
             throw new ResourceNotFoundException("User", "id", null);
         }

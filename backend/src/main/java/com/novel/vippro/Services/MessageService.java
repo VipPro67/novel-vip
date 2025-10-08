@@ -16,6 +16,7 @@ import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Message;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.MessageRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class MessageService {
@@ -45,7 +46,8 @@ public class MessageService {
 
     public MessageDTO createMessage(CreateMessageDTO messageDTO) {
         Message message = mapper.CreateDTOtoMessage(messageDTO);
-        User user = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User user = userService.getUserById(currentUserId);
         message.setSender(user);
         if (messageDTO.getGroupId() == null && messageDTO.getReceiverId() == null) {
             throw new RuntimeException("Either groupId or receiverId must be provided");
@@ -80,7 +82,8 @@ public class MessageService {
     }
 
     public List<MessageDTO> getMyConversations() {
-        User user = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User user = userService.getUserById(currentUserId);
         List<MessageDTO> myConversations = new ArrayList<MessageDTO>();
         List<MessageDTO> privateConversations = getMyPrivateConversations(user);
         List<MessageDTO> groupConversations = getMyGroupConversations(user);

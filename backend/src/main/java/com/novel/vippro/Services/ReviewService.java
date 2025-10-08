@@ -11,6 +11,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.ReviewRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ReviewService;
 import com.novel.vippro.Mapper.Mapper;
 
@@ -39,8 +40,6 @@ public class ReviewService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserService userService;
-    @Autowired
     private Mapper mapper;
 
     @Transactional(readOnly = true)
@@ -61,7 +60,9 @@ public class ReviewService {
 
     @Transactional
     public ReviewDTO createReview(ReviewCreateDTO reviewDTO) {
-        User currentUser = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         Novel novel = novelRepository.findById(reviewDTO.getNovelId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
 
@@ -86,7 +87,9 @@ public class ReviewService {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
-        User currentUser = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!review.getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to update this review");
         }
@@ -105,7 +108,9 @@ public class ReviewService {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
-        User currentUser = userService.getCurrentUser();
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (!review.getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to delete this review");
         }
