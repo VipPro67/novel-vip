@@ -7,12 +7,12 @@ import lombok.Data;
 
 @Data
 public class BaseDTO {
-    private UUID id;
-    private Boolean isActive;
-    private Boolean isDeleted;
-    private Long version;
-    private UUID createdBy;
-    private UUID updatedBy;
-    private Instant createdAt;
-    private Instant updatedAt;
+    protected UUID id;
+    protected Boolean isActive;
+    protected Boolean isDeleted;
+    protected Long version;
+    protected UUID createdBy;
+    protected UUID updatedBy;
+    protected Instant createdAt;
+    protected Instant updatedAt;
 }

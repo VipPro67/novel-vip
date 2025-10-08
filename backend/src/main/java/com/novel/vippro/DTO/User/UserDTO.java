@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import com.novel.vippro.DTO.base.BaseDTO;
 import com.novel.vippro.Models.Role;
 
 import lombok.Data;
@@ -13,15 +15,11 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class UserDTO {
-    private UUID id;
+public class UserDTO extends BaseDTO {
     private String username;
     private String email;
     private String fullName;
     private Set<Role> roles = new HashSet<>();
-    private Instant createdAt;
-    private Instant updatedAt;
-    // Constructor for basic user info
     public UserDTO(UUID id, String username, String email, String fullName) {
         this.id = id;
         this.username = username;
@@ -29,7 +27,6 @@ public class UserDTO {
         this.fullName = fullName;
     }
 
-    // Default constructor
     public UserDTO() {
     }
 }

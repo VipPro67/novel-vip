@@ -13,56 +13,32 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
-@Getter
-@Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
 public abstract class BaseEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @CreatedDate
-    @Column(name = "created_at")
+    @Column(updatable = false)
     private Instant createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by")
     private UUID createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
     private UUID updatedBy;
 
     @Version
-    @Column(name = "version")
     private Long version = 0L;
 
-    @Column(name = "is_deleted")
     private Boolean isDeleted = false;
-
-    @Column(name = "is_active")
     private Boolean isActive = true;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-        if (isDeleted == null) {
-            isDeleted = false;
-        }
-        if (isActive == null) {
-            isActive = true;
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = Instant.now();
-    }
 }
+

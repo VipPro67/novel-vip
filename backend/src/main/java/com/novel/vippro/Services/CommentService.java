@@ -127,12 +127,14 @@ public class CommentService {
                                         : "Chapter: " + comment.getChapter().getTitle()));
                 notificationDTO.setType(NotificationType.COMMENT);
                 notificationService.createNotification(notificationDTO);
+
             }
         }
         logger.info(comment.toString()
         );
         Comment saved = commentRepository.save(comment);
         CommentDTO dto = mapper.CommenttoDTO(saved);
+
         messagePublisher.publishComment(dto);
         return dto;
     }
