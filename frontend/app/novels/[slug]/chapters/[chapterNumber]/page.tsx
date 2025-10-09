@@ -4,12 +4,28 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import type { CSSProperties } from "react"
 import { Client } from "@stomp/stompjs"
 import { useParams, useRouter } from "next/navigation"
-import { ChevronLeft, ChevronRight, Bookmark, Settings, MessageCircle, Loader2, MoreVertical, Edit, Trash2, Reply, ChevronDown, ChevronUp, Send, RefreshCw, AlertCircle, Volume2 } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+  Loader2,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Reply,
+  ChevronDown,
+  ChevronUp,
+  Send,
+  RefreshCw,
+  AlertCircle,
+  Volume2,
+  Flag,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useReaderSettings } from "@/components/providers/reader-settings-provider"
@@ -27,6 +43,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import ChapterNavigation from "@/components/chapter-navigation"
+import { ReportDialog } from "@/components/report/report-dialog"
+import AutoHideHeader from "@/components/chapter/auto-hide-header"
 
 interface ChapterContent {
   title: string
@@ -39,6 +58,8 @@ interface CommentWithReplies extends Comment {
   replies: CommentWithReplies[]
   showReplies?: boolean
 }
+
+type ErrorType = "chapter-not-found" | "content-fetch-error" | "content-not-available" | null
 
 export default function ChapterPage() {
   const params = useParams()
@@ -55,6 +76,8 @@ export default function ChapterPage() {
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [contentLoading, setContentLoading] = useState(false)
+  const [error, setError] = useState<ErrorType>(null)
+  const [errorMessage, setErrorMessage] = useState<string>("")
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioLoading, setAudioLoading] = useState(false)
   const [audioError, setAudioError] = useState<string | null>(null)
@@ -128,6 +151,8 @@ export default function ChapterPage() {
     setAudioUrl(null)
     setAudioError(null)
     setAudioLoading(false)
+    setError(null)
+    setErrorMessage("")
     try {
       if (!slug) {
         setLoading(false)
@@ -141,18 +166,22 @@ export default function ChapterPage() {
         await fetchChapterContent(chapterData)
         setAudioUrl(chapterData.audioUrl ?? null)
       } else {
+        setError("chapter-not-found")
+        setErrorMessage(response.message || "Failed to load chapter")
         setContentLoading(false)
         toast({
           title: "Error",
-          description: "Failed to load chapter",
+          description: response.message || "Failed to load chapter",
           variant: "destructive",
         })
       }
     } catch (error) {
       console.error("Failed to fetch chapter:", error)
+      setError("chapter-not-found")
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load chapter")
       toast({
         title: "Error",
-        description: "Failed to load chapter",
+        description: "Failed to load chapter. Please try again.",
         variant: "destructive",
       })
       setContentLoading(false)
@@ -164,28 +193,39 @@ export default function ChapterPage() {
   const fetchChapterContent = async (chapterData: ChapterDetail) => {
     try {
       if (!chapterData.jsonUrl) {
+        setError("content-not-available")
+        setErrorMessage("This chapter does not have any content yet.")
         setChapterContent(null)
-        toast({
-          title: "Content unavailable",
-          description: "This chapter does not have any content yet.",
-          variant: "destructive",
-        })
         return
       }
 
       const response = await fetch(chapterData.jsonUrl)
       if (!response.ok) {
-        throw new Error("Failed to fetch chapter content")
+        throw new Error(`Failed to fetch chapter content: ${response.statusText}`)
       }
 
       const content = await response.json()
       setChapterContent(content)
+      setError(null)
+      setErrorMessage("")
+
+      if (isAuthenticated && chapterData.id) {
+        try {
+          await api.addReadingHistory(chapterData.id)
+          console.log("[v0] Chapter added to reading history")
+        } catch (error) {
+          // Silently fail - don't disrupt reading experience
+          console.error("[v0] Failed to add to reading history:", error)
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch chapter content:", error)
+      setError("content-fetch-error")
+      setErrorMessage(error instanceof Error ? error.message : "Failed to load chapter content")
       setChapterContent(null)
       toast({
         title: "Error",
-        description: "Failed to load chapter content",
+        description: "Failed to load chapter content. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -555,6 +595,17 @@ export default function ChapterPage() {
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
+                  <ReportDialog
+                    reportType="COMMENT"
+                    targetId={comment.id}
+                    targetTitle={`Comment by ${comment.username}`}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Flag className="mr-2 h-4 w-4" />
+                        Report
+                      </DropdownMenuItem>
+                    }
+                  />
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -780,7 +831,7 @@ export default function ChapterPage() {
               size="sm"
               variant="outline"
               onClick={handleGenerateAudio}
-              className="self-start md:self-auto"
+              className="self-start md:self-auto bg-transparent"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Try again
@@ -814,7 +865,7 @@ export default function ChapterPage() {
             size="sm"
             variant="outline"
             onClick={handleGenerateAudio}
-            className="self-start md:self-auto"
+            className="self-start md:self-auto bg-transparent"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Generate audio
@@ -842,12 +893,31 @@ export default function ChapterPage() {
     )
   }
 
-  if (!chapter) {
+  if (!chapter || error === "chapter-not-found") {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Chapter not found</h1>
-          <Button onClick={() => router.back()}>Go Back</Button>
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardContent className="p-8">
+              <div className="text-center space-y-4">
+                <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
+                <h1 className="text-2xl font-bold">Chapter Not Found</h1>
+                <p className="text-muted-foreground">
+                  {errorMessage || "The chapter you're looking for could not be found."}
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button onClick={() => router.back()} variant="outline">
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Go Back
+                  </Button>
+                  <Button onClick={fetchChapter}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -855,151 +925,188 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-              <div>
-                <h1 className="font-semibold text-lg truncate max-w-md">{chapter.title}</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
+      <AutoHideHeader
+        novelSlug={slug!}
+        novelTitle={chapter.novel?.title || "Novel"}
+        chapterNumber={chapterNumber}
+        chapterId={chapter.id}
+        chapterTitle={chapter.title}
+        onPrevChapter={() => navigateChapter("prev")}
+        onNextChapter={() => navigateChapter("next")}
+        canGoPrev={chapterNumber > 1}
+        reportTrigger={
+          <ReportDialog
+            reportType="CHAPTER"
+            targetId={chapter.id}
+            targetTitle={chapter.title}
+            trigger={
               <Button variant="ghost" size="sm">
-                <Bookmark className="h-4 w-4" />
+                <Flag className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+            }
+          />
+        }
+      />
 
-      {/* Chapter Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardContent className="p-8" style={cardContentStyle}>
-              <div className="space-y-6">
-                {renderAudioSection()}
-                {contentLoading ? (
-                  <div className="animate-pulse space-y-4">
-                    {Array.from({ length: 15 }).map((_, i) => (
-                      <div key={i} className="h-4 bg-muted rounded"></div>
-                    ))}
-                  </div>
-                ) : chapterContent ? (
-                  <div className="prose prose-lg dark:prose-invert max-w-none">
-                    <h1 className="text-3xl font-bold mb-6">{chapterContent.title}</h1>
-                    {/* Render HTML content safely */}
-                    <div
-                      className="chapter-content leading-relaxed text-base"
-                      dangerouslySetInnerHTML={renderHtmlContent(chapterContent.content)}
-                      style={chapterTypographyStyle}
-                    />
-                    {chapterContent.wordCount && (
-                      <div className="mt-8 pt-4 border-t text-sm text-muted-foreground">
-                        <p>Word count: {chapterContent.wordCount.toLocaleString()}</p>
-                        {chapterContent.readingTime && (
-                          <p>Estimated reading time: {chapterContent.readingTime} minutes</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Chapter content not available</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Chapter Navigation */}
-          <div className="flex justify-between items-center mt-8">
-            <Button variant="outline" onClick={() => navigateChapter("prev")} disabled={chapterNumber <= 1}>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous Chapter
-            </Button>
-            <Button variant="outline" onClick={() => navigateChapter("next")}>
-              Next Chapter
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-
-          {/* Comments Section */}
-          <div className="mt-8 text-center">
-            <Button variant="outline" size="lg" onClick={handleShowComments} className="mb-6 bg-transparent">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              {showComments ? "Hide Comments" : "Show Comments"}
-              {totalComments > 0 && (
-                <Badge variant="secondary" className="ml-2">
-                  {totalComments > 99 ? "99+" : totalComments}
-                </Badge>
-              )}
-            </Button>
-
-            {showComments && (
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-left space-y-6">
-                    {/* Add Comment Form */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Add a Comment</h3>
-                      <Textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Share your thoughts about this chapter..."
-                        className="min-h-[100px]"
-                      />
-                      <Button onClick={handleAddComment} disabled={submittingComment || !newComment.trim()}>
-                        {submittingComment ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Posting...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Post Comment
-                          </>
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* Comments List */}
-                    <div className="space-y-6">
-                      {commentsLoading ? (
-                        <div className="space-y-4">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="animate-pulse flex space-x-3">
-                              <div className="h-8 w-8 bg-muted rounded-full"></div>
-                              <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-muted rounded w-1/4"></div>
-                                <div className="h-4 bg-muted rounded w-3/4"></div>
-                                <div className="h-4 bg-muted rounded w-1/2"></div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : comments.length === 0 ? (
-                        <div className="text-center py-8">
-                          <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <p className="text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-6">{comments.map((comment) => renderComment(comment))}</div>
+      <div className="pt-16">
+        {/* Chapter Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardContent className="p-8" style={cardContentStyle}>
+                <div className="space-y-6">
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-bold mb-2">{chapter.title}</h1>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Chapter {chapterNumber}</span>
+                      {chapterContent?.wordCount && (
+                        <>
+                          <span>•</span>
+                          <span>{chapterContent.wordCount.toLocaleString()} words</span>
+                        </>
+                      )}
+                      {chapterContent?.readingTime && (
+                        <>
+                          <span>•</span>
+                          <span>{chapterContent.readingTime} min read</span>
+                        </>
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {renderAudioSection()}
+                  {contentLoading ? (
+                    <div className="animate-pulse space-y-4">
+                      {Array.from({ length: 15 }).map((_, i) => (
+                        <div key={i} className="h-4 bg-muted rounded"></div>
+                      ))}
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-12 space-y-4">
+                      <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          {error === "content-not-available" ? "Content Not Available" : "Error Loading Content"}
+                        </h3>
+                        <p className="text-muted-foreground">{errorMessage || "Unable to load chapter content"}</p>
+                      </div>
+                      {error === "content-fetch-error" && (
+                        <Button onClick={() => chapter && fetchChapterContent(chapter)} variant="outline">
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Retry
+                        </Button>
+                      )}
+                    </div>
+                  ) : chapterContent ? (
+                    <div className="prose prose-lg dark:prose-invert max-w-none">
+                      <div
+                        className="chapter-content leading-relaxed text-base"
+                        dangerouslySetInnerHTML={renderHtmlContent(chapterContent.content)}
+                        style={chapterTypographyStyle}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chapter Navigation */}
+            <div className="flex justify-between items-center mt-8">
+              <Button variant="outline" onClick={() => navigateChapter("prev")} disabled={chapterNumber <= 1}>
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous Chapter
+              </Button>
+              <Button variant="outline" onClick={() => navigateChapter("next")}>
+                Next Chapter
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+
+            {chapter && (
+              <div className="mt-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <ChapterNavigation
+                      novelSlug={slug!}
+                      currentChapterNumber={chapterNumber}
+                      currentChapterTitle={chapter.title}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
             )}
+
+            {/* Comments Section */}
+            <div className="mt-8 text-center">
+              <Button variant="outline" size="lg" onClick={handleShowComments} className="mb-6 bg-transparent">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                {showComments ? "Hide Comments" : "Show Comments"}
+                {totalComments > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {totalComments > 99 ? "99+" : totalComments}
+                  </Badge>
+                )}
+              </Button>
+
+              {showComments && (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-left space-y-6">
+                      {/* Add Comment Form */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Add a Comment</h3>
+                        <Textarea
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Share your thoughts about this chapter..."
+                          className="min-h-[100px]"
+                        />
+                        <Button onClick={handleAddComment} disabled={submittingComment || !newComment.trim()}>
+                          {submittingComment ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Posting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Post Comment
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Comments List */}
+                      <div className="space-y-6">
+                        {commentsLoading ? (
+                          <div className="space-y-4">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                              <div key={i} className="animate-pulse flex space-x-3">
+                                <div className="h-8 w-8 bg-muted rounded-full"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : comments.length === 0 ? (
+                          <div className="text-center py-8">
+                            <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">
+                              No comments yet. Be the first to share your thoughts!
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-6">{comments.map((comment) => renderComment(comment))}</div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1047,4 +1154,3 @@ export default function ChapterPage() {
     </div>
   )
 }
-
