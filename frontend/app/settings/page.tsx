@@ -2,12 +2,10 @@
 
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useMemo, useState } from "react"
-import { User, Shield, Bell, Palette, Loader2, RefreshCw } from "lucide-react"
+import { Bell, Palette, Loader2, RefreshCw } from "lucide-react"
 
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Header } from "@/components/layout/header"
-import { RoleRequestForm } from "@/components/user/role-request-form"
-import { MyRoleRequests } from "@/components/user/my-role-requests"
 import { useReaderSettings } from "@/components/providers/reader-settings-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,12 +26,6 @@ export default function SettingsPage() {
 }
 
 function SettingsContent() {
-  const [refreshRequests, setRefreshRequests] = useState(0)
-
-  const handleRequestSubmitted = () => {
-    setRefreshRequests((prev) => prev + 1)
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -45,16 +37,8 @@ function SettingsContent() {
             <p className="text-muted-foreground">Manage your account settings and preferences</p>
           </div>
 
-          <Tabs defaultValue="profile" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="profile" className="flex items-center space-x-2">
-                <User className="h-4 w-4" />
-                <span>Profile</span>
-              </TabsTrigger>
-              <TabsTrigger value="roles" className="flex items-center space-x-2">
-                <Shield className="h-4 w-4" />
-                <span>Roles</span>
-              </TabsTrigger>
+          <Tabs defaultValue="appearance" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="notifications" className="flex items-center space-x-2">
                 <Bell className="h-4 w-4" />
                 <span>Notifications</span>
@@ -64,25 +48,6 @@ function SettingsContent() {
                 <span>Appearance</span>
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="profile" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Settings</CardTitle>
-                  <CardDescription>Manage your personal information</CardDescription>
-                </CardHeader>
-                <CardContent></CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="roles" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <RoleRequestForm onRequestSubmitted={handleRequestSubmitted} />
-                <div key={refreshRequests}>
-                  <MyRoleRequests />
-                </div>
-              </div>
-            </TabsContent>
 
             <TabsContent value="notifications" className="space-y-4">
               <Card>
@@ -348,9 +313,7 @@ function AppearanceSettingsForm() {
 
   return (
     <form className="space-y-8" onSubmit={handleSubmit}>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <section className="space-y-4">
         <div>
@@ -577,4 +540,3 @@ function AppearanceSettingsForm() {
     </form>
   )
 }
-
