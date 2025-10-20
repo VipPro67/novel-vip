@@ -56,6 +56,45 @@ public class FileService {
     }
 
     @Transactional
+    public FileMetadata uploadFile(byte[] bytes, String originalFileName, String contentType, String type) {
+        try {
+            String publicId = UUID.randomUUID().toString();
+            String fileUrl = fileStorageService.uploadFile(bytes, publicId, contentType);
+
+            FileMetadata metadata = new FileMetadata();
+            metadata.setFileName(originalFileName);
+            metadata.setContentType(contentType);
+            metadata.setSize((long) bytes.length);
+            metadata.setType(type);
+            metadata.setPublicId(publicId);
+            metadata.setFileUrl(fileUrl);
+            metadata = fileMetadataRepository.save(metadata);
+            return metadata;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    @Transactional
+    public FileMetadata uploadFileWithPublicId(byte[] bytes, String publicId, String originalFileName, String contentType, String type) {
+        try {
+            String fileUrl = fileStorageService.uploadFile(bytes, publicId, contentType);
+
+            FileMetadata metadata = new FileMetadata();
+            metadata.setFileName(originalFileName);
+            metadata.setContentType(contentType);
+            metadata.setSize((long) bytes.length);
+            metadata.setType(type);
+            metadata.setPublicId(publicId);
+            metadata.setFileUrl(fileUrl);
+            metadata = fileMetadataRepository.save(metadata);
+            return metadata;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload file", e);
+        }
+    }
+
+    @Transactional
     public List<FileMetadata> uploadMultipleFiles(MultipartFile[] files, String type) {
         return Arrays.stream(files)
                 .map(file -> uploadFile(file, type))

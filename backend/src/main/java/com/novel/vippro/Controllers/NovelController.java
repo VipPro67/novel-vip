@@ -25,7 +25,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -272,6 +274,24 @@ public class NovelController {
     public ControllerResponse<NovelDTO> createNovel(@Valid @ModelAttribute NovelCreateDTO novelDTO) {
         NovelDTO createdNovel = novelService.createNovel(novelDTO);
         return ControllerResponse.success("Novel created successfully", createdNovel);
+    }
+
+    @Operation(summary = "Import EPUB and create novel", description = "Upload an EPUB file and import it as a novel (creates novel + chapters)", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping(path = "/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ControllerResponse<NovelDTO> importEpub(
+            @RequestPart("epub") MultipartFile epub,
+            @RequestParam(value = "slug") String slug,
+            @RequestParam(value = "status", required = false) String status) {
+        try {
+            byte[] bytes = epub.getBytes();
+            com.novel.vippro.Utils.EpubParseResult parsed = com.novel.vippro.Utils.EpubParser.parse(bytes);
+            NovelDTO dto = novelService.createNovelFromEpub(parsed, slug, status);
+            return ControllerResponse.success("Novel imported successfully", dto);
+        } catch (Exception e) {
+            logger.error("Failed to import epub: {}", e.getMessage(), e);
+            return ControllerResponse.error("Failed to import epub: " + e.getMessage(), null);
+        }
     }
 
     @Operation(summary = "Delete novel", description = "Delete an existing novel", security = @SecurityRequirement(name = "bearerAuth"))

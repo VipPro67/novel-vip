@@ -27,11 +27,13 @@ public class CloudinaryService implements FileStorageService {
     public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
         Map<String, String> resourceType = determineResourceType(contentType);
         logger.info("Uploading file with publicId: {}, resourceType: {}", publicId, resourceType);
+        //check file exsits or not before upload
+        
         @SuppressWarnings("unchecked")
         Map<String, Object> result = cloudinary.uploader().upload(fileData, ObjectUtils.asMap(
                 "resource_type", resourceType.get("resourceType"),
                 "public_id", publicId));
-
+        
         Object url = result.get("secure_url");
         return url != null ? url.toString() : (String) result.get("url");
     }

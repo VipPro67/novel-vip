@@ -261,6 +261,8 @@
             <version>1.11.0</version>
         </dependency>
 
+        <!-- EPUB parsing implemented with JDK (no external dependency) -->
+
     </dependencies>
 
     <build>

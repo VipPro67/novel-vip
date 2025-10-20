@@ -1,5 +1,6 @@
 package com.novel.vippro.Services;
 
+import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
@@ -7,6 +8,7 @@ import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Category;
 import com.novel.vippro.Models.FileMetadata;
+import com.novel.vippro.Utils.EpubParseResult;
 import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.Tag;
@@ -62,6 +64,9 @@ public class NovelService {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private ChapterService chapterService;
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
         List<Novel> novels = novelRepository.findAll();
@@ -292,6 +297,72 @@ public class NovelService {
         searchService.indexNovels(novelsToIndex);
 
         return mapper.NoveltoDTO(savedNovel);
+    }
+
+    @CacheEvict(value = "novels", allEntries = true)
+    public NovelDTO createNovelFromEpub(EpubParseResult epubResult, String slug, String status) {
+        // Create novel quickly in its own transaction to avoid holding DB connections during file IO
+        Novel saved = saveNovelInitial(epubResult, slug, status);
+
+        // upload cover and attach in a short transaction
+        if (epubResult.getCoverImage() != null) {
+            try {
+                FileMetadata cover = fileService.uploadFile(epubResult.getCoverImage(), epubResult.getCoverImageName(), "image/jpeg", "cover");
+                updateNovelCover(saved.getId(), cover);
+                saved = novelRepository.findById(saved.getId()).orElse(saved);
+            } catch (Exception e) {
+                logger.error("Error uploading cover image from EPUB: {}", e.getMessage());
+            }
+        }
+
+        // create chapters using transactional ChapterService.createChapter to keep transactions short
+        if (epubResult.getChapters() != null) {
+            int idx = 1;
+            for (var c : epubResult.getChapters()) {
+                try {
+                    CreateChapterDTO dto = new CreateChapterDTO();
+                    dto.setChapterNumber(idx);
+                    dto.setNovelId(saved.getId());
+                    dto.setTitle(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx);
+                    dto.setContentHtml(c.getContentHtml() == null ? "" : c.getContentHtml());
+                    dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+                    chapterService.createChapter(dto);
+                } catch (Exception e) {
+                    logger.error("Failed to create chapter {} for novel {}: {}", idx, saved.getId(), e.getMessage());
+                }
+                idx++;
+            }
+        }
+
+        // reload and index
+        saved = novelRepository.findById(saved.getId()).orElseThrow();
+        searchService.indexNovels(List.of(saved));
+        return mapper.NoveltoDTO(saved);
+    }
+
+    @Transactional
+    protected Novel saveNovelInitial(EpubParseResult epubResult, String slug, String status) {
+        Novel novel = new Novel();
+        novel.setTitle(epubResult.getTitle() == null || epubResult.getTitle().isBlank() ? epubResult.getAuthor() + " - Import" : epubResult.getTitle());
+        novel.setSlug(slug);
+        novel.setDescription("Imported from EPUB: " + (epubResult.getTitle() != null ? epubResult.getTitle() : ""));
+        novel.setAuthor(epubResult.getAuthor() == null || epubResult.getAuthor().isBlank() ? "Unknown" : epubResult.getAuthor());
+        novel.setTitleNormalized(novel.getTitle().toLowerCase());
+        novel.setStatus(status == null ? "ongoing" : status);
+        novel.setViews(0);
+        novel.setRating(0);
+        novel.setTotalChapters(0);
+        novel.setComments(null);
+        novel.setCategories(new HashSet<>());
+        return novelRepository.save(novel);
+    }
+
+    @Transactional
+    protected void updateNovelCover(java.util.UUID novelId, FileMetadata cover) {
+        novelRepository.findById(novelId).ifPresent(n -> {
+            n.setCoverImage(cover);
+            novelRepository.save(n);
+        });
     }
 
     @CacheEvict(value = "novels", key = "#id")

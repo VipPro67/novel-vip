@@ -395,4 +395,10 @@ public class ChapterService {
         }
         return jsonFile;
     }
+
+    @Transactional
+    public Chapter saveChapterEntity(Chapter chapter) {
+        // simple save used by importers; do not increment novel chapter count here since caller manages it
+        return chapterRepository.save(chapter);
+    }
 }

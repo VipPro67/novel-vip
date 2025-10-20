@@ -72,11 +72,15 @@ public class NovelMapper {
         doc.setViews(novel.getViews());
         doc.setRating(novel.getRating());
         FileMetadataDTO coverImage = new FileMetadataDTO();
-        coverImage.setId(novel.getCoverImage().getId());
-        coverImage.setFileName(novel.getCoverImage().getFileName());
-        coverImage.setFileUrl(fileStorageService.generateFileUrl(novel.getCoverImage().getPublicId(), 360));
-        coverImage.setContentType(novel.getCoverImage().getContentType());
-        coverImage.setSize(novel.getCoverImage().getSize());
+        if (novel.getCoverImage() != null) {
+            coverImage.setId(novel.getCoverImage().getId());
+            coverImage.setFileName(novel.getCoverImage().getFileName());
+            coverImage.setContentType(novel.getCoverImage().getContentType());
+            coverImage.setSize(novel.getCoverImage().getSize());
+            coverImage.setType(novel.getCoverImage().getType());
+            coverImage.setPublicId(novel.getCoverImage().getPublicId());
+            coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
+        }
         
         doc.setCoverImage(coverImage);
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
