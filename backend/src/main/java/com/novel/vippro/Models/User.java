@@ -1,6 +1,7 @@
 package com.novel.vippro.Models;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -49,10 +50,10 @@ public class User extends BaseEntity {
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-	private Set<Role> roles = new HashSet<>();
+	private List<Role> roles;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Novel> ownedNovels = new HashSet<>();
+    private List<Novel> ownedNovels;
 
 	public User(String username, String email, String password) {
 		this.username = username;

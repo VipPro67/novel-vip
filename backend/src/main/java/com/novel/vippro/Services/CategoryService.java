@@ -15,7 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -89,8 +91,8 @@ public class CategoryService {
 
     @Cacheable(value = "categories")
     @Transactional(readOnly = true)
-    public Set<CategoryDTO> getAllCategories() {
-        Set<CategoryDTO> categoryDTOs = new HashSet<>();
+    public List<CategoryDTO> getAllCategories() {
+        List<CategoryDTO> categoryDTOs = new ArrayList<>();
         for (Category category : categoryRepository.findAll()) {
             categoryDTOs.add(mapper.CategorytoDTO(category));
         }

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,12 +28,12 @@ public class UserPreferences {
     @ElementCollection
     @CollectionTable(name = "user_favorite_genres")
     @Column(name = "genre")
-    private Set<String> favoriteGenres;
+    private List<String> favoriteGenres;
 
     @ElementCollection
     @CollectionTable(name = "user_favorite_tags")
     @Column(name = "tag")
-    private Set<String> favoriteTags;
+    private List<String> favoriteTags;
 
     @Column(name = "preferred_language")
     private String preferredLanguage;
