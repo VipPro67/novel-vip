@@ -12,7 +12,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -66,8 +68,8 @@ public class TagService {
     }
 
     @Cacheable(value = "tags")
-    public Set<TagDTO> getAllTags() {
-        Set<TagDTO> tagDTOs = new HashSet<>();
+    public List<TagDTO> getAllTags() {
+        List<TagDTO> tagDTOs = new ArrayList<>();
         for (Tag tag : tagRepository.findAll()) {
             tagDTOs.add(mapper.TagtoDTO(tag));
         }

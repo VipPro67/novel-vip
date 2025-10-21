@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import com.novel.vippro.Models.base.BaseEntity;
 
@@ -36,7 +38,7 @@ public class FeatureRequest extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "feature_request_votes", joinColumns = @JoinColumn(name = "feature_request_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> voters = new HashSet<>();
+    private List<User> voters = new ArrayList<>();
     public enum FeatureRequestStatus {
         VOTING,
         PROCESSING,

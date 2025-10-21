@@ -561,7 +561,9 @@ class ApiClient {
       }
     })
 
-    return this.request<PageResponse<Chapter>>(`/api/chapters/novel/${novelId}?${searchParams}`)
+    return this.request<PageResponse<Chapter>>(
+      `/api/chapters/novel/${novelId}?${searchParams.toString()}`,
+    )
   }
 
   async getChapterById(id: string) {

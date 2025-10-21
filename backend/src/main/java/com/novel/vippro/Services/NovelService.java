@@ -29,6 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -229,12 +230,9 @@ public class NovelService {
         novel.setTotalChapters(0);
         novel.setComments(null);
 
-        // Initialize categories as an empty set
-        novel.setCategories(new HashSet<>());
-
         // Handle categories - only use existing categories
         if (novelDTO.getCategories() != null && !novelDTO.getCategories().isEmpty()) {
-            Set<Category> categories = new HashSet<>();
+            List<Category> categories = new ArrayList<>();
 
             for (String categoryName : novelDTO.getCategories()) {
                 try {
@@ -301,10 +299,8 @@ public class NovelService {
 
     @CacheEvict(value = "novels", allEntries = true)
     public NovelDTO createNovelFromEpub(EpubParseResult epubResult, String slug, String status) {
-        // Create novel quickly in its own transaction to avoid holding DB connections during file IO
         Novel saved = saveNovelInitial(epubResult, slug, status);
 
-        // upload cover and attach in a short transaction
         if (epubResult.getCoverImage() != null) {
             try {
                 FileMetadata cover = fileService.uploadFile(epubResult.getCoverImage(), epubResult.getCoverImageName(), "image/jpeg", "cover");
@@ -315,7 +311,6 @@ public class NovelService {
             }
         }
 
-        // create chapters using transactional ChapterService.createChapter to keep transactions short
         if (epubResult.getChapters() != null) {
             int idx = 1;
             for (var c : epubResult.getChapters()) {
@@ -334,7 +329,6 @@ public class NovelService {
             }
         }
 
-        // reload and index
         saved = novelRepository.findById(saved.getId()).orElseThrow();
         searchService.indexNovels(List.of(saved));
         return mapper.NoveltoDTO(saved);
@@ -353,7 +347,6 @@ public class NovelService {
         novel.setRating(0);
         novel.setTotalChapters(0);
         novel.setComments(null);
-        novel.setCategories(new HashSet<>());
         return novelRepository.save(novel);
     }
 
@@ -493,4 +486,54 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
+    @CacheEvict(value = "novels", allEntries = true)
+    @Transactional
+    public NovelDTO addChaptersFromEpub(UUID novelId, EpubParseResult epubResult) {
+        Novel novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
+
+        // Find the highest chapter number
+        int lastChapterNumber = chapterService.getLastChapterNumber(novelId);
+        int startingIndex = lastChapterNumber + 1;
+
+        // Add new chapters starting from the next number
+        if (epubResult.getChapters() != null) {
+            int idx = startingIndex;
+            List<CreateChapterDTO> dtos = new java.util.ArrayList<>();
+            for (var c : epubResult.getChapters()) {
+                CreateChapterDTO dto = new CreateChapterDTO();
+                dto.setChapterNumber(idx);
+                dto.setNovelId(novelId);
+                dto.setTitle(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx);
+                dto.setContentHtml(c.getContentHtml() == null ? "" : c.getContentHtml());
+                dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+                dtos.add(dto);
+                idx++;
+            }
+
+            try {
+                chapterService.createChaptersBatch(dtos, 50);
+                logger.info("Created {} chapters for novel {} via batch", dtos.size(), novelId);
+            } catch (Exception e) {
+                logger.error("Failed to create chapters batch for novel {}: {}", novelId, e.getMessage());
+                // fallback: try to create individually to salvage successful ones
+                int retryIdx = startingIndex;
+                for (CreateChapterDTO dto : dtos) {
+                    try {
+                        chapterService.createChapter(dto);
+                        logger.info("Created chapter {} for novel {} (fallback)", retryIdx, novelId);
+                    } catch (Exception ex) {
+                        logger.error("Failed to create chapter {} for novel {} in fallback: {}", retryIdx, novelId, ex.getMessage());
+                    }
+                    retryIdx++;
+                }
+            }
+        }
+
+        // Reload and index the updated novel
+        novel = novelRepository.findById(novelId).orElseThrow();
+        searchService.indexNovels(List.of(novel));
+        return mapper.NoveltoDTO(novel);
+    }
+    
 }

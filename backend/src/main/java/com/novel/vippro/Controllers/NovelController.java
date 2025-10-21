@@ -11,6 +11,8 @@ import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.NovelService;
 import com.novel.vippro.Services.SuggestService;
+import com.novel.vippro.Utils.EpubParseResult;
+import com.novel.vippro.Utils.EpubParser;
 import com.novel.vippro.DTO.Novel.SearchSuggestion;
 
 import jakarta.validation.Valid;
@@ -285,12 +287,29 @@ public class NovelController {
             @RequestParam(value = "status", required = false) String status) {
         try {
             byte[] bytes = epub.getBytes();
-            com.novel.vippro.Utils.EpubParseResult parsed = com.novel.vippro.Utils.EpubParser.parse(bytes);
+            EpubParseResult parsed = EpubParser.parse(bytes);
             NovelDTO dto = novelService.createNovelFromEpub(parsed, slug, status);
             return ControllerResponse.success("Novel imported successfully", dto);
         } catch (Exception e) {
             logger.error("Failed to import epub: {}", e.getMessage(), e);
             return ControllerResponse.error("Failed to import epub: " + e.getMessage(), null);
+        }
+    }
+
+    @Operation(summary = "Add chapters from EPUB", description = "Add chapters to a novel from an EPUB file", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping(path = "/{novelId}/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ControllerResponse<NovelDTO> addChaptersFromEpub(
+            @Parameter(description = "Novel ID") @PathVariable UUID novelId,
+            @RequestPart("epub") MultipartFile epub) {
+        try {
+            byte[] bytes = epub.getBytes();
+            EpubParseResult parsed = EpubParser.parse(bytes);
+            NovelDTO dto = novelService.addChaptersFromEpub(novelId, parsed);
+            return ControllerResponse.success("Chapters added successfully", dto);
+        } catch (Exception e) {
+            logger.error("Failed to add chapters from epub: {}", e.getMessage(), e);
+            return ControllerResponse.error("Failed to add chapters from epub: " + e.getMessage(), null);
         }
     }
 
