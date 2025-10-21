@@ -39,6 +39,7 @@ public class S3FileStorageService implements FileStorageService {
     @Override
     public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
         try {
+            logger.info("Uploading file to S3. publicId: {}, contentType: {}, data length: {}", publicId, contentType, fileData != null ? fileData.length : 0);
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(publicId)

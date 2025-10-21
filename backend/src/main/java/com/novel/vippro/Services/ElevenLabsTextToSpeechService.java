@@ -9,9 +9,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+
+import com.novel.vippro.Models.FileMetadata;
 
 @Service("elevenLabsTTS")
 @ConditionalOnProperty(name = "texttospeech.provider", havingValue = "elevenlabs")
@@ -22,7 +25,9 @@ public class ElevenLabsTextToSpeechService implements TextToSpeechService {
     private static final String DEFAULT_MODEL = "eleven_monolingual_v1";
     private static final String AUDIO_CONTENT_TYPE = "audio/mpeg";
 
-    private final FileStorageService fileStorageService;
+    @Autowired
+    private FileService fileService;
+
     private final HttpClient httpClient;
 
     @Value("${elevenlabs.api.key:}")
@@ -37,13 +42,12 @@ public class ElevenLabsTextToSpeechService implements TextToSpeechService {
     @Value("${elevenlabs.base.url:https://api.elevenlabs.io}")
     private String baseUrl;
 
-    public ElevenLabsTextToSpeechService(FileStorageService fileStorageService) {
-        this.fileStorageService = fileStorageService;
+    public ElevenLabsTextToSpeechService() {
         this.httpClient = HttpClient.newHttpClient();
     }
 
     @Override
-    public String synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
+    public FileMetadata synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
         validateConfiguration();
 
         String requestBody = buildRequestBody(text);
@@ -73,7 +77,7 @@ public class ElevenLabsTextToSpeechService implements TextToSpeechService {
         }
 
         String publicId = String.format("novels/%s/audios/chap-%d-audio", novelSlug, chapterNumber);
-        return fileStorageService.uploadFile(response.body(), publicId, AUDIO_CONTENT_TYPE);
+        return fileService.uploadFile(response.body(), publicId, AUDIO_CONTENT_TYPE,"mp3");
     }
 
     private void validateConfiguration() {

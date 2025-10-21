@@ -28,7 +28,6 @@ public class ReadingStatsDTO {
 
     // Additional fields needed by the service
     @JsonProperty("lastReadAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonDeserialize(using = InstantDeserializer.class)
     private Instant lastReadAt;
     private long minutesSpentReading;

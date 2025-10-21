@@ -91,11 +91,13 @@ public class NovelMapper {
             coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
         }
 
+
         doc.setCoverImage(coverImage);
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
         doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
         return doc;
     }
+
 
     public static Novel DocumenttoNovel(NovelDocument doc) {
         Novel n = new Novel();

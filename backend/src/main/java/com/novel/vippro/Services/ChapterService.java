@@ -1,18 +1,18 @@
 package com.novel.vippro.Services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
-import com.novel.vippro.DTO.Chapter.ChapterDTO;
-import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
-import com.novel.vippro.Exception.ResourceNotFoundException;
-import com.novel.vippro.Mapper.Mapper;
-import com.novel.vippro.Models.Chapter;
-import com.novel.vippro.Models.FileMetadata;
-import com.novel.vippro.Models.Novel;
-import com.novel.vippro.Payload.Response.PageResponse;
-import com.novel.vippro.Repository.ChapterRepository;
-import com.novel.vippro.Repository.FileMetadataRepository;
-import com.novel.vippro.Repository.NovelRepository;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,15 +25,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.novel.vippro.DTO.Chapter.ChapterDTO;
+import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
+import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
+import com.novel.vippro.Exception.ResourceNotFoundException;
+import com.novel.vippro.Mapper.Mapper;
+import com.novel.vippro.Models.Chapter;
+import com.novel.vippro.Models.FileMetadata;
+import com.novel.vippro.Models.Novel;
+import com.novel.vippro.Payload.Response.PageResponse;
+import com.novel.vippro.Repository.ChapterRepository;
+import com.novel.vippro.Repository.FileMetadataRepository;
+import com.novel.vippro.Repository.NovelRepository;
 
 @Service
 public class ChapterService {
@@ -52,9 +57,6 @@ public class ChapterService {
     private ObjectMapper objectMapper;
     @Autowired
     private Mapper mapper;
-
-    @Autowired
-    private RestTemplate restTemplate;
 
     @Autowired
     @Qualifier("openAiEdgeTTS")
@@ -173,34 +175,31 @@ public class ChapterService {
     }
 
     public Map<String, Object> getChapterContent(Chapter chapter) {
-        // Get the JSON content URL from Cloudinary
-        String jsonUrl = chapter.getJsonFile().getFileUrl();
-        // jsonurl only save publicId not full url
+        FileMetadata jsonFile = chapter.getJsonFile();
 
-        if (jsonUrl == null || jsonUrl.isEmpty()) {
-            throw new ResourceNotFoundException("Chapter content", "jsonUrl", jsonUrl);
+        if (jsonFile == null || jsonFile.getPublicId() == null) {
+            throw new ResourceNotFoundException("JSON file not found for chapter " + chapter.getId());
         }
 
-        // Fetch the JSON content from the URL
-        String jsonContent = restTemplate.getForObject(jsonUrl, String.class);
+        String presignedUrl = fileStorageService.generateFileUrl(jsonFile.getPublicId(), 3600);
+        logger.info("Fetching chapter content from presigned URL: {}", presignedUrl);
 
-        if (jsonContent == null || jsonContent.isEmpty()) {
-            throw new ResourceNotFoundException("Chapter content", "jsonContent", jsonContent);
-        }
-
-        // Parse the JSON content
-        Map<String, Object> contentMap;
         try {
-            contentMap = objectMapper.readValue(jsonContent, Map.class);
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(presignedUrl))
+                .GET()
+                .build();
 
-        } catch (IOException e) {
-            throw new RuntimeException("Error parsing chapter content: " + e.getMessage(), e);
+            HttpResponse<String> response = HttpClient.newHttpClient()
+                .send(request, HttpResponse.BodyHandlers.ofString());
+
+            String json = response.body();
+            return new ObjectMapper().readValue(json, Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch chapter content: " + e.getMessage(), e);
         }
-        if (contentMap == null || contentMap.isEmpty()) {
-            throw new ResourceNotFoundException("Chapter content", "contentMap", contentMap);
-        }
-        return contentMap;
     }
+
 
     @Transactional
     public Chapter createChapter(CreateChapterDTO chapterDTO) {
@@ -423,6 +422,7 @@ public class ChapterService {
 
     @Transactional
     public ChapterDetailDTO createChapterAudio(UUID id) {
+        logger.info("Generating audio for chapter id: {}", id);
         Chapter chapter = getChapterById(id);
         if (chapter == null) {
             throw new ResourceNotFoundException("Chapter", "id", id);
@@ -438,25 +438,16 @@ public class ChapterService {
 
         textToConvert = textToConvert.replaceAll("<[^>]*>", "");
 
-        String audioUrl;
+        FileMetadata audioFile;;
         try {
-            audioUrl = textToSpeechService.synthesizeSpeech(
+            logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
+            audioFile = textToSpeechService.synthesizeSpeech(
                     textToConvert,
                     chapter.getNovel().getSlug(),
                     chapter.getChapterNumber());
-        } catch (IOException | IllegalStateException e) {
-            throw new RuntimeException("Error generating audio for chapter: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to synthesize speech: " + e.getMessage(), e);
         }
-
-        FileMetadata audioFile = new FileMetadata();
-        audioFile.setPublicId("novels/"+chapter.getNovel().getSlug() + "/audios/" + "chap-" + chapter.getChapterNumber() + "-audio.mp3");
-        audioFile.setContentType("audio/mpeg");
-        audioFile.setFileUrl(audioUrl);
-        audioFile.setFileName("chap-" + chapter.getChapterNumber() + "-audio.mp3");
-        audioFile.setType("audio");
-        audioFile.setSize(0);
-        audioFile.setUpdatedAt(Instant.now());
-        fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
         chapterRepository.save(chapter);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);

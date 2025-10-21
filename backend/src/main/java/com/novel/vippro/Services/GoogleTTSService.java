@@ -2,6 +2,7 @@ package com.novel.vippro.Services;
 
 import com.google.cloud.texttospeech.v1.*;
 import com.google.protobuf.ByteString;
+import com.novel.vippro.Models.FileMetadata;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import org.slf4j.Logger;
@@ -22,11 +23,11 @@ public class GoogleTTSService implements TextToSpeechService  {
     private String googleCredentialsPath;
 
     @Autowired
-    private FileStorageService fileStorageService;
+    private FileService fileService;
 
     private static final Logger logger = LoggerFactory.getLogger(GoogleTTSService.class);
 
-    public String synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
+    public FileMetadata synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
         // Initialize the Text-to-Speech client with default credentials
         try {
 
@@ -67,7 +68,7 @@ public class GoogleTTSService implements TextToSpeechService  {
             String publicId = String.format("novels/%s/audios/chap-%d-audio", novelSlug, chapterNumber);
 
             // Upload the audio content to Cloudinary
-            return fileStorageService.uploadFile(audioContents.toByteArray(), publicId, "audio/mpeg");
+            return fileService.uploadFile(audioContents.toByteArray(), publicId, "audio/mpeg","mp3");
 
         } catch (IOException e) {
             e.printStackTrace();

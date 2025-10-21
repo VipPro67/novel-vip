@@ -54,12 +54,12 @@ public class Novel extends BaseEntity {
 	@BatchSize(size = 20)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
-	private List<Tag> tags;
+	private Set<Tag> tags;
 
 	@BatchSize(size = 20)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
-	private List<Genre> genres;
+	private Set<Genre> genres;
 
 	@BatchSize(size = 20)
 	@ManyToOne(fetch = FetchType.LAZY)

@@ -9,9 +9,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+
+import com.novel.vippro.Models.FileMetadata;
 
 @Service("openAiEdgeTTS")
 @ConditionalOnProperty(name = "texttospeech.provider", havingValue = "openai-edge", matchIfMissing = true)
@@ -23,7 +26,9 @@ public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
     private static final String DEFAULT_RESPONSE_FORMAT = "mp3";
     private static final double DEFAULT_SPEED = 1.0;
 
-    private final FileStorageService fileStorageService;
+    @Autowired
+    private FileService fileService;
+
     private final HttpClient httpClient;
 
     @Value("${openai.edge.tts.api-key:}")
@@ -38,15 +43,15 @@ public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
     @Value("${openai.edge.tts.speed:1.0}")
     private double speed;
 
-    public OpenAiEdgeTextToSpeechService(FileStorageService fileStorageService) {
-        this.fileStorageService = fileStorageService;
+    public OpenAiEdgeTextToSpeechService() {
         this.httpClient = HttpClient.newHttpClient();
     }
 
     @Override
-    public String synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
+    public FileMetadata synthesizeSpeech(String text, String novelSlug, int chapterNumber) throws IOException {
         validateConfiguration();
 
+        logger.info("Synthesizing speech for novel: {}, chapter: {}", novelSlug, chapterNumber);
         String requestBody = buildRequestBody(text);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(buildSynthesisUrl()))
@@ -59,6 +64,8 @@ public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
         HttpResponse<byte[]> response;
         try {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            logger.info("Received response from TTS service. Status: {}, Body length: {}", response.statusCode(),
+                    response.body() != null ? response.body().length : 0);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Text-to-speech request interrupted", e);
@@ -71,7 +78,7 @@ public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
         }
 
         String publicId = String.format("novels/%s/audios/chap-%d-audio", novelSlug, chapterNumber);
-        return fileStorageService.uploadFile(response.body(), publicId, AUDIO_CONTENT_TYPE);
+        return fileService.uploadFileWithPublicId(response.body(), publicId,"chap-"+ chapterNumber+"-audio", AUDIO_CONTENT_TYPE,"mp3");
     }
 
     private void validateConfiguration() {

@@ -22,11 +22,9 @@ public class ReadingHistoryDTO {
     private Integer progress;
     private Integer readingTime;
     @JsonProperty("lastReadAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonDeserialize(using = InstantDeserializer.class)
     private Instant lastReadAt;
     @JsonProperty("createdAt")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @JsonDeserialize(using = InstantDeserializer.class)
     private Instant createdAt;
 }
