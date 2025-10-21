@@ -493,4 +493,40 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
+    @CacheEvict(value = "novels", allEntries = true)
+    @Transactional
+    public NovelDTO addChaptersFromEpub(UUID novelId, EpubParseResult epubResult) {
+        Novel novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
+
+        // Find the highest chapter number
+        int lastChapterNumber = chapterService.getLastChapterNumber(novelId);
+        int startingIndex = lastChapterNumber + 1;
+
+        // Add new chapters starting from the next number
+        if (epubResult.getChapters() != null) {
+            int idx = startingIndex;
+            for (var c : epubResult.getChapters()) {
+                try {
+                    CreateChapterDTO dto = new CreateChapterDTO();
+                    dto.setChapterNumber(idx);
+                    dto.setNovelId(novelId);
+                    dto.setTitle(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx);
+                    dto.setContentHtml(c.getContentHtml() == null ? "" : c.getContentHtml());
+                    dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+                    chapterService.createChapter(dto);
+                    logger.info("Created chapter {} for novel {}", idx, novelId);
+                } catch (Exception e) {
+                    logger.error("Failed to create chapter {} for novel {}: {}", idx, novelId, e.getMessage());
+                }
+                idx++;
+            }
+        }
+
+        // Reload and index the updated novel
+        novel = novelRepository.findById(novelId).orElseThrow();
+        searchService.indexNovels(List.of(novel));
+        return mapper.NoveltoDTO(novel);
+    }
+
 }

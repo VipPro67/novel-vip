@@ -398,7 +398,12 @@ public class ChapterService {
 
     @Transactional
     public Chapter saveChapterEntity(Chapter chapter) {
-        // simple save used by importers; do not increment novel chapter count here since caller manages it
         return chapterRepository.save(chapter);
+    }
+
+    public int getLastChapterNumber(UUID novelId) {
+        Integer lastChapterNumber = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId)
+                .map(Chapter::getChapterNumber).getNumber();
+        return lastChapterNumber;
     }
 }

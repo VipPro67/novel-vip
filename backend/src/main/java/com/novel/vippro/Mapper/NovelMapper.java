@@ -24,34 +24,40 @@ import java.util.stream.Collectors;
 @Component
 public class NovelMapper {
 
-	@Autowired
-	private ModelMapper modelMapper;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Autowired
     @Qualifier("s3FileStorageService")
     private FileStorageService fileStorageService;
 
-	public NovelDTO NoveltoDTO(Novel novel) {
-		NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
-		if(novel.getCategories() != null) {
-		novelDTO.setCategories(novel.getCategories().stream()
-		.map(category -> new CategoryDTO(category.getId(), category.getName(),
-		category.getDescription()))
-		.collect(Collectors.toSet()));
-		}
-		if(novel.getTags() != null) {
-		novelDTO.setTags(novel.getTags().stream()
-		.map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
-		.collect(Collectors.toSet()));
-		}
-		if(novel.getGenres() != null) {
-		novelDTO.setGenres(novel.getGenres().stream()
-		.map(genre -> new GenreDTO(genre.getId(), genre.getName(),
-		genre.getDescription()))
-		.collect(Collectors.toSet()));
-		}
-		return novelDTO;
-	}
+    public NovelDTO NoveltoDTO(Novel novel) {
+        NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
+        if (novel.getCategories() != null) {
+            novelDTO.setCategories(novel.getCategories().stream()
+                    .map(category -> new CategoryDTO(category.getId(), category.getName(),
+                            category.getDescription()))
+                    .collect(Collectors.toSet()));
+        }
+        if (novel.getTags() != null) {
+            novelDTO.setTags(novel.getTags().stream()
+                    .map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
+                    .collect(Collectors.toSet()));
+        }
+        if (novel.getGenres() != null) {
+            novelDTO.setGenres(novel.getGenres().stream()
+                    .map(genre -> new GenreDTO(genre.getId(), genre.getName(),
+                            genre.getDescription()))
+                    .collect(Collectors.toSet()));
+        }
+        if (novel.getChapters().size() > 0) {
+            novelDTO.setTotalChapters(novel.getChapters().size());
+        } else {
+            novelDTO.setTotalChapters(0);
+        }
+
+        return novelDTO;
+    }
 
     public NovelDocument toDocument(Novel novel) {
         NovelDocument doc = new NovelDocument();
@@ -81,12 +87,13 @@ public class NovelMapper {
             coverImage.setPublicId(novel.getCoverImage().getPublicId());
             coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
         }
-        
+
         doc.setCoverImage(coverImage);
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
         doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
         return doc;
     }
+
     public static Novel DocumenttoNovel(NovelDocument doc) {
         Novel n = new Novel();
         n.setId(doc.getId());
@@ -111,30 +118,30 @@ public class NovelMapper {
         // Categories, Tags, Genres
         if (doc.getCategories() != null) {
             n.setCategories(doc.getCategories().stream()
-                .map(name -> new Category(name))
-                .collect(Collectors.toSet()));
+                    .map(name -> new Category(name))
+                    .collect(Collectors.toSet()));
         }
         if (doc.getTags() != null) {
             n.setTags(doc.getTags().stream()
-                .map(name -> new Tag( name))
-                .collect(Collectors.toSet()));
+                    .map(name -> new Tag(name))
+                    .collect(Collectors.toSet()));
         }
         if (doc.getGenres() != null) {
             n.setGenres(doc.getGenres().stream()
-                .map(name -> new Genre( name))
-                .collect(Collectors.toSet()));
+                    .map(name -> new Genre(name))
+                    .collect(Collectors.toSet()));
         }
 
         return n; // detached (not managed by JPA)
     }
 
-	public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {
-		return novels.stream()
-				.map(this::NoveltoDTO)
-				.collect(Collectors.toList());
-	}
+    public List<NovelDTO> NovelListtoDTOList(List<Novel> novels) {
+        return novels.stream()
+                .map(this::NoveltoDTO)
+                .collect(Collectors.toList());
+    }
 
-	public void updateNovelFromDTO(NovelDTO dto, Novel novel) {
-		modelMapper.map(dto, novel);
-	}
+    public void updateNovelFromDTO(NovelDTO dto, Novel novel) {
+        modelMapper.map(dto, novel);
+    }
 }

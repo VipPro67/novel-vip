@@ -21,6 +21,9 @@ services:
     volumes:
       - ~/.m2:/root/.m2
       - app_logs:/app/logs
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   caddy:
     image: caddy:2.8
@@ -28,7 +31,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "80:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -36,18 +38,18 @@ services:
     depends_on:
       - backend
 
-  # frontend:
-  #   build:
-  #     context: ../frontend
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     REACT_EDITOR: atom
-  #     NEXT_PUBLIC_API_URL: http://localhost:8081
-  #     NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
-  #   depends_on:
-  #     - backend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_EDITOR: atom
+      NEXT_PUBLIC_API_URL: http://localhost:8081
+      NEXT_PUBLIC_WS_URL: ws://localhost:8081/ws
+    depends_on:
+      - backend
 
   # redis:
   #   image: redis:latest
@@ -57,18 +59,26 @@ services:
   #     - redis_data:/data
   #   command: [ "redis-server", "--appendonly", "yes" ]
 
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   command: >
-  #     bash -c "rabbitmq-plugins enable rabbitmq_stomp &&
-  #             rabbitmq-server"
-  #   ports:
-  #     - "5672:5672" # AMQP
-  #     - "15672:15672" # Management
-  #     - "61613:61613" # STOMP
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: guest
-  #     RABBITMQ_DEFAULT_PASS: guest
+  rabbitmq:
+      image: rabbitmq:3-management
+      container_name: rabbitmq
+      command: >
+        bash -c "rabbitmq-plugins enable --offline rabbitmq_stomp rabbitmq_web_stomp &&
+                rabbitmq-server"
+      environment:
+        RABBITMQ_DEFAULT_USER: guest
+        RABBITMQ_DEFAULT_PASS: guest
+      ports:
+        - "5672:5672"     # AMQP
+        - "15672:15672"   # Management UI
+        - "61613:61613"   # STOMP (for backend apps)
+        - "15674:15674"   # Web STOMP (for browsers via ws://localhost:15674/ws)
+      healthcheck:
+        test: ["CMD", "rabbitmqctl", "status"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 40s
 
   # postgres:
   #   image: postgres:16

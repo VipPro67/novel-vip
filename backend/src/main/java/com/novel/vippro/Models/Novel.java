@@ -46,22 +46,22 @@ public class Novel extends BaseEntity {
 	@Column(nullable = false)
 	private String status; // ongoing, completed
 
-    @BatchSize(size = 20)
+	@BatchSize(size = 20)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_categories", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
 	private Set<Category> categories = new HashSet<>();
-    
-    @BatchSize(size = 20)
+
+	@BatchSize(size = 20)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
 	private Set<Tag> tags = new HashSet<>();
 
-    @BatchSize(size = 20)
+	@BatchSize(size = 20)
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
 	private Set<Genre> genres = new HashSet<>();
 
-    @BatchSize(size = 20)
+	@BatchSize(size = 20)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "owner_id", referencedColumnName = "id")
 	private User owner;
