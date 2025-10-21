@@ -22,6 +22,6 @@ public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
     Chapter findByNovelIdAndChapterNumber(UUID novelId, Integer chapterNumber);
 
     @Query("SELECT c FROM Chapter c WHERE c.novel.id = ?1 ORDER BY c.chapterNumber DESC")
-    Page<Chapter> findTopByNovelIdOrderByChapterNumberDesc(UUID novelId);
+    Chapter findTopByNovelIdOrderByChapterNumberDesc(UUID novelId);
 
 }

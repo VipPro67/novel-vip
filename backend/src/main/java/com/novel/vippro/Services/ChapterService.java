@@ -402,8 +402,7 @@ public class ChapterService {
     }
 
     public int getLastChapterNumber(UUID novelId) {
-        Integer lastChapterNumber = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId)
-                .map(Chapter::getChapterNumber).getNumber();
+        Integer lastChapterNumber = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId).getChapterNumber();
         return lastChapterNumber;
     }
 }
