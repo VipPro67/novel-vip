@@ -1,5 +1,15 @@
 package com.novel.vippro.Mapper;
 
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.hibernate.Hibernate;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
@@ -11,15 +21,6 @@ import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NovelDocument;
 import com.novel.vippro.Models.Tag;
 import com.novel.vippro.Services.FileStorageService;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class NovelMapper {
@@ -33,27 +34,29 @@ public class NovelMapper {
 
     public NovelDTO NoveltoDTO(Novel novel) {
         NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
+
         if (novel.getCategories() != null) {
             novelDTO.setCategories(novel.getCategories().stream()
-                    .map(category -> new CategoryDTO(category.getId(), category.getName(),
-                            category.getDescription()))
+                    .map(category -> new CategoryDTO(category.getId(), category.getName(), category.getDescription()))
                     .collect(Collectors.toSet()));
         }
+
         if (novel.getTags() != null) {
             novelDTO.setTags(novel.getTags().stream()
                     .map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
                     .collect(Collectors.toSet()));
         }
+
         if (novel.getGenres() != null) {
             novelDTO.setGenres(novel.getGenres().stream()
-                    .map(genre -> new GenreDTO(genre.getId(), genre.getName(),
-                            genre.getDescription()))
+                    .map(genre -> new GenreDTO(genre.getId(), genre.getName(), genre.getDescription()))
                     .collect(Collectors.toSet()));
         }
-        if (novel.getChapters().size() > 0) {
+
+        if (Hibernate.isInitialized(novel.getChapters()) && novel.getChapters() != null) {
             novelDTO.setTotalChapters(novel.getChapters().size());
         } else {
-            novelDTO.setTotalChapters(0);
+            novelDTO.setTotalChapters(novel.getTotalChapters() != null ? novel.getTotalChapters() : 0);
         }
 
         return novelDTO;
