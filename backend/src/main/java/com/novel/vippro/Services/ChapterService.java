@@ -445,9 +445,10 @@ public class ChapterService {
                     textToConvert,
                     chapter.getNovel().getSlug(),
                     chapter.getChapterNumber());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to synthesize speech: " + e.getMessage(), e);
+        } catch (IOException | IllegalStateException e) {
+            throw new RuntimeException("Error generating audio for chapter: " + e.getMessage(), e);
         }
+        fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
         chapterRepository.save(chapter);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);

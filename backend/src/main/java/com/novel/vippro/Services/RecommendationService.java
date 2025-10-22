@@ -253,8 +253,8 @@ public class RecommendationService {
 
         private double calculateNovelSimilarity(Novel novel1, Novel novel2) {
                 // Genre similarity (40% weight)
-                List<Genre> genres1 = novel1.getGenres();
-                List<Genre> genres2 = novel2.getGenres();
+                Set<Genre> genres1 = novel1.getGenres();
+                Set<Genre> genres2 = novel2.getGenres();
                 long matchingGenres = genres1.stream()
                                 .filter(genres2::contains)
                                 .count();
@@ -262,8 +262,8 @@ public class RecommendationService {
                                 Math.max(genres1.size(), genres2.size());
 
                 // Tag similarity (30% weight)
-                List<Tag> tags1 = novel1.getTags();
-                List<Tag> tags2 = novel2.getTags();
+                Set<Tag> tags1 = novel1.getTags();
+                Set<Tag> tags2 = novel2.getTags();
                 long matchingTags = tags1.stream()
                                 .filter(tags2::contains)
                                 .count();

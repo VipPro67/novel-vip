@@ -10,6 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.hibernate.Hibernate;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
@@ -123,15 +133,15 @@ public class NovelMapper {
         // Categories, Tags, Genres
         if (doc.getCategories() != null) {
             n.setCategories(doc.getCategories().stream()
-                    .map(name -> new Category(name)).collect(Collectors.toList()));
+                    .map(name -> new Category(name)).collect(Collectors.toSet()));
         }
         if (doc.getTags() != null) {
             n.setTags(doc.getTags().stream()
-                    .map(name -> new Tag(name)).collect(Collectors.toList()));
+                    .map(name -> new Tag(name)).collect(Collectors.toSet()));
         }
         if (doc.getGenres() != null) {
             n.setGenres(doc.getGenres().stream()
-                    .map(name -> new Genre(name)).collect(Collectors.toList()));
+                    .map(name -> new Genre(name)).collect(Collectors.toSet()));
         }
 
         return n; // detached (not managed by JPA)
