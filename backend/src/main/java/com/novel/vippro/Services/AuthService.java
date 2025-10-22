@@ -1,5 +1,6 @@
 package com.novel.vippro.Services;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -199,7 +200,7 @@ public class AuthService {
         user.setEmail(email);
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
 
-        Set<Role> roles = new HashSet<>();
+        List<Role> roles = new ArrayList<>();
         Role userRole = roleRepository.findByName(ERole.USER)
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         roles.add(userRole);

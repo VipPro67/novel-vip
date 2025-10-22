@@ -44,8 +44,8 @@ public class RecommendationService {
                                 .collect(Collectors.toSet());
 
                 // Get user's favorite genres and tags
-                Set<String> favoriteGenres = preferences.getFavoriteGenres();
-                Set<String> favoriteTags = preferences.getFavoriteTags();
+                List<String> favoriteGenres = preferences.getFavoriteGenres();
+                List<String> favoriteTags = preferences.getFavoriteTags();
 
                 // Get novels matching user preferences
                 List<Novel> candidateNovels = novelRepository.findByGenresInAndTagsIn(
@@ -102,7 +102,7 @@ public class RecommendationService {
                 Set<String> novelGenres = novel.getGenres().stream()
                                 .map(Genre::getName)
                                 .collect(Collectors.toSet());
-                Set<String> userGenres = preferences.getFavoriteGenres();
+                List<String> userGenres = preferences.getFavoriteGenres();
 
                 if (userGenres.isEmpty())
                         return 0.5; // Default score if no preferences
@@ -118,7 +118,7 @@ public class RecommendationService {
                 Set<String> novelTags = novel.getTags().stream()
                                 .map(Tag::getName)
                                 .collect(Collectors.toSet());
-                Set<String> userTags = preferences.getFavoriteTags();
+                List<String> userTags = preferences.getFavoriteTags();
 
                 if (userTags.isEmpty())
                         return 0.5; // Default score if no preferences
@@ -196,8 +196,8 @@ public class RecommendationService {
         private UserPreferences createDefaultPreferences(User user) {
                 UserPreferences preferences = new UserPreferences();
                 preferences.setUser(user);
-                preferences.setFavoriteGenres(new HashSet<>());
-                preferences.setFavoriteTags(new HashSet<>());
+                preferences.setFavoriteGenres(new ArrayList<>());
+                preferences.setFavoriteTags(new ArrayList<>());
                 return userPreferencesRepository.save(preferences);
         }
 
@@ -253,8 +253,8 @@ public class RecommendationService {
 
         private double calculateNovelSimilarity(Novel novel1, Novel novel2) {
                 // Genre similarity (40% weight)
-                Set<Genre> genres1 = novel1.getGenres();
-                Set<Genre> genres2 = novel2.getGenres();
+                List<Genre> genres1 = novel1.getGenres();
+                List<Genre> genres2 = novel2.getGenres();
                 long matchingGenres = genres1.stream()
                                 .filter(genres2::contains)
                                 .count();
@@ -262,8 +262,8 @@ public class RecommendationService {
                                 Math.max(genres1.size(), genres2.size());
 
                 // Tag similarity (30% weight)
-                Set<Tag> tags1 = novel1.getTags();
-                Set<Tag> tags2 = novel2.getTags();
+                List<Tag> tags1 = novel1.getTags();
+                List<Tag> tags2 = novel2.getTags();
                 long matchingTags = tags1.stream()
                                 .filter(tags2::contains)
                                 .count();

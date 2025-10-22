@@ -24,9 +24,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      opensearch:
-        condition: service_healthy
-
+      # opensearch:
+      #   condition: service_healthy
   caddy:
     image: caddy:2.8
     restart: unless-stopped
@@ -126,30 +125,30 @@ services:
   #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
   #   ports:
   #     - "5601:5601"
-  opensearch:
-    image: opensearchproject/opensearch:2.13.0
-    environment:
-      - discovery.type=single-node
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
-      - "OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m"
-      - bootstrap.memory_lock=true
-      - DISABLE_SECURITY_PLUGIN=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 0.8g                                  
-    ports:
-      - "9200:9200"
-      - "9600:9600"
-    volumes:
-      - opensearch_data:/usr/share/opensearch/data
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 40s
+  # opensearch:
+  #   image: opensearchproject/opensearch:2.13.0
+  #   environment:
+  #     - discovery.type=single-node
+  #     - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
+  #     - "OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m"
+  #     - bootstrap.memory_lock=true
+  #     - DISABLE_SECURITY_PLUGIN=true
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   mem_limit: 0.8g                                  
+  #   ports:
+  #     - "9200:9200"
+  #     - "9600:9600"
+  #   volumes:
+  #     - opensearch_data:/usr/share/opensearch/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 10
+  #     start_period: 40s
 
   # opensearch-dashboards:
   #   image: opensearchproject/opensearch-dashboards:2.13.0

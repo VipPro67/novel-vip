@@ -38,19 +38,19 @@ public class NovelMapper {
         if (novel.getCategories() != null) {
             novelDTO.setCategories(novel.getCategories().stream()
                     .map(category -> new CategoryDTO(category.getId(), category.getName(), category.getDescription()))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
         }
 
         if (novel.getTags() != null) {
             novelDTO.setTags(novel.getTags().stream()
                     .map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
         }
 
         if (novel.getGenres() != null) {
             novelDTO.setGenres(novel.getGenres().stream()
                     .map(genre -> new GenreDTO(genre.getId(), genre.getName(), genre.getDescription()))
-                    .collect(Collectors.toSet()));
+                    .collect(Collectors.toList()));
         }
 
         if (Hibernate.isInitialized(novel.getChapters()) && novel.getChapters() != null) {
@@ -121,18 +121,15 @@ public class NovelMapper {
         // Categories, Tags, Genres
         if (doc.getCategories() != null) {
             n.setCategories(doc.getCategories().stream()
-                    .map(name -> new Category(name))
-                    .collect(Collectors.toSet()));
+                    .map(name -> new Category(name)).collect(Collectors.toList()));
         }
         if (doc.getTags() != null) {
             n.setTags(doc.getTags().stream()
-                    .map(name -> new Tag(name))
-                    .collect(Collectors.toSet()));
+                    .map(name -> new Tag(name)).collect(Collectors.toList()));
         }
         if (doc.getGenres() != null) {
             n.setGenres(doc.getGenres().stream()
-                    .map(name -> new Genre(name))
-                    .collect(Collectors.toSet()));
+                    .map(name -> new Genre(name)).collect(Collectors.toList()));
         }
 
         return n; // detached (not managed by JPA)

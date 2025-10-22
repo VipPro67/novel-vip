@@ -12,7 +12,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -66,8 +68,8 @@ public class GenreService {
     }
 
     @Cacheable(value = "genres")
-    public Set<GenreDTO> getAllGenres() {
-        Set<GenreDTO> genreDTOs = new HashSet<>();
+    public List<GenreDTO> getAllGenres() {
+        List<GenreDTO> genreDTOs = new ArrayList<>();
         for (Genre genre : genreRepository.findAll()) {
             genreDTOs.add(mapper.GenretoDTO(genre));
         }

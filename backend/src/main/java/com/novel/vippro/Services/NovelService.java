@@ -29,6 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -229,12 +230,9 @@ public class NovelService {
         novel.setTotalChapters(0);
         novel.setComments(null);
 
-        // Initialize categories as an empty set
-        novel.setCategories(new HashSet<>());
-
         // Handle categories - only use existing categories
         if (novelDTO.getCategories() != null && !novelDTO.getCategories().isEmpty()) {
-            Set<Category> categories = new HashSet<>();
+            List<Category> categories = new ArrayList<>();
 
             for (String categoryName : novelDTO.getCategories()) {
                 try {
@@ -349,7 +347,6 @@ public class NovelService {
         novel.setRating(0);
         novel.setTotalChapters(0);
         novel.setComments(null);
-        novel.setCategories(new HashSet<>());
         return novelRepository.save(novel);
     }
 
