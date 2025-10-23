@@ -1,6 +1,7 @@
 package com.novel.vippro.Controllers;
 
 import com.novel.vippro.DTO.Comment.CommentDTO;
+import com.novel.vippro.DTO.Epub.EpubImportJobDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
@@ -9,10 +10,9 @@ import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.CommentService;
+import com.novel.vippro.Services.EpubImportService;
 import com.novel.vippro.Services.NovelService;
 import com.novel.vippro.Services.SuggestService;
-import com.novel.vippro.Utils.EpubParseResult;
-import com.novel.vippro.Utils.EpubParser;
 import com.novel.vippro.DTO.Novel.SearchSuggestion;
 
 import jakarta.validation.Valid;
@@ -56,6 +56,9 @@ public class NovelController {
 
     @Autowired
     private SuggestService suggestService;
+
+    @Autowired
+    private EpubImportService epubImportService;
 
     private static final Logger logger = LoggerFactory.getLogger(NovelController.class);
 
@@ -281,35 +284,31 @@ public class NovelController {
     @Operation(summary = "Import EPUB and create novel", description = "Upload an EPUB file and import it as a novel (creates novel + chapters)", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ControllerResponse<NovelDTO> importEpub(
+    public ControllerResponse<EpubImportJobDTO> importEpub(
             @RequestPart("epub") MultipartFile epub,
             @RequestParam(value = "slug") String slug,
             @RequestParam(value = "status", required = false) String status) {
         try {
-            byte[] bytes = epub.getBytes();
-            EpubParseResult parsed = EpubParser.parse(bytes);
-            NovelDTO dto = novelService.createNovelFromEpub(parsed, slug, status);
-            return ControllerResponse.success("Novel imported successfully", dto);
+            EpubImportJobDTO job = epubImportService.queueNewNovelImport(epub, slug, status);
+            return ControllerResponse.success("EPUB import queued successfully", job);
         } catch (Exception e) {
-            logger.error("Failed to import epub: {}", e.getMessage(), e);
-            return ControllerResponse.error("Failed to import epub: " + e.getMessage(), null);
+            logger.error("Failed to queue epub import: {}", e.getMessage(), e);
+            return ControllerResponse.error("Failed to queue epub import: " + e.getMessage(), null);
         }
     }
 
     @Operation(summary = "Add chapters from EPUB", description = "Add chapters to a novel from an EPUB file", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/{novelId}/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ControllerResponse<NovelDTO> addChaptersFromEpub(
+    public ControllerResponse<EpubImportJobDTO> addChaptersFromEpub(
             @Parameter(description = "Novel ID") @PathVariable UUID novelId,
             @RequestPart("epub") MultipartFile epub) {
         try {
-            byte[] bytes = epub.getBytes();
-            EpubParseResult parsed = EpubParser.parse(bytes);
-            NovelDTO dto = novelService.addChaptersFromEpub(novelId, parsed);
-            return ControllerResponse.success("Chapters added successfully", dto);
+            EpubImportJobDTO job = epubImportService.queueChaptersImport(novelId, epub);
+            return ControllerResponse.success("EPUB import queued successfully", job);
         } catch (Exception e) {
-            logger.error("Failed to add chapters from epub: {}", e.getMessage(), e);
-            return ControllerResponse.error("Failed to add chapters from epub: " + e.getMessage(), null);
+            logger.error("Failed to queue chapter import from epub: {}", e.getMessage(), e);
+            return ControllerResponse.error("Failed to queue chapter import: " + e.getMessage(), null);
         }
     }
 

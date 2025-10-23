@@ -8,6 +8,7 @@ import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.AdvancedChapterUploadService;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ChapterService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,8 +110,10 @@ public class ChapterController {
     @GetMapping("/{id}/audio")
     public ControllerResponse<ChapterDetailDTO> createChapterAudio(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
-        ChapterDetailDTO chapter = chapterService.createChapterAudio(id);
-        return ControllerResponse.success("Chapter audio retrieved successfully", chapter);
+        ChapterDetailDTO chapter = chapterService.getChapterDetailDTO(id);
+        boolean queued = chapterService.enqueueChapterAudio(id, UserDetailsImpl.getCurrentUserId());
+        String message = queued ? "Chapter audio generation queued" : "Chapter audio already available";
+        return ControllerResponse.success(message, chapter);
     }
 
     @Operation(summary = "Create new chapter", description = "Create a new chapter for a novel", security = @SecurityRequirement(name = "bearerAuth"))

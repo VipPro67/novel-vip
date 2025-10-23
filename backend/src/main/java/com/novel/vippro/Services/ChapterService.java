@@ -32,6 +32,8 @@ import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
+import com.novel.vippro.Messaging.AsyncTaskPublisher;
+import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Novel;
@@ -67,6 +69,9 @@ public class ChapterService {
 
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
+
+    @Autowired
+    private AsyncTaskPublisher asyncTaskPublisher;
 
     private static final Logger logger = LogManager.getLogger(ChapterService.class);
 
@@ -421,24 +426,22 @@ public class ChapterService {
     }
 
     @Transactional
-    public ChapterDetailDTO createChapterAudio(UUID id) {
-        logger.info("Generating audio for chapter id: {}", id);
+    public Chapter ensureChapterAudioGenerated(UUID id) {
+        logger.info("Ensuring audio for chapter id: {}", id);
         Chapter chapter = getChapterById(id);
         if (chapter == null) {
             throw new ResourceNotFoundException("Chapter", "id", id);
         }
 
         if (chapter.getAudioFile() != null) {
-            ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
-            return dto;
+            return chapter;
         }
 
         Map<String, Object> content = getChapterContent(chapter);
         String textToConvert = chapter.getTitle() + "\n" + content.get("content");
-
         textToConvert = textToConvert.replaceAll("<[^>]*>", "");
 
-        FileMetadata audioFile;;
+        FileMetadata audioFile;
         try {
             logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
             audioFile = textToSpeechService.synthesizeSpeech(
@@ -451,8 +454,31 @@ public class ChapterService {
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
         chapterRepository.save(chapter);
-        ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
-        return dto;
+        return chapter;
+    }
+
+    @Transactional
+    public ChapterDetailDTO createChapterAudio(UUID id) {
+        Chapter chapter = ensureChapterAudioGenerated(id);
+        return mapper.ChaptertoChapterDetailDTO(chapter);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean enqueueChapterAudio(UUID chapterId, UUID userId) {
+        Chapter chapter = getChapterById(chapterId);
+        if (chapter.getAudioFile() != null) {
+            return false;
+        }
+        ChapterAudioMessage message = ChapterAudioMessage.builder()
+                .chapterId(chapter.getId())
+                .chapterNumber(chapter.getChapterNumber())
+                .novelId(chapter.getNovel().getId())
+                .novelSlug(chapter.getNovel().getSlug())
+                .jobId(null)
+                .userId(userId)
+                .build();
+        asyncTaskPublisher.publishChapterAudio(message);
+        return true;
     }
 
     public FileMetadata getChapterAudioMetadata(UUID id) {
@@ -485,7 +511,7 @@ public class ChapterService {
     }
 
     public int getLastChapterNumber(UUID novelId) {
-        Integer lastChapterNumber = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId).getChapterNumber();
-        return lastChapterNumber;
+        Chapter last = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId);
+        return last == null ? 0 : last.getChapterNumber();
     }
 }

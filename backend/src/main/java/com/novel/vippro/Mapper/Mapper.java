@@ -5,6 +5,7 @@ import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
+import com.novel.vippro.DTO.Epub.EpubImportJobDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
@@ -182,4 +183,7 @@ public interface Mapper {
     FileMetadata DTOToFileMetadata(FileMetadataDTO dto);
 
     void updateFileMetadataFromDTO(FileMetadataDTO dto, FileMetadata metadata);
+
+    // EPUB import job mappings
+    EpubImportJobDTO EpubImportJobToDTO(EpubImportJob job);
 }

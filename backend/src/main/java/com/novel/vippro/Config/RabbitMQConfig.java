@@ -25,10 +25,20 @@ public class RabbitMQConfig {
         return new Queue(MessageQueues.COMMENT, true, false, false);
     }
 
-	@Bean
-	public MessageConverter jsonMessageConverter() {
-		return new Jackson2JsonMessageConverter();
-	}
+    @Bean
+    public Queue epubUploadQueue() {
+        return new Queue(MessageQueues.EPUB_UPLOAD, true, false, false);
+    }
+
+    @Bean
+    public Queue chapterAudioQueue() {
+        return new Queue(MessageQueues.CHAPTER_AUDIO, true, false, false);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+            return new Jackson2JsonMessageConverter();
+    }
 
 	@Bean
 	public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter converter) {
