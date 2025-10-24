@@ -21,14 +21,11 @@ export function AuthGuard({ children, requireRole, fallback }: AuthGuardProps) {
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        // Redirect to login with current page as redirect parameter
-        const redirectUrl = encodeURIComponent(pathname)
-        router.push(`/login?redirect=${redirectUrl}`)
+        router.push(`/`)
         return
       }
 
       if (requireRole && !hasRole(requireRole)) {
-        // User doesn't have required role, redirect to home
         router.push("/")
         return
       }

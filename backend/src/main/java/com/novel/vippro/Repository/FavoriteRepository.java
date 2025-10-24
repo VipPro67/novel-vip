@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.novel.vippro.Models.Favorite;
+import com.novel.vippro.Models.Novel;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +15,8 @@ import java.util.UUID;
 
 @Repository
 public interface FavoriteRepository extends JpaRepository<Favorite, UUID> {
-    @Query("SELECT f FROM Favorite f WHERE f.user.id = ?1 ORDER BY f.createdAt DESC")
-    Page<Favorite> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    @Query("SELECT n FROM Favorite f JOIN f.novel n WHERE f.user.id = ?1 ORDER BY f.createdAt DESC")
+    Page<Novel> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     @Query("SELECT f FROM Favorite f WHERE f.novel.id = ?1")
     List<Favorite> findByNovelId(UUID novelId);

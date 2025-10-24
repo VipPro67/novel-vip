@@ -33,11 +33,11 @@ public class ChapterMapper {
 		chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
         if(chapter.getAudioFile()!=null)
         {
-            chapterDetailDTO.setAudioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 360));
+            chapterDetailDTO.setAudioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 3600));
         }
         if(chapter.getJsonFile()!=null)
         {
-            chapterDetailDTO.setJsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 360));
+            chapterDetailDTO.setJsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 3600));
         }
 		return chapterDetailDTO;
 	}

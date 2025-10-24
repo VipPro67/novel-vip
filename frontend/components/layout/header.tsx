@@ -31,18 +31,18 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useState } from "react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import SearchBar from "../ui/search-bar"
+import { useAuthModals } from "@/hooks/use-auth-modals"
 
 export function Header() {
   const { user, logout, isAuthenticated, hasRole } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const { openLogin, openRegister } = useAuthModals()
 
   const handleProtectedNavigation = (path: string) => {
     if (!isAuthenticated) {
-      // Redirect to login with current page as redirect
-      const redirectUrl = encodeURIComponent(path)
-      router.push(`/login?redirect=${redirectUrl}`)
+      openLogin()
     } else {
       router.push(path)
     }
@@ -156,12 +156,10 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Sign In</Link>
+                <Button variant="ghost" onClick={openLogin}>
+                  Sign In
                 </Button>
-                <Button asChild>
-                  <Link href="/register">Sign Up</Link>
-                </Button>
+                <Button onClick={openRegister}>Sign Up</Button>
               </div>
             )}
 

@@ -6,6 +6,8 @@ import { AuthProvider } from "@/components/providers/auth-provider"
 import { ReaderSettingsProvider } from "@/components/providers/reader-settings-provider"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { LoginModal } from "@/components/auth/login-modal"
+import { RegisterModal } from "@/components/auth/register-modal"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,6 +28,8 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <ReaderSettingsProvider>
+              <LoginModal />
+              <RegisterModal />
               {children}
               <Toaster />
             </ReaderSettingsProvider>

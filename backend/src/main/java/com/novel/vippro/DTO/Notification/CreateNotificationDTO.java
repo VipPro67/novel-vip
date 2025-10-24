@@ -11,5 +11,5 @@ public class CreateNotificationDTO {
     private String title;
     private String message;
     private NotificationType type;
-    private UUID referenceId; 
+    private String reference; 
 }

@@ -113,7 +113,7 @@ public class EpubImportProcessor {
             job.setStatusMessage("Failed: " + ex.getMessage());
             job.setCompletedAt(Instant.now());
             jobRepository.save(job);
-            notifyUser(job, "EPUB import failed", ex.getMessage(), NotificationType.SYSTEM, job.getNovelId());
+            notifyUser(job, "EPUB import failed", ex.getMessage(), NotificationType.SYSTEM, job.getSlug());
         }
     }
 
@@ -220,10 +220,10 @@ public class EpubImportProcessor {
         job.setStatusMessage(message);
         job.setCompletedAt(Instant.now());
         jobRepository.save(job);
-        notifyUser(job, "EPUB import completed", message, NotificationType.SYSTEM, job.getNovelId());
+        notifyUser(job, "EPUB import completed", message, NotificationType.SYSTEM, job.getSlug());
     }
 
-    private void notifyUser(EpubImportJob job, String title, String message, NotificationType type, UUID referenceId) {
+    private void notifyUser(EpubImportJob job, String title, String message, NotificationType type, String reference) {
         if (job.getUserId() == null) {
             return;
         }
@@ -232,7 +232,7 @@ public class EpubImportProcessor {
         dto.setTitle(title);
         dto.setMessage(message);
         dto.setType(type);
-        dto.setReferenceId(referenceId);
+        dto.setReference(reference);
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {
@@ -280,6 +280,6 @@ public class EpubImportProcessor {
         job.setStatusMessage(reason);
         job.setCompletedAt(Instant.now());
         jobRepository.save(job);
-        notifyUser(job, "EPUB import failed", reason, NotificationType.SYSTEM, job.getNovelId());
+        notifyUser(job, "EPUB import failed", reason, NotificationType.SYSTEM, job.getSlug());
     }
 }

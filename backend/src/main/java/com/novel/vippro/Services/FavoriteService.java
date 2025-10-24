@@ -42,8 +42,8 @@ public class FavoriteService {
 
     public PageResponse<NovelDTO> getUserFavorites(Pageable pageable) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
-        return new PageResponse<>(favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-                .map(favorite -> mapper.NoveltoDTO(favorite.getNovel())));
+        var favoritesNovel = favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        return new PageResponse<>(favoritesNovel.map(mapper::NoveltoDTO));
     }
 
     @Transactional
@@ -107,7 +107,7 @@ public class FavoriteService {
                 notificationDTO.setTitle("New Chapter Available");
                 notificationDTO.setMessage("A new chapter has been added to novel: " + novel.getTitle());
                 notificationDTO.setType(NotificationType.CHAPTER_UPDATE);
-                notificationDTO.setReferenceId(novelId);
+                notificationDTO.setReference(novel.getSlug());
                 notificationService.createNotification(notificationDTO);
             }
         }

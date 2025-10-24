@@ -308,7 +308,7 @@ export function NovelManagement() {
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Novel
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push(`/admin/chapters/add?novelId=${novel.id}`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/chapters/add`)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Chapter
                       </DropdownMenuItem>

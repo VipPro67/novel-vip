@@ -29,7 +29,7 @@ interface NovelFormData {
 	tags: string[]
 }
 
-export default function EditNovelPage({ params }: { params: { id: string } }) {
+export default function EditNovelPage({ params }: { params: { slug: string } }) {
 	const router = useRouter()
 	const { toast } = useToast()
 	const [loading, setLoading] = useState(false)
@@ -57,7 +57,7 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 
     useEffect(() => {
         fetchNovel()
-    }, [params.id])
+    }, [params.slug])
 
     // Load selectable options for categories, genres, and tags
     useEffect(() => {
@@ -84,16 +84,13 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 
 	const fetchNovel = async () => {
 		try {
-			const response = await api.getNovelById(params.id)
+			const response = await api.getNovelBySlug(params.slug)
 			if (response.success) {
 				const novelData = response.data
 				setNovel(novelData)
                 setFormData({
                     title: novelData.title,
-                    slug: novelData.title
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s-]/g, "")
-                        .replace(/\s+/g, "-"),
+                    slug: novelData.slug,
                     description: novelData.description,
                     author: novelData.author,
                     status: novelData.status,
@@ -194,7 +191,7 @@ export default function EditNovelPage({ params }: { params: { id: string } }) {
 				...(coverImageFile && { coverImage: coverImageFile }),
 			}
 
-			const response = await api.request(`/api/novels/${params.id}`, {
+			const response = await api.request(`/api/novels/${novel?.id}`, {
 				method: "PUT",
 				body: JSON.stringify(novelData),
 			})

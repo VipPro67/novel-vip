@@ -9,7 +9,7 @@ import Link from "next/link"
 
 export default function AdminAnalyticsPage() {
   return (
-    <AuthGuard requireAdmin>
+  <AuthGuard requireRole="ADMIN">
       <div className="min-h-screen bg-background">
         <Header />
 

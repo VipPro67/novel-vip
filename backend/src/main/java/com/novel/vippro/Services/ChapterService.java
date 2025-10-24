@@ -77,7 +77,7 @@ public class ChapterService {
 
     @Cacheable(value = "chapters", key = "#id")
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
-        Chapter chapter = getChapterById(id);
+        Chapter chapter = chapterRepository.getChapterDetailById(id);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
         return dto;
     }
@@ -375,18 +375,13 @@ public class ChapterService {
                 "novelTitle", chapter.getNovel().getTitle(),
                 "chapterNumber", chapter.getChapterNumber(),
                 "chapterTitle", chapter.getTitle(),
-                "content", chapterDTO.getContentHtml());
+                "content", chapterDTO.getContent());
 
         String jsonContent;
         try {
             jsonContent = objectMapper.writeValueAsString(contentMap);
         } catch (IOException e) {
             throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
-        }
-        if (chapterRepository.findByNovelIdAndChapterNumber(chapter.getNovel().getId(),
-                chapter.getChapterNumber()) != null) {
-            throw new RuntimeException(
-                    "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
         }
 
         String publicId = String.format("novels/%s/chapters/chap-%d" + ".json",
@@ -414,7 +409,6 @@ public class ChapterService {
         jsonFile.setContentType("application/json");
         jsonFile.setFileUrl(jsonUrl);
         jsonFile.setUpdatedAt(Instant.now());
-        fileMetadataRepository.save(jsonFile);
         chapter.setJsonFile(jsonFile);
 
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {

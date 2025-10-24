@@ -8,10 +8,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Header } from "@/components/layout/header"
 import { NovelCard } from "@/components/novel/novel-card"
 import { useAuth } from "@/components/providers/auth-provider"
+import { useAuthModals } from "@/hooks/use-auth-modals"
 import { api, type Novel } from "@/lib/api"
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth()
+  const { openRegister } = useAuthModals()
   const [hotNovels, setHotNovels] = useState<Novel[]>([])
   const [topRatedNovels, setTopRatedNovels] = useState<Novel[]>([])
   const [latestNovels, setLatestNovels] = useState<Novel[]>([])
@@ -38,18 +40,6 @@ export default function HomePage() {
       }
       if (latestResponse.success) {
         setLatestNovels(latestResponse.data.content)
-      }
-
-      // Fetch recently read novels if user is authenticated
-      if (isAuthenticated) {
-        try {
-          const recentResponse = await api.getRecentlyRead(6)
-          if (recentResponse.success) {
-            setRecentlyRead(recentResponse.data)
-          }
-        } catch (error) {
-          console.error("Failed to fetch recently read novels:", error)
-        }
       }
     } catch (error) {
       console.error("Failed to fetch home data:", error)
@@ -110,7 +100,42 @@ export default function HomePage() {
               </div>
             </section>
           )}
-
+          {/* Latest Updates Section */}
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-2">
+                <BookOpen className="h-6 w-6 text-primary" />
+                <h2 className="text-3xl font-bold">Latest Updates</h2>
+              </div>
+              <Button asChild variant="ghost">
+                <Link href="/novels/latest">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="aspect-[3/4] bg-muted rounded-lg mb-4" />
+                      <div className="space-y-2">
+                        <div className="h-4 bg-muted rounded" />
+                        <div className="h-3 bg-muted rounded w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {latestNovels.map((novel) => (
+                  <NovelCard key={novel.id} novel={novel} />
+                ))}
+              </div>
+            )}
+          </section>
           {/* Hot Novels Section */}
           <section>
             <div className="flex items-center justify-between mb-8">
@@ -185,42 +210,7 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* Latest Updates Section */}
-          <section>
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-6 w-6 text-primary" />
-                <h2 className="text-3xl font-bold">Latest Updates</h2>
-              </div>
-              <Button asChild variant="ghost">
-                <Link href="/novels/latest">
-                  View All
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-4">
-                      <div className="aspect-[3/4] bg-muted rounded-lg mb-4" />
-                      <div className="space-y-2">
-                        <div className="h-4 bg-muted rounded" />
-                        <div className="h-3 bg-muted rounded w-2/3" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {latestNovels.map((novel) => (
-                  <NovelCard key={novel.id} novel={novel} />
-                ))}
-              </div>
-            )}
-          </section>
+
 
           {/* Call to Action Section */}
           <section className="text-center py-16">
@@ -230,8 +220,8 @@ export default function HomePage() {
                 Join thousands of readers discovering their next favorite story every day.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg">
-                  <Link href="/register">Sign Up Free</Link>
+                <Button size="lg" onClick={openRegister}>
+                  Sign Up Free
                 </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link href="/novels">Browse Novels</Link>

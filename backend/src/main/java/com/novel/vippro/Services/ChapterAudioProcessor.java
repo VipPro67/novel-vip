@@ -7,6 +7,7 @@ import com.novel.vippro.Models.NotificationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class ChapterAudioProcessor {
         }
     }
 
+    @CacheEvict
     private void notifySuccess(ChapterAudioMessage message, Chapter chapter) {
         if (message.getUserId() == null || message.getJobId() != null) {
             return;
@@ -53,7 +55,7 @@ public class ChapterAudioProcessor {
         dto.setMessage(String.format("Audio for %s - Chapter %d is ready.",
                 chapter.getNovel().getTitle(), chapter.getChapterNumber()));
         dto.setType(NotificationType.CHAPTER_UPDATE);
-        dto.setReferenceId(chapter.getId());
+        dto.setReference(chapter.getNovel().getSlug());
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {
@@ -70,7 +72,7 @@ public class ChapterAudioProcessor {
         dto.setTitle("Chapter audio failed");
         dto.setMessage(reason == null ? "Unable to generate chapter audio." : reason);
         dto.setType(NotificationType.SYSTEM);
-        dto.setReferenceId(message.getChapterId());
+        dto.setReference(dto.getReference());
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {

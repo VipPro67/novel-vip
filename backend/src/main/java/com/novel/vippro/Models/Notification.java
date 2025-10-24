@@ -37,5 +37,5 @@ public class Notification extends BaseEntity {
     private NotificationType type;
 
     @Column
-    private UUID referenceId; 
+    private String reference; 
 }

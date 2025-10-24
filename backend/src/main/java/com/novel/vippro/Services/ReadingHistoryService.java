@@ -151,14 +151,6 @@ public class ReadingHistoryService {
         readingHistoryRepository.deleteByUserId(userId);
     }
 
-    public List<NovelDTO> getRecentlyRead(int limit) {
-        UUID userId = UserDetailsImpl.getCurrentUserId();
-        return readingHistoryRepository.findRecentlyReadNovels(userId, PageRequest.of(0, limit))
-                .stream()
-                .map(history -> mapper.NoveltoDTO(history.getNovel()))
-                .collect(Collectors.toList());
-    }
-
     public ReadingStatsDTO getReadingStats() {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         ReadingStatsDTO stats = new ReadingStatsDTO();

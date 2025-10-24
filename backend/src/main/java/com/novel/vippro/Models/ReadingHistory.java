@@ -34,10 +34,10 @@ public class ReadingHistory extends BaseEntity {
     private Chapter chapter;
 
     @Column(name = "progress")
-    private Integer progress; // Progress percentage in the chapter (0-100)
+    private Integer progress; 
 
     @Column(name = "reading_time")
-    private Integer readingTime; // Time spent reading in minutes
+    private Integer readingTime;
 
     @Column(name = "last_read_at")
     @UpdateTimestamp

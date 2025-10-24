@@ -46,7 +46,4 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
                         @Param("chapterId") UUID chapterId);
 
         void deleteByUserId(UUID userId);
-
-        @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
-        List<ReadingHistory> findRecentlyReadNovels(@Param("userId") UUID userId, Pageable pageable);
 }

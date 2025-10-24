@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   console.log("Admin page - User roles:", user?.roles)
 
   return (
-    <AuthGuard requireAdmin>
+  <AuthGuard requireRole="ADMIN">
       <AdminDashboardContent />
     </AuthGuard>
   )
@@ -205,7 +205,7 @@ function AdminDashboardContent() {
                       Manage Novels
                     </Button>
                   </Link>
-                  <Link href="/admin/chapters" className="block">
+                  <Link href="/admin/novels" className="block">
                     <Button variant="outline" className="w-full justify-start bg-transparent">
                       Manage Chapters
                     </Button>

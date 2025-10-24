@@ -8,7 +8,7 @@ import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.base.BaseDTO;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class NovelDTO extends BaseDTO {
@@ -18,9 +18,9 @@ public class NovelDTO extends BaseDTO {
     private String slug;
     @JsonProperty("coverImage")
     private FileMetadataDTO coverImage;
-    private List<CategoryDTO> categories;
-    private List<TagDTO> tags;
-    private List<GenreDTO> genres;
+    private Set<CategoryDTO> categories;
+    private Set<TagDTO> tags;
+    private Set<GenreDTO> genres;
     private String status;
     private Integer totalChapters;
     private Integer views;

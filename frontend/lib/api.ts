@@ -581,7 +581,11 @@ class ApiClient {
   async createChapter(data: {
     title: string
     chapterNumber: number
-    contentHtml: string
+    // contentHtml when format is HTML, content when format is TEXT
+    contentHtml?: string
+    content?: string
+    // format: 'HTML' or 'TEXT'
+    format?: 'HTML' | 'TEXT'
     novelId: string
   }) {
     return this.request<Chapter>("/api/chapters", {
@@ -595,7 +599,10 @@ class ApiClient {
     data: {
       title: string
       chapterNumber: number
-      content: string
+      // content for TEXT, contentHtml for HTML
+      content?: string
+      contentHtml?: string
+      format?: 'HTML' | 'TEXT'
       novelId: string
     },
   ) {
@@ -656,10 +663,6 @@ class ApiClient {
     })
 
     return this.request<PageResponse<ReadingHistory>>(`/api/reading-history?${searchParams}`)
-  }
-
-  async getRecentlyRead(limit = 5) {
-    return this.request<Novel[]>(`/api/reading-history/recent?limit=${limit}`)
   }
 
   // Favorites endpoints

@@ -49,7 +49,7 @@ public class NotificationService {
         notification.setTitle(notificationDTO.getTitle());
         notification.setMessage(notificationDTO.getMessage());
         notification.setType(notificationDTO.getType());
-        notification.setReferenceId(notificationDTO.getReferenceId());
+        notification.setReference(notificationDTO.getReference());
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = mapper.NotificationtoDTO(saved);
         messagePublisher.publishNotification(dto);

@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useReaderSettings } from "@/components/providers/reader-settings-provider"
-import { api, type ChapterDetail, type Comment } from "@/lib/api"
+import { api, type ChapterDetail, type Comment, type ReaderSettings } from "@/lib/api"
 import { formatRelativeTime } from "@/lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -45,7 +45,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import ChapterNavigation from "@/components/chapter-navigation"
 import { ReportDialog } from "@/components/report/report-dialog"
-import AutoHideHeader from "@/components/chapter/auto-hide-header"
+import { Header } from "@/components/layout/header"
+
+const READER_SETTINGS_STORAGE_KEY = "readerSettings"
 
 interface ChapterContent {
   title: string
@@ -67,7 +69,63 @@ export default function ChapterPage() {
   const { toast } = useToast()
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { settings: readerSettings } = useReaderSettings()
+  const [cachedReaderSettings, setCachedReaderSettings] = useState<ReaderSettings | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (readerSettings) {
+      setCachedReaderSettings(readerSettings)
+      return
+    }
+
+    if (typeof window === "undefined") {
+      return
+    }
+
+    try {
+      const raw = window.localStorage.getItem(READER_SETTINGS_STORAGE_KEY)
+      if (!raw) {
+        setCachedReaderSettings(null)
+        return
+      }
+
+      const storedSettings = JSON.parse(raw) as ReaderSettings
+      setCachedReaderSettings(storedSettings)
+    } catch (error) {
+      console.error("Failed to load reader settings from local storage", error)
+      setCachedReaderSettings(null)
+    }
+  }, [readerSettings])
+
+  useEffect(() => {
+    if (typeof window === "undefined" || readerSettings) {
+      return
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== READER_SETTINGS_STORAGE_KEY) {
+        return
+      }
+
+      if (!event.newValue) {
+        setCachedReaderSettings(null)
+        return
+      }
+
+      try {
+        const updatedSettings = JSON.parse(event.newValue) as ReaderSettings
+        setCachedReaderSettings(updatedSettings)
+      } catch (error) {
+        console.error("Failed to parse updated reader settings from storage event", error)
+      }
+    }
+
+    window.addEventListener("storage", handleStorage)
+
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+    }
+  }, [readerSettings])
 
   const slug = params.slug as string | undefined
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
@@ -80,36 +138,78 @@ export default function ChapterPage() {
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioLoading, setAudioLoading] = useState(false)
+  const [audioGenerating, setAudioGenerating] = useState(false)
   const [audioError, setAudioError] = useState<string | null>(null)
 
+  const effectiveReaderSettings = readerSettings ?? cachedReaderSettings
+
   const cardContentStyle = useMemo<CSSProperties>(() => {
-    if (!readerSettings) {
+    if (!effectiveReaderSettings) {
       return {}
     }
 
     return {
-      padding: `${readerSettings.marginSize ?? 20}px`,
-      backgroundColor: readerSettings.backgroundColor ?? undefined,
-      color: readerSettings.textColor ?? undefined,
+      padding: `${effectiveReaderSettings.marginSize ?? 20}px`,
+      backgroundColor: effectiveReaderSettings.backgroundColor ?? undefined,
+      color: effectiveReaderSettings.textColor ?? undefined,
     }
-  }, [readerSettings])
+  }, [effectiveReaderSettings])
 
   const chapterTypographyStyle = useMemo<CSSProperties & Record<string, string | number>>(() => {
     const style: CSSProperties & Record<string, string | number> = {
-      lineHeight: readerSettings?.lineHeight ?? 1.8,
-      fontSize: `${readerSettings?.fontSize ?? 16}px`,
-      color: readerSettings?.textColor ?? "inherit",
-      fontFamily: readerSettings?.fontFamily ?? "inherit",
+      lineHeight: effectiveReaderSettings?.lineHeight ?? 1.8,
+      fontSize: `${effectiveReaderSettings?.fontSize ?? 16}px`,
+      color: effectiveReaderSettings?.textColor ?? "inherit",
+      fontFamily: effectiveReaderSettings?.fontFamily ?? "inherit",
     }
 
-    style["--paragraph-spacing"] = `${readerSettings?.paragraphSpacing ?? 10}px`
+    style["--paragraph-spacing"] = `${effectiveReaderSettings?.paragraphSpacing ?? 10}px`
     return style
-  }, [readerSettings])
+  }, [effectiveReaderSettings])
   useEffect(() => {
-    if (audioRef.current && readerSettings?.audioSpeed) {
-      audioRef.current.playbackRate = readerSettings.audioSpeed
+    if (audioRef.current && effectiveReaderSettings?.audioSpeed) {
+      audioRef.current.playbackRate = effectiveReaderSettings.audioSpeed
     }
-  }, [audioUrl, readerSettings?.audioSpeed])
+  }, [audioUrl, effectiveReaderSettings?.audioSpeed])
+
+  useEffect(() => {
+    const audioElement = audioRef.current
+    if (!audioElement || !audioUrl) {
+      return
+    }
+
+    if (!effectiveReaderSettings?.audioEnabled) {
+      return
+    }
+
+    const shouldAutoPlay = Boolean(effectiveReaderSettings?.audioAutoNextChapter)
+    if (!shouldAutoPlay || !audioElement.paused) {
+      return
+    }
+
+    const attemptPlay = async () => {
+      try {
+        await audioElement.play()
+      } catch (error) {
+        console.warn("Auto play audio failed", error)
+      }
+    }
+
+    if (audioElement.readyState >= 2) {
+      void attemptPlay()
+      return
+    }
+
+    const handleCanPlay = () => {
+      void attemptPlay()
+    }
+
+    audioElement.addEventListener("canplaythrough", handleCanPlay, { once: true })
+
+    return () => {
+      audioElement.removeEventListener("canplaythrough", handleCanPlay)
+    }
+  }, [audioUrl, effectiveReaderSettings?.audioAutoNextChapter, effectiveReaderSettings?.audioEnabled])
 
   // Comment states
   const [showComments, setShowComments] = useState(false)
@@ -242,14 +342,10 @@ export default function ChapterPage() {
     setAudioError(null)
     try {
       const response = await api.getChapterAudio(chapter.id)
-      if (response.success && response.data.audioUrl) {
-        setAudioUrl(response.data.audioUrl)
-        setChapter((prev) => {
-          if (prev && prev.id === response.data.id) {
-            return { ...prev, audioUrl: response.data.audioUrl }
-          }
-          return prev
-        })
+      if (response.success) {
+        setAudioError(null)
+        setAudioLoading(false)
+        setAudioGenerating(true)
       } else {
         setAudioError("Audio is not available yet. Please try again shortly.")
       }
@@ -768,11 +864,20 @@ export default function ChapterPage() {
       return null
     }
 
-    if (readerSettings && !readerSettings.audioEnabled) {
+    if (effectiveReaderSettings && !effectiveReaderSettings.audioEnabled) {
       return null
     }
 
     const canGenerateAudio = !authLoading && isAuthenticated
+
+    if (audioGenerating) {
+      return (
+        <div className="flex items-center space-x-3 rounded-lg border border-muted p-4">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Generating audio it can take 3-5 minutes, you will get notification while it ready</span>
+        </div>
+      )
+    }
 
     if (audioLoading) {
       return (
@@ -793,15 +898,18 @@ export default function ChapterPage() {
           <audio
             ref={(element) => {
               audioRef.current = element
-              if (element && readerSettings?.audioSpeed) {
-                element.playbackRate = readerSettings.audioSpeed
+              if (element && effectiveReaderSettings?.audioSpeed) {
+                element.playbackRate = effectiveReaderSettings.audioSpeed
+              }
+              if (element && effectiveReaderSettings?.audioAutoNextChapter) {
+                element.autoplay = true
               }
             }}
             controls
             preload="none"
             className="w-full"
             onEnded={() => {
-              if (readerSettings?.audioAutoNextChapter) {
+              if (effectiveReaderSettings?.audioAutoNextChapter) {
                 navigateChapter("next")
               }
             }}
@@ -925,30 +1033,8 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AutoHideHeader
-        novelSlug={slug!}
-        novelTitle={chapter.novel?.title || "Novel"}
-        chapterNumber={chapterNumber}
-        chapterId={chapter.id}
-        chapterTitle={chapter.title}
-        onPrevChapter={() => navigateChapter("prev")}
-        onNextChapter={() => navigateChapter("next")}
-        canGoPrev={chapterNumber > 1}
-        reportTrigger={
-          <ReportDialog
-            reportType="CHAPTER"
-            targetId={chapter.id}
-            targetTitle={chapter.title}
-            trigger={
-              <Button variant="ghost" size="sm">
-                <Flag className="h-4 w-4" />
-              </Button>
-            }
-          />
-        }
-      />
-
-      <div className="pt-16">
+      <Header/>
+      <div className="pt-16 pb-24">
         {/* Chapter Content */}
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
