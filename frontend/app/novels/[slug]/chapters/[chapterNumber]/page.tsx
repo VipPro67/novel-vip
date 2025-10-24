@@ -242,14 +242,9 @@ export default function ChapterPage() {
     setAudioError(null)
     try {
       const response = await api.getChapterAudio(chapter.id)
-      if (response.success && response.data.audioUrl) {
-        setAudioUrl(response.data.audioUrl)
-        setChapter((prev) => {
-          if (prev && prev.id === response.data.id) {
-            return { ...prev, audioUrl: response.data.audioUrl }
-          }
-          return prev
-        })
+      if (response.success) {
+        setAudioError("Audio generation has been initiated. It may take a few minutes to complete.")
+        setAudioUrl(null)
       } else {
         setAudioError("Audio is not available yet. Please try again shortly.")
       }

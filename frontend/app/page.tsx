@@ -39,18 +39,6 @@ export default function HomePage() {
       if (latestResponse.success) {
         setLatestNovels(latestResponse.data.content)
       }
-
-      // Fetch recently read novels if user is authenticated
-      if (isAuthenticated) {
-        try {
-          const recentResponse = await api.getRecentlyRead(6)
-          if (recentResponse.success) {
-            setRecentlyRead(recentResponse.data)
-          }
-        } catch (error) {
-          console.error("Failed to fetch recently read novels:", error)
-        }
-      }
     } catch (error) {
       console.error("Failed to fetch home data:", error)
     } finally {

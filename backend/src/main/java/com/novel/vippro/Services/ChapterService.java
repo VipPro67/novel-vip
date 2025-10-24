@@ -77,7 +77,7 @@ public class ChapterService {
 
     @Cacheable(value = "chapters", key = "#id")
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
-        Chapter chapter = getChapterById(id);
+        Chapter chapter = chapterRepository.getChapterDetailById(id);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
         return dto;
     }

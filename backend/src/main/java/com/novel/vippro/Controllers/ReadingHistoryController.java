@@ -139,18 +139,6 @@ public class ReadingHistoryController {
                 return ControllerResponse.success("Reading history cleared successfully", null);
         }
 
-        @Operation(summary = "Get recently read novels", description = "Get a list of recently read novels")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Recent novels retrieved successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping("/recent")
-        public ControllerResponse<List<NovelDTO>> getRecentlyRead(
-                        @Parameter(description = "Maximum number of novels to return", example = "5") @RequestParam(defaultValue = "5") int limit) {
-                List<NovelDTO> recentNovels = readingHistoryService.getRecentlyRead(limit);
-                return ControllerResponse.success("Recent novels retrieved successfully", recentNovels);
-        }
-
         @Operation(summary = "Get reading statistics", description = "Get reading statistics for the current user")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Reading statistics retrieved"),

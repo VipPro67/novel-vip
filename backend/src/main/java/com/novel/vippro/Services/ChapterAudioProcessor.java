@@ -53,7 +53,7 @@ public class ChapterAudioProcessor {
         dto.setMessage(String.format("Audio for %s - Chapter %d is ready.",
                 chapter.getNovel().getTitle(), chapter.getChapterNumber()));
         dto.setType(NotificationType.CHAPTER_UPDATE);
-        dto.setReferenceId(chapter.getId());
+        dto.setReference(chapter.getNovel().getSlug());
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {
@@ -70,7 +70,7 @@ public class ChapterAudioProcessor {
         dto.setTitle("Chapter audio failed");
         dto.setMessage(reason == null ? "Unable to generate chapter audio." : reason);
         dto.setType(NotificationType.SYSTEM);
-        dto.setReferenceId(message.getChapterId());
+        dto.setReference(dto.getReference());
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {

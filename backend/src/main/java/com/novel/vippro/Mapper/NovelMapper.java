@@ -44,31 +44,6 @@ public class NovelMapper {
 
     public NovelDTO NoveltoDTO(Novel novel) {
         NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
-
-        if (novel.getCategories() != null) {
-            novelDTO.setCategories(novel.getCategories().stream()
-                    .map(category -> new CategoryDTO(category.getId(), category.getName(), category.getDescription()))
-                    .collect(Collectors.toList()));
-        }
-
-        if (novel.getTags() != null) {
-            novelDTO.setTags(novel.getTags().stream()
-                    .map(tag -> new TagDTO(tag.getId(), tag.getName(), tag.getDescription()))
-                    .collect(Collectors.toList()));
-        }
-
-        if (novel.getGenres() != null) {
-            novelDTO.setGenres(novel.getGenres().stream()
-                    .map(genre -> new GenreDTO(genre.getId(), genre.getName(), genre.getDescription()))
-                    .collect(Collectors.toList()));
-        }
-
-        if (Hibernate.isInitialized(novel.getChapters()) && novel.getChapters() != null) {
-            novelDTO.setTotalChapters(novel.getChapters().size());
-        } else {
-            novelDTO.setTotalChapters(novel.getTotalChapters() != null ? novel.getTotalChapters() : 0);
-        }
-
         return novelDTO;
     }
 

@@ -107,7 +107,7 @@ public class FavoriteService {
                 notificationDTO.setTitle("New Chapter Available");
                 notificationDTO.setMessage("A new chapter has been added to novel: " + novel.getTitle());
                 notificationDTO.setType(NotificationType.CHAPTER_UPDATE);
-                notificationDTO.setReferenceId(novelId);
+                notificationDTO.setReference(novel.getSlug());
                 notificationService.createNotification(notificationDTO);
             }
         }

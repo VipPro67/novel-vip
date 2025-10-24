@@ -658,10 +658,6 @@ class ApiClient {
     return this.request<PageResponse<ReadingHistory>>(`/api/reading-history?${searchParams}`)
   }
 
-  async getRecentlyRead(limit = 5) {
-    return this.request<Novel[]>(`/api/reading-history/recent?limit=${limit}`)
-  }
-
   // Favorites endpoints
   async getFavorites(
     params: {
