@@ -544,6 +544,12 @@ class ApiClient {
     return this.request<PageResponse<Novel>>(`/api/novels/latest-updates?${searchParams}`)
   }
 
+  async getRecentlyRead(size = 6) {
+    return this.request<Novel[]>(`/api/reading-history/recently-read?size=${size}`, {
+      method: "POST",
+    })
+  }
+
   // Chapter endpoints
   async getChaptersByNovel(
     novelId: string,
@@ -561,9 +567,7 @@ class ApiClient {
       }
     })
 
-    return this.request<PageResponse<Chapter>>(
-      `/api/chapters/novel/${novelId}?${searchParams.toString()}`,
-    )
+    return this.request<PageResponse<Chapter>>(`/api/chapters/novel/${novelId}?${searchParams.toString()}`)
   }
 
   async getChapterById(id: string) {
@@ -585,7 +589,7 @@ class ApiClient {
     contentHtml?: string
     content?: string
     // format: 'HTML' or 'TEXT'
-    format?: 'HTML' | 'TEXT'
+    format?: "HTML" | "TEXT"
     novelId: string
   }) {
     return this.request<Chapter>("/api/chapters", {
@@ -602,7 +606,7 @@ class ApiClient {
       // content for TEXT, contentHtml for HTML
       content?: string
       contentHtml?: string
-      format?: 'HTML' | 'TEXT'
+      format?: "HTML" | "TEXT"
       novelId: string
     },
   ) {
@@ -625,6 +629,7 @@ class ApiClient {
   async getChapterAudioMetadata(chapterId: string) {
     return this.request<FileMetadata>(`/api/chapters/${chapterId}/audio-metadata`)
   }
+
   async getChapterAudio(chapterId: string) {
     return this.request<ChapterDetail>(`/api/chapters/${chapterId}/audio`)
   }
@@ -1118,6 +1123,85 @@ class ApiClient {
     }
 
     return response.json()
+  }
+
+  async uploadEpub(file: File): Promise<ApiResponse<FileMetadata>> {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("type", "NOVEL_EPUB")
+
+    const headers: HeadersInit = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/api/files/upload`, {
+        method: "POST",
+        headers,
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error("EPUB Upload Error:", error)
+      throw error
+    }
+  }
+
+  async getNovelReviews(
+    novelId: string,
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    return this.request<PageResponse<Review>>(`/api/reviews/novel/${novelId}?${searchParams}`)
+  }
+
+  async createReview(data: {
+    novelId: string
+    title: string
+    content: string
+    rating: number
+  }) {
+    return this.request<Review>("/api/reviews", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateReview(
+    reviewId: string,
+    data: {
+      title: string
+      content: string
+      rating: number
+    },
+  ) {
+    return this.request<Review>(`/api/reviews/${reviewId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteReview(reviewId: string) {
+    return this.request<void>(`/api/reviews/${reviewId}`, {
+      method: "DELETE",
+    })
   }
 }
 

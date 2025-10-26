@@ -313,12 +313,21 @@ public class NovelController {
     }
 
     @Operation(summary = "Update novel", description = "Update an existing novel", security = @SecurityRequirement(name = "bearerAuth"))
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}")
     public ControllerResponse<NovelDTO> updateNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID id,
             @Valid @ModelAttribute NovelCreateDTO novelDTO) {
         NovelDTO updatedNovel = novelService.updateNovel(id, novelDTO);
         return ControllerResponse.success("Novel updated successfully", updatedNovel);
+    }
+
+    @Operation(summary = "Update novel cover image", description = "Update the cover image of an existing novel", security = @SecurityRequirement(name = "bearerAuth"))
+    @PutMapping(value = "/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ControllerResponse<NovelDTO> updateNovelCover(
+            @Parameter(description = "Novel ID") @PathVariable UUID id,
+            @RequestPart("coverImage") MultipartFile coverImage) {
+        NovelDTO updatedNovel = novelService.updateNovelCover(id, coverImage);
+        return ControllerResponse.success("Novel cover image updated successfully", updatedNovel);
     }
 
     @Operation(summary = "Delete novel", description = "Delete an existing novel", security = @SecurityRequirement(name = "bearerAuth"))

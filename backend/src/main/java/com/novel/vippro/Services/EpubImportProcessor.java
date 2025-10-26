@@ -141,7 +141,8 @@ public class EpubImportProcessor {
             try {
                 FileMetadata cover = fileService.uploadFile(parsed.getCoverImage(), parsed.getCoverImageName(),
                         "image/jpeg", "cover");
-                novelService.updateNovelCover(novel.getId(), cover);
+                novel.setCoverImage(cover);
+                novelRepository.save(novel);
             } catch (Exception ex) {
                 logger.warn("Failed to upload EPUB cover for novel {}: {}", novel.getId(), ex.getMessage());
             }

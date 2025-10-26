@@ -24,8 +24,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.checkerframework.checker.units.qual.N;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,7 +306,8 @@ public class NovelService {
         if (epubResult.getCoverImage() != null) {
             try {
                 FileMetadata cover = fileService.uploadFile(epubResult.getCoverImage(), epubResult.getCoverImageName(), "image/jpeg", "cover");
-                updateNovelCover(saved.getId(), cover);
+                saved.setCoverImage(cover);
+                novelRepository.save(saved);
                 saved = novelRepository.findById(saved.getId()).orElse(saved);
             } catch (Exception e) {
                 logger.error("Error uploading cover image from EPUB: {}", e.getMessage());
@@ -351,11 +354,19 @@ public class NovelService {
     }
 
     @Transactional
-    protected void updateNovelCover(java.util.UUID novelId, FileMetadata cover) {
-        novelRepository.findById(novelId).ifPresent(n -> {
-            n.setCoverImage(cover);
-            novelRepository.save(n);
-        });
+    public NovelDTO updateNovelCover(UUID novelId, MultipartFile coverImage) {
+        try {
+            Novel novel = novelRepository.findById(novelId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
+            FileMetadata cover = fileService.uploadFile(coverImage, "cover");
+            
+            novel.setCoverImage(cover);
+            Novel updatedNovel = novelRepository.save(novel);
+            return mapper.NoveltoDTO(updatedNovel);
+        } catch (Exception e) {
+            logger.error("Error uploading cover image: {}", e.getMessage());
+            throw new RuntimeException("Failed to upload cover image", e);
+        }
     }
 
     @CacheEvict(value = "novels", key = "#id")
