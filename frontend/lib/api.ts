@@ -29,7 +29,7 @@ export interface Novel {
   description: string
   slug: string
   author: string
-  coverImage?: FileMetadata
+  imageUrl: string
   status: string
   categories?: Category[]
   genres?: Genre[]
@@ -545,9 +545,7 @@ class ApiClient {
   }
 
   async getRecentlyRead(size = 6) {
-    return this.request<Novel[]>(`/api/reading-history/recently-read?size=${size}`, {
-      method: "POST",
-    })
+    return this.request<Novel[]>(`/api/reading-history`)
   }
 
   // Chapter endpoints

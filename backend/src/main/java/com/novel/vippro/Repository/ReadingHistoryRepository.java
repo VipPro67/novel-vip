@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.ReadingHistory;
 
 import java.util.List;
@@ -15,11 +16,15 @@ import java.util.UUID;
 
 @Repository
 public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, UUID> {
+        
+        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByUserIdOrderByLastReadAtDesc(UUID userId, Pageable pageable);
 
-        Page<ReadingHistory> findByNovelIdOrderByLastReadAtDesc(UUID novelId, Pageable pageable);
+        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
+        Page<ReadingHistory> findByNovelIdOrderByLastReadAtDesc(@Param("novelId") UUID novelId, Pageable pageable);
 
-        Optional<ReadingHistory> findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(UUID userId, UUID novelId);
+        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.user.id = :userId AND h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
+        Optional<ReadingHistory> findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(@Param("userId") UUID userId, @Param("novelId") UUID novelId);
 
         @Query("SELECT COUNT(DISTINCT h.chapter.id) FROM ReadingHistory h WHERE h.user.id = :userId")
         long countTotalChaptersRead(@Param("userId") UUID userId);

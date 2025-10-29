@@ -304,11 +304,11 @@ export function NovelManagement() {
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/edit`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.slug}/edit`)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Novel
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/chapters/add`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.slug}/chapters/add`)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Chapter
                       </DropdownMenuItem>

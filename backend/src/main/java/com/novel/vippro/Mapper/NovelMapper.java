@@ -44,6 +44,10 @@ public class NovelMapper {
 
     public NovelDTO NoveltoDTO(Novel novel) {
         NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
+        if (novel.getCoverImage() != null) {
+            String imageUrl = fileStorageService.generateFileUrl(novel.getCoverImage().getPublicId(), 500);
+            novelDTO.setImageUrl(imageUrl);
+        }
         return novelDTO;
     }
 
@@ -75,9 +79,6 @@ public class NovelMapper {
             coverImage.setPublicId(novel.getCoverImage().getPublicId());
             coverImage.setFileUrl(novel.getCoverImage().getFileUrl());
         }
-
-
-        doc.setCoverImage(coverImage);
         doc.setCreatedAt(novel.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
         doc.setUpdatedAt(novel.getUpdatedAt().atZone(ZoneOffset.UTC).toInstant());
         return doc;

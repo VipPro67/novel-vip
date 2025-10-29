@@ -763,7 +763,7 @@ export default function NovelDetailPage() {
               <CardContent className="p-6">
                 <div className="aspect-[3/4] relative mb-4">
                   <Image
-                    src={novel.coverImage?.fileUrl || "/placeholder.svg?height=600&width=450" || "/placeholder.svg"}
+                    src={novel.imageUrl || "/placeholder.svg?height=600&width=450" || "/placeholder.svg"}
                     alt={novel.title}
                     fill
                     className="object-cover rounded-lg"

@@ -18,6 +18,7 @@ import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -88,6 +89,7 @@ public class ReadingHistoryService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReadingHistoryDTO> getUserReadingHistory(Pageable pageable) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         Page<ReadingHistory> historyPage = readingHistoryRepository
@@ -96,6 +98,7 @@ public class ReadingHistoryService {
                 historyPage.map(mapper::ReadingHistorytoDTO));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReadingHistoryDTO> getNovelReadingHistory(UUID novelId, Pageable pageable) {
         if (!novelRepository.existsById(novelId)) {
             throw new ResourceNotFoundException("Novel", "id", novelId);
@@ -129,6 +132,7 @@ public class ReadingHistoryService {
         return mapper.ReadingHistorytoDTO(savedHistory);
     }
 
+    @Transactional(readOnly = true)
     public ReadingHistoryDTO getLastReadChapter(UUID novelId) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         ReadingHistory history = readingHistoryRepository
@@ -261,5 +265,18 @@ public class ReadingHistoryService {
         history.setProgress(progress);
 
         return mapper.ReadingHistorytoDTO(readingHistoryRepository.save(history));
+    }
+
+    public PageResponse<NovelDTO> getUserNovelReadingHistory(Pageable pageable) {
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        Page<ReadingHistory> historyPage = readingHistoryRepository
+                .findByUserIdOrderByLastReadAtDesc(userId, pageable);
+        List<NovelDTO> novelDTOs = historyPage.stream()
+                .map(ReadingHistory::getNovel)
+                .distinct()
+                .map(mapper::NoveltoDTO)
+                .collect(Collectors.toList());
+        return new PageResponse<>(
+                new PageImpl<>(novelDTOs, pageable, historyPage.getTotalElements()));
     }
 }

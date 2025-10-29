@@ -16,7 +16,7 @@ export function NovelCard({ novel }: NovelCardProps) {
 				{/* Cover Image - Smaller on mobile */}
 				<div className="aspect-[3/4] sm:aspect-[2/3] md:aspect-[3/4] relative">
 					<Image
-						src={novel.coverImage?.fileUrl || "/placeholder.svg?height=400&width=300"}
+						src={novel.imageUrl || "/placeholder.svg?height=400&width=300"}
 						alt={novel.title}
 						fill
 						className="object-cover"

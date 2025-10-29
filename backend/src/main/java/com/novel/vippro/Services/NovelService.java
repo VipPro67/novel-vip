@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.checkerframework.checker.units.qual.N;
+import org.springframework.cache.annotation.Caching;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +70,7 @@ public class NovelService {
 
     @Autowired
     private ChapterService chapterService;
+
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
         List<Novel> novels = novelRepository.findAll();
@@ -204,7 +205,6 @@ public class NovelService {
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
 
-    @CacheEvict(value = "novels", allEntries = true)
     @Transactional
     public NovelDTO createNovel(NovelCreateDTO novelDTO) {
         Novel novel = new Novel();
@@ -299,7 +299,6 @@ public class NovelService {
         return mapper.NoveltoDTO(savedNovel);
     }
 
-    @CacheEvict(value = "novels", allEntries = true)
     public NovelDTO createNovelFromEpub(EpubParseResult epubResult, String slug, String status) {
         Novel saved = saveNovelInitial(epubResult, slug, status);
 
@@ -354,6 +353,10 @@ public class NovelService {
     }
 
     @Transactional
+    @Caching( evict ={
+        @CacheEvict(value = "novels", key = "#novelId"),
+        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
+    })
     public NovelDTO updateNovelCover(UUID novelId, MultipartFile coverImage) {
         try {
             Novel novel = novelRepository.findById(novelId)
@@ -369,7 +372,10 @@ public class NovelService {
         }
     }
 
-    @CacheEvict(value = "novels", key = "#id")
+    @Caching( evict ={
+        @CacheEvict(value = "novels", key = "#id"),
+        @CacheEvict(value = "novels", key = "'slug-' + #novelDTO.slug")
+    })
     @Transactional
     public NovelDTO updateNovel(UUID id, NovelCreateDTO novelDTO) {
         Novel novel = novelRepository.findById(id)
@@ -377,7 +383,7 @@ public class NovelService {
 
         // Update novel properties
         novel.setTitle(novelDTO.getTitle());
-        novel.setSlug(novelDTO.getSlug());
+        //novel.setSlug(novelDTO.getSlug()); dont allow slug change :)
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
         novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
@@ -460,7 +466,10 @@ public class NovelService {
         return mapper.NoveltoDTO(updatedNovel);
     }
 
-    @CacheEvict(value = "novels", allEntries = true)
+    @Caching( evict ={
+        @CacheEvict(value = "novels", key = "#id"),
+        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
+    })
     @Transactional
     public void deleteNovel(UUID id) {
         Novel novel = novelRepository.findById(id)
@@ -497,7 +506,10 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
-    @CacheEvict(value = "novels", allEntries = true)
+    @Caching( evict ={
+        @CacheEvict(value = "novels", key = "#novelId"),
+        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
+    })
     @Transactional
     public NovelDTO addChaptersFromEpub(UUID novelId, EpubParseResult epubResult) {
         Novel novel = novelRepository.findById(novelId)

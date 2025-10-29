@@ -99,8 +99,8 @@ export default function EditNovelPage({ params }: { params: { slug: string } }) 
           genres: novelData.genres?.map((g) => g.name) || [],
           tags: novelData.tags?.map((t) => t.name) || [],
         })
-        if (novelData.coverImage?.fileUrl) {
-          setCoverPreview(novelData.coverImage.fileUrl)
+        if (novelData?.imageUrl) {
+          setCoverPreview(novelData.imageUrl)
         }
       }
     } catch (error) {
