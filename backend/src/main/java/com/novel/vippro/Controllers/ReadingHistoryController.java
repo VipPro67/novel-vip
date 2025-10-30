@@ -39,114 +39,114 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 @PreAuthorize("isAuthenticated()")
 public class ReadingHistoryController {
 
-        @Autowired
-        private ReadingHistoryService readingHistoryService;
+	@Autowired
+	private ReadingHistoryService readingHistoryService;
 
-        @Operation(summary = "Get user reading history", description = "Get paginated list of user's reading history")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading history retrieved successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping
-        public ControllerResponse<PageResponse<NovelDTO>> getReadingHistory(
-                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
-                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
-                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-                PageResponse<NovelDTO> history = readingHistoryService.getUserNovelReadingHistory(pageable);
-                return ControllerResponse.success("Reading history retrieved successfully", history);
-        }
+	@Operation(summary = "Get user reading history", description = "Get paginated list of user's reading history")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading history retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@GetMapping
+	public ControllerResponse<PageResponse<NovelDTO>> getReadingHistory(
+			@Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+			@Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+			@Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+			@Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+		PageResponse<NovelDTO> history = readingHistoryService.getUserNovelReadingHistory(pageable);
+		return ControllerResponse.success("Reading history retrieved successfully", history);
+	}
 
-        @Operation(summary = "Get novel reading history", description = "Get paginated list of reading history for a specific novel")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading history retrieved successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
-                        @ApiResponse(responseCode = "404", description = "Novel not found")
-        })
-        @GetMapping("/novel/{novelId}")
-        public ControllerResponse<PageResponse<ReadingHistoryDTO>> getNovelReadingHistory(
-                        @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
-                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
-                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
-                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-                PageResponse<ReadingHistoryDTO> history = readingHistoryService.getNovelReadingHistory(novelId,
-                                pageable);
-                return ControllerResponse.success("Novel reading history retrieved successfully", history);
-        }
+	@Operation(summary = "Get novel reading history", description = "Get paginated list of reading history for a specific novel")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading history retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated"),
+			@ApiResponse(responseCode = "404", description = "Novel not found")
+	})
+	@GetMapping("/novel/{novelId}")
+	public ControllerResponse<PageResponse<ReadingHistoryDTO>> getNovelReadingHistory(
+			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
+			@Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+			@Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+			@Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+			@Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+		PageResponse<ReadingHistoryDTO> history = readingHistoryService.getNovelReadingHistory(novelId,
+				pageable);
+		return ControllerResponse.success("Novel reading history retrieved successfully", history);
+	}
 
-        @Operation(summary = "Add reading history", description = "Record a new reading history entry")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading history recorded successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
-                        @ApiResponse(responseCode = "404", description = "Novel or chapter not found")
-        })
-        @PostMapping("/chapter/{chapterId}")
-        public ControllerResponse<ReadingHistoryDTO> addReadingHistory(
-                        @Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId) {
-                ReadingHistoryDTO history = readingHistoryService.addReadingHistory(chapterId);
-                return ControllerResponse.success("Reading history recorded successfully", history);
-        }
+	@Operation(summary = "Add reading history", description = "Record a new reading history entry")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading history recorded successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated"),
+			@ApiResponse(responseCode = "404", description = "Novel or chapter not found")
+	})
+	@PostMapping("/chapter/{chapterId}")
+	public ControllerResponse<ReadingHistoryDTO> addReadingHistory(
+			@Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId) {
+		ReadingHistoryDTO history = readingHistoryService.addReadingHistory(chapterId);
+		return ControllerResponse.success("Reading history recorded successfully", history);
+	}
 
-        @PostMapping("/novel/{novelId}/chapter/{chapterId}/progress")
-        public ControllerResponse<ReadingHistoryDTO> updateReadingProgress(
-                        @PathVariable UUID novelId,
-                        @PathVariable UUID chapterId,
-                        @RequestParam Integer progress,
-                        @RequestParam(defaultValue = "0") Integer readingTime) {
-                ReadingHistoryDTO dto = readingHistoryService.updateReadingProgress(novelId, chapterId, progress,
-                                readingTime);
-                return ControllerResponse.success("Reading progress updated", dto);
-        }
+	@PostMapping("/novel/{novelId}/chapter/{chapterId}/progress")
+	public ControllerResponse<ReadingHistoryDTO> updateReadingProgress(
+			@PathVariable UUID novelId,
+			@PathVariable UUID chapterId,
+			@RequestParam Integer progress,
+			@RequestParam(defaultValue = "0") Integer readingTime) {
+		ReadingHistoryDTO dto = readingHistoryService.updateReadingProgress(novelId, chapterId, progress,
+				readingTime);
+		return ControllerResponse.success("Reading progress updated", dto);
+	}
 
-        @Operation(summary = "Get last read chapter", description = "Get the last read chapter for a novel")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Last read chapter retrieved successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
-                        @ApiResponse(responseCode = "404", description = "Novel not found or no reading history")
-        })
-        @GetMapping("/novel/{novelId}/last-read")
-        public ControllerResponse<ReadingHistoryDTO> getLastReadChapter(
-                        @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
-                ReadingHistoryDTO lastRead = readingHistoryService.getLastReadChapter(novelId);
-                return ControllerResponse.success("Last read chapter retrieved successfully", lastRead);
-        }
+	@Operation(summary = "Get last read chapter", description = "Get the last read chapter for a novel")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Last read chapter retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated"),
+			@ApiResponse(responseCode = "404", description = "Novel not found or no reading history")
+	})
+	@GetMapping("/novel/{novelId}/last-read")
+	public ControllerResponse<ReadingHistoryDTO> getLastReadChapter(
+			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
+		ReadingHistoryDTO lastRead = readingHistoryService.getLastReadChapter(novelId);
+		return ControllerResponse.success("Last read chapter retrieved successfully", lastRead);
+	}
 
-        @Operation(summary = "Delete reading history", description = "Delete a specific reading history entry")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading history deleted successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated"),
-                        @ApiResponse(responseCode = "403", description = "Not authorized"),
-                        @ApiResponse(responseCode = "404", description = "Reading history not found")
-        })
-        @DeleteMapping("/{id}")
-        public ControllerResponse<Void> deleteReadingHistory(
-                        @Parameter(description = "Reading history ID", required = true) @PathVariable UUID id) {
-                readingHistoryService.deleteReadingHistory(id);
-                return ControllerResponse.success("Reading history deleted successfully", null);
-        }
+	@Operation(summary = "Delete reading history", description = "Delete a specific reading history entry")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading history deleted successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated"),
+			@ApiResponse(responseCode = "403", description = "Not authorized"),
+			@ApiResponse(responseCode = "404", description = "Reading history not found")
+	})
+	@DeleteMapping("/{id}")
+	public ControllerResponse<Void> deleteReadingHistory(
+			@Parameter(description = "Reading history ID", required = true) @PathVariable UUID id) {
+		readingHistoryService.deleteReadingHistory(id);
+		return ControllerResponse.success("Reading history deleted successfully", null);
+	}
 
-        @Operation(summary = "Clear reading history", description = "Delete all reading history for the current user")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading history cleared successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @DeleteMapping("/clear")
-        public ControllerResponse<Void> clearReadingHistory() {
-                readingHistoryService.clearReadingHistory();
-                return ControllerResponse.success("Reading history cleared successfully", null);
-        }
+	@Operation(summary = "Clear reading history", description = "Delete all reading history for the current user")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading history cleared successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@DeleteMapping("/clear")
+	public ControllerResponse<Void> clearReadingHistory() {
+		readingHistoryService.clearReadingHistory();
+		return ControllerResponse.success("Reading history cleared successfully", null);
+	}
 
-        @Operation(summary = "Get reading statistics", description = "Get reading statistics for the current user")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Reading statistics retrieved"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping("/stats")
-        public ControllerResponse<ReadingStatsDTO> getReadingStats() {
-                ReadingStatsDTO stats = readingHistoryService.getReadingStats();
-                return ControllerResponse.success("Reading statistics retrieved", stats);
-        }
+	@Operation(summary = "Get reading statistics", description = "Get reading statistics for the current user")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Reading statistics retrieved"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@GetMapping("/stats")
+	public ControllerResponse<ReadingStatsDTO> getReadingStats() {
+		ReadingStatsDTO stats = readingHistoryService.getReadingStats();
+		return ControllerResponse.success("Reading statistics retrieved", stats);
+	}
 }

@@ -267,6 +267,7 @@ public class ReadingHistoryService {
         return mapper.ReadingHistorytoDTO(readingHistoryRepository.save(history));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getUserNovelReadingHistory(Pageable pageable) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         Page<ReadingHistory> historyPage = readingHistoryRepository

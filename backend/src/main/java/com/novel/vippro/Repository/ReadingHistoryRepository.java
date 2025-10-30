@@ -17,13 +17,13 @@ import java.util.UUID;
 @Repository
 public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, UUID> {
         
-        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
+        @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByUserIdOrderByLastReadAtDesc(UUID userId, Pageable pageable);
 
-        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
+        @Query("SELECT h FROM ReadingHistory h WHERE h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByNovelIdOrderByLastReadAtDesc(@Param("novelId") UUID novelId, Pageable pageable);
 
-        @Query("SELECT h FROM ReadingHistory h LEFT JOIN FETCH h.novel n LEFT JOIN FETCH n.coverImage LEFT JOIN FETCH h.chapter WHERE h.user.id = :userId AND h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
+        @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId AND h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
         Optional<ReadingHistory> findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(@Param("userId") UUID userId, @Param("novelId") UUID novelId);
 
         @Query("SELECT COUNT(DISTINCT h.chapter.id) FROM ReadingHistory h WHERE h.user.id = :userId")

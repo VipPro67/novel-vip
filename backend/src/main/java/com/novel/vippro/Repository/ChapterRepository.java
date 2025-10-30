@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
 
-    @Query("SELECT c FROM Chapter c LEFT JOIN FETCH c.novel LEFT JOIN FETCH c.jsonFile LEFT JOIN FETCH c.audioFile WHERE c.id = ?1")
+    @Query("SELECT c FROM Chapter c WHERE c.id = ?1")
     Chapter getChapterDetailById(UUID chapterId);
 
     @Query("SELECT c FROM Chapter c JOIN c.novel n WHERE c.novel.id = ?1 ORDER BY c.chapterNumber ASC")
