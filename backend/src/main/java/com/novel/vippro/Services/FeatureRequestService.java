@@ -50,6 +50,7 @@ public class FeatureRequestService {
         }
 
         @Cacheable(value = "featureRequests", key = "#id")
+        @Transactional(readOnly = true)
         public FeatureRequestDTO getFeatureRequest(UUID id) {
                 FeatureRequest featureRequest = featureRequestRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Feature request not found"));
@@ -57,12 +58,14 @@ public class FeatureRequestService {
         }
 
         @Cacheable(value = "featureRequests")
+        @Transactional(readOnly = true)
         public PageResponse<FeatureRequestDTO> getAllFeatureRequests(Pageable pageable) {
                 Page<FeatureRequest> page = featureRequestRepository.findAll(pageable);
                 return new PageResponse<>(page.map(fr -> mapper.RequesttoRequestDTO(fr)));
         }
 
         @Cacheable(value = "featureRequests", key = "#status")
+        @Transactional(readOnly = true)
         public PageResponse<FeatureRequestDTO> getFeatureRequestsByStatus(
                         FeatureRequest.FeatureRequestStatus status, Pageable pageable) {
                 Page<FeatureRequestDTO> page = featureRequestRepository.findByStatus(status, pageable);

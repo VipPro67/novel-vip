@@ -39,6 +39,7 @@ public class FavoriteController {
 			@ApiResponse(responseCode = "401", description = "Not authenticated")
 	})
 	@GetMapping
+	@PreAuthorize("isAuthenticated()")
 	public ControllerResponse<PageResponse<NovelDTO>> getUserFavorites(
 			@Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
 			@Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
@@ -57,6 +58,7 @@ public class FavoriteController {
 			@ApiResponse(responseCode = "404", description = "Novel not found")
 	})
 	@PostMapping("/{novelId}")
+	@PreAuthorize("isAuthenticated()")
 	public ControllerResponse<Void> addToFavorites(
 			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
 		favoriteService.addToFavorites(novelId);
@@ -70,6 +72,7 @@ public class FavoriteController {
 			@ApiResponse(responseCode = "404", description = "Favorite not found")
 	})
 	@DeleteMapping("/{novelId}")
+	@PreAuthorize("isAuthenticated()")
 	public ControllerResponse<Void> removeFromFavorites(
 			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
 		favoriteService.removeFromFavorites(novelId);
@@ -83,6 +86,7 @@ public class FavoriteController {
 			@ApiResponse(responseCode = "404", description = "Novel not found")
 	})
 	@GetMapping("/{novelId}/status")
+	@PreAuthorize("isAuthenticated()")
 	public ControllerResponse<Boolean> checkFavoriteStatus(
 			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
 		boolean isFavorite = favoriteService.isFavorite(novelId);

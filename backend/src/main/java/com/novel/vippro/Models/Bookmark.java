@@ -28,6 +28,7 @@ public class Bookmark extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
+
     private String note;
-    private Integer progress; 
+    
 }

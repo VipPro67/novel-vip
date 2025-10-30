@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
-
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity

@@ -1,6 +1,5 @@
 package com.novel.vippro.Controllers;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,27 +76,13 @@ public class ReadingHistoryController {
 		return ControllerResponse.success("Novel reading history retrieved successfully", history);
 	}
 
-	@Operation(summary = "Add reading history", description = "Record a new reading history entry")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Reading history recorded successfully"),
-			@ApiResponse(responseCode = "401", description = "Not authenticated"),
-			@ApiResponse(responseCode = "404", description = "Novel or chapter not found")
-	})
-	@PostMapping("/chapter/{chapterId}")
-	public ControllerResponse<ReadingHistoryDTO> addReadingHistory(
-			@Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId) {
-		ReadingHistoryDTO history = readingHistoryService.addReadingHistory(chapterId);
-		return ControllerResponse.success("Reading history recorded successfully", history);
-	}
 
-	@PostMapping("/novel/{novelId}/chapter/{chapterId}/progress")
+	@PostMapping("/novel/{novelId}")
 	public ControllerResponse<ReadingHistoryDTO> updateReadingProgress(
-			@PathVariable UUID novelId,
-			@PathVariable UUID chapterId,
-			@RequestParam Integer progress,
-			@RequestParam(defaultValue = "0") Integer readingTime) {
-		ReadingHistoryDTO dto = readingHistoryService.updateReadingProgress(novelId, chapterId, progress,
-				readingTime);
+			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
+			@Parameter(description = "Last read chapter index", required = true) @RequestParam Integer lastReadChapterIndex
+			) {
+		ReadingHistoryDTO dto = readingHistoryService.updateReadingProgress(novelId, lastReadChapterIndex);
 		return ControllerResponse.success("Reading progress updated", dto);
 	}
 

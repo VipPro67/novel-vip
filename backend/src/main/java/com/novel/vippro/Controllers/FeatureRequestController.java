@@ -31,115 +31,117 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 public class FeatureRequestController {
 
-        @Autowired
-        private FeatureRequestService featureRequestService;
+	@Autowired
+	private FeatureRequestService featureRequestService;
 
-        @Operation(summary = "Create feature request", description = "Create a new feature request that users can vote on")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Feature request created successfully"),
-                        @ApiResponse(responseCode = "400", description = "Invalid input data"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @PostMapping
-        @PreAuthorize("isAuthenticated()")
-        public ControllerResponse<FeatureRequestDTO> createFeatureRequest(
-                        @Parameter(description = "Feature request details", required = true) @Valid @RequestBody CreateFeatureRequestDTO requestDTO) {
-                FeatureRequestDTO createdRequest = featureRequestService.createFeatureRequest(requestDTO);
-                return ControllerResponse.success("Feature request created successfully", createdRequest);
-        }
+	@Operation(summary = "Create feature request", description = "Create a new feature request that users can vote on")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Feature request created successfully"),
+			@ApiResponse(responseCode = "400", description = "Invalid input data"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@PostMapping
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<FeatureRequestDTO> createFeatureRequest(
+			@Parameter(description = "Feature request details", required = true) @Valid @RequestBody CreateFeatureRequestDTO requestDTO) {
+		FeatureRequestDTO createdRequest = featureRequestService.createFeatureRequest(requestDTO);
+		return ControllerResponse.success("Feature request created successfully", createdRequest);
+	}
 
-        @Operation(summary = "Get feature request", description = "Retrieve a specific feature request by ID")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Feature request retrieved successfully"),
-                        @ApiResponse(responseCode = "404", description = "Feature request not found"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping("/{id}")
-        @PreAuthorize("isAuthenticated()")
-        public ControllerResponse<FeatureRequestDTO> getFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
-                FeatureRequestDTO request = featureRequestService.getFeatureRequest(id);
-                return ControllerResponse.success("Feature request retrieved successfully", request);
-        }
+	@Operation(summary = "Get feature request", description = "Retrieve a specific feature request by ID")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Feature request retrieved successfully"),
+			@ApiResponse(responseCode = "404", description = "Feature request not found"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@GetMapping("/{id}")
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<FeatureRequestDTO> getFeatureRequest(
+			@Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+		FeatureRequestDTO request = featureRequestService.getFeatureRequest(id);
+		return ControllerResponse.success("Feature request retrieved successfully", request);
+	}
 
-        @Operation(summary = "Get all feature requests", description = "Retrieve all feature requests with pagination")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Feature requests retrieved successfully"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping
-        public ControllerResponse<PageResponse<FeatureRequestDTO>> getAllFeatureRequests(
-                        @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
-                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
-                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-                PageResponse<FeatureRequestDTO> requests = featureRequestService.getAllFeatureRequests(pageable);
-                return ControllerResponse.success("Feature requests retrieved successfully", requests);
-        }
+	@Operation(summary = "Get all feature requests", description = "Retrieve all feature requests with pagination")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Feature requests retrieved successfully"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@GetMapping
+	public ControllerResponse<PageResponse<FeatureRequestDTO>> getAllFeatureRequests(
+			@Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+			@Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+			@Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+			@Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+		PageResponse<FeatureRequestDTO> requests = featureRequestService.getAllFeatureRequests(pageable);
+		return ControllerResponse.success("Feature requests retrieved successfully", requests);
+	}
 
-        @Operation(summary = "Get feature requests by status", description = "Retrieve feature requests filtered by status with pagination")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Feature requests retrieved successfully"),
-                        @ApiResponse(responseCode = "400", description = "Invalid status"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @GetMapping("/status/{status}")
-        public ControllerResponse<PageResponse<FeatureRequestDTO>> getFeatureRequestsByStatus(
-                        @Parameter(description = "Status to filter by (VOTING, PROCESSING, DONE, REJECTED)", required = true) @PathVariable FeatureRequest.FeatureRequestStatus status,
-                        @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
-                        @Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
-                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
-                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
-                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
-                Pageable pageable = PageRequest.of(page, size, sort);
-                PageResponse<FeatureRequestDTO> requests = featureRequestService.getFeatureRequestsByStatus(status,
-                                pageable);
-                return ControllerResponse.success("Feature requests retrieved successfully", requests);
-        }
+	@Operation(summary = "Get feature requests by status", description = "Retrieve feature requests filtered by status with pagination")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Feature requests retrieved successfully"),
+			@ApiResponse(responseCode = "400", description = "Invalid status"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@GetMapping("/status/{status}")
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<PageResponse<FeatureRequestDTO>> getFeatureRequestsByStatus(
+			@Parameter(description = "Status to filter by (VOTING, PROCESSING, DONE, REJECTED)", required = true) @PathVariable FeatureRequest.FeatureRequestStatus status,
+			@Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
+			@Parameter(description = "Number of items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+			@Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+			@Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+		Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+		Pageable pageable = PageRequest.of(page, size, sort);
+		PageResponse<FeatureRequestDTO> requests = featureRequestService.getFeatureRequestsByStatus(status,
+				pageable);
+		return ControllerResponse.success("Feature requests retrieved successfully", requests);
+	}
 
-        @Operation(summary = "Vote for feature request", description = "Cast a vote for a specific feature request")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Vote recorded successfully"),
-                        @ApiResponse(responseCode = "400", description = "Cannot vote for own request or already voted"),
-                        @ApiResponse(responseCode = "404", description = "Feature request not found"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @PostMapping("/{id}/vote")
-        @PreAuthorize("isAuthenticated()")
-        public ControllerResponse<FeatureRequestDTO> voteForFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
-                FeatureRequestDTO updatedRequest = featureRequestService.voteForFeatureRequest(id);
-                return ControllerResponse.success("Vote recorded successfully", updatedRequest);
-        }
+	@Operation(summary = "Vote for feature request", description = "Cast a vote for a specific feature request")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Vote recorded successfully"),
+			@ApiResponse(responseCode = "400", description = "Cannot vote for own request or already voted"),
+			@ApiResponse(responseCode = "404", description = "Feature request not found"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@PostMapping("/{id}/vote")
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<FeatureRequestDTO> voteForFeatureRequest(
+			@Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+		FeatureRequestDTO updatedRequest = featureRequestService.voteForFeatureRequest(id);
+		return ControllerResponse.success("Vote recorded successfully", updatedRequest);
+	}
 
-        @Operation(summary = "Update feature request status", description = "Update the status of a feature request (admin only)")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Status updated successfully"),
-                        @ApiResponse(responseCode = "403", description = "Not authorized (admin only)"),
-                        @ApiResponse(responseCode = "404", description = "Feature request not found"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @PutMapping("/{id}/status")
-        @PreAuthorize("hasRole('ADMIN')")
-        public ControllerResponse<FeatureRequestDTO> updateFeatureRequestStatus(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
-                        @Parameter(description = "New status (VOTING, PROCESSING, DONE, REJECTED)", required = true) @RequestParam FeatureRequest.FeatureRequestStatus newStatus) {
-                FeatureRequestDTO updatedRequest = featureRequestService.updateFeatureRequestStatus(id, newStatus);
-                return ControllerResponse.success("Status updated successfully", updatedRequest);
-        }
+	@Operation(summary = "Update feature request status", description = "Update the status of a feature request (admin only)")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Status updated successfully"),
+			@ApiResponse(responseCode = "403", description = "Not authorized (admin only)"),
+			@ApiResponse(responseCode = "404", description = "Feature request not found"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@PutMapping("/{id}/status")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ControllerResponse<FeatureRequestDTO> updateFeatureRequestStatus(
+			@Parameter(description = "Feature request ID", required = true) @PathVariable UUID id,
+			@Parameter(description = "New status (VOTING, PROCESSING, DONE, REJECTED)", required = true) @RequestParam FeatureRequest.FeatureRequestStatus newStatus) {
+		FeatureRequestDTO updatedRequest = featureRequestService.updateFeatureRequestStatus(id, newStatus);
+		return ControllerResponse.success("Status updated successfully", updatedRequest);
+	}
 
-        @Operation(summary = "Delete feature request", description = "Delete a feature request (creator or admin only)")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Feature request deleted successfully"),
-                        @ApiResponse(responseCode = "403", description = "Not authorized (creator or admin only)"),
-                        @ApiResponse(responseCode = "404", description = "Feature request not found"),
-                        @ApiResponse(responseCode = "401", description = "Not authenticated")
-        })
-        @DeleteMapping("/{id}")
-        public ControllerResponse<Void> deleteFeatureRequest(
-                        @Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
-                featureRequestService.deleteFeatureRequest(id);
-                return ControllerResponse.success("Feature request deleted successfully", null);
-        }
+	@Operation(summary = "Delete feature request", description = "Delete a feature request (creator or admin only)")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Feature request deleted successfully"),
+			@ApiResponse(responseCode = "403", description = "Not authorized (creator or admin only)"),
+			@ApiResponse(responseCode = "404", description = "Feature request not found"),
+			@ApiResponse(responseCode = "401", description = "Not authenticated")
+	})
+	@DeleteMapping("/{id}")
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<Void> deleteFeatureRequest(
+			@Parameter(description = "Feature request ID", required = true) @PathVariable UUID id) {
+		featureRequestService.deleteFeatureRequest(id);
+		return ControllerResponse.success("Feature request deleted successfully", null);
+	}
 }

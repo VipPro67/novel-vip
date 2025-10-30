@@ -40,6 +40,7 @@ public class BookmarkController {
                         @ApiResponse(responseCode = "401", description = "Not authenticated")
         })
         @GetMapping
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<PageResponse<BookmarkDTO>> getUserBookmarks(
                         @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
                         @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size) {
@@ -55,6 +56,7 @@ public class BookmarkController {
                         @ApiResponse(responseCode = "404", description = "Novel not found")
         })
         @GetMapping("/novel/{novelId}")
+        @PreAuthorize("hasRole('ADMIN')")
         public ControllerResponse<List<BookmarkDTO>> getNovelBookmarks(
                         @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId) {
                 List<BookmarkDTO> bookmarks = bookmarkService.getNovelBookmarks(novelId);
@@ -69,6 +71,7 @@ public class BookmarkController {
                         @ApiResponse(responseCode = "404", description = "Novel or chapter not found")
         })
         @PostMapping
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<BookmarkDTO> createBookmark(
                         @Parameter(description = "Bookmark details", required = true) @Valid @RequestBody BookmarkCreateDTO bookmarkDTO) {
                 BookmarkDTO createdBookmark = bookmarkService.createBookmark( bookmarkDTO);
@@ -83,6 +86,7 @@ public class BookmarkController {
                         @ApiResponse(responseCode = "404", description = "Bookmark not found")
         })
         @PutMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<BookmarkDTO> updateBookmark(
                         @Parameter(description = "Bookmark ID", required = true) @PathVariable UUID id,
                         @Parameter(description = "Updated bookmark details", required = true) @Valid @RequestBody BookmarkUpdateDTO bookmarkDTO) {
@@ -97,6 +101,7 @@ public class BookmarkController {
                         @ApiResponse(responseCode = "404", description = "Bookmark not found")
         })
         @DeleteMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<Void> deleteBookmark(
                         @Parameter(description = "Bookmark ID", required = true) @PathVariable UUID id) {
                 bookmarkService.deleteBookmark(id);

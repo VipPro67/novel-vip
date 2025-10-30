@@ -40,6 +40,7 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "Novel not found")
     })
     @GetMapping("/novel/{novelId}")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<PageResponse<CommentDTO>> getNovelComments(
             @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
             @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -57,6 +58,7 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "Chapter not found")
     })
     @GetMapping("/chapter/{chapterId}")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<PageResponse<CommentDTO>> getChapterComments(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID chapterId,
             @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -74,6 +76,7 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<PageResponse<CommentDTO>> getUserComments(
             @Parameter(description = "User ID", required = true) @PathVariable UUID userId,
             @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -136,6 +139,7 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "Parent comment not found")
     })
     @GetMapping("/{commentId}/replies")
+        @PreAuthorize("isAuthenticated()")
     public ControllerResponse<PageResponse<CommentDTO>> getReplies(
             @Parameter(description = "Parent comment ID", required = true) @PathVariable UUID commentId,
             @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,

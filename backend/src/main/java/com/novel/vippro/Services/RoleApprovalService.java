@@ -1,8 +1,6 @@
 package com.novel.vippro.Services;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
+import com.novel.vippro.DTO.Role.RoleRequestDTO;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.ERole;
 import com.novel.vippro.Models.Role;
@@ -25,6 +24,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.RoleApprovalRequestRepository;
 import com.novel.vippro.Repository.RoleRepository;
 import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
 public class RoleApprovalService {
@@ -43,11 +43,12 @@ public class RoleApprovalService {
     private Mapper mapper;
 
     @Transactional
-    public RoleApprovalDTO createRoleApprovalRequest(User user, ERole requestedRole) {
+    public RoleApprovalDTO createRoleApprovalRequest(User user, RoleRequestDTO request) {
         // Check if user already has a pending request for this role
 
-        Role requestedRoleEntity = roleRepository.findByName(requestedRole)
+        Role requestedRoleEntity = roleRepository.findByName(request.getRequestedRole())
                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
+        ERole requestedRole = request.getRequestedRole();   
         Optional<RoleApprovalRequest> existingRequest = roleApprovalRequestRepository
                 .findByUserAndStatus(user, "PENDING", requestedRoleEntity);
 
@@ -67,12 +68,12 @@ public class RoleApprovalService {
         Role role = roleRepository.findByName(requestedRole)
                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
 
-        RoleApprovalRequest request = new RoleApprovalRequest(user, role);
-        roleApprovalRequestRepository.save(request);
+        RoleApprovalRequest roleRequest = new RoleApprovalRequest(user, role, request.getReason());
+        roleApprovalRequestRepository.save(roleRequest);
 
         logger.info("Created role approval request for user {} requesting role {}",
                 user.getUsername(), requestedRole);
-        return mapper.RoleApprovalRequestToDTO(request);
+        return mapper.RoleApprovalRequestToDTO(roleRequest);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -124,17 +125,18 @@ public class RoleApprovalService {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional(readOnly = true)
     public PageResponse<RoleApprovalDTO> getAllPendingRequests(Pageable pageable) {
         Page<RoleApprovalRequest> requests = roleApprovalRequestRepository
                 .findByStatus("PENDING", pageable);
         return new PageResponse<>(requests.map(mapper::RoleApprovalRequestToDTO));
     }
 
-    public List<RoleApprovalDTO> getUserRequests(User user) {
-        List<RoleApprovalRequest> requests = roleApprovalRequestRepository
-                .findByUser(user);
-        return requests.stream()
-                .map(mapper::RoleApprovalRequestToDTO)
-                .toList();
+    @Transactional(readOnly = true)
+    public PageResponse<RoleApprovalDTO> getUserRequests(Pageable pageable) {
+        var userId = UserDetailsImpl.getCurrentUserId();
+        Page<RoleApprovalRequest> requests = roleApprovalRequestRepository
+                .findByUserId(userId, pageable);
+        return new PageResponse<>(requests.map(mapper::RoleApprovalRequestToDTO));
     }
 }

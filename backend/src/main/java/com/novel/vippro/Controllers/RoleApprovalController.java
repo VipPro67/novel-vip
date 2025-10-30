@@ -1,6 +1,5 @@
 package com.novel.vippro.Controllers;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +53,7 @@ public class RoleApprovalController {
         User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("Error: User not found"));
         return ControllerResponse.success("Role request submitted successfully",
-                roleApprovalService.createRoleApprovalRequest(user, request.getRequestedRole()));
+                roleApprovalService.createRoleApprovalRequest(user, request));
     }
 
     @Operation(summary = "Approve a role request", description = "Approve a pending role request")
@@ -104,13 +103,16 @@ public class RoleApprovalController {
 
     @Operation(summary = "Get my role requests", description = "Retrieve all role requests made by the authenticated user")
     @GetMapping("/my-requests")
-    public ControllerResponse<List<RoleApprovalDTO>> getMyRequests() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("Error: User not found"));
+    public ControllerResponse<PageResponse<RoleApprovalDTO>> getMyRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "requestDate") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir){
+                Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        List<RoleApprovalDTO> myRequests = roleApprovalService.getUserRequests(user);
-        return ControllerResponse.success("My requests retrieved successfully", myRequests);
+        var myRequests = roleApprovalService.getUserRequests(pageable);
+		return ControllerResponse.success("User requests retrieved successfully", myRequests);
+
     }
 }

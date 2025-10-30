@@ -18,8 +18,8 @@ import com.novel.vippro.Models.User;
 public interface RoleApprovalRequestRepository extends JpaRepository<RoleApprovalRequest, UUID> {
     @Query("SELECT r FROM RoleApprovalRequest r WHERE r.status = ?1")
     Page<RoleApprovalRequest> findByStatus(String status, Pageable pageable);
-
-    List<RoleApprovalRequest> findByUser(User user);
+    @Query("SELECT r FROM RoleApprovalRequest r WHERE r.user.id = ?1")
+    Page<RoleApprovalRequest> findByUserId(UUID userId, Pageable pageable);
 
     @Query("SELECT r FROM RoleApprovalRequest r WHERE r.user = ?1 AND r.status = ?2 AND r.requestedRole = ?3")
     Optional<RoleApprovalRequest> findByUserAndStatus(User user, String status, Role requestedRole);

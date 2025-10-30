@@ -35,9 +35,6 @@ public abstract class BaseEntity implements Serializable {
     @LastModifiedBy
     private UUID updatedBy;
 
-    @Version
-    private Long version = 0L;
-
     private Boolean isDeleted = false;
     private Boolean isActive = true;
 }

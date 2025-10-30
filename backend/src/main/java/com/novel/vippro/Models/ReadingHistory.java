@@ -7,8 +7,6 @@ import lombok.Setter;
 import lombok.AllArgsConstructor;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.novel.vippro.Models.base.BaseEntity;
@@ -29,15 +27,7 @@ public class ReadingHistory extends BaseEntity {
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chapter_id", nullable = false)
-    private Chapter chapter;
-
-    @Column(name = "progress")
-    private Integer progress; 
-
-    @Column(name = "reading_time")
-    private Integer readingTime;
+    private int lastReadChapterIndex;
 
     @Column(name = "last_read_at")
     @UpdateTimestamp

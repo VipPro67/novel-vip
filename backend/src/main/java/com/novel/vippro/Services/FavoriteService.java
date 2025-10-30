@@ -40,6 +40,7 @@ public class FavoriteService {
     @Autowired
     private NotificationService notificationService;
 
+    @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getUserFavorites(Pageable pageable) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         var favoritesNovel = favoriteRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);

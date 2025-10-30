@@ -19,7 +19,6 @@ import com.novel.vippro.Security.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -63,24 +62,12 @@ public class ReadingHistoryService {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
 
-        Chapter chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", chapterId));
-
-        ReadingHistory history = readingHistoryRepository
+                ReadingHistory history = readingHistoryRepository
                 .findByUserIdAndNovelIdAndChapterId(userId, novelId, chapterId)
                 .orElse(new ReadingHistory());
 
         history.setUser(user);
         history.setNovel(novel);
-        history.setChapter(chapter);
-        history.setProgress(progress);
-
-        // Add new reading time to existing
-        if (history.getReadingTime() == null) {
-            history.setReadingTime(readingTime);
-        } else {
-            history.setReadingTime(history.getReadingTime() + readingTime);
-        }
 
         history.setUpdatedAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
@@ -123,10 +110,6 @@ public class ReadingHistoryService {
         ReadingHistory history = new ReadingHistory();
         history.setUser(user);
         history.setNovel(novel);
-        history.setChapter(chapter);
-        history.setProgress(0); // Initial progress
-
-        history.setReadingTime(0); // Initial reading time
         history.setUpdatedAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         return mapper.ReadingHistorytoDTO(savedHistory);
@@ -200,17 +183,6 @@ public class ReadingHistoryService {
         readingHistoryRepository.findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, null)
                 .ifPresent(current -> stats.setCurrentlyReading(current.getNovel().getTitle()));
 
-        // Calculate completion statistics
-        long completedCount = history.stream()
-                .filter(h -> h.getProgress() != null && h.getProgress() >= 100)
-                .map(h -> h.getNovel().getId())
-                .distinct()
-                .count();
-
-        stats.setCompletedNovels((int) completedCount);
-        stats.setCompletionRate(stats.getTotalNovelsRead() == 0 ? 0
-                : (double) completedCount / stats.getTotalNovelsRead() * 100);
-
         return stats;
     }
 
@@ -248,22 +220,17 @@ public class ReadingHistoryService {
     }
 
     @Transactional
-    public ReadingHistoryDTO updateReadingProgress(UUID chapterId, Integer progress) {
+    public ReadingHistoryDTO updateReadingProgress(UUID novelId, Integer lastReadChapterIndex) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
-
-        Chapter chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", chapterId));
-
-        Novel novel = chapter.getNovel();
+        Novel novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         ReadingHistory history = new ReadingHistory();
         history.setUser(user);
         history.setNovel(novel);
-        history.setChapter(chapter);
-        history.setProgress(progress);
-
+        history.setLastReadChapterIndex(lastReadChapterIndex);
         return mapper.ReadingHistorytoDTO(readingHistoryRepository.save(history));
     }
 

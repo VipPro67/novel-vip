@@ -28,13 +28,16 @@ public class RoleApprovalRequest extends BaseEntity {
     private Role requestedRole;
 
     @Column(nullable = false)
-    private String status = "PENDING"; // PENDING, APPROVED, REJECTED
+    private String status = "PENDING";
+    
+    private String reason;
 
     private String processedBy;
 
     private String rejectionReason;
-    public RoleApprovalRequest(User user, Role requestedRole) {
+    public RoleApprovalRequest(User user, Role requestedRole, String reason) {
         this.user = user;
         this.requestedRole = requestedRole;
+        this.reason = reason;
     }
 }

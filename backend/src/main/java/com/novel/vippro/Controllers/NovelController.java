@@ -276,6 +276,7 @@ public class NovelController {
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<NovelDTO> createNovel(@Valid @ModelAttribute NovelCreateDTO novelDTO) {
         NovelDTO createdNovel = novelService.createNovel(novelDTO);
         return ControllerResponse.success("Novel created successfully", createdNovel);
@@ -283,7 +284,7 @@ public class NovelController {
 
     @Operation(summary = "Import EPUB and create novel", description = "Upload an EPUB file and import it as a novel (creates novel + chapters)", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<EpubImportJobDTO> importEpub(
             @RequestPart("epub") MultipartFile epub,
             @RequestParam(value = "slug") String slug,
@@ -299,7 +300,7 @@ public class NovelController {
 
     @Operation(summary = "Add chapters from EPUB", description = "Add chapters to a novel from an EPUB file", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/{novelId}/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<EpubImportJobDTO> addChaptersFromEpub(
             @Parameter(description = "Novel ID") @PathVariable UUID novelId,
             @RequestPart("epub") MultipartFile epub) {
@@ -314,6 +315,7 @@ public class NovelController {
 
     @Operation(summary = "Update novel", description = "Update an existing novel", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping(value = "/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<NovelDTO> updateNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID id,
             @Valid @ModelAttribute NovelCreateDTO novelDTO) {
@@ -323,6 +325,7 @@ public class NovelController {
 
     @Operation(summary = "Update novel cover image", description = "Update the cover image of an existing novel", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping(value = "/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<NovelDTO> updateNovelCover(
             @Parameter(description = "Novel ID") @PathVariable UUID id,
             @RequestPart("coverImage") MultipartFile coverImage) {
@@ -332,6 +335,7 @@ public class NovelController {
 
     @Operation(summary = "Delete novel", description = "Delete an existing novel", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<Void> deleteNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID id) {
         novelService.deleteNovel(id);
@@ -348,6 +352,7 @@ public class NovelController {
 
     @Operation(summary = "Update novel rating", description = "Update the rating of a novel")
     @PutMapping("/{id}/rating")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<NovelDTO> updateRating(
             @Parameter(description = "Novel ID") @PathVariable UUID id,
             @Parameter(description = "New rating value (1-5)") @RequestParam int rating) {
@@ -357,6 +362,7 @@ public class NovelController {
 
     @Operation(summary = "Reindex all novels", description = "Reindex all novels in the search repository", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/reindex")
+    @PreAuthorize("hasRole('ADMIN')")
     public ControllerResponse<Void> reindexAllNovels() {
         novelService.reindexAllNovels();
         return ControllerResponse.success("All novels reindexed successfully", null);

@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,6 +41,7 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FileMetadata> uploadFile(
                         @Parameter(description = "File to upload", required = true) @RequestParam("file") MultipartFile file,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
@@ -55,6 +57,7 @@ public class FileController {
                         @ApiResponse(responseCode = "415", description = "Unsupported file type")
         })
         @PostMapping("/upload/multiple")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<List<FileMetadata>> uploadMultipleFiles(
                         @Parameter(description = "Files to upload", required = true) @RequestParam("files") MultipartFile[] files,
                         @Parameter(description = "File type (NOVEL_COVER, CHAPTER_IMAGE, etc.)") @RequestParam(required = false) String type) {
@@ -68,6 +71,7 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @GetMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
         public Resource downloadFile(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 FileDownloadDTO fileDownload = fileService.downloadFile(id);
@@ -82,6 +86,7 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @DeleteMapping("/{id}")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<Void> deleteFile(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 fileService.deleteFile(id);
@@ -94,6 +99,7 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @GetMapping("/{id}/metadata")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FileMetadataDTO> getFileMetadata(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 FileMetadataDTO metadata = fileService.getFileMetadata(id);
@@ -108,6 +114,7 @@ public class FileController {
                         @ApiResponse(responseCode = "404", description = "File not found")
         })
         @PutMapping("/{id}/metadata")
+        @PreAuthorize("isAuthenticated()")
         public ControllerResponse<FileMetadataDTO> updateFileMetadata(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id,
                         @Parameter(description = "Updated metadata", required = true) @Valid @RequestBody FileMetadataUpdateDTO metadata) {

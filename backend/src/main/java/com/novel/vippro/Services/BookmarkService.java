@@ -71,7 +71,6 @@ public class BookmarkService {
         if (existingBookmark != null) {
             // Update existing bookmark
             existingBookmark.setNote(bookmarkDTO.getNote());
-            existingBookmark.setProgress(bookmarkDTO.getProgress());
             return mapper.BookmarktoDTO(bookmarkRepository.save(existingBookmark));
         }
 
@@ -81,7 +80,6 @@ public class BookmarkService {
         bookmark.setNovel(novel);
         bookmark.setChapter(chapter);
         bookmark.setNote(bookmarkDTO.getNote());
-        bookmark.setProgress(bookmarkDTO.getProgress());
 
         return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }
@@ -92,7 +90,6 @@ public class BookmarkService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bookmark", "id", id));
 
         bookmark.setNote(bookmarkDTO.getNote());
-        bookmark.setProgress(bookmarkDTO.getProgress());
 
         return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }

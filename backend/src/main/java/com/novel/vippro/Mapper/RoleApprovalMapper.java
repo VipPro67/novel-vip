@@ -12,10 +12,15 @@ public class RoleApprovalMapper {
 	private ModelMapper modelMapper;
 
 	public RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest) {
-		
-		RoleApprovalDTO dto = modelMapper.map(roleApprovalRequest, RoleApprovalDTO.class);
+		var dto = new RoleApprovalDTO();
 		dto.setUserId(roleApprovalRequest.getUser().getId());
 		dto.setUsername(roleApprovalRequest.getUser().getUsername());
+		dto.setRequestedRole(roleApprovalRequest.getRequestedRole().getName());
+		dto.setStatus(roleApprovalRequest.getStatus());
+		dto.setCreatedAt(roleApprovalRequest.getCreatedAt());
+		dto.setUpdatedAt(roleApprovalRequest.getUpdatedAt());
+		dto.setProcessedBy(roleApprovalRequest.getRejectionReason());
+		dto.setRejectionReason(roleApprovalRequest.getRejectionReason());
 		return dto;
 	}
 

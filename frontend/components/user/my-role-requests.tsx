@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { api, type RoleRequest } from "@/lib/api"
+import { api, ERole, type RoleRequest } from "@/lib/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
 
@@ -75,13 +75,13 @@ export function MyRoleRequests() {
     }
   }
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role.toUpperCase()) {
-      case "ADMIN":
+  const getRoleBadgeColor = (erole: ERole) => {
+    switch (erole) {
+      case ERole.ADMIN:
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-      case "MODERATOR":
+      case ERole.MODERATOR:
         return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-      case "AUTHOR":
+      case ERole.AUTHOR:
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
@@ -123,7 +123,7 @@ export function MyRoleRequests() {
                       </TableCell>
                       <TableCell>
                         <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                      </TableCell>
+                      </TableCell>                    
                       <TableCell>
                         <div className="h-4 w-24 bg-muted rounded animate-pulse" />
                       </TableCell>

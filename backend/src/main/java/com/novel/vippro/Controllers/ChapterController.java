@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -108,6 +109,7 @@ public class ChapterController {
             @ApiResponse(responseCode = "400", description = "Error generating audio content")
     })
     @GetMapping("/{id}/audio")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<ChapterDetailDTO> createChapterAudio(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
         ChapterDetailDTO chapter = chapterService.getChapterDetailDTO(id);
@@ -124,6 +126,7 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<ChapterDTO> createChapter(
             @Parameter(description = "Chapter details", required = true) @RequestBody CreateChapterDTO chapterDTO) {
         ChapterDTO chapter = chapterService.createChapterDTO(chapterDTO);
@@ -138,6 +141,7 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<ChapterDTO> updateChapter(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id,
             @Parameter(description = "Updated chapter details", required = true) @RequestBody CreateChapterDTO chapterDTO) {
@@ -154,6 +158,7 @@ public class ChapterController {
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
     @DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<Void> deleteChapter(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id) {
         chapterService.deleteChapter(id);
@@ -185,6 +190,7 @@ public class ChapterController {
     @Operation(summary = "Upload a single chapter .txt", description = "Filename must start with the chapter number, e.g. 1.txt. First line is the title; remainder is the content.")
     @ApiResponse(responseCode = "200", description = "Processed")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<UploadChapterResult> uploadOne(
             @RequestParam("novelId") UUID novelId,
             @RequestParam("file") MultipartFile file,
@@ -198,6 +204,7 @@ public class ChapterController {
     @Operation(summary = "Upload multiple chapter .txt files", description = "Each filename must start with the chapter number (e.g. 1.txt, 2_my-title.txt). First line is title; remainder is content.")
     @ApiResponse(responseCode = "200", description = "Processed")
     @PostMapping(value = "/upload/batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<List<UploadChapterResult>> uploadMany(
             @RequestParam("novelId") UUID novelId,
             @RequestParam("files") List<MultipartFile> files,

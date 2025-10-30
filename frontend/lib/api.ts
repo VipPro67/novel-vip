@@ -191,12 +191,19 @@ export interface ReaderSettings {
   audioSpeed: number
 }
 
+export enum ERole {
+  USER,
+  MODERATOR,
+  ADMIN,
+  AUTHOR,
+}
+
 export interface RoleRequest {
   id: string
   userId: string
   username: string
   email: string
-  requestedRole: string
+  requestedRole: ERole
   reason: string
   status: "PENDING" | "APPROVED" | "REJECTED"
   createdAt: string

@@ -66,11 +66,13 @@ public class MessageController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<MessageDTO> updateMessage(@PathVariable UUID id, @RequestBody MessageDTO messageDTO) {
         return ControllerResponse.success("Message updated successfully", messageService.updateMessage(id, messageDTO));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<Void> deleteMessage(@PathVariable UUID id) {
         messageService.deleteMessage(id);
         return ControllerResponse.success("Message deleted successfully", null);
