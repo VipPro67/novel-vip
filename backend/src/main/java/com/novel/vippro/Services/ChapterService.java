@@ -76,6 +76,7 @@ public class ChapterService {
     private static final Logger logger = LogManager.getLogger(ChapterService.class);
 
     @Cacheable(value = "chapters", key = "#id")
+    @Transactional(readOnly = true)
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
         Chapter chapter = chapterRepository.getChapterDetailById(id);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
@@ -433,7 +434,7 @@ public class ChapterService {
 
         Map<String, Object> content = getChapterContent(chapter);
         String textToConvert = chapter.getTitle() + "\n" + content.get("content");
-        textToConvert = textToConvert.replaceAll("<[^>]*>", "");
+        textToConvert = textToConvert.replaceAll("</?(?!h2\\b)[^>]*>", "");
 
         FileMetadata audioFile;
         try {

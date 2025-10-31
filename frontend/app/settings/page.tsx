@@ -1,49 +1,67 @@
-"use client"
+"use client";
 
-import type { ChangeEvent, FormEvent } from "react"
-import { useEffect, useMemo, useState } from "react"
-import { Bell, Palette, Loader2, RefreshCw } from "lucide-react"
+import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Bell, Palette, Loader2, RefreshCw } from "lucide-react";
 
-import { AuthGuard } from "@/components/auth/auth-guard"
-import { Header } from "@/components/layout/header"
-import { useReaderSettings } from "@/components/providers/reader-settings-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { api, type ReaderSettings } from "@/lib/api"
+import { AuthGuard } from "@/components/auth/auth-guard";
+import { Header } from "@/components/layout/header";
+import { useReaderSettings } from "@/components/providers/reader-settings-provider";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { api, type ReaderSettings } from "@/lib/api";
 
 export default function SettingsPage() {
   return (
     <AuthGuard>
       <SettingsContent />
     </AuthGuard>
-  )
+  );
 }
 
 function SettingsContent() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl font-bold">Settings</h1>
-            <p className="text-muted-foreground">Manage your account settings and preferences</p>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences
+            </p>
           </div>
 
           <Tabs defaultValue="appearance" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="notifications" className="flex items-center space-x-2">
+              <TabsTrigger
+                value="notifications"
+                className="flex items-center space-x-2"
+              >
                 <Bell className="h-4 w-4" />
                 <span>Notifications</span>
               </TabsTrigger>
-              <TabsTrigger value="appearance" className="flex items-center space-x-2">
+              <TabsTrigger
+                value="appearance"
+                className="flex items-center space-x-2"
+              >
                 <Palette className="h-4 w-4" />
                 <span>Appearance</span>
               </TabsTrigger>
@@ -53,10 +71,14 @@ function SettingsContent() {
               <Card>
                 <CardHeader>
                   <CardTitle>Notification Settings</CardTitle>
-                  <CardDescription>Configure how you receive notifications</CardDescription>
+                  <CardDescription>
+                    Configure how you receive notifications
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Notification settings will be implemented here.</p>
+                  <p className="text-muted-foreground">
+                    Notification settings will be implemented here.
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -65,7 +87,9 @@ function SettingsContent() {
               <Card>
                 <CardHeader>
                   <CardTitle>Appearance Settings</CardTitle>
-                  <CardDescription>Customize the look and feel of your reader experience</CardDescription>
+                  <CardDescription>
+                    Customize the look and feel of your reader experience
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <AppearanceSettingsForm />
@@ -76,7 +100,7 @@ function SettingsContent() {
         </div>
       </main>
     </div>
-  )
+  );
 }
 
 type BooleanSettingKey =
@@ -87,170 +111,195 @@ type BooleanSettingKey =
   | "showTime"
   | "showBattery"
   | "audioEnabled"
-  | "audioAutoNextChapter"
+  | "audioAutoNextChapter";
 
-type IntegerSettingKey = "fontSize" | "marginSize" | "paragraphSpacing" | "autoScrollSpeed"
+type IntegerSettingKey =
+  | "fontSize"
+  | "marginSize"
+  | "paragraphSpacing"
+  | "autoScrollSpeed";
 
-type DecimalSettingKey = "lineHeight" | "audioSpeed"
+type DecimalSettingKey = "lineHeight" | "audioSpeed";
 
 function AppearanceSettingsForm() {
-  const { toast } = useToast()
-  const { settings, loading, saving, error, updateSettings, refreshSettings } = useReaderSettings()
-  const [formValues, setFormValues] = useState<ReaderSettings | null>(null)
-  const [fontOptions, setFontOptions] = useState<string[]>([])
-  const [themeOptions, setThemeOptions] = useState<string[]>([])
-  const [optionsLoading, setOptionsLoading] = useState(false)
+  const { toast } = useToast();
+  const { settings, loading, saving, error, updateSettings, refreshSettings } =
+    useReaderSettings();
+  const [formValues, setFormValues] = useState<ReaderSettings | null>(null);
+  const [fontOptions, setFontOptions] = useState<string[]>([]);
+  const [themeOptions, setThemeOptions] = useState<string[]>([]);
+  const [optionsLoading, setOptionsLoading] = useState(false);
 
   useEffect(() => {
     if (settings) {
-      setFormValues(settings)
+      setFormValues(settings);
     }
-  }, [settings])
+  }, [settings]);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     const loadOptions = async () => {
       try {
-        setOptionsLoading(true)
-        const [fontsResponse, themesResponse] = await Promise.all([api.getFontOptions(), api.getThemeOptions()])
+        setOptionsLoading(true);
+        const [fontsResponse, themesResponse] = await Promise.all([
+          api.getFontOptions(),
+          api.getThemeOptions(),
+        ]);
 
         if (!isMounted) {
-          return
+          return;
         }
 
         if (fontsResponse.success) {
-          setFontOptions(fontsResponse.data)
+          setFontOptions(fontsResponse.data);
         }
         if (themesResponse.success) {
-          setThemeOptions(themesResponse.data)
+          setThemeOptions(themesResponse.data);
         }
       } catch (err) {
-        console.error("Failed to load appearance options", err)
+        console.error("Failed to load appearance options", err);
       } finally {
         if (isMounted) {
-          setOptionsLoading(false)
+          setOptionsLoading(false);
         }
       }
-    }
+    };
 
-    loadOptions()
+    loadOptions();
     return () => {
-      isMounted = false
-    }
-  }, [])
+      isMounted = false;
+    };
+  }, []);
 
-  const handleIntegerChange = (key: IntegerSettingKey) => (event: ChangeEvent<HTMLInputElement>) => {
-    if (!formValues) {
-      return
-    }
-    const value = Number.parseInt(event.target.value, 10)
-    if (Number.isNaN(value)) {
-      return
-    }
+  const handleIntegerChange =
+    (key: IntegerSettingKey) => (event: ChangeEvent<HTMLInputElement>) => {
+      if (!formValues) {
+        return;
+      }
+      const value = Number.parseInt(event.target.value, 10);
+      if (Number.isNaN(value)) {
+        return;
+      }
 
-    const constraints: Record<IntegerSettingKey, { min: number; max: number }> = {
-      fontSize: { min: 12, max: 40 },
-      marginSize: { min: 0, max: 64 },
-      paragraphSpacing: { min: 0, max: 48 },
-      autoScrollSpeed: { min: 1, max: 10 },
-    }
+      const constraints: Record<
+        IntegerSettingKey,
+        { min: number; max: number }
+      > = {
+        fontSize: { min: 12, max: 40 },
+        marginSize: { min: 0, max: 64 },
+        paragraphSpacing: { min: 0, max: 48 },
+        autoScrollSpeed: { min: 1, max: 10 },
+      };
 
-    const { min, max } = constraints[key]
-    const nextValue = Math.min(max, Math.max(min, value))
+      const { min, max } = constraints[key];
+      const nextValue = Math.min(max, Math.max(min, value));
 
-    setFormValues((prev) => (prev ? { ...prev, [key]: nextValue } : prev))
-  }
+      setFormValues((prev) => (prev ? { ...prev, [key]: nextValue } : prev));
+    };
 
-  const handleDecimalChange = (key: DecimalSettingKey) => (event: ChangeEvent<HTMLInputElement>) => {
-    if (!formValues) {
-      return
-    }
-    const value = Number.parseFloat(event.target.value)
-    if (Number.isNaN(value)) {
-      return
-    }
+  const handleDecimalChange =
+    (key: DecimalSettingKey) => (event: ChangeEvent<HTMLInputElement>) => {
+      if (!formValues) {
+        return;
+      }
+      const value = Number.parseFloat(event.target.value);
+      if (Number.isNaN(value)) {
+        return;
+      }
 
-    const constraints: Record<DecimalSettingKey, { min: number; max: number }> = {
-      lineHeight: { min: 1.2, max: 2.4 },
-      audioSpeed: { min: 0.5, max: 3 },
-    }
+      const constraints: Record<
+        DecimalSettingKey,
+        { min: number; max: number }
+      > = {
+        lineHeight: { min: 1.2, max: 2.4 },
+        audioSpeed: { min: 0.5, max: 3 },
+      };
 
-    const { min, max } = constraints[key]
-    const nextValue = Math.min(max, Math.max(min, value))
+      const { min, max } = constraints[key];
+      const nextValue = Math.min(max, Math.max(min, value));
 
-    setFormValues((prev) => (prev ? { ...prev, [key]: Number(nextValue.toFixed(2)) } : prev))
-  }
+      setFormValues((prev) =>
+        prev ? { ...prev, [key]: Number(nextValue.toFixed(2)) } : prev
+      );
+    };
 
   const handleBooleanChange = (key: BooleanSettingKey) => (value: boolean) => {
-    setFormValues((prev) => (prev ? { ...prev, [key]: value } : prev))
-  }
+    setFormValues((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
 
-  const handleColorChange = (key: "textColor" | "backgroundColor") => (event: ChangeEvent<HTMLInputElement>) => {
-    const color = event.target.value
-    setFormValues((prev) => (prev ? { ...prev, [key]: color } : prev))
-  }
+  const handleColorChange =
+    (key: "textColor" | "backgroundColor") =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const color = event.target.value;
+      setFormValues((prev) => (prev ? { ...prev, [key]: color } : prev));
+    };
 
-  const handleSelectChange = (key: "theme" | "fontFamily") => (value: string) => {
-    setFormValues((prev) => (prev ? { ...prev, [key]: value } : prev))
-  }
+  const handleSelectChange =
+    (key: "theme" | "fontFamily") => (value: string) => {
+      setFormValues((prev) => (prev ? { ...prev, [key]: value } : prev));
+    };
 
   const isDirty = useMemo(() => {
     if (!settings || !formValues) {
-      return false
+      return false;
     }
-    return JSON.stringify(settings) !== JSON.stringify(formValues)
-  }, [formValues, settings])
+    return JSON.stringify(settings) !== JSON.stringify(formValues);
+  }, [formValues, settings]);
 
-  const loadingState = loading && !formValues
+  const loadingState = loading && !formValues;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+    event.preventDefault();
     if (!formValues) {
-      return
+      return;
     }
     try {
-      const updated = await updateSettings(formValues)
+      const updated = await updateSettings(formValues);
       if (updated) {
-        setFormValues(updated)
+        setFormValues(updated);
         toast({
           title: "Appearance updated",
           description: "Your reader preferences have been saved.",
-        })
+        });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update reader settings"
+      const message =
+        err instanceof Error ? err.message : "Failed to update reader settings";
       toast({
         title: "Update failed",
         description: message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handleRefresh = async () => {
     try {
-      const refreshed = await refreshSettings()
+      const refreshed = await refreshSettings();
       if (refreshed) {
-        setFormValues(refreshed)
+        setFormValues(refreshed);
       }
       toast({
         title: "Settings refreshed",
         description: "Latest reader preferences loaded from the server.",
-      })
+      });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to refresh reader settings"
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to refresh reader settings";
       toast({
         title: "Refresh failed",
         description: message,
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handleDiscardChanges = () => {
-    setFormValues(settings)
-  }
+    setFormValues(settings);
+  };
 
   if (loadingState) {
     return (
@@ -258,14 +307,22 @@ function AppearanceSettingsForm() {
         <Loader2 className="h-4 w-4 animate-spin" />
         <span>Loading reader preferences.</span>
       </div>
-    )
+    );
   }
 
   if (!formValues) {
-    return <p className="text-sm text-muted-foreground">Reader settings are not available.</p>
+    return (
+      <p className="text-sm text-muted-foreground">
+        Reader settings are not available.
+      </p>
+    );
   }
 
-  const readingToggles: Array<{ key: BooleanSettingKey; label: string; description: string }> = [
+  const readingToggles: Array<{
+    key: BooleanSettingKey;
+    label: string;
+    description: string;
+  }> = [
     {
       key: "autoScroll",
       label: "Auto scroll",
@@ -296,9 +353,13 @@ function AppearanceSettingsForm() {
       label: "Show battery level",
       description: "Display your device battery level in the reader header.",
     },
-  ]
+  ];
 
-  const audioToggles: Array<{ key: BooleanSettingKey; label: string; description: string }> = [
+  const audioToggles: Array<{
+    key: BooleanSettingKey;
+    label: string;
+    description: string;
+  }> = [
     {
       key: "audioEnabled",
       label: "Enable audio narration",
@@ -307,9 +368,10 @@ function AppearanceSettingsForm() {
     {
       key: "audioAutoNextChapter",
       label: "Auto play next chapter",
-      description: "Automatically start narration for the next chapter when finished.",
+      description:
+        "Automatically start narration for the next chapter when finished.",
     },
-  ]
+  ];
 
   return (
     <form className="space-y-8" onSubmit={handleSubmit}>
@@ -318,7 +380,9 @@ function AppearanceSettingsForm() {
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Typography</h3>
-          <p className="text-sm text-muted-foreground">Tune fonts and spacing for a comfortable reading experience.</p>
+          <p className="text-sm text-muted-foreground">
+            Tune fonts and spacing for a comfortable reading experience.
+          </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -333,7 +397,9 @@ function AppearanceSettingsForm() {
               </SelectTrigger>
               <SelectContent>
                 {fontOptions.length === 0 ? (
-                  <SelectItem value={formValues.fontFamily}>{formValues.fontFamily}</SelectItem>
+                  <SelectItem value={formValues.fontFamily}>
+                    {formValues.fontFamily}
+                  </SelectItem>
                 ) : (
                   fontOptions.map((option) => (
                     <SelectItem key={option} value={option}>
@@ -390,7 +456,9 @@ function AppearanceSettingsForm() {
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Display</h3>
-          <p className="text-sm text-muted-foreground">Control colors, theme, and layout for the chapter reader.</p>
+          <p className="text-sm text-muted-foreground">
+            Control colors, theme, and layout for the chapter reader.
+          </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -405,7 +473,9 @@ function AppearanceSettingsForm() {
               </SelectTrigger>
               <SelectContent>
                 {themeOptions.length === 0 ? (
-                  <SelectItem value={formValues.theme}>{formValues.theme}</SelectItem>
+                  <SelectItem value={formValues.theme}>
+                    {formValues.theme}
+                  </SelectItem>
                 ) : (
                   themeOptions.map((option) => (
                     <SelectItem key={option} value={option}>
@@ -454,7 +524,10 @@ function AppearanceSettingsForm() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {readingToggles.map(({ key, label, description }) => (
-            <div key={key} className="flex items-center justify-between rounded-lg border p-4">
+            <div
+              key={key}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
               <div className="pr-4">
                 <p className="font-medium leading-none">{label}</p>
                 <p className="text-sm text-muted-foreground">{description}</p>
@@ -473,7 +546,9 @@ function AppearanceSettingsForm() {
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Audio playback</h3>
-          <p className="text-sm text-muted-foreground">Configure audio narration preferences.</p>
+          <p className="text-sm text-muted-foreground">
+            Configure audio narration preferences.
+          </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -503,12 +578,17 @@ function AppearanceSettingsForm() {
               onChange={handleIntegerChange("autoScrollSpeed")}
               disabled={saving}
             />
-            <p className="text-xs text-muted-foreground">Higher values scroll faster.</p>
+            <p className="text-xs text-muted-foreground">
+              Higher values scroll faster.
+            </p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           {audioToggles.map(({ key, label, description }) => (
-            <div key={key} className="flex items-center justify-between rounded-lg border p-4">
+            <div
+              key={key}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
               <div className="pr-4">
                 <p className="font-medium leading-none">{label}</p>
                 <p className="text-sm text-muted-foreground">{description}</p>
@@ -525,10 +605,20 @@ function AppearanceSettingsForm() {
       </section>
 
       <div className="flex flex-wrap justify-end gap-3">
-        <Button type="button" variant="outline" onClick={handleDiscardChanges} disabled={!isDirty || saving}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleDiscardChanges}
+          disabled={!isDirty || saving}
+        >
           Discard changes
         </Button>
-        <Button type="button" variant="outline" onClick={handleRefresh} disabled={saving}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={saving}
+        >
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh from server
         </Button>
@@ -538,5 +628,5 @@ function AppearanceSettingsForm() {
         </Button>
       </div>
     </form>
-  )
+  );
 }

@@ -1,56 +1,57 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Grid, List, TrendingUp, Trophy, Eye, Star } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/layout/header"
-import { NovelCard } from "@/components/novel/novel-card"
-import { api, type Novel } from "@/lib/api"
-import { Pagination } from "@/components/ui/pagination"
+import { useEffect, useState } from "react";
+import { Grid, List, TrendingUp, Trophy, Eye, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/layout/header";
+import { NovelCard } from "@/components/novel/novel-card";
+import { api, type Novel } from "@/lib/api";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function HotNovelsPage() {
-  const [novels, setNovels] = useState<Novel[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    fetchHotNovels()
-  }, [currentPage])
+    fetchHotNovels();
+  }, [currentPage]);
 
   const fetchHotNovels = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await api.getHotNovels({
         page: currentPage,
         size: 20,
-      })
+      });
 
       if (response.success) {
-        setNovels(response.data.content)
-        setTotalPages(response.data.totalPages)
+        setNovels(response.data.content);
+        setTotalPages(response.data.totalPages);
       }
     } catch (error) {
-      console.error("Failed to fetch hot novels:", error)
+      console.error("Failed to fetch hot novels:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getRankingBadge = (index: number) => {
-    if (index === 0) return <Badge className="bg-orange-500 text-white">🔥 #1</Badge>
-    if (index === 1) return <Badge className="bg-orange-400 text-white">🔥 #2</Badge>
-    if (index === 2) return <Badge className="bg-orange-300 text-white">🔥 #3</Badge>
-    return null
-  }
+    if (index === 0)
+      return <Badge className="bg-orange-500 text-white">🔥 #1</Badge>;
+    if (index === 1)
+      return <Badge className="bg-orange-400 text-white">🔥 #2</Badge>;
+    if (index === 2)
+      return <Badge className="bg-orange-300 text-white">🔥 #3</Badge>;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="flex flex-col space-y-6">
           {/* Header */}
@@ -59,7 +60,9 @@ export default function HotNovelsPage() {
               <TrendingUp className="h-8 w-8 text-orange-500" />
               <div>
                 <h1 className="text-3xl font-bold">Hot Novels</h1>
-                <p className="text-muted-foreground">Trending stories everyone's reading</p>
+                <p className="text-muted-foreground">
+                  Trending stories everyone's reading
+                </p>
               </div>
             </div>
 
@@ -85,7 +88,9 @@ export default function HotNovelsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Most Viewed</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Most Viewed
+                </CardTitle>
                 <Eye className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
@@ -95,12 +100,16 @@ export default function HotNovelsPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Rising Stars</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Rising Stars
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">45</div>
-                <p className="text-xs text-muted-foreground">new trending novels</p>
+                <p className="text-xs text-muted-foreground">
+                  new trending novels
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -115,7 +124,9 @@ export default function HotNovelsPage() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Hot Streak</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Hot Streak
+                </CardTitle>
                 <Trophy className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
@@ -161,7 +172,11 @@ export default function HotNovelsPage() {
               {novels.map((novel, index) => (
                 <div key={novel.id} className="relative">
                   <NovelCard novel={novel} />
-                  {getRankingBadge(index) && <div className="absolute top-2 left-2 z-10">{getRankingBadge(index)}</div>}
+                  {getRankingBadge(index) && (
+                    <div className="absolute top-2 left-2 z-10">
+                      {getRankingBadge(index)}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -178,5 +193,5 @@ export default function HotNovelsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

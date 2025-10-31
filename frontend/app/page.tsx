@@ -62,8 +62,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main>
         {/* Hero Section */}
         <section className="relative py-20 px-4 text-center bg-gradient-to-b from-primary/10 to-background">

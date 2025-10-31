@@ -20,6 +20,8 @@ public class NovelDTO extends BaseDTO {
     private Set<GenreDTO> genres;
     private String status;
     private Integer totalChapters;
-    private Integer views;
+    private Integer totalViews;
+    private Integer monthlyViews;
+    private Integer dailyViews;
     private Integer rating;
 }

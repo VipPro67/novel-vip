@@ -1,60 +1,71 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Grid, List, Clock, Calendar, Zap, BookOpen } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/layout/header"
-import { NovelCard } from "@/components/novel/novel-card"
-import { api, type Novel } from "@/lib/api"
-import { Pagination } from "@/components/ui/pagination"
+import { useEffect, useState } from "react";
+import { Grid, List, Clock, Calendar, Zap, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/layout/header";
+import { NovelCard } from "@/components/novel/novel-card";
+import { api, type Novel } from "@/lib/api";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function LatestNovelsPage() {
-  const [novels, setNovels] = useState<Novel[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    fetchLatestNovels()
-  }, [currentPage])
+    fetchLatestNovels();
+  }, [currentPage]);
 
   const fetchLatestNovels = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await api.getLatestNovels({
         page: currentPage,
         size: 20,
-      })
+      });
 
       if (response.success) {
-        setNovels(response.data.content)
-        setTotalPages(response.data.totalPages)
+        setNovels(response.data.content);
+        setTotalPages(response.data.totalPages);
       }
     } catch (error) {
-      console.error("Failed to fetch latest novels:", error)
+      console.error("Failed to fetch latest novels:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getUpdateBadge = (updatedAt: string) => {
-    const now = new Date()
-    const updated = new Date(updatedAt)
-    const diffHours = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60))
+    const now = new Date();
+    const updated = new Date(updatedAt);
+    const diffHours = Math.floor(
+      (now.getTime() - updated.getTime()) / (1000 * 60 * 60)
+    );
 
-    if (diffHours < 1) return <Badge className="bg-green-500 text-white">Just now</Badge>
-    if (diffHours < 24) return <Badge className="bg-blue-500 text-white">{diffHours}h ago</Badge>
-    if (diffHours < 168) return <Badge className="bg-purple-500 text-white">{Math.floor(diffHours / 24)}d ago</Badge>
-    return <Badge className="bg-gray-500 text-white">{Math.floor(diffHours / 168)}w ago</Badge>
-  }
+    if (diffHours < 1)
+      return <Badge className="bg-green-500 text-white">Just now</Badge>;
+    if (diffHours < 24)
+      return <Badge className="bg-blue-500 text-white">{diffHours}h ago</Badge>;
+    if (diffHours < 168)
+      return (
+        <Badge className="bg-purple-500 text-white">
+          {Math.floor(diffHours / 24)}d ago
+        </Badge>
+      );
+    return (
+      <Badge className="bg-gray-500 text-white">
+        {Math.floor(diffHours / 168)}w ago
+      </Badge>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="flex flex-col space-y-6">
           {/* Header */}
@@ -63,7 +74,9 @@ export default function LatestNovelsPage() {
               <Clock className="h-8 w-8 text-blue-500" />
               <div>
                 <h1 className="text-3xl font-bold">Latest Updates</h1>
-                <p className="text-muted-foreground">Recently updated novels with fresh content</p>
+                <p className="text-muted-foreground">
+                  Recently updated novels with fresh content
+                </p>
               </div>
             </div>
 
@@ -104,7 +117,9 @@ export default function LatestNovelsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">892</div>
-                <p className="text-xs text-muted-foreground">updated this week</p>
+                <p className="text-xs text-muted-foreground">
+                  updated this week
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -152,7 +167,9 @@ export default function LatestNovelsPage() {
           ) : novels.length === 0 ? (
             <div className="text-center py-12">
               <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No recently updated novels found</p>
+              <p className="text-muted-foreground">
+                No recently updated novels found
+              </p>
             </div>
           ) : (
             <div
@@ -165,7 +182,9 @@ export default function LatestNovelsPage() {
               {novels.map((novel) => (
                 <div key={novel.id} className="relative">
                   <NovelCard novel={novel} />
-                  <div className="absolute top-2 right-2 z-10">{getUpdateBadge(novel.updatedAt)}</div>
+                  <div className="absolute top-2 right-2 z-10">
+                    {getUpdateBadge(novel.updatedAt)}
+                  </div>
                 </div>
               ))}
             </div>
@@ -182,5 +201,5 @@ export default function LatestNovelsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

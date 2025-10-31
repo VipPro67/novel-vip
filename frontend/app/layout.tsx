@@ -8,13 +8,13 @@ import { ThemeProvider } from "@/components/providers/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { LoginModal } from "@/components/auth/login-modal"
 import { RegisterModal } from "@/components/auth/register-modal"
+import { Header } from "@/components/layout/header"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Novel VIP Pro",
   description: "Premium novel reading platform",
-  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -30,7 +30,9 @@ export default function RootLayout({
             <ReaderSettingsProvider>
               <LoginModal />
               <RegisterModal />
-              {children}
+              <main>
+                <Header />
+                {children}</main>
               <Toaster />
             </ReaderSettingsProvider>
           </AuthProvider>

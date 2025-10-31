@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +22,8 @@ export function NotificationBell() {
         setUnreadCount,
     } = useNotifications()
 
+    const router = useRouter()
+
     const [open, setOpen] = useState(false)
 
     // Fetch notifications when opened
@@ -40,37 +43,39 @@ export function NotificationBell() {
         })
     }
 
-    const markOneRead = (id: string) => {
+    const markOneRead = async (id: string) => {
         const notification = notifications.find((n) => n.id === id)
-        if (notification?.read) return
-        api.markNotificationAsRead(id).then(() => {
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-            )
-            refreshUnreadCount()
-        })
-        // check relation and type/ example chapter update => redirect to novel page
-        if (notification?.referenceId) {
+        if (!notification) return
+
+        // Mark as read on server first (if unread)
+        if (notification.read === false) {
+            try {
+                await api.markNotificationAsRead(id)
+                setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)))
+                refreshUnreadCount()
+            } catch (err) {
+                console.error("Failed to mark notification as read", err)
+            }
+        }
+
+        // Use Next.js client navigation instead of forcing full page reload
+        if (notification.reference) {
             switch (notification.type) {
                 case "CHAPTER_UPDATE":
-                    // Redirect to the novel page
-                    window.location.href = `/novel/${notification.referenceId}/chapters`
+                    // use the same URL shape used elsewhere (`/novels/[slug]`)
+                    await router.push(`/novels/${notification.reference}`)
                     break
                 case "COMMENT":
-                    // Redirect to the comment section
-                    window.location.href = `/comments/${notification.referenceId}`
+                    await router.push(`/comments/${notification.reference}`)
                     break
                 case "LIKE":
-                    // Redirect to the liked content
-                    window.location.href = `/likes/${notification.referenceId}`
+                    await router.push(`/likes/${notification.reference}`)
                     break
                 case "FOLLOW":
-                    // Redirect to the followed user or content
-                    window.location.href = `/user/${notification.referenceId}`
+                    await router.push(`/user/${notification.reference}`)
                     break
                 case "MESSAGE":
-                    // Redirect to the message or chat page
-                    window.location.href = `/messages/${notification.referenceId}`
+                    await router.push(`/messages/${notification.reference}`)
                     break
                 default:
                     break

@@ -99,12 +99,15 @@ export default function NovelDetailPage() {
     if (novel) {
       fetchChapters(novel.id, chaptersPage, chaptersSize)
     }
-  }, [chaptersPage, chaptersSize, novel]) // Removed novel?.id from dependency array
+  }, [chaptersPage, chaptersSize])
 
   // fetch paginated chapters helper
   const fetchChapters = async (novelId: string, page = 0, size = 100) => {
     setChaptersLoading(true)
     try {
+      if (!novelId || chapters.length > 0) {
+        return
+      }
       const chaptersResponse = await api.getChaptersByNovel(novelId, {
         page,
         size,
@@ -136,6 +139,9 @@ export default function NovelDetailPage() {
   const fetchNovelData = async (novelSlug: string) => {
     setLoading(true)
     try {
+      if(!novelSlug || novel != null) {
+        return
+      }
       const novelResponse = await api.getNovelBySlug(novelSlug)
 
       if (!novelResponse.success) {
@@ -719,7 +725,6 @@ export default function NovelDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -741,7 +746,6 @@ export default function NovelDetailPage() {
   if (!novel) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Novel not found</h1>
@@ -753,8 +757,6 @@ export default function NovelDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Novel Cover and Actions */}
@@ -844,7 +846,7 @@ export default function NovelDetailPage() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Eye className="h-4 w-4" />
-                    <span>{novel.views.toLocaleString()} views</span>
+                    <span>{novel?.totalViews.toLocaleString()} views</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <BookOpen className="h-4 w-4" />

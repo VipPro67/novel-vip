@@ -1,56 +1,57 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Grid, List, Trophy, Star, Award, Crown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Header } from "@/components/layout/header"
-import { NovelCard } from "@/components/novel/novel-card"
-import { api, type Novel } from "@/lib/api"
-import { Pagination } from "@/components/ui/pagination"
+import { useEffect, useState } from "react";
+import { Grid, List, Trophy, Star, Award, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/layout/header";
+import { NovelCard } from "@/components/novel/novel-card";
+import { api, type Novel } from "@/lib/api";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function TopRatedNovelsPage() {
-  const [novels, setNovels] = useState<Novel[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [novels, setNovels] = useState<Novel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
-    fetchTopRatedNovels()
-  }, [currentPage])
+    fetchTopRatedNovels();
+  }, [currentPage]);
 
   const fetchTopRatedNovels = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await api.getTopRatedNovels({
         page: currentPage,
         size: 20,
-      })
+      });
 
       if (response.success) {
-        setNovels(response.data.content)
-        setTotalPages(response.data.totalPages)
+        setNovels(response.data.content);
+        setTotalPages(response.data.totalPages);
       }
     } catch (error) {
-      console.error("Failed to fetch top rated novels:", error)
+      console.error("Failed to fetch top rated novels:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getTrophyBadge = (index: number) => {
-    if (index === 0) return <Badge className="bg-yellow-500 text-white">🏆 #1</Badge>
-    if (index === 1) return <Badge className="bg-gray-400 text-white">🥈 #2</Badge>
-    if (index === 2) return <Badge className="bg-amber-600 text-white">🥉 #3</Badge>
-    return null
-  }
+    if (index === 0)
+      return <Badge className="bg-yellow-500 text-white">🏆 #1</Badge>;
+    if (index === 1)
+      return <Badge className="bg-gray-400 text-white">🥈 #2</Badge>;
+    if (index === 2)
+      return <Badge className="bg-amber-600 text-white">🥉 #3</Badge>;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="flex flex-col space-y-6">
           {/* Header */}
@@ -59,7 +60,9 @@ export default function TopRatedNovelsPage() {
               <Trophy className="h-8 w-8 text-yellow-500" />
               <div>
                 <h1 className="text-3xl font-bold">Top Rated Novels</h1>
-                <p className="text-muted-foreground">The highest rated stories by our community</p>
+                <p className="text-muted-foreground">
+                  The highest rated stories by our community
+                </p>
               </div>
             </div>
 
@@ -90,7 +93,9 @@ export default function TopRatedNovelsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">156</div>
-                <p className="text-xs text-muted-foreground">perfect rated novels</p>
+                <p className="text-xs text-muted-foreground">
+                  perfect rated novels
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -100,22 +105,30 @@ export default function TopRatedNovelsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">2.1K</div>
-                <p className="text-xs text-muted-foreground">highly rated novels</p>
+                <p className="text-xs text-muted-foreground">
+                  highly rated novels
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Hall of Fame</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Hall of Fame
+                </CardTitle>
                 <Crown className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">25</div>
-                <p className="text-xs text-muted-foreground">legendary novels</p>
+                <p className="text-xs text-muted-foreground">
+                  legendary novels
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Highly Rated</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Highly Rated
+                </CardTitle>
                 <Trophy className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
@@ -161,7 +174,11 @@ export default function TopRatedNovelsPage() {
               {novels.map((novel, index) => (
                 <div key={novel.id} className="relative">
                   <NovelCard novel={novel} />
-                  {getTrophyBadge(index) && <div className="absolute top-2 left-2 z-10">{getTrophyBadge(index)}</div>}
+                  {getTrophyBadge(index) && (
+                    <div className="absolute top-2 left-2 z-10">
+                      {getTrophyBadge(index)}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -178,5 +195,5 @@ export default function TopRatedNovelsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

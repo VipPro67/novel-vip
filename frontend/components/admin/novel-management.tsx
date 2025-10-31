@@ -265,7 +265,7 @@ export function NovelManagement() {
                   <div className="flex items-center space-x-4">
                     <Avatar className="h-16 w-12 rounded-md">
                       <AvatarImage
-                        src={novel.coverImage?.fileUrl || "/placeholder.jpg"}
+                        src={novel.imageUrl || "/placeholder.jpg"}
                         alt={novel.title}
                         className="object-cover"
                       />
@@ -276,7 +276,7 @@ export function NovelManagement() {
                       <p className="text-sm text-muted-foreground">by {novel.author}</p>
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <span>{novel.totalChapters} chapters</span>
-                        <span>{novel.views.toLocaleString()} views</span>
+                        <span>{novel.totalViews?.toLocaleString()} views</span>
                         <span className="flex items-center">
                           <span className="text-yellow-500 mr-1">★</span>
                           {novel.rating.toFixed(1)}

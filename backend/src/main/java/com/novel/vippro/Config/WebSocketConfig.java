@@ -8,6 +8,9 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.sockjs.transport.handler.WebSocketTransportHandler;
+import org.springframework.web.socket.sockjs.transport.handler.XhrPollingTransportHandler;
+import org.springframework.web.socket.sockjs.transport.handler.XhrStreamingTransportHandler;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -34,7 +37,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .withSockJS(); // for browser fallback
+                .withSockJS()
+                .setSessionCookieNeeded(false)
+                .setWebSocketEnabled(true);
     }
 
     @Override

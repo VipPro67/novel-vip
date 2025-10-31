@@ -53,8 +53,7 @@ public class ReadingHistoryService {
     private ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer lastReadChapterIndex,
-            Integer readingTime) {
+    public ReadingHistoryDTO updateReadingProgress(UUID novelId, Integer lastReadChapterIndex) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
@@ -62,8 +61,8 @@ public class ReadingHistoryService {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
 
-                ReadingHistory history = readingHistoryRepository.findByUserIdAndNovelId(userId, novelId)
-                .orElse(new ReadingHistory());
+        ReadingHistory history = readingHistoryRepository.findByUserIdAndNovelId(userId, novelId)
+        .orElse(new ReadingHistory());
 
         history.setUser(user);
         history.setNovel(novel);
@@ -93,25 +92,6 @@ public class ReadingHistoryService {
                 .findByNovelIdOrderByLastReadAtDesc(novelId, pageable);
         return new PageResponse<>(
                 historyPage.map(mapper::ReadingHistorytoDTO));
-    }
-
-    @Transactional
-    public ReadingHistoryDTO addReadingHistory(UUID chapterId) {
-        UUID userId = UserDetailsImpl.getCurrentUserId();
-
-        Chapter chapter = chapterRepository.findById(chapterId)
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", chapterId));
-
-        Novel novel = chapter.getNovel();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-
-        ReadingHistory history = new ReadingHistory();
-        history.setUser(user);
-        history.setNovel(novel);
-        history.setUpdatedAt(Instant.now());
-        ReadingHistory savedHistory = readingHistoryRepository.save(history);
-        return mapper.ReadingHistorytoDTO(savedHistory);
     }
 
     @Transactional(readOnly = true)
@@ -214,21 +194,6 @@ public class ReadingHistoryService {
                 });
 
         return stats;
-    }
-
-    @Transactional
-    public ReadingHistoryDTO updateReadingProgress(UUID novelId, Integer lastReadChapterIndex) {
-        UUID userId = UserDetailsImpl.getCurrentUserId();
-        Novel novel = novelRepository.findById(novelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
-
-        ReadingHistory history = new ReadingHistory();
-        history.setUser(user);
-        history.setNovel(novel);
-        history.setLastReadChapterIndex(lastReadChapterIndex);
-        return mapper.ReadingHistorytoDTO(readingHistoryRepository.save(history));
     }
 
     @Transactional(readOnly = true)

@@ -71,6 +71,9 @@ export default function ChapterPage() {
   const { settings: readerSettings } = useReaderSettings()
   const [cachedReaderSettings, setCachedReaderSettings] = useState<ReaderSettings | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const wsConnectedRef = useRef(false)
+  const fetchingChapterRef = useRef(false)
+  const updatingProgressRef = useRef(false)
 
   useEffect(() => {
     if (readerSettings) {
@@ -246,6 +249,9 @@ export default function ChapterPage() {
   }, [slug, chapterNumber])
 
   const fetchChapter = async () => {
+    if (fetchingChapterRef.current) return
+    fetchingChapterRef.current = true
+
     setLoading(true)
     setContentLoading(true)
     setAudioUrl(null)
@@ -287,6 +293,7 @@ export default function ChapterPage() {
       setContentLoading(false)
     } finally {
       setLoading(false)
+      fetchingChapterRef.current = false
     }
   }
 
@@ -309,13 +316,15 @@ export default function ChapterPage() {
       setError(null)
       setErrorMessage("")
 
-      if (isAuthenticated && chapterData.id) {
+      if (isAuthenticated && chapterData.id && !updatingProgressRef.current) {
+        updatingProgressRef.current = true
         try {
-          await api.addReadingHistory(chapterData.id)
+          await api.updateReadingProgress(chapterData.novelId, chapterData.chapterNumber)
           console.log("[v0] Chapter added to reading history")
         } catch (error) {
-          // Silently fail - don't disrupt reading experience
           console.error("[v0] Failed to add to reading history:", error)
+        } finally {
+          updatingProgressRef.current = false
         }
       }
     } catch (error) {
@@ -374,12 +383,14 @@ export default function ChapterPage() {
   }, [chapter])
 
   useEffect(() => {
-    if (!chapter) return
+    if (!chapter || wsConnectedRef.current) return
+
     const client = new Client({
       brokerURL: process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081/ws",
     })
 
     client.onConnect = () => {
+      wsConnectedRef.current = true
       client.subscribe(`/topic/chapter.${chapter.id}`, (message) => {
         const incoming: Comment = JSON.parse(message.body)
         setComments((prev) => [incoming, ...prev])
@@ -387,11 +398,19 @@ export default function ChapterPage() {
       })
     }
 
-    client.activate()
-    return () => {
-      client.deactivate()
+    client.onDisconnect = () => {
+      wsConnectedRef.current = false
     }
-  }, [chapter])
+
+    client.activate()
+
+    return () => {
+      wsConnectedRef.current = false
+      if (client.active) {
+        client.deactivate()
+      }
+    }
+  }, [chapter?.id])
 
   const organizeComments = (comments: Comment[]): CommentWithReplies[] => {
     const commentMap = new Map<string, CommentWithReplies>()
@@ -1033,7 +1052,6 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header/>
       <div className="pt-16 pb-24">
         {/* Chapter Content */}
         <div className="container mx-auto px-4 py-8">
@@ -1041,25 +1059,6 @@ export default function ChapterPage() {
             <Card>
               <CardContent className="p-8" style={cardContentStyle}>
                 <div className="space-y-6">
-                  <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">{chapter.title}</h1>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Chapter {chapterNumber}</span>
-                      {chapterContent?.wordCount && (
-                        <>
-                          <span>•</span>
-                          <span>{chapterContent.wordCount.toLocaleString()} words</span>
-                        </>
-                      )}
-                      {chapterContent?.readingTime && (
-                        <>
-                          <span>•</span>
-                          <span>{chapterContent.readingTime} min read</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
                   {renderAudioSection()}
                   {contentLoading ? (
                     <div className="animate-pulse space-y-4">

@@ -14,5 +14,5 @@ public class NotificationDTO extends BaseDTO {
     private String message;
     private boolean read;
     private NotificationType type;
-    private String referenceId; 
+    private String reference; 
 }

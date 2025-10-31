@@ -31,11 +31,13 @@ export interface Novel {
   author: string
   imageUrl: string
   status: string
-  categories?: Category[]
-  genres?: Genre[]
-  tags?: Tag[]
+  categories: Category[] | []
+  genres: Genre[] | []
+  tags: Tag[] | []
   totalChapters: number
-  views: number
+  totalViews: number
+  monthlyViews: number
+  dailyViews: number
   rating: number
   updatedAt: string
 }
@@ -164,7 +166,7 @@ export interface Notification {
   message: string
   read: boolean
   type: "SYSTEM" | "BOOK_UPDATE" | "CHAPTER_UPDATE" | "COMMENT" | "LIKE" | "FOLLOW" | "MESSAGE"
-  referenceId?: string
+  reference?: string
   createdAt: string
 }
 
@@ -195,8 +197,7 @@ export enum ERole {
   USER,
   MODERATOR,
   ADMIN,
-  AUTHOR,
-}
+  AUTHOR}
 
 export interface RoleRequest {
   id: string
@@ -422,22 +423,58 @@ class ApiClient {
 
   async updateNovel(
     id: string,
-    data: {
-      title: string
-      slug: string
-      description: string
-      author: string
-      coverImage?: string
-      status: string
-      categories: string[]
-      genres?: string[]
-      tags?: string[]
-    },
+    data:
+      | {
+          title: string
+          slug: string
+          description: string
+          author: string
+          status: string
+          categories: string[]
+          genres?: string[]
+          tags?: string[]
+        }
+      | FormData,
   ) {
-    return this.request<Novel>(`/api/novels/${id}`, {
+    const isFormData = data instanceof FormData
+    const options: RequestInit = {
       method: "PUT",
-      body: JSON.stringify(data),
-    })
+    }
+
+    if (isFormData) {
+      options.body = data
+    } else {
+      options.body = JSON.stringify(data)
+    }
+
+    return this.request<Novel>(`/api/novels/${id}`, options)
+  }
+
+  async updateNovelCover(id: string, coverImage: File): Promise<ApiResponse<Novel>> {
+    const formData = new FormData()
+    formData.append("coverImage", coverImage)
+
+    const headers: HeadersInit = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/api/novels/${id}/cover`, {
+        method: "PUT",
+        headers,
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Cover update failed: ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error("Cover Update Error:", error)
+      throw error
+    }
   }
 
   async deleteNovel(id: string) {
@@ -526,6 +563,42 @@ class ApiClient {
     } = {},
   ) {
     const searchParams = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    return this.request<PageResponse<Novel>>(`/api/novels/top-rated?${searchParams}`)
+  }
+
+  async getHotNovelsByPeriod(
+    period: "day" | "week" | "month" | "all" = "week",
+    params: {
+      page?: number
+      size?: number
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    searchParams.append("period", period)
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, value.toString())
+      }
+    })
+
+    return this.request<PageResponse<Novel>>(`/api/novels/hot?${searchParams}`)
+  }
+
+  async getTopRatedNovelsByPeriod(
+    period: "day" | "month" | "year" | "all" = "all",
+    params: {
+      page?: number
+      size?: number
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    searchParams.append("period", period)
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
         searchParams.append(key, value.toString())
@@ -639,22 +712,10 @@ class ApiClient {
     return this.request<ChapterDetail>(`/api/chapters/${chapterId}/audio`)
   }
 
-  // Reading History endpoints
-  async addReadingHistory(chapterId: string) {
-    return this.request<ReadingHistory>(`/api/reading-history/chapter/${chapterId}`, {
+  async updateReadingProgress(novelId: string, lastReadChapterIndex: number) {
+    return this.request<ReadingHistory>(`/api/reading-history/novel/${novelId}?lastReadChapterIndex=${lastReadChapterIndex}`, {
       method: "POST",
     })
-  }
-
-  async updateReadingProgress(novelId: string, chapterId: string, progress: number, readingTime = 0) {
-    const params = new URLSearchParams({
-      progress: progress.toString(),
-      readingTime: readingTime.toString(),
-    })
-    return this.request<ReadingHistory>(
-      `/api/reading-history/novel/${novelId}/chapter/${chapterId}/progress?${params}`,
-      { method: "POST" },
-    )
   }
 
   async getReadingHistory(

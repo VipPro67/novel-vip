@@ -173,7 +173,6 @@ export default function EditChapterPage({ params }: { params: { id: string } }) 
     return (
       <AuthGuard requireAdmin>
         <div className="min-h-screen bg-background">
-          <Header />
           <main className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -188,7 +187,6 @@ export default function EditChapterPage({ params }: { params: { id: string } }) 
     return (
       <AuthGuard requireAdmin>
         <div className="min-h-screen bg-background">
-          <Header />
           <main className="container mx-auto px-4 py-8">
             <div className="text-center">
               <h1 className="text-2xl font-bold">Chapter not found</h1>
@@ -205,8 +203,6 @@ export default function EditChapterPage({ params }: { params: { id: string } }) 
   return (
     <AuthGuard requireAdmin>
       <div className="min-h-screen bg-background">
-        <Header />
-
         <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             {/* Header */}

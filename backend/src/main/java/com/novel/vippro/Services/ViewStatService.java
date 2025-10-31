@@ -8,6 +8,7 @@ import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Repository.ViewStatRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.ViewStat;
 
@@ -32,11 +33,12 @@ public class ViewStatService {
     @Autowired
     private ChapterRepository chapterRepository;
 
-    public void recordView(UUID novelId, UUID chapterId, UUID userId) {
-        // Check if user has viewed in last hour to prevent spam
-        // About 1 minute for each view
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        Long recentViews = viewStatRepository.countRecentViewsByUserAndNovel(novelId, userId, oneHourAgo);
+    @Transactional
+    public void recordView(UUID novelId, UUID chapterId) {
+       
+        UUID userId = UserDetailsImpl.getCurrentUserId();
+        LocalDateTime thereMinutesAgo = LocalDateTime.now().minusMinutes(3);
+        Long recentViews = viewStatRepository.countRecentViewsByUserAndNovel(novelId, userId, thereMinutesAgo);
         
         if (recentViews == 0) {
             ViewStat stat = new ViewStat();
@@ -49,9 +51,11 @@ public class ViewStatService {
             
             viewStatRepository.save(stat);
             updateNovelViewCounts(novelId);
+            System.out.println("View recorded for novel " + novelId + " by user " + userId);
         }
     }
 
+    @Transactional
     private void updateNovelViewCounts(UUID novelId) {
         Novel novel = novelRepository.findById(novelId).orElseThrow();
         
@@ -78,6 +82,7 @@ public class ViewStatService {
         novelRepository.save(novel);
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Long> getNovelViewStats(UUID novelId) {
         Novel novel = novelRepository.findById(novelId).orElseThrow();
         

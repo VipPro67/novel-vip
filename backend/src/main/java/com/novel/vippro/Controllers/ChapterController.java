@@ -77,13 +77,7 @@ public class ChapterController {
             @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetailsImpl) {
-            UUID userId = ((UserDetailsImpl) auth.getPrincipal()).getId();
-            viewStatService.recordView(novelId, chapter.getId(), userId);
-        }
-
+        viewStatService.recordView(novelId, chapter.getId());
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
     }
 
@@ -98,8 +92,8 @@ public class ChapterController {
             @Parameter(description = "Novel slug", required = true) @PathVariable String slug,
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumber2DTO(slug, chapterNumber);
+        viewStatService.recordView(chapter.getNovelId(), chapter.getId());
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
-
     }
 
     @Operation(summary = "Get chapter by ID", description = "Get detailed information about a specific chapter")
