@@ -76,10 +76,10 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
             @Param("tag") String tag,
             Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.views > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.views DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.totalViews DESC")
     Page<Novel> findAllByOrderByViewsDesc(Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.views > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.views DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.totalViews DESC")
     Page<Novel> findAllByOrderByRatingDesc(Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.author LIKE %:author% AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
@@ -109,7 +109,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.rating >= :minRating AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.rating DESC")
     Page<Novel> findByMinimumRating(int minRating, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.views >= :minViews AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.views DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews >= :minViews AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.totalViews DESC")
     Page<Novel> findPopularNovels(int minViews, Pageable pageable);
 
     // @Query("SELECT n FROM Novel n WHERE n.createdAt >= CURRENT_DATE - 7 ORDER BY

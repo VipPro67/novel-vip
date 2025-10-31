@@ -16,6 +16,9 @@ import java.util.UUID;
 
 @Repository
 public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, UUID> {
+
+        @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId AND h.novel.id = :novelId")
+        Optional<ReadingHistory> findByUserIdAndNovelId(@Param("userId") UUID userId, @Param("novelId") UUID novelId);
         
         @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByUserIdOrderByLastReadAtDesc(UUID userId, Pageable pageable);
@@ -25,9 +28,6 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
 
         @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId AND h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
         Optional<ReadingHistory> findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(@Param("userId") UUID userId, @Param("novelId") UUID novelId);
-
-        @Query("SELECT COUNT(DISTINCT h.chapter.id) FROM ReadingHistory h WHERE h.user.id = :userId")
-        long countTotalChaptersRead(@Param("userId") UUID userId);
 
         @Query("SELECT COUNT(DISTINCT h.novel.id) FROM ReadingHistory h WHERE h.user.id = :userId")
         long countTotalNovelsRead(@Param("userId") UUID userId);
@@ -42,13 +42,6 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
                         "JOIN h.novel n WHERE h.user.id = :userId " +
                         "GROUP BY n.author ORDER BY count DESC")
         List<Object[]> findFavoriteAuthor(@Param("userId") UUID userId);
-
-        @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId AND h.novel.id = :novelId " +
-                        "AND h.chapter.id = :chapterId")
-        Optional<ReadingHistory> findByUserIdAndNovelIdAndChapterId(
-                        @Param("userId") UUID userId,
-                        @Param("novelId") UUID novelId,
-                        @Param("chapterId") UUID chapterId);
 
         void deleteByUserId(UUID userId);
 }

@@ -9,6 +9,8 @@ import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.hibernate.annotations.BatchSize;
@@ -69,9 +71,6 @@ public class Novel extends BaseEntity {
 	private Integer totalChapters;
 
 	@Column(nullable = false)
-	private Integer views;
-
-	@Column(nullable = false)
 	private Integer rating;
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -81,4 +80,16 @@ public class Novel extends BaseEntity {
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-comments")
 	private List<Comment> comments;
+
+	@Column(name = "total_views", nullable = true)
+	private Long totalViews = 0L;
+
+	@Column(name = "monthly_views", nullable = true)
+	private Long monthlyViews = 0L;
+
+	@Column(name = "daily_views", nullable = true)
+	private Long dailyViews = 0L;
+
+	@Column(name = "last_view_reset")
+	private LocalDateTime lastViewReset;
 }

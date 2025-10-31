@@ -226,8 +226,6 @@ public class NovelService {
         
         novel.setStatus(novelDTO.getStatus());
 
-        // Set default values
-        novel.setViews(0);
         novel.setRating(0);
         novel.setTotalChapters(0);
         novel.setComments(null);
@@ -345,7 +343,6 @@ public class NovelService {
         novel.setAuthor(epubResult.getAuthor() == null || epubResult.getAuthor().isBlank() ? "Unknown" : epubResult.getAuthor());
         novel.setTitleNormalized(novel.getTitle().toLowerCase());
         novel.setStatus(status == null ? "ongoing" : status);
-        novel.setViews(0);
         novel.setRating(0);
         novel.setTotalChapters(0);
         novel.setComments(null);
@@ -476,16 +473,6 @@ public class NovelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
         novelRepository.delete(novel);
         searchService.deleteNovel(id);
-    }
-
-    @Transactional
-    public NovelDTO incrementViews(UUID id) {
-        Novel novel = novelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
-
-        novel.setViews(novel.getViews() + 1);
-        Novel updatedNovel = novelRepository.save(novel);
-        return mapper.NoveltoDTO(updatedNovel);
     }
 
     @Transactional

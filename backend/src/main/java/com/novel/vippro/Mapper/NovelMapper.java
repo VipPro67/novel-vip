@@ -53,7 +53,6 @@ public class NovelMapper {
                 .stream().map(Genre::getName).collect(Collectors.toList()));
         doc.setPublic(novel.isPublic());
         doc.setTotalChapters(novel.getTotalChapters());
-        doc.setViews(novel.getViews());
         doc.setRating(novel.getRating());
         FileMetadataDTO coverImage = new FileMetadataDTO();
         if (novel.getCoverImage() != null) {
@@ -81,7 +80,6 @@ public class NovelMapper {
         n.setStatus(doc.getStatus());
         n.setPublic(doc.isPublic());
         n.setTotalChapters(doc.getTotalChapters());
-        n.setViews(doc.getViews());
         n.setRating(doc.getRating());
 
         // Timestamps: Instant -> Instant (UTC)

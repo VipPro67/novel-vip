@@ -53,7 +53,7 @@ public class ReadingHistoryService {
     private ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer progress,
+    public ReadingHistoryDTO updateReadingProgress(UUID novelId, UUID chapterId, Integer lastReadChapterIndex,
             Integer readingTime) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(userId)
@@ -62,13 +62,12 @@ public class ReadingHistoryService {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
 
-                ReadingHistory history = readingHistoryRepository
-                .findByUserIdAndNovelIdAndChapterId(userId, novelId, chapterId)
+                ReadingHistory history = readingHistoryRepository.findByUserIdAndNovelId(userId, novelId)
                 .orElse(new ReadingHistory());
 
         history.setUser(user);
         history.setNovel(novel);
-
+        history.setLastReadChapterIndex(lastReadChapterIndex);
         history.setUpdatedAt(Instant.now());
         ReadingHistory savedHistory = readingHistoryRepository.save(history);
         ReadingHistoryDTO dto = mapper.ReadingHistorytoDTO(savedHistory);
@@ -143,7 +142,6 @@ public class ReadingHistoryService {
         ReadingStatsDTO stats = new ReadingStatsDTO();
 
         // Get total chapters and novels read
-        stats.setTotalChaptersRead(readingHistoryRepository.countTotalChaptersRead(userId));
         stats.setTotalNovelsRead(readingHistoryRepository.countTotalNovelsRead(userId));
 
         // Calculate reading time and average
@@ -191,7 +189,6 @@ public class ReadingHistoryService {
         ReadingStatsDTO stats = new ReadingStatsDTO();
 
         // Calculate basic stats
-        stats.setTotalChaptersRead((int) readingHistoryRepository.countTotalChaptersRead(userId));
         stats.setTotalNovelsRead((int) readingHistoryRepository.countTotalNovelsRead(userId));
 
         // Get most read genre

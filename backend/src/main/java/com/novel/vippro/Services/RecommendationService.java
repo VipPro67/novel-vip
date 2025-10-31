@@ -132,7 +132,7 @@ public class RecommendationService {
 
         private double calculatePopularityScore(Novel novel) {
                 // Consider factors like view count, rating count, and average rating
-                long viewCount = novel.getViews();
+                long viewCount = novel.getTotalViews();
                 long ratingCount = ratingRepository.countByNovelId(novel.getId());
                 double avgRating = ratingRepository.getAverageRatingByNovelId(novel.getId());
 

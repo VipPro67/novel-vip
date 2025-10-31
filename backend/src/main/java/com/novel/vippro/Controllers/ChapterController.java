@@ -10,6 +10,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.AdvancedChapterUploadService;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ChapterService;
+import com.novel.vippro.Services.ViewStatService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +30,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -42,6 +45,9 @@ public class ChapterController {
 
     @Autowired
     private AdvancedChapterUploadService advancedChapterUploadService;
+
+    @Autowired
+    private ViewStatService viewStatService;
 
     @Operation(summary = "Get chapters by novel", description = "Get all chapters for a specific novel with pagination")
     @ApiResponses(value = {
@@ -71,6 +77,13 @@ public class ChapterController {
             @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetailsImpl) {
+            UUID userId = ((UserDetailsImpl) auth.getPrincipal()).getId();
+            viewStatService.recordView(novelId, chapter.getId(), userId);
+        }
+
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
     }
 

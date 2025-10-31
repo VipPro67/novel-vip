@@ -13,11 +13,13 @@ import com.novel.vippro.Services.CommentService;
 import com.novel.vippro.Services.EpubImportService;
 import com.novel.vippro.Services.NovelService;
 import com.novel.vippro.Services.SuggestService;
+import com.novel.vippro.Services.ViewStatService;
 import com.novel.vippro.DTO.Novel.SearchSuggestion;
 
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -59,6 +61,9 @@ public class NovelController {
 
     @Autowired
     private EpubImportService epubImportService;
+
+    @Autowired
+    private ViewStatService viewStatService;
 
     private static final Logger logger = LoggerFactory.getLogger(NovelController.class);
 
@@ -342,14 +347,6 @@ public class NovelController {
         return ControllerResponse.success("Novel deleted successfully", null);
     }
 
-    @Operation(summary = "Increment novel views", description = "Increment the view count of a novel")
-    @PutMapping("/{id}/increment-views")
-    public ControllerResponse<NovelDTO> incrementViews(
-            @Parameter(description = "Novel ID") @PathVariable UUID id) {
-        NovelDTO updatedNovel = novelService.incrementViews(id);
-        return ControllerResponse.success("Novel views incremented successfully", updatedNovel);
-    }
-
     @Operation(summary = "Update novel rating", description = "Update the rating of a novel")
     @PutMapping("/{id}/rating")
     @PreAuthorize("isAuthenticated()")
@@ -380,5 +377,12 @@ public class NovelController {
             return List.of();
         limit = Math.min(Math.max(1, limit), 20);
         return suggestService.suggest(q.trim(), limit);
+    }
+
+    @GetMapping("/{id}/views")
+    public ControllerResponse<Map<String, Long>> getNovelViewStats(
+            @PathVariable UUID id) {
+        Map<String, Long> stats = viewStatService.getNovelViewStats(id);
+        return ControllerResponse.success("View statistics retrieved successfully", stats);
     }
 }
