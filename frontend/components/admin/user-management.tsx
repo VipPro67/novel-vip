@@ -77,9 +77,6 @@ export function UserManagement() {
         ...paginationParams,
         search: searchQuery.trim() || undefined,
       })
-
-      console.log("Users API response:", response)
-
       if (response.success) {
         setUsers(response.data.content)
         updateTotalPages(response.data.totalPages)

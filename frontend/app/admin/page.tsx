@@ -12,11 +12,6 @@ import { Button } from "@/components/ui/button"
 
 export default function AdminDashboard() {
   const { user, hasRole } = useAuth()
-
-  console.log("Admin page - User:", user)
-  console.log("Admin page - Has ADMIN role:", hasRole("ADMIN"))
-  console.log("Admin page - User roles:", user?.roles)
-
   return (
   <AuthGuard requireRole="ADMIN">
       <AdminDashboardContent />

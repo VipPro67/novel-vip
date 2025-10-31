@@ -289,9 +289,6 @@ class ApiClient {
         ...options,
         headers,
       })
-
-      console.log(`API Response: ${response.status} ${response.statusText}`)
-
       if (!response.ok) {
         // Handle different error status codes
         if (response.status === 401) {

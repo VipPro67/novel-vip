@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import type { CSSProperties } from "react"
 import { Client } from "@stomp/stompjs"
+import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import {
   ChevronLeft,
@@ -320,7 +321,6 @@ export default function ChapterPage() {
         updatingProgressRef.current = true
         try {
           await api.updateReadingProgress(chapterData.novelId, chapterData.chapterNumber)
-          console.log("[v0] Chapter added to reading history")
         } catch (error) {
           console.error("[v0] Failed to add to reading history:", error)
         } finally {
@@ -909,11 +909,7 @@ export default function ChapterPage() {
 
     if (audioUrl) {
       return (
-        <div className="space-y-3 rounded-lg border border-muted p-4">
-          <div className="flex items-center space-x-2">
-            <Volume2 className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Listen to this chapter</h2>
-          </div>
+        <div className="rounded-lg border border-muted p-2">
           <audio
             ref={(element) => {
               audioRef.current = element
@@ -936,9 +932,6 @@ export default function ChapterPage() {
             <source src={audioUrl} type="audio/mpeg" />
             Your browser does not support the audio element.
           </audio>
-          <p className="text-xs text-muted-foreground">
-            Press play to listen while you read. Audio is generated automatically from the chapter content.
-          </p>
         </div>
       )
     }
@@ -1056,6 +1049,25 @@ export default function ChapterPage() {
         {/* Chapter Content */}
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
+            {/* Breadcrumb: Novels > slug > Chapter number */}
+            <div className="mb-4 text-sm text-muted-foreground">
+              <nav aria-label="Breadcrumb" className="flex items-center space-x-2">
+                <Link href="/novels" className="text-sm text-primary hover:underline">
+                  Novels
+                </Link>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                {slug ? (
+                  <Link href={`/novels/${slug}`} className="text-sm hover:underline">
+                    {slug}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground">{slug ?? "..."}</span>
+                )}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Chapter {chapterNumber}</span>
+              </nav>
+            </div>
+
             <Card>
               <CardContent className="p-8" style={cardContentStyle}>
                 <div className="space-y-6">

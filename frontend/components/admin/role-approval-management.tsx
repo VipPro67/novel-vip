@@ -46,9 +46,6 @@ export function RoleApprovalManagement() {
     try {
       const paginationParams = getPaginationParams()
       const response = await api.getPendingRoleRequests(paginationParams)
-
-      console.log("Pending role requests response:", response)
-
       if (response.success) {
         setRequests(response.data.content)
         updateTotalPages(response.data.totalPages)
