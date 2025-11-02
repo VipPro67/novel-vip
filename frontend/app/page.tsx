@@ -26,6 +26,13 @@ export default function HomePage() {
 
   const fetchHomeData = async () => {
     try {
+      if (
+        hotNovels.length &&
+        topRatedNovels.length &&
+        latestNovels.length &&
+        (isAuthenticated ? recentlyRead.length : true)
+      )
+        return
       const [hotResponse, topRatedResponse, latestResponse] = await Promise.all([
         api.getHotNovels({ size: 6 }),
         api.getTopRatedNovels({ size: 6 }),
@@ -66,7 +73,7 @@ export default function HomePage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 px-4 text-center bg-gradient-to-b from-primary/10 to-background">
+        <section className="relative py-20 px-4 text-center bg-gradient-to-b from-primary/10 to-background hidden lg:block">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">Discover Amazing Stories</h1>
@@ -105,7 +112,7 @@ export default function HomePage() {
                   </Link>
                 </Button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {recentlyRead.map((novel) => (
                   <NovelCard key={novel.id} novel={novel} />
                 ))}
@@ -128,7 +135,7 @@ export default function HomePage() {
               </Button>
             </div>
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-4">
@@ -142,7 +149,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {hotNovels.map((novel) => (
                   <NovelCard key={novel.id} novel={novel} />
                 ))}
@@ -165,7 +172,7 @@ export default function HomePage() {
               </Button>
             </div>
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-4">
@@ -179,7 +186,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {topRatedNovels.map((novel) => (
                   <NovelCard key={novel.id} novel={novel} />
                 ))}
@@ -202,7 +209,7 @@ export default function HomePage() {
               </Button>
             </div>
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-4">
@@ -216,7 +223,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {latestNovels.map((novel) => (
                   <NovelCard key={novel.id} novel={novel} />
                 ))}
@@ -225,7 +232,7 @@ export default function HomePage() {
           </section>
 
           {/* Call to Action Section */}
-          <section className="text-center py-16">
+          <section className="text-center py-16 hidden lg:block">
             <div className="max-w-2xl mx-auto">
               <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
               <p className="text-xl text-muted-foreground mb-8">
@@ -236,7 +243,7 @@ export default function HomePage() {
                   Sign Up Free
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="/novels">Browse Novels</Link>
+                  <Link href="/search">Browse Novels</Link>
                 </Button>
               </div>
             </div>

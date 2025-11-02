@@ -19,7 +19,6 @@ public class NovelCreateDTO {
     @Size(min = 1, max = 255, message = "Slug must be between 1 and 255 characters")
     private String slug;
 
-    @NotBlank(message = "Description is required")
     private String description;
 
     @NotBlank(message = "Author is required")
@@ -31,7 +30,6 @@ public class NovelCreateDTO {
     @NotBlank(message = "Status is required")
     private String status;
 
-    @NotNull(message = "Categories list cannot be null")
     private List<String> categories;
 
     private List<String> genres;

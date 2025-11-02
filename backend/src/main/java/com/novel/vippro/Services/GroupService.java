@@ -20,10 +20,10 @@ import com.novel.vippro.Models.GroupMember;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.GroupMemberRepository;
 import com.novel.vippro.Repository.GroupRepository;
+import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.GroupService;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GroupService {
@@ -32,7 +32,7 @@ public class GroupService {
     private GroupRepository groupRepository;
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Autowired
     private GroupMemberRepository groupMemberRepository;
@@ -62,7 +62,8 @@ public class GroupService {
         group = groupRepository.save(group);
         groupRepository.flush();
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
-        User user = userService.getUserById(currentUserId);
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         GroupMember groupMember = new GroupMember();
         groupMember.setGroup(group);
         groupMember.setUser(user);
@@ -86,4 +87,16 @@ public class GroupService {
     public void deleteGroup(UUID id) {
         groupRepository.deleteById(id);
     }
+
+    @Transactional(readOnly = true)
+    public List<GroupDTO> getMyGroups() {
+        UUID currentUserId = UserDetailsImpl.getCurrentUserId();
+        List<GroupMember> groupMembers = groupMemberRepository.findByUserId(currentUserId);
+        List<GroupDTO> groupDTOs = groupMembers.stream()
+                .map(GroupMember::getGroup)
+                .map(mapper::GroupToDTO)
+                .collect(Collectors.toList());
+        return groupDTOs;
+    }
+
 }

@@ -1033,11 +1033,28 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header/>
-      <div className="pt-16 pb-24">
         {/* Chapter Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Breadcrumb: Novels > slug > Chapter number */}
+            <div className="mb-4 text-sm text-muted-foreground">
+              <nav aria-label="Breadcrumb" className="flex items-center space-x-2">
+                <Link href="/novels" className="text-sm text-primary hover:underline">
+                  Novels
+                </Link>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                {slug ? (
+                  <Link href={`/novels/${slug}`} className="text-sm hover:underline">
+                    {slug}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground">{slug ?? "..."}</span>
+                )}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Chapter {chapterNumber}</span>
+              </nav>
+            </div>
+
             <Card>
               <CardContent className="p-8" style={cardContentStyle}>
                 <div className="space-y-6">
@@ -1195,7 +1212,6 @@ export default function ChapterPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Custom CSS for chapter content */}
       <style jsx>{`

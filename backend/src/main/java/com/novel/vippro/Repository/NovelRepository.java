@@ -19,7 +19,7 @@ import java.util.UUID;
 @Repository
 public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
-    @Query("SELECT n.id FROM Novel n where (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n.id FROM Novel n")
     Page<UUID> findAllIds(Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.id IN :ids")
@@ -33,22 +33,22 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @EntityGraph(attributePaths = {"categories", "tags", "genres", "owner","coverImage"})
     Novel findBySlugWithGraph(@Param("slug") String slug);
 
-    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.name = :category")
     Page<Novel> findByCategoriesContaining(String category, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n JOIN n.genres c WHERE c.id = :genreId AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n JOIN n.genres c WHERE c.id = :genreId")
     Page<Novel> findByGenresId(@Param("genreId") UUID genreId, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n JOIN n.tags c WHERE c.id = :tagId AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n JOIN n.tags c WHERE c.id = :tagId")
     Page<Novel> findByTagsId(@Param("tagId") UUID tagId, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.id = :categoryId AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE c.id = :categoryId")
     Page<Novel> findByCategoriesId(@Param("categoryId") UUID categoryId, Pageable pageable);
     
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword% AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("""
@@ -65,7 +65,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
               AND (:category IS NULL OR CAST(c.name AS string) ILIKE CONCAT('%', CAST(:category AS string), '%'))
               AND (:tag IS NULL OR CAST(t.name AS string) ILIKE CONCAT('%', CAST(:tag AS string), '%'))
               AND (:genre IS NULL OR CAST(g.name AS string) ILIKE CONCAT('%', CAST(:genre AS string), '%'))
-              AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')
+        
             """)
     Page<Novel> searchByCriteria(
             @Param("keyword") String keyword,
@@ -76,20 +76,20 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
             @Param("tag") String tag,
             Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.totalViews DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 ORDER BY n.totalViews DESC")
     Page<Novel> findAllByOrderByViewsDesc(Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 AND (n.status = 'COMPLETED' OR n.status = 'ONGOING') ORDER BY n.totalViews DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews > 0 ORDER BY n.totalViews DESC")
     Page<Novel> findAllByOrderByRatingDesc(Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.author LIKE %:author% AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n WHERE n.author LIKE %:author%")
     Page<Novel> findByAuthorContaining(String author, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.title LIKE %:title% AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')")
+    @Query("SELECT n FROM Novel n WHERE n.title LIKE %:title%")
     Page<Novel> findByTitleContaining(String title, Pageable pageable);
 
     // For recommendations
-    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE n.id NOT IN :excludeIds AND c.name = :categoryName AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.rating DESC")
+    @Query("SELECT n FROM Novel n JOIN n.categories c WHERE n.id NOT IN :excludeIds AND c.name = :categoryName  ORDER BY n.rating DESC")
     List<Novel> findByCategoryNameAndIdNotIn(String categoryName, Set<UUID> excludeIds, Pageable pageable);
 
     List<Novel> findByAuthorAndIdNotIn(String author, Set<UUID> excludeIds, Pageable pageable);
@@ -106,10 +106,10 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     List<Novel> findByGenresInAndTagsIn(ArrayList<String> genres, ArrayList<String> tags);
 
-    @Query("SELECT n FROM Novel n WHERE n.rating >= :minRating AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.rating DESC")
+    @Query("SELECT n FROM Novel n WHERE n.rating >= :minRating  ORDER BY n.rating DESC")
     Page<Novel> findByMinimumRating(int minRating, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.totalViews >= :minViews AND (n.status = 'COMPLETED' OR n.status = 'ONGOING')  ORDER BY n.totalViews DESC")
+    @Query("SELECT n FROM Novel n WHERE n.totalViews >= :minViews  ORDER BY n.totalViews DESC")
     Page<Novel> findPopularNovels(int minViews, Pageable pageable);
 
     // @Query("SELECT n FROM Novel n WHERE n.createdAt >= CURRENT_DATE - 7 ORDER BY
@@ -117,13 +117,13 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     // Page<Novel> findRecentlyAddedNovels(Pageable pageable);
 
     // Added methods for RecommendationService
-    @Query("SELECT n FROM Novel n WHERE n.status = 'COMPLETED' OR n.status = 'ONGOING' ORDER BY n.rating DESC")
+    @Query("SELECT n FROM Novel n ORDER BY n.rating DESC")
     Page<Novel> findAllByOrderByAverageRatingDesc(Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.status = 'COMPLETED' OR n.status = 'ONGOING' ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Novel n ORDER BY n.createdAt DESC")
     Page<Novel> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.status = 'COMPLETED' OR n.status = 'ONGOING' ORDER BY n.updatedAt DESC")
+    @Query("SELECT n FROM Novel n ORDER BY n.updatedAt DESC")
     Page<Novel> findAllByOrderByUpdatedAtDesc(Pageable pageable);
 
     @Query("SELECT n FROM Novel n WHERE n.slug = :slug")

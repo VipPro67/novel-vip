@@ -7,7 +7,7 @@ import { api, ApiResponse, type User } from "@/lib/api"
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<AuthResponse>
-  register: (username: string, email: string, password: string) => Promise<boolean>
+  register: (username: string, email: string, password: string) => Promise<ApiResponse<string>>
   logout: () => void
   loading: boolean
   isAuthenticated: boolean
@@ -125,8 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.data.accessToken) {
         // Token is already set in api.login(), but let's decode it
         const decodedToken = decodeJWT(response.data.accessToken)
-        console.log("Login - decoded token:", decodedToken)
-
         if (decodedToken) {
           const userData: User = {
             id: decodedToken.userId || response.data.id,
@@ -139,6 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return response
         }
       }
+      console.log(response.message)
       return response
     } catch (error) {
       console.error("Login failed:", error)
@@ -149,14 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const register = async (username: string, email: string, password: string): Promise<boolean> => {
-    try {
-      const response = await api.register(username, email, password)
-      return response.success
-    } catch (error) {
-      console.error("Registration failed:", error)
-      return false
-    }
+  const register = async (username: string, email: string, password: string): Promise<ApiResponse<string>> => {
+    const response = await api.register(username, email, password)
+    return response
   }
 
   const logout = () => {
@@ -169,9 +163,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const hasRole = (role: string): boolean => {
-    const result = user?.roles.includes(role) || false
-    console.log(`hasRole(${role}):`, result, "User roles:", user?.roles)
-    return result
+    if (!user) {
+      return false
+    }
+    for (const r of user.roles) {
+      if (r === role) {
+        return true
+      }
+    }
+    return false
   }
 
   const value: AuthContextType = {

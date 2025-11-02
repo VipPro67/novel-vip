@@ -20,7 +20,7 @@ export interface User {
   username: string
   email: string
   fullName?: string
-  roles: { id: string; name: string }[]
+  roles: string []
 }
 
 export interface Novel {
@@ -192,10 +192,10 @@ export interface ReaderSettings {
 }
 
 export enum ERole {
-  USER,
-  MODERATOR,
-  ADMIN,
-  AUTHOR,
+  USER = 0,
+  MODERATOR = 1,
+  ADMIN = 2,
+  AUTHOR = 3,
 }
 
 export interface RoleRequest {
@@ -292,13 +292,10 @@ class ApiClient {
       console.log(`API Response: ${response.status} ${response.statusText}`)
 
       if (!response.ok) {
-        // Handle different error status codes
         if (response.status === 401) {
-          // Unauthorized - token might be expired
           this.clearToken()
           throw new Error("Authentication failed. Please login again.")
         } else if (response.status === 403) {
-          // Forbidden - insufficient permissions
           throw new Error("Access denied. Insufficient permissions.")
         } else if (response.status === 404) {
           throw new Error("Resource not found.")
@@ -338,7 +335,7 @@ class ApiClient {
     return response
   }
 
-  async register(username: string, email: string, password: string) {
+  async register(username: string, email: string, password: string) : Promise<ApiResponse<string>> {
     return this.request("/api/auth/signup", {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
@@ -639,11 +636,13 @@ class ApiClient {
     return this.request<ChapterDetail>(`/api/chapters/${chapterId}/audio`)
   }
 
-  // Reading History endpoints
-  async addReadingHistory(chapterId: string) {
-    return this.request<ReadingHistory>(`/api/reading-history/chapter/${chapterId}`, {
-      method: "POST",
-    })
+  async updateReadingProgress(novelId: string, lastReadChapterIndex: number) {
+    return this.request<ReadingHistory>(
+      `/api/reading-history/novel/${novelId}?lastReadChapterIndex=${lastReadChapterIndex}`,
+      {
+        method: "POST",
+      },
+    )
   }
 
   async updateReadingProgress(novelId: string, chapterId: string, progress: number, readingTime = 0) {
@@ -1205,6 +1204,324 @@ class ApiClient {
 
   async deleteReview(reviewId: string) {
     return this.request<void>(`/api/reviews/${reviewId}`, {
+      method: "DELETE",
+    })
+  }
+
+  // File Management endpoints
+  async getAllFiles(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "uploadedAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<FileMetadata>>(`/api/files?${searchParams}`)
+  }
+
+  async deleteFile(fileId: string) {
+    return this.request<void>(`/api/files/${fileId}`, {
+      method: "DELETE",
+    })
+  }
+
+  // Notification endpoints for admin
+  async getAllNotifications(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<Notification>>(`/api/notifications?${searchParams}`)
+  }
+
+  async createSystemNotification(data: {
+    title: string
+    message: string
+    type: string
+  }) {
+    return this.request<Notification>("/api/notifications", {
+      method: "POST",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateNotification(
+    notificationId: string,
+    data: {
+      title: string
+      message: string
+    },
+  ) {
+    return this.request<Notification>(`/api/notifications/${notificationId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteNotification(notificationId: string) {
+    return this.request<void>(`/api/notifications/${notificationId}`, {
+      method: "DELETE",
+    })
+  }
+
+  // Comments Management endpoints
+  async getAllComments(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<Comment>>(`/api/comments/admin?${searchParams}`)
+  }
+
+  async approveComment(commentId: string) {
+    return this.request<Comment>(`/api/comments/${commentId}/approve`, {
+      method: "POST",
+    })
+  }
+
+  async rejectComment(commentId: string) {
+    return this.request<Comment>(`/api/comments/${commentId}/reject`, {
+      method: "POST",
+    })
+  }
+
+  // Reviews Management endpoints
+  async getAllReviews(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<Review>>(`/api/reviews?${searchParams}`)
+  }
+
+  async flagReview(reviewId: string, reason: string) {
+    return this.request<Review>(`/api/reviews/${reviewId}/flag`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    })
+  }
+
+  // Reports Management endpoints
+  async getAllReports(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+      status?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    if (params.status) {
+      searchParams.append("status", params.status)
+    }
+
+    return this.request<PageResponse<Report>>(`/api/reports/admin?${searchParams}`)
+  }
+
+  async updateReportStatus(reportId: string, status: string) {
+    return this.request<Report>(`/api/reports/${reportId}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    })
+  }
+
+  async resolveReport(reportId: string, action: string) {
+    return this.request<Report>(`/api/reports/${reportId}/resolve`, {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    })
+  }
+
+  // Messages Management endpoints
+  async getAllMessages(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<any>>(`/api/messages/admin?${searchParams}`)
+  }
+
+  async deleteMessage(messageId: string) {
+    return this.request<void>(`/api/messages/${messageId}`, {
+      method: "DELETE",
+    })
+  }
+
+  async getMessagesByGroup(
+    groupId: string,
+    params: {
+      page?: number
+      size?: number
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+
+    return this.request<PageResponse<any>>(`/api/messages/group/${groupId}?${searchParams}`)
+  }
+
+  // Groups Management endpoints
+  async getAllGroups(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    return this.request<PageResponse<any>>(`/api/groups/me`)
+  }
+
+  async deleteGroup(groupId: string) {
+    return this.request<void>(`/api/groups/${groupId}`, {
+      method: "DELETE",
+    })
+  }
+
+  async getGroupMembers(groupId: string) {
+    return this.request<any[]>(`/api/groups/${groupId}/members`)
+  }
+
+  // Message and group API methods
+  async sendMessage(groupId: string, content: string) {
+    return this.request<any>("/api/messages", {
+      method: "POST",
+      body: JSON.stringify({ groupId, content }),
+    })
+  }
+
+  async getUserGroups() {
+    return this.request<any[]>("/api/groups/my-groups")
+  }
+
+  async createGroup(name: string, description?: string, isPrivate = false) {
+    return this.request<any>("/api/groups", {
+      method: "POST",
+      body: JSON.stringify({ name, description, isPrivate }),
+    })
+  }
+
+  async joinGroup(groupId: string) {
+    return this.request<any>(`/api/groups/${groupId}/join`, {
+      method: "POST",
+    })
+  }
+
+  async leaveGroup(groupId: string) {
+    return this.request<any>(`/api/groups/${groupId}/leave`, {
+      method: "POST",
+    })
+  }
+
+  async updateGroup(groupId: string, data: { name?: string; description?: string }) {
+    return this.request<any>(`/api/groups/${groupId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  }
+
+  async addGroupMember(groupId: string, userId: string) {
+    return this.request<any>(`/api/groups/${groupId}/members/${userId}`, {
+      method: "POST",
+    })
+  }
+
+  async removeGroupMember(groupId: string, userId: string) {
+    return this.request<any>(`/api/groups/${groupId}/members/${userId}`, {
       method: "DELETE",
     })
   }
