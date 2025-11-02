@@ -162,49 +162,6 @@ export function Header() {
                 <Button onClick={openRegister}>Sign Up</Button>
               </div>
             )}
-
-            {/* Mobile Menu */}
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <nav className="flex flex-col space-y-4">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`text-sm font-medium transition-colors hover:text-primary ${
-                        pathname === item.href ? "text-primary" : "text-muted-foreground"
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                  <div className="pt-4 border-t">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search novels..."
-                        className="pl-10"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            const query = (e.target as HTMLInputElement).value
-                            if (query.trim()) {
-                              router.push(`/search?q=${encodeURIComponent(query)}`)
-                              setIsOpen(false)
-                            }
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                </nav>
-              </SheetContent>
-            </Sheet>
           </div>
         </div>
       </div>

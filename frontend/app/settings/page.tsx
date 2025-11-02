@@ -28,8 +28,6 @@ export default function SettingsPage() {
 function SettingsContent() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>

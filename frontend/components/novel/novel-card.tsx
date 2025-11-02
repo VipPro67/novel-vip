@@ -21,8 +21,8 @@ export function NovelCard({ novel }: NovelCardProps) {
 						fill
 						className="object-cover"
 					/>
-					<div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-						<Badge variant="secondary" className="text-xs px-1 py-0.5 sm:px-2 sm:py-1">
+					<div className="absolute top-1 right-1 sm:top-1 sm:right-2">
+						<Badge variant="secondary" className="text-[8px] px-1 py-0.5 sm:px-2 sm:py-1">
 							{novel.status}
 						</Badge>
 					</div>
@@ -33,13 +33,6 @@ export function NovelCard({ novel }: NovelCardProps) {
 					{/* Title and Author */}
 					<h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2 leading-tight">{novel.title}</h3>
 					<p className="text-xs text-muted-foreground mb-2 hidden sm:block">by {novel.author}</p>
-
-					{/* Description - Hidden on mobile */}
-					<p className="text-xs text-muted-foreground mb-2 hidden md:block">
-						{novel.description?.length > 100
-							? novel.description.substring(0, 100) + "..."
-							: novel.description}
-					</p>
 
 					{/* Stats - Simplified on mobile */}
 					<div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
@@ -53,9 +46,9 @@ export function NovelCard({ novel }: NovelCardProps) {
 						{/* Views - Hidden on very small screens */}
 						<div className="flex items-center space-x-1 hidden xs:flex">
 							<Eye className="h-3 w-3" />
-							<span className="hidden sm:inline">{novel.views.toLocaleString()}</span>
+							<span className="hidden sm:inline">{novel.totalViews?.toLocaleString()}</span>
 							<span className="sm:hidden">
-								{novel.views > 1000 ? `${Math.floor(novel.views / 1000)}k` : novel.views}
+								{novel.totalViews > 1000 ? `${Math.floor(novel.totalViews / 1000)}k` : novel.totalViews}
 							</span>
 						</div>
 
@@ -65,32 +58,6 @@ export function NovelCard({ novel }: NovelCardProps) {
 							<span>{novel.totalChapters}</span>
 						</div>
 					</div>
-
-					{/* Categories - Limited on mobile */}
-					<div className="flex flex-wrap gap-1">
-						{novel.categories.slice(0, 1).map((category) => (
-							<Badge key={category.id} variant="outline" className="text-xs px-1 py-0.5 sm:px-2">
-								{category.name}
-							</Badge>
-						))}
-						{/* Show second category only on larger screens */}
-						{novel.categories.length > 1 && (
-							<Badge
-								key={novel.categories[1].id}
-								variant="outline"
-								className="text-xs px-1 py-0.5 sm:px-2 hidden sm:inline-flex"
-							>
-								{novel.categories[1].name}
-							</Badge>
-						)}
-						{/* Show more indicator on mobile if there are more categories */}
-						{novel.categories.length > 1 && (
-							<Badge variant="outline" className="text-xs px-1 py-0.5 sm:hidden">
-								+{novel.categories.length - 1}
-							</Badge>
-						)}
-					</div>
-
 					{/* Author on mobile - moved to bottom */}
 					<p className="text-xs text-muted-foreground mt-2 sm:hidden truncate">by {novel.author}</p>
 				</CardContent>

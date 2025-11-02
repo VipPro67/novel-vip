@@ -5,8 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 export default function AddChapterLoading() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Header */}

@@ -37,6 +37,7 @@ export function LoginModal() {
         closeLogin()
         router.refresh()
       } else {
+        console.error("Login failed:", response?.message)
         toast({
           title: "Login failed",
           description: response?.message || "Invalid email or password",

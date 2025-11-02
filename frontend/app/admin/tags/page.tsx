@@ -6,6 +6,7 @@ import { AuthGuard } from "@/components/auth/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Search, MoreHorizontal, Edit, Trash2, Plus } from "lucide-react"
 import {
@@ -24,14 +25,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
 
 interface Tag {
   id: string
   name: string
+  description: string
   novelCount: number
-  createdAt: string
 }
 
 export default function AdminTagsPage() {
@@ -40,7 +43,11 @@ export default function AdminTagsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
-  const [tagName, setTagName] = useState("")
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    description: ""
+  })
   const { toast } = useToast()
 
   useEffect(() => {
@@ -50,21 +57,8 @@ export default function AdminTagsPage() {
   const fetchTags = async () => {
     setLoading(true)
     try {
-      // Mock data - replace with actual API call
-      const mockTags: Tag[] = [
-        { id: "1", name: "Magic", novelCount: 89, createdAt: "2024-01-01" },
-        { id: "2", name: "Dragons", novelCount: 45, createdAt: "2024-01-01" },
-        { id: "3", name: "School Life", novelCount: 67, createdAt: "2024-01-01" },
-        { id: "4", name: "Cultivation", novelCount: 123, createdAt: "2024-01-01" },
-        { id: "5", name: "System", novelCount: 78, createdAt: "2024-01-01" },
-        { id: "6", name: "Reincarnation", novelCount: 56, createdAt: "2024-01-01" },
-        { id: "7", name: "Martial Arts", novelCount: 91, createdAt: "2024-01-01" },
-        { id: "8", name: "Slice of Life", novelCount: 34, createdAt: "2024-01-01" },
-        { id: "9", name: "Harem", novelCount: 42, createdAt: "2024-01-01" },
-        { id: "10", name: "Overpowered MC", novelCount: 87, createdAt: "2024-01-01" },
-      ]
-
-      setTags(mockTags)
+      const response = await api.getTags()
+      setTags(response.data)
     } catch (error) {
       console.error("Failed to fetch tags:", error)
       toast({
@@ -78,13 +72,17 @@ export default function AdminTagsPage() {
   }
 
   const handleAddTag = () => {
-    setTagName("")
+    setFormData({ name: "", description: "", id: ""})
     setEditingTag(null)
     setShowAddDialog(true)
   }
 
   const handleEditTag = (tag: Tag) => {
-    setTagName(tag.name)
+    setFormData({
+      name: tag.name,
+      description: tag.description,
+      id: tag.id
+    })
     setEditingTag(tag)
     setShowAddDialog(true)
   }
@@ -92,13 +90,14 @@ export default function AdminTagsPage() {
   const handleSaveTag = async () => {
     try {
       if (editingTag) {
-        // Update existing tag
+        await api.updateTag(formData.id,formData.name,formData.description)
         toast({
           title: "Success",
           description: "Tag updated successfully",
         })
       } else {
         // Add new tag
+        await api.createTag(formData.name,formData.description)
         toast({
           title: "Success",
           description: "Tag added successfully",
@@ -115,30 +114,16 @@ export default function AdminTagsPage() {
     }
   }
 
-  const handleDeleteTag = async (tag: Tag) => {
-    try {
-      toast({
-        title: "Success",
-        description: "Tag deleted successfully",
-      })
-      fetchTags()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete tag",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const filteredTags = tags.filter((tag) => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredTags = tags.filter(
+    (tag) =>
+      tag.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tag.description.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   return (
     <AuthGuard requireAdmin>
       <div className="min-h-screen bg-background">
-        <Header />
-
-        <main className="container mx-auto px-4 py-8">
+          <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
@@ -150,7 +135,7 @@ export default function AdminTagsPage() {
               </Link>
               <div>
                 <h1 className="text-3xl font-bold">Tag Management</h1>
-                <p className="text-muted-foreground">Manage novel tags and labels</p>
+                <p className="text-muted-foreground">Manage novel tags and categories</p>
               </div>
             </div>
 
@@ -160,7 +145,7 @@ export default function AdminTagsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Tag Management</CardTitle>
-                    <CardDescription>Manage tags used to categorize novels</CardDescription>
+                    <CardDescription>Manage tags and their properties</CardDescription>
                   </div>
                   <Button onClick={handleAddTag}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -188,56 +173,94 @@ export default function AdminTagsPage() {
                     )}
                   </div>
 
-                  {/* Tags Grid */}
-                  {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="border rounded-lg p-4 space-y-2">
-                          <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-                          <div className="h-3 w-16 bg-muted rounded animate-pulse" />
-                          <div className="h-3 w-24 bg-muted rounded animate-pulse" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : filteredTags.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No tags found</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {filteredTags.map((tag) => (
-                        <div key={tag.id} className="border rounded-lg p-4 space-y-2 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="text-sm">
-                              {tag.name}
-                            </Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6">
-                                  <MoreHorizontal className="h-3 w-3" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditTag(tag)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit Tag
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleDeleteTag(tag)} className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete Tag
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{tag.novelCount} novels</p>
-                          <p className="text-xs text-muted-foreground">
-                            Created {new Date(tag.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Tags Table */}
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tag</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Novel Count</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="w-[70px]">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {loading ? (
+                          Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+                                  <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="h-4 w-40 bg-muted rounded animate-pulse" />
+                              </TableCell>
+                              <TableCell>
+                                <div className="h-4 w-12 bg-muted rounded animate-pulse" />
+                              </TableCell>
+                              <TableCell>
+                                <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+                              </TableCell>
+                              <TableCell>
+                                <div className="h-4 w-8 bg-muted rounded animate-pulse" />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : filteredTags.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8">
+                              No tags found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredTags.map((tag) => (
+                            <TableRow key={tag.id}>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <div className="h-4 w-4 rounded" style={{ backgroundColor: tag.color }} />
+                                  <span className="font-medium">{tag.name}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{tag.description}</p>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">{tag.novelCount} novels</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(tag.createdAt).toLocaleDateString()}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditTag(tag)}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit Tag
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete Tag
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -250,16 +273,28 @@ export default function AdminTagsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingTag ? "Edit Tag" : "Add New Tag"}</DialogTitle>
-            <DialogDescription>{editingTag ? "Update the tag name" : "Create a new tag for novels"}</DialogDescription>
+            <DialogDescription>
+              {editingTag ? "Update the tag information" : "Create a new tag for novels"}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="tagName">Tag Name</Label>
+              <Label htmlFor="name">Tag Name</Label>
               <Input
-                id="tagName"
-                value={tagName}
-                onChange={(e) => setTagName(e.target.value)}
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Enter tag name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Enter tag description"
+                rows={3}
               />
             </div>
           </div>

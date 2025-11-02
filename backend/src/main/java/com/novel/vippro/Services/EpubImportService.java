@@ -11,6 +11,8 @@ import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Repository.EpubImportJobRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
+
+import java.io.IOException;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +71,14 @@ public class EpubImportService {
                 .orElseThrow(() -> new IllegalArgumentException("Novel not found with id " + novelId));
         logger.info("Queueing EPUB import for novel {} to append chapters by user={}.", novelId, userId);
 
-        FileMetadata metadata = fileService.uploadFile(epub, "epub");
+        FileMetadata metadata;
+        try {
+            String publicId = String.format("novels/%s/epubs/", novel.getSlug());
+            metadata = fileService.uploadFileWithPublicId(epub.getBytes(), publicId, epub.getOriginalFilename(), epub.getContentType(), "epub");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read EPUB file content", e);
+        }
+
 
         EpubImportJob job = new EpubImportJob();
         job.setType(EpubImportType.APPEND_CHAPTERS);

@@ -46,6 +46,7 @@ import {
 import ChapterNavigation from "@/components/chapter-navigation"
 import { ReportDialog } from "@/components/report/report-dialog"
 import { Header } from "@/components/layout/header"
+import Link from "next/link"
 
 const READER_SETTINGS_STORAGE_KEY = "readerSettings"
 
@@ -308,16 +309,6 @@ export default function ChapterPage() {
       setChapterContent(content)
       setError(null)
       setErrorMessage("")
-
-      if (isAuthenticated && chapterData.id) {
-        try {
-          await api.addReadingHistory(chapterData.id)
-          console.log("[v0] Chapter added to reading history")
-        } catch (error) {
-          // Silently fail - don't disrupt reading experience
-          console.error("[v0] Failed to add to reading history:", error)
-        }
-      }
     } catch (error) {
       console.error("Failed to fetch chapter content:", error)
       setError("content-fetch-error")
@@ -1033,11 +1024,28 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header/>
-      <div className="pt-16 pb-24">
         {/* Chapter Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto">
+            {/* Breadcrumb: Novels > slug > Chapter number */}
+            <div className="mb-4 text-sm text-muted-foreground">
+              <nav aria-label="Breadcrumb" className="flex items-center space-x-2">
+                <Link href="/novels" className="text-sm text-primary hover:underline">
+                  Novels
+                </Link>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                {slug ? (
+                  <Link href={`/novels/${slug}`} className="text-sm hover:underline">
+                    {slug}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted-foreground">{slug ?? "..."}</span>
+                )}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Chapter {chapterNumber}</span>
+              </nav>
+            </div>
+
             <Card>
               <CardContent className="p-8" style={cardContentStyle}>
                 <div className="space-y-6">
@@ -1195,7 +1203,6 @@ export default function ChapterPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Custom CSS for chapter content */}
       <style jsx>{`

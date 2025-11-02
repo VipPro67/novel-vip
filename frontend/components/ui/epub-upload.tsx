@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Upload, X, FileText, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
+import { useParams } from "next/navigation"
 
 interface EpubUploadProps {
   onUploadSuccess?: (fileMetadata: any) => void
@@ -15,6 +16,7 @@ interface EpubUploadProps {
 }
 
 export function EpubUpload({ onUploadSuccess, onUploadError }: EpubUploadProps) {
+  const {params} = useParams();
   const { toast } = useToast()
   const [epubFile, setEpubFile] = useState<File | null>(null)
   const [epubPreview, setEpubPreview] = useState<string>("")
@@ -50,11 +52,12 @@ export function EpubUpload({ onUploadSuccess, onUploadError }: EpubUploadProps) 
 
     setUploading(true)
     try {
-      const response = await api.uploadEpub(epubFile)
+      
+      const response = await api.addChaptersFromEpub(epubFile)
       if (response.success) {
         toast({
           title: "Success",
-          description: "EPUB file uploaded successfully",
+          description: "EPUB file uploaded successfully. You will get notification about this shortly.",
         })
         onUploadSuccess?.(response.data)
         setEpubFile(null)

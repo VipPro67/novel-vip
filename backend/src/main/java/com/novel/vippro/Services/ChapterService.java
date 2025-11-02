@@ -269,6 +269,7 @@ public class ChapterService {
 
         chapterRepository.save(chapter);
         favoriteService.notifyFavorites(chapter.getNovel().getId());
+        logger.info("Created chapter: {}", chapterNovel.getSlug() + " " + chapter.getChapterNumber());
         return chapter;
     }
 

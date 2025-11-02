@@ -89,6 +89,7 @@ public class UserService {
     }
 
     @Cacheable(value = "users", key = "#userId")
+    @Transactional(readOnly = true)
     public UserDTO getUserProfile(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));

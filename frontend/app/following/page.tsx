@@ -64,8 +64,6 @@ function FollowingContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>

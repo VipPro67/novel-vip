@@ -28,14 +28,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
 
 interface Genre {
   id: string
   name: string
   description: string
   novelCount: number
-  color: string
-  createdAt: string
 }
 
 export default function AdminGenresPage() {
@@ -45,9 +44,9 @@ export default function AdminGenresPage() {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null)
   const [formData, setFormData] = useState({
+    id: "",
     name: "",
-    description: "",
-    color: "#3b82f6",
+    description: ""
   })
   const { toast } = useToast()
 
@@ -58,43 +57,8 @@ export default function AdminGenresPage() {
   const fetchGenres = async () => {
     setLoading(true)
     try {
-      // Mock data - replace with actual API call
-      const mockGenres: Genre[] = [
-        {
-          id: "1",
-          name: "Fantasy",
-          description: "Stories with magical elements and mythical creatures",
-          novelCount: 245,
-          color: "#8b5cf6",
-          createdAt: "2024-01-01",
-        },
-        {
-          id: "2",
-          name: "Romance",
-          description: "Love stories and romantic relationships",
-          novelCount: 189,
-          color: "#ec4899",
-          createdAt: "2024-01-01",
-        },
-        {
-          id: "3",
-          name: "Action",
-          description: "Fast-paced stories with exciting sequences",
-          novelCount: 156,
-          color: "#ef4444",
-          createdAt: "2024-01-01",
-        },
-        {
-          id: "4",
-          name: "Mystery",
-          description: "Suspenseful stories with puzzles to solve",
-          novelCount: 98,
-          color: "#6366f1",
-          createdAt: "2024-01-01",
-        },
-      ]
-
-      setGenres(mockGenres)
+      const response = await api.getGenres()
+      setGenres(response.data)
     } catch (error) {
       console.error("Failed to fetch genres:", error)
       toast({
@@ -108,7 +72,7 @@ export default function AdminGenresPage() {
   }
 
   const handleAddGenre = () => {
-    setFormData({ name: "", description: "", color: "#3b82f6" })
+    setFormData({ name: "", description: "", id: ""})
     setEditingGenre(null)
     setShowAddDialog(true)
   }
@@ -117,7 +81,7 @@ export default function AdminGenresPage() {
     setFormData({
       name: genre.name,
       description: genre.description,
-      color: genre.color,
+      id: genre.id
     })
     setEditingGenre(genre)
     setShowAddDialog(true)
@@ -126,13 +90,14 @@ export default function AdminGenresPage() {
   const handleSaveGenre = async () => {
     try {
       if (editingGenre) {
-        // Update existing genre
+        await api.updateGenre(formData.id,formData.name,formData.description)
         toast({
           title: "Success",
           description: "Genre updated successfully",
         })
       } else {
         // Add new genre
+        await api.createGenre(formData.name,formData.description)
         toast({
           title: "Success",
           description: "Genre added successfully",
@@ -158,9 +123,7 @@ export default function AdminGenresPage() {
   return (
     <AuthGuard requireAdmin>
       <div className="min-h-screen bg-background">
-        <Header />
-
-        <main className="container mx-auto px-4 py-8">
+          <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
@@ -333,23 +296,6 @@ export default function AdminGenresPage() {
                 placeholder="Enter genre description"
                 rows={3}
               />
-            </div>
-            <div>
-              <Label htmlFor="color">Color</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  id="color"
-                  type="color"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-16 h-10"
-                />
-                <Input
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  placeholder="#3b82f6"
-                />
-              </div>
             </div>
           </div>
           <DialogFooter>

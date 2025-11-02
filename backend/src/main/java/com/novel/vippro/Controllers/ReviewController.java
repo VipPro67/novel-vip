@@ -46,6 +46,22 @@ public class ReviewController {
         @Autowired
         private ReviewService reviewService;
 
+        @Operation(summary = "Get all reviews", description = "Retrieve all reviews with pagination")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Reviews retrieved successfully")
+        })
+        @GetMapping
+        @PreAuthorize("hasRole('ADMIN')")
+        public ControllerResponse<PageResponse<ReviewDTO>> getAllReviews(
+                        @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
+                        @Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+                        @Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
+                Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
+                PageResponse<ReviewDTO> reviews = reviewService.getAllReviews(null, pageable);
+                return ControllerResponse.success("Reviews retrieved successfully", reviews);
+        }
+
         @Operation(summary = "Get reviews by novel", description = "Retrieve all reviews for a specific novel")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Reviews retrieved successfully"),
