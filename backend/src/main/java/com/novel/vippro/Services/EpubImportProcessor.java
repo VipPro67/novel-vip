@@ -20,6 +20,8 @@ import com.novel.vippro.Utils.EpubParser;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -68,7 +70,9 @@ public class EpubImportProcessor {
 
     @Transactional
     public void process(EpubImportMessage message) {
-        EpubImportJob job = jobRepository.findById(message.getJobId()).orElse(null);
+        try {
+            TimeUnit.SECONDS.sleep(1);
+            EpubImportJob job = jobRepository.findById(message.getJobId()).orElse(null);
         if (job == null) {
             logger.warn("Received EPUB import message for unknown job {}", message.getJobId());
             return;
@@ -115,6 +119,9 @@ public class EpubImportProcessor {
             jobRepository.save(job);
             notifyUser(job, "EPUB import failed", ex.getMessage(), NotificationType.SYSTEM, job.getSlug());
         }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private FileMetadata resolveFile(EpubImportMessage message, EpubImportJob job) {
@@ -154,7 +161,7 @@ public class EpubImportProcessor {
                 Chapter chapter = createChapter(job, novel.getId(), idx, chapterData.getTitle(),
                         chapterData.getContentHtml());
                 idx++;
-                enqueueAudio(job, novel, chapter);
+                //enqueueAudio(job, novel, chapter);
             }
         }
 
@@ -181,7 +188,7 @@ public class EpubImportProcessor {
                 Chapter chapter = createChapter(job, novel.getId(), idx, chapterData.getTitle(),
                         chapterData.getContentHtml());
                 idx++;
-                enqueueAudio(job, novel, chapter);
+                //enqueueAudio(job, novel, chapter);
             }
         }
 

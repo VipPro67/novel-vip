@@ -85,16 +85,18 @@ export default function AddNovelPage() {
             [field]: value,
         }))
 
-        // Auto-generate slug from title
         if (field === "title") {
             const slug = value
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
                 .toLowerCase()
                 .replace(/[^a-z0-9\s-]/g, "")
                 .replace(/\s+/g, "-")
                 .replace(/-+/g, "-")
                 .trim()
-            setFormData((prev) => ({ ...prev, slug }))
-        }
+            setFormData(prev => ({ ...prev, slug }))
+            }
+
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,9 +163,7 @@ export default function AddNovelPage() {
     return (
         <AuthGuard requireAdmin>
             <div className="min-h-screen bg-background">
-                <Header />
-
-                <main className="container mx-auto px-4 py-8">
+                          <main className="container mx-auto px-4 py-8">
                     <div className="space-y-6">
                         {/* Header */}
                         <div className="flex items-center gap-4">

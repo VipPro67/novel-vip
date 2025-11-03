@@ -136,9 +136,7 @@ export default function AdminTagsPage() {
   return (
     <AuthGuard requireAdmin>
       <div className="min-h-screen bg-background">
-        <Header />
-
-        <main className="container mx-auto px-4 py-8">
+          <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">

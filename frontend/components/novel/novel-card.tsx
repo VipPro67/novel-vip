@@ -46,9 +46,9 @@ export function NovelCard({ novel }: NovelCardProps) {
 						{/* Views - Hidden on very small screens */}
 						<div className="flex items-center space-x-1 hidden xs:flex">
 							<Eye className="h-3 w-3" />
-							<span className="hidden sm:inline">{novel.views.toLocaleString()}</span>
+							<span className="hidden sm:inline">{novel.totalViews?.toLocaleString()}</span>
 							<span className="sm:hidden">
-								{novel.views > 1000 ? `${Math.floor(novel.views / 1000)}k` : novel.views}
+								{novel.totalViews > 1000 ? `${Math.floor(novel.totalViews / 1000)}k` : novel.totalViews}
 							</span>
 						</div>
 

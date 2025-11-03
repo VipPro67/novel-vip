@@ -20,7 +20,7 @@ export interface User {
   username: string
   email: string
   fullName?: string
-  roles: string []
+  roles: string[]
 }
 
 export interface Novel {
@@ -35,7 +35,9 @@ export interface Novel {
   genres?: Genre[]
   tags?: Tag[]
   totalChapters: number
-  views: number
+  totalViews: number
+  monthlyViews: number
+  dailyViews: number
   rating: number
   updatedAt: string
 }
@@ -240,15 +242,6 @@ export interface FeatureRequest {
 }
 
 class ApiClient {
-  private baseURL: string
-  private token: string | null = null
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
-    if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("token")
-    }
-  }
 
   setToken(token: string) {
     this.token = token
@@ -335,7 +328,7 @@ class ApiClient {
     return response
   }
 
-  async register(username: string, email: string, password: string) : Promise<ApiResponse<string>> {
+  async register(username: string, email: string, password: string): Promise<ApiResponse<string>> {
     return this.request("/api/auth/signup", {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
@@ -1154,6 +1147,44 @@ class ApiClient {
     } catch (error) {
       console.error("EPUB Upload Error:", error)
       throw error
+    }
+  }
+
+  async addChaptersFromEpub(id: string | undefined, epubFile: File): Promise<ApiResponse<FileMetadata>> {
+    const formData = new FormData()
+    formData.append("epub", epubFile) // required
+
+    const headers: HeadersInit = {}
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/api/novels/${id}/import-epub`, {
+        method: "POST",
+        headers,
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error("EPUB Upload Error:", error)
+      throw error
+    }
+  }
+
+
+  private baseURL: string
+  private token: string | null = null
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("token")
     }
   }
 

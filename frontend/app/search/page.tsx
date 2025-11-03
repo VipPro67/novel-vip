@@ -296,9 +296,7 @@ export default function SearchPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <Header />
-
-            <main className="container py-8">
+                  <main className="container py-8">
                 <div className="flex flex-col space-y-6">
                     {/* Search Header */}
                     <div className="flex flex-col space-y-4">

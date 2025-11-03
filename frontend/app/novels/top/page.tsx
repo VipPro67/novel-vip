@@ -49,8 +49,6 @@ export default function TopRatedNovelsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       <main className="container py-8">
         <div className="flex flex-col space-y-6">
           {/* Header */}

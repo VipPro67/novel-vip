@@ -12,11 +12,14 @@ import com.novel.vippro.Utils.EpubParseResult;
 import com.novel.vippro.Models.Genre;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.Tag;
+import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.CategoryRepository;
 import com.novel.vippro.Repository.GenreRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.TagRepository;
+import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +74,10 @@ public class NovelService {
 
     @Autowired
     private ChapterService chapterService;
+
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
@@ -206,6 +214,7 @@ public class NovelService {
     }
 
     @Transactional
+    @CacheEvict(value = "novels", allEntries = true)
     public NovelDTO createNovel(NovelCreateDTO novelDTO) {
         Novel novel = new Novel();
         novel.setTitle(novelDTO.getTitle());
@@ -225,7 +234,10 @@ public class NovelService {
         }
         
         novel.setStatus(novelDTO.getStatus());
-
+        UUID ownerId = UserDetailsImpl.getCurrentUserId();
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", ownerId));
+        novel.setOwner(owner);
         novel.setRating(0);
         novel.setTotalChapters(0);
         novel.setComments(null);
@@ -542,7 +554,14 @@ public class NovelService {
 
         // Reload and index the updated novel
         novel = novelRepository.findById(novelId).orElseThrow();
-        searchService.indexNovels(List.of(novel));
+        try{
+            searchService.indexNovels(List.of(novel));
+        }
+        catch (Exception e) {
+            logger.error("Error indexing novel: {}", e.getMessage());
+        }
+
+        // Notification for novel owner 
         return mapper.NoveltoDTO(novel);
     }
     
