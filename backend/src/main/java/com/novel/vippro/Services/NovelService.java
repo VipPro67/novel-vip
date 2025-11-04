@@ -222,17 +222,6 @@ public class NovelService {
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
         novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
-        // Set cover image if provided
-        if (novelDTO.getCoverImage() != null) {
-            try {
-                FileMetadata coverImage = fileService.uploadFile(novelDTO.getCoverImage(), "cover");
-                novel.setCoverImage(coverImage);
-            } catch (Exception e) {
-                logger.error("Error uploading cover image: {}", e.getMessage());
-                throw new RuntimeException("Failed to upload cover image", e);
-            }
-        }
-        
         novel.setStatus(novelDTO.getStatus());
         UUID ownerId = UserDetailsImpl.getCurrentUserId();
         User owner = userRepository.findById(ownerId)
@@ -396,18 +385,6 @@ public class NovelService {
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
         novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
-
-        // Update cover image if provided
-        if (novelDTO.getCoverImage() != null) {
-            try {
-                FileMetadata coverImage = fileService.uploadFile(novelDTO.getCoverImage(), "cover");
-                novel.setCoverImage(coverImage);
-            } catch (Exception e) {
-                logger.error("Error uploading cover image: {}", e.getMessage());
-                throw new RuntimeException("Failed to upload cover image", e);
-            }
-        }
-        // Update status
         novel.setStatus(novelDTO.getStatus());
 
         // Handle categories

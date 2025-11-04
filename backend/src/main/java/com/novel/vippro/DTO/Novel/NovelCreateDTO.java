@@ -25,8 +25,6 @@ public class NovelCreateDTO {
     @Size(min = 1, max = 255, message = "Author must be between 1 and 255 characters")
     private String author;
 
-    private MultipartFile coverImage;
-
     @NotBlank(message = "Status is required")
     private String status;
 

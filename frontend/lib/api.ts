@@ -580,10 +580,8 @@ class ApiClient {
   async createChapter(data: {
     title: string
     chapterNumber: number
-    // contentHtml when format is HTML, content when format is TEXT
     contentHtml?: string
     content?: string
-    // format: 'HTML' or 'TEXT'
     format?: "HTML" | "TEXT"
     novelId: string
   }) {
