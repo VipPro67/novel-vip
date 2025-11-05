@@ -46,6 +46,7 @@ import {
 import ChapterNavigation from "@/components/chapter-navigation"
 import { ReportDialog } from "@/components/report/report-dialog"
 import { Header } from "@/components/layout/header"
+import Link from "next/link"
 
 const READER_SETTINGS_STORAGE_KEY = "readerSettings"
 
@@ -308,16 +309,6 @@ export default function ChapterPage() {
       setChapterContent(content)
       setError(null)
       setErrorMessage("")
-
-      if (isAuthenticated && chapterData.id) {
-        try {
-          await api.addReadingHistory(chapterData.id)
-          console.log("[v0] Chapter added to reading history")
-        } catch (error) {
-          // Silently fail - don't disrupt reading experience
-          console.error("[v0] Failed to add to reading history:", error)
-        }
-      }
     } catch (error) {
       console.error("Failed to fetch chapter content:", error)
       setError("content-fetch-error")

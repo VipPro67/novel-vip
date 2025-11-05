@@ -202,9 +202,9 @@ function AdminDashboardContent() {
                       Manage Novels
                     </Button>
                   </Link>
-                  <Link href="/admin/novels" className="block">
+                  <Link href="/admin/categories" className="block">
                     <Button variant="outline" className="w-full justify-start bg-transparent">
-                      Manage Chapters
+                      Manage Categories
                     </Button>
                   </Link>
                   <Link href="/admin/genres" className="block">

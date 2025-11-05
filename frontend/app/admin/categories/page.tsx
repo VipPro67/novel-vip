@@ -30,40 +30,40 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 
-interface Genre {
+interface Category {
   id: string
   name: string
   description: string
   novelCount: number
 }
 
-export default function AdminGenresPage() {
-  const [genres, setGenres] = useState<Genre[]>([])
+export default function AdminCategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddDialog, setShowAddDialog] = useState(false)
-  const [editingGenre, setEditingGenre] = useState<Genre | null>(null)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formData, setFormData] = useState({
     id: "",
     name: "",
-    description: ""
+    description: "",
   })
   const { toast } = useToast()
 
   useEffect(() => {
-    fetchGenres()
+    fetchCategories()
   }, [])
 
-  const fetchGenres = async () => {
+  const fetchCategories = async () => {
     setLoading(true)
     try {
-      const response = await api.getGenres()
-      setGenres(response.data)
+      const response = await api.getCategories()
+      setCategories(response.data)
     } catch (error) {
-      console.error("Failed to fetch genres:", error)
+      console.error("Failed to fetch categories:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch genres",
+        description: "Failed to fetch categories",
         variant: "destructive",
       })
     } finally {
@@ -71,53 +71,52 @@ export default function AdminGenresPage() {
     }
   }
 
-  const handleAddGenre = () => {
-    setFormData({ name: "", description: "", id: ""})
-    setEditingGenre(null)
+  const handleAddCategory = () => {
+    setFormData({id: "", name: "", description: ""})
+    setEditingCategory(null)
     setShowAddDialog(true)
   }
 
-  const handleEditGenre = (genre: Genre) => {
+  const handleEditCategory = (category: Category) => {
     setFormData({
-      name: genre.name,
-      description: genre.description,
-      id: genre.id
+      id: category.id,
+      name: category.name,
+      description: category.description,
     })
-    setEditingGenre(genre)
+    setEditingCategory(category)
     setShowAddDialog(true)
   }
 
-  const handleSaveGenre = async () => {
+  const handleSaveCategory = async () => {
     try {
-      if (editingGenre) {
-        await api.updateGenre(formData.id,formData.name,formData.description)
+      if (editingCategory) {
+        await api.updateCategory(formData.id,formData.name, formData.description)
         toast({
           title: "Success",
-          description: "Genre updated successfully",
+          description: "Category updated successfully",
         })
       } else {
-        // Add new genre
-        await api.createGenre(formData.name,formData.description)
+        await api.createCategory(formData.name, formData.description)
         toast({
           title: "Success",
-          description: "Genre added successfully",
+          description: "Category added successfully",
         })
       }
       setShowAddDialog(false)
-      fetchGenres()
+      fetchCategories()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save genre",
+        description: "Failed to save category",
         variant: "destructive",
       })
     }
   }
 
-  const filteredGenres = genres.filter(
-    (genre) =>
-      genre.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      genre.description.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredCategories = categories.filter(
+    (category) =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.description.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   return (
@@ -134,22 +133,22 @@ export default function AdminGenresPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold">Genre Management</h1>
-                <p className="text-muted-foreground">Manage novel genres and categories</p>
+                <h1 className="text-3xl font-bold">Category Management</h1>
+                <p className="text-muted-foreground">Manage novel categories and categories</p>
               </div>
             </div>
 
-            {/* Genre Management */}
+            {/* Category Management */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Genre Management</CardTitle>
-                    <CardDescription>Manage genres and their properties</CardDescription>
+                    <CardTitle>Category Management</CardTitle>
+                    <CardDescription>Manage categories and their properties</CardDescription>
                   </div>
-                  <Button onClick={handleAddGenre}>
+                  <Button onClick={handleAddCategory}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Genre
+                    Add Category
                   </Button>
                 </div>
               </CardHeader>
@@ -160,7 +159,7 @@ export default function AdminGenresPage() {
                     <div className="relative flex-1 max-w-sm">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search genres..."
+                        placeholder="Search categories..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-8"
@@ -173,12 +172,12 @@ export default function AdminGenresPage() {
                     )}
                   </div>
 
-                  {/* Genres Table */}
+                  {/* Categories Table */}
                   <div className="border rounded-md">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Genre</TableHead>
+                          <TableHead>Category</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead>Novel Count</TableHead>
                           <TableHead>Created</TableHead>
@@ -209,31 +208,25 @@ export default function AdminGenresPage() {
                               </TableCell>
                             </TableRow>
                           ))
-                        ) : filteredGenres.length === 0 ? (
+                        ) : filteredCategories.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={5} className="text-center py-8">
-                              No genres found
+                              No categories found
                             </TableCell>
                           </TableRow>
                         ) : (
-                          filteredGenres.map((genre) => (
-                            <TableRow key={genre.id}>
+                          filteredCategories.map((category) => (
+                            <TableRow key={category.id}>
                               <TableCell>
                                 <div className="flex items-center space-x-2">
-                                  <div className="h-4 w-4 rounded" style={{ backgroundColor: genre.color }} />
-                                  <span className="font-medium">{genre.name}</span>
+                                  <span className="font-medium">{category.name}</span>
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <p className="text-sm text-muted-foreground line-clamp-2">{genre.description}</p>
+                                <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="secondary">{genre.novelCount} novels</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(genre.createdAt).toLocaleDateString()}
-                                </span>
+                                <Badge variant="secondary">{category.novelCount} novels</Badge>
                               </TableCell>
                               <TableCell>
                                 <DropdownMenu>
@@ -243,14 +236,14 @@ export default function AdminGenresPage() {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditGenre(genre)}>
+                                    <DropdownMenuItem onClick={() => handleEditCategory(category)}>
                                       <Edit className="mr-2 h-4 w-4" />
-                                      Edit Genre
+                                      Edit Category
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem className="text-destructive">
                                       <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete Genre
+                                      Delete Category
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -268,23 +261,23 @@ export default function AdminGenresPage() {
         </main>
       </div>
 
-      {/* Add/Edit Genre Dialog */}
+      {/* Add/Edit Category Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingGenre ? "Edit Genre" : "Add New Genre"}</DialogTitle>
+            <DialogTitle>{editingCategory ? "Edit Category" : "Add New Category"}</DialogTitle>
             <DialogDescription>
-              {editingGenre ? "Update the genre information" : "Create a new genre for novels"}
+              {editingCategory ? "Update the category information" : "Create a new category for novels"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Genre Name</Label>
+              <Label htmlFor="name">Category Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter genre name"
+                placeholder="Enter category name"
               />
             </div>
             <div>
@@ -293,7 +286,7 @@ export default function AdminGenresPage() {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter genre description"
+                placeholder="Enter category description"
                 rows={3}
               />
             </div>
@@ -302,7 +295,7 @@ export default function AdminGenresPage() {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveGenre}>{editingGenre ? "Update Genre" : "Add Genre"}</Button>
+            <Button onClick={handleSaveCategory}>{editingCategory ? "Update Category" : "Add Category"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

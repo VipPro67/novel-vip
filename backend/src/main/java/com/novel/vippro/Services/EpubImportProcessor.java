@@ -166,7 +166,11 @@ public class EpubImportProcessor {
         }
 
         Novel refreshed = novelRepository.findById(novel.getId()).orElse(novel);
-        searchService.indexNovels(List.of(refreshed));
+        try {
+            searchService.indexNovels(List.of(refreshed));
+        } catch (Exception e) {
+            logger.error("Failed to index novel {} after EPUB import", novel.getId(), e);
+        }
     }
 
     private void processAppendChapters(EpubImportJob job, EpubParseResult parsed) {

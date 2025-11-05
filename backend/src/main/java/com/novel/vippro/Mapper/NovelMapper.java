@@ -45,12 +45,21 @@ public class NovelMapper {
         doc.setDescription(novel.getDescription());
         doc.setAuthor(novel.getAuthor());
         doc.setStatus(novel.getStatus());
-        doc.setCategories(novel.getCategories()
+        if(novel.getCategories() != null)
+        {
+            doc.setCategories(novel.getCategories()
                 .stream().map(Category::getName).collect(Collectors.toList()));
-        doc.setTags(novel.getTags()
+        }
+        if(novel.getTags() != null)
+        {
+            doc.setTags(novel.getTags()
                 .stream().map(Tag::getName).collect(Collectors.toList()));
-        doc.setGenres(novel.getGenres()
+        }
+        if(novel.getGenres() != null)
+        {
+            doc.setGenres(novel.getGenres()
                 .stream().map(Genre::getName).collect(Collectors.toList()));
+        }
         doc.setPublic(novel.isPublic());
         doc.setTotalChapters(novel.getTotalChapters());
         doc.setRating(novel.getRating());

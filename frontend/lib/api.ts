@@ -466,12 +466,55 @@ class ApiClient {
     return this.request<Category[]>("/api/novels/categories")
   }
 
+  async createCategory(name: string, description?: string) {
+    var id = crypto.randomUUID();
+    return this.request<Category>("/api/novels/categories", {
+      method: "POST",
+      body: JSON.stringify({id, name, description }),
+    })
+  }
+
+  async updateCategory(id: string, name: string, description?: string) {
+    return this.request<Category>(`/api/novels/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, description }),
+    })
+  }
   async getGenres() {
     return this.request<Genre[]>("/api/novels/genres")
   }
 
+  async createGenre(name: string, description?: string) {
+    var id = crypto.randomUUID();
+    return this.request<Genre>("/api/novels/genres", {
+      method: "POST",
+      body: JSON.stringify({id, name, description }),
+    })
+  }
+
+  async updateGenre(id: string, name: string, description?: string) {
+    return this.request<Genre>(`/api/novels/genres/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, description }),
+    })
+  }
+
   async getTags() {
     return this.request<Tag[]>("/api/novels/tags")
+  }
+
+  async createTag(name: string, description?: string) {
+    var id = crypto.randomUUID();
+    return this.request<Tag>("/api/novels/tags", {
+      method: "POST",
+      body: JSON.stringify({id, name, description }),
+    })
+  }
+  async updateTag(id: string, name: string, description?: string) {
+    return this.request<Tag>(`/api/novels/tags/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name, description }),
+    })
   }
 
   async getNovelsByCategory(

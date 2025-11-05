@@ -33,7 +33,7 @@ public class GenreService {
         return mapper.GenretoDTO(savedGenre);
     }
 
-    @CacheEvict(value = "genres", key = "#id")
+    @CacheEvict(value = "genres", allEntries = true)
     @Transactional
     public GenreDTO updateGenre(UUID id, GenreDTO genreDTO) {
         Genre genre = genreRepository.findById(id)

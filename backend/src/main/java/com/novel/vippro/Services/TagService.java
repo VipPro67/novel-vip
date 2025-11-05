@@ -33,7 +33,7 @@ public class TagService {
         return mapper.TagtoDTO(savedTag);
     }
 
-    @CacheEvict(value = "tags", key = "#id")
+    @CacheEvict(value = "tags", allEntries = true)
     @Transactional
     public TagDTO updateTag(UUID id, TagDTO tagDTO) {
         Tag tag = tagRepository.findById(id)

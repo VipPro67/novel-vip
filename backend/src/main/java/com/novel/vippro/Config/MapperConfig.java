@@ -20,7 +20,6 @@ public class MapperConfig {
             .setFieldAccessLevel(AccessLevel.PRIVATE)
             .setSkipNullEnabled(true);
 
-        // Ignore unmapped fields between Novel and NovelDTO
         TypeMap<Novel, NovelDTO> typeMap = modelMapper.createTypeMap(Novel.class, NovelDTO.class);
         typeMap.setPropertyCondition(context -> context.getMapping() != null);
 
