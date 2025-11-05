@@ -282,7 +282,7 @@ public class NovelController {
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
-    public ControllerResponse<NovelDTO> createNovel(@Valid @ModelAttribute NovelCreateDTO novelDTO) {
+    public ControllerResponse<NovelDTO> createNovel(@RequestBody NovelCreateDTO novelDTO) {
         NovelDTO createdNovel = novelService.createNovel(novelDTO);
         return ControllerResponse.success("Novel created successfully", createdNovel);
     }
@@ -323,7 +323,7 @@ public class NovelController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<NovelDTO> updateNovel(
             @Parameter(description = "Novel ID") @PathVariable UUID id,
-            @Valid @ModelAttribute NovelCreateDTO novelDTO) {
+            @RequestBody NovelCreateDTO novelDTO) {
         NovelDTO updatedNovel = novelService.updateNovel(id, novelDTO);
         return ControllerResponse.success("Novel updated successfully", updatedNovel);
     }

@@ -829,6 +829,15 @@ export default function NovelDetailPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Description */}
+              <Card className="mt-2">
+                <CardHeader>
+                  <CardTitle>Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">{novel.description}</p>
+                </CardContent>
+              </Card>
           </div>
 
           {/* Novel Info */}
@@ -846,7 +855,7 @@ export default function NovelDetailPage() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Eye className="h-4 w-4" />
-                    <span>{novel?.totalViews.toLocaleString()} views</span>
+                    <span>{novel?.totalViews?.toLocaleString()} views</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <BookOpen className="h-4 w-4" />
@@ -879,17 +888,6 @@ export default function NovelDetailPage() {
                     ))}
                 </div>
               </div>
-
-              {/* Description */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Description</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">{novel.description}</p>
-                </CardContent>
-              </Card>
-
               {/* Tabs */}
               <Tabs value={tab} onValueChange={setTab} defaultValue="chapters" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
@@ -969,10 +967,10 @@ export default function NovelDetailPage() {
                               <Link
                                 key={chapter.id}
                                 href={`/novels/${novel.slug}/chapters/${chapter.chapterNumber}`}
-                                className="block p-3 rounded-lg border hover:bg-muted transition-colors"
+                                className="block p-2 rounded-lg border hover:bg-muted transition-colors"
                               >
                                 <div className="flex justify-between items-center">
-                                  <div>
+                                  <div className="flex justify-between w-full">
                                     <p className="font-medium">{chapter.title}</p>
                                     <p className="text-sm text-muted-foreground">
                                       Updated {formatRelativeDate(chapter.updatedAt)}

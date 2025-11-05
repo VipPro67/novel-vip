@@ -85,16 +85,18 @@ export default function AddNovelPage() {
             [field]: value,
         }))
 
-        // Auto-generate slug from title
         if (field === "title") {
             const slug = value
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
                 .toLowerCase()
                 .replace(/[^a-z0-9\s-]/g, "")
                 .replace(/\s+/g, "-")
                 .replace(/-+/g, "-")
                 .trim()
-            setFormData((prev) => ({ ...prev, slug }))
-        }
+            setFormData(prev => ({ ...prev, slug }))
+            }
+
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,26 +132,21 @@ export default function AddNovelPage() {
         setLoading(true);
 
         try {
-            const fd = new FormData();
-            fd.append("title", formData.title);
-            fd.append("slug", formData.slug);
-            fd.append("description", formData.description);
-            fd.append("author", formData.author);
-            fd.append("status", formData.status);
-            formData.categories.forEach(c => fd.append("categories", c));
-            formData.genres.forEach(g => fd.append("genres", g));
-            formData.tags.forEach(t => fd.append("tags", t));
-            if (coverImage) fd.append("coverImage", coverImage); // <-- actual file
-
-            const response = await api.request("/api/novels", {
-                method: "POST",
-                body: fd
-            });
-
+        const response = await api.createNovel({
+            title: formData.title,
+            slug: formData.slug,
+            description: formData.description,
+            author: formData.author,
+            status: formData.status,
+            categories: formData.categories,
+            genres: formData.genres,
+            tags: formData.tags,
+        });
             if (response.success) {
-                toast({ title: "Success", description: "Novel created successfully" });
-                router.push("/admin/novels");
+                toast({ title: "Success", description: "Novel created successfully"});
+                router.push("/admin/novels/"+formData.slug);
             }
+
         } catch (err) {
             console.error(err);
             toast({ title: "Error", description: "Failed to create novel", variant: "destructive" });
@@ -310,7 +307,7 @@ export default function AddNovelPage() {
                                 {/* Sidebar */}
                                 <div className="space-y-6">
                                     {/* Cover Image */}
-                                    <Card>
+                                    {/* <Card>
                                         <CardHeader>
                                             <CardTitle>Cover Image</CardTitle>
                                             <CardDescription>Upload a cover image for the novel</CardDescription>
@@ -348,7 +345,7 @@ export default function AddNovelPage() {
                                                 <Input type="file" accept="image/*" onChange={handleImageChange} className="cursor-pointer" />
                                             </div>
                                         </CardContent>
-                                    </Card>
+                                    </Card> */}
 
                                     {/* Actions */}
                                     <Card>

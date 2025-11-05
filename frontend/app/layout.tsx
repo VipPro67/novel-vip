@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { LoginModal } from "@/components/auth/login-modal"
 import { RegisterModal } from "@/components/auth/register-modal"
 import { Header } from "@/components/layout/header"
+import { ChatWidget } from "@/components/chat-widget"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -30,9 +31,11 @@ export default function RootLayout({
             <ReaderSettingsProvider>
               <LoginModal />
               <RegisterModal />
-              <main>
+              <main >
                 <Header />
-                {children}</main>
+                {children}
+              </main>
+              <ChatWidget />
               <Toaster />
             </ReaderSettingsProvider>
           </AuthProvider>

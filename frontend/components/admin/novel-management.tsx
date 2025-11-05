@@ -265,7 +265,7 @@ export function NovelManagement() {
                   <div className="flex items-center space-x-4">
                     <Avatar className="h-16 w-12 rounded-md">
                       <AvatarImage
-                        src={novel.imageUrl || "/placeholder.jpg"}
+                        src={novel?.imageUrl || "/placeholder.jpg"}
                         alt={novel.title}
                         className="object-cover"
                       />
@@ -300,10 +300,6 @@ export function NovelManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/novels/${novel.slug}`)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.slug}/edit`)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Novel

@@ -325,23 +325,21 @@ export default function SearchPage() {
     setCurrentPage(0);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <main className="container py-8">
-        <div className="flex flex-col space-y-6">
-          {/* Search Header */}
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-3">
-              <Search className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold">Search Novels</h1>
-                <p className="text-muted-foreground">
-                  {searchQuery
-                    ? `Results for "${searchQuery}"`
-                    : "Find your next favorite story"}
-                </p>
-              </div>
-            </div>
+    return (
+        <div className="min-h-screen bg-background">
+                  <main className="container py-8">
+                <div className="flex flex-col space-y-6">
+                    {/* Search Header */}
+                    <div className="flex flex-col space-y-4">
+                        <div className="flex items-center space-x-3">
+                            <Search className="h-8 w-8 text-primary" />
+                            <div>
+                                <h1 className="text-3xl font-bold">Search Novels</h1>
+                                <p className="text-muted-foreground">
+                                    {searchQuery ? `Results for "${searchQuery}"` : "Find your next favorite story"}
+                                </p>
+                            </div>
+                        </div>
 
             {/* Search Form */}
             <form onSubmit={handleSearch} className="space-y-3">

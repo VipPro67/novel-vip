@@ -28,7 +28,8 @@ public class FeatureRequest extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private FeatureRequestStatus status = FeatureRequestStatus.VOTING;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requester_id")
     private User requester;
 
     @Column(nullable = false)

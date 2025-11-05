@@ -47,6 +47,7 @@ import {
 import ChapterNavigation from "@/components/chapter-navigation"
 import { ReportDialog } from "@/components/report/report-dialog"
 import { Header } from "@/components/layout/header"
+import Link from "next/link"
 
 const READER_SETTINGS_STORAGE_KEY = "readerSettings"
 
@@ -316,17 +317,6 @@ export default function ChapterPage() {
       setChapterContent(content)
       setError(null)
       setErrorMessage("")
-
-      if (isAuthenticated && chapterData.id && !updatingProgressRef.current) {
-        updatingProgressRef.current = true
-        try {
-          await api.updateReadingProgress(chapterData.novelId, chapterData.chapterNumber)
-        } catch (error) {
-          console.error("[v0] Failed to add to reading history:", error)
-        } finally {
-          updatingProgressRef.current = false
-        }
-      }
     } catch (error) {
       console.error("Failed to fetch chapter content:", error)
       setError("content-fetch-error")
@@ -1045,10 +1035,9 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="pt-16 pb-24">
         {/* Chapter Content */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+        <div className="container mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto">
             {/* Breadcrumb: Novels > slug > Chapter number */}
             <div className="mb-4 text-sm text-muted-foreground">
               <nav aria-label="Breadcrumb" className="flex items-center space-x-2">
@@ -1067,6 +1056,28 @@ export default function ChapterPage() {
                 <span className="text-sm font-medium">Chapter {chapterNumber}</span>
               </nav>
             </div>
+
+            <Card>
+              <CardContent className="p-8" style={cardContentStyle}>
+                <div className="space-y-6">
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-bold mb-2">{chapter.title}</h1>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Chapter {chapterNumber}</span>
+                      {chapterContent?.wordCount && (
+                        <>
+                          <span>•</span>
+                          <span>{chapterContent.wordCount.toLocaleString()} words</span>
+                        </>
+                      )}
+                      {chapterContent?.readingTime && (
+                        <>
+                          <span>•</span>
+                          <span>{chapterContent.readingTime} min read</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
             <Card>
               <CardContent className="p-8" style={cardContentStyle}>
@@ -1206,7 +1217,6 @@ export default function ChapterPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Custom CSS for chapter content */}
       <style jsx>{`

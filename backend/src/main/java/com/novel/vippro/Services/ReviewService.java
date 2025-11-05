@@ -167,4 +167,9 @@ public class ReviewService {
         review.setUnhelpfulVotes(review.getUnhelpfulVotes() + 1);
         reviewRepository.save(review);
     }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ReviewDTO> getAllReviews(Object object, Pageable pageable) {
+        return new PageResponse<>(reviewRepository.findAll(pageable).map(mapper::ReviewtoDTO));
+    }
 }

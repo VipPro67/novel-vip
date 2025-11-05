@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle } from "lucide-react"
+import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Header } from "@/components/layout/header"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { useAuth } from "@/components/providers/auth-provider"
 import { api } from "@/lib/api"
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button"
 export default function AdminDashboard() {
   const { user, hasRole } = useAuth()
   return (
-  <AuthGuard requireRole="ADMIN">
+    <AuthGuard requireRole="ADMIN">
       <AdminDashboardContent />
     </AuthGuard>
   )
@@ -198,9 +197,9 @@ function AdminDashboardContent() {
                       Manage Novels
                     </Button>
                   </Link>
-                  <Link href="/admin/novels" className="block">
+                  <Link href="/admin/categories" className="block">
                     <Button variant="outline" className="w-full justify-start bg-transparent">
-                      Manage Chapters
+                      Manage Categories
                     </Button>
                   </Link>
                   <Link href="/admin/genres" className="block">
@@ -243,6 +242,128 @@ function AdminDashboardContent() {
                     </Button>
                   </Link>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* New Admin Features */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  File Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Manage uploaded files in the system</p>
+                <Link href="/admin/files" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Manage Files
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Manage system-wide announcements and notifications</p>
+                <Link href="/admin/notifications" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Notification Center
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Feature Requests
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Review, approve, and manage feature requests</p>
+                <Link href="/admin/feature-requests" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Feature Requests
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Comments
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Moderate and manage all user comments</p>
+                <Link href="/admin/comments" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Comments Management
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Reviews
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Moderate novel reviews and ratings</p>
+                <Link href="/admin/reviews" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Reviews Management
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Messages
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Monitor user messages and group chats</p>
+                <Link href="/admin/messages" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Messages & Groups
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Handle content and user reports</p>
+                <Link href="/admin/reports" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Reports Management
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

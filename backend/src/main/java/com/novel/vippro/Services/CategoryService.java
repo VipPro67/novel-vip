@@ -43,7 +43,7 @@ public class CategoryService {
         return mapper.CategorytoDTO(category);
     }
 
-    @CacheEvict(value = "categories", key = "#id")
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional
     public CategoryDTO updateCategory(UUID id, CategoryDTO categoryDetails) {
         Category category = categoryRepository.findById(id)
