@@ -27,6 +27,8 @@ import com.novel.vippro.DTO.Review.ReviewDTO;
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.User.UserDTO;
+import com.novel.vippro.DTO.Video.CreateVideoDTO;
+import com.novel.vippro.DTO.Video.VideoDTO;
 import com.novel.vippro.Models.*;
 
 import java.util.List;
@@ -186,4 +188,11 @@ public interface Mapper {
 
     // EPUB import job mappings
     EpubImportJobDTO EpubImportJobToDTO(EpubImportJob job);
+
+    // Video-related mappings
+    VideoDTO VideoToDTO(Video video);
+
+    Video CreateVideoDTOtoVideo(CreateVideoDTO dto);
+
+    void updateVideoFromDTO(VideoDTO dto, Video video);
 }

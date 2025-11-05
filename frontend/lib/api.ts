@@ -129,6 +129,24 @@ export interface ReadingHistory {
   createdAt: string
 }
 
+export interface Video {
+  id: string
+  title: string
+  description?: string
+  videoUrl: string
+  embedUrl: string
+  platform: "YOUTUBE" | "FACEBOOK"
+  externalId?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateVideoPayload {
+  title: string
+  description?: string
+  videoUrl: string
+}
+
 export interface Rating {
   id: string
   userId: string
@@ -1191,6 +1209,45 @@ class ApiClient {
   async rejectRoleRequest(requestId: string) {
     return this.request<RoleRequest>(`/api/role-approval/reject/${requestId}`, {
       method: "POST",
+    })
+  }
+
+  // Video endpoints
+  async getVideos(
+    params: {
+      page?: number
+      size?: number
+      sortBy?: string
+      sortDir?: string
+      search?: string
+    } = {},
+  ) {
+    const searchParams = new URLSearchParams()
+    const page = params.page ?? 0
+    const size = params.size ?? 12
+    const sortBy = params.sortBy ?? "createdAt"
+    const sortDir = params.sortDir ?? "desc"
+
+    searchParams.append("page", page.toString())
+    searchParams.append("size", size.toString())
+    searchParams.append("sortBy", sortBy)
+    searchParams.append("sortDir", sortDir)
+
+    if (params.search && params.search.trim().length > 0) {
+      searchParams.append("search", params.search.trim())
+    }
+
+    return this.request<PageResponse<Video>>(`/api/videos?${searchParams.toString()}`)
+  }
+
+  async getVideo(videoId: string) {
+    return this.request<Video>(`/api/videos/${videoId}`)
+  }
+
+  async createVideo(payload: CreateVideoPayload) {
+    return this.request<Video>("/api/videos", {
+      method: "POST",
+      body: JSON.stringify(payload),
     })
   }
 

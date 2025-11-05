@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, AlertCircle } from "lucide-react"
+import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, AlertCircle, PlayCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -277,6 +277,23 @@ function AdminDashboardContent() {
                 <Link href="/admin/notifications" className="block">
                   <Button variant="outline" className="w-full justify-start bg-transparent">
                     Notification Center
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PlayCircle className="h-5 w-5" />
+                  Video Library
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Curate external videos and keep the catalog fresh</p>
+                <Link href="/admin/videos" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Manage Videos
                   </Button>
                 </Link>
               </CardContent>

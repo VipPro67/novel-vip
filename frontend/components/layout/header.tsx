@@ -58,6 +58,7 @@ export function Header() {
     { name: "Hot", href: "/novels/hot" },
     { name: "Top", href: "/novels/top" },
     { name: "Latest", href: "/novels/latest" },
+    { name: "Videos", href: "/videos" },
   ]
 
   return (

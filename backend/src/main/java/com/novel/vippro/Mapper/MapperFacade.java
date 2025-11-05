@@ -27,6 +27,8 @@ import com.novel.vippro.DTO.Review.ReviewDTO;
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.DTO.User.UserDTO;
+import com.novel.vippro.DTO.Video.CreateVideoDTO;
+import com.novel.vippro.DTO.Video.VideoDTO;
 import com.novel.vippro.Models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -78,6 +80,8 @@ public class MapperFacade implements Mapper {
 	private RatingMapper ratingMapper;
 	@Autowired
 	private EpubImportJobMapper epubImportJobMapper;
+	@Autowired
+	private VideoMapper videoMapper;
 
 	// Novel-related mappings
 	@Override
@@ -423,14 +427,29 @@ public class MapperFacade implements Mapper {
 		return fileMetadataMapper.DTOToFileMetadata(dto);
 	}
 
-        @Override
-        public void updateFileMetadataFromDTO(FileMetadataDTO dto, FileMetadata metadata) {
-                fileMetadataMapper.updateFileMetadataFromDTO(dto, metadata);
-        }
+	@Override
+	public void updateFileMetadataFromDTO(FileMetadataDTO dto, FileMetadata metadata) {
+		fileMetadataMapper.updateFileMetadataFromDTO(dto, metadata);
+	}
 
-        @Override
-        public EpubImportJobDTO EpubImportJobToDTO(EpubImportJob job) {
-                return epubImportJobMapper.toDTO(job);
-        }
+	@Override
+	public EpubImportJobDTO EpubImportJobToDTO(EpubImportJob job) {
+		return epubImportJobMapper.toDTO(job);
+	}
+
+	@Override
+	public VideoDTO VideoToDTO(Video video) {
+		return videoMapper.VideoToDTO(video);
+	}
+
+	@Override
+	public Video CreateVideoDTOtoVideo(CreateVideoDTO dto) {
+		return videoMapper.CreateVideoDTOtoVideo(dto);
+	}
+
+	@Override
+	public void updateVideoFromDTO(VideoDTO dto, Video video) {
+		videoMapper.updateVideoFromDTO(dto, video);
+	}
 
 }
