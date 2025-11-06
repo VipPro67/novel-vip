@@ -1249,20 +1249,6 @@ export default function ChapterPage() {
             </Button>
           </div>
 
-          {chapter && (
-            <div className="mt-6">
-              <Card>
-                <CardContent className="p-4">
-                  <ChapterNavigation
-                    novelSlug={slug!}
-                    currentChapterNumber={chapterNumber}
-                    currentChapterTitle={chapter.title}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* Comments Section */}
           <div className="mt-8 text-center">
             <Button

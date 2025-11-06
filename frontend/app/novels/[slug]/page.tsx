@@ -98,6 +98,7 @@ export default function NovelDetailPage() {
   useEffect(() => {
     if (novel) {
       fetchChapters(novel.id, chaptersPage, chaptersSize)
+      fetchUserRating(novel.id)
     }
   }, [chaptersPage, chaptersSize])
 
@@ -114,7 +115,6 @@ export default function NovelDetailPage() {
         sortBy: "chapterNumber",
         sortDir: "asc",
       })
-
       if (chaptersResponse.success) {
         setChapters(chaptersResponse.data.content)
         setChaptersTotalPages(chaptersResponse.data.totalPages)
@@ -134,6 +134,22 @@ export default function NovelDetailPage() {
     } finally {
       setChaptersLoading(false)
     }
+  }
+
+  const fetchUserRating = async (novelId: string)=>
+  {    try {
+
+    if(isAuthenticated)
+      {
+        const ratingResponse = await api.getUserRating(novelId)
+        if(ratingResponse.success)
+        {
+          setUserRating(ratingResponse.data.score)
+        }
+      }}
+      catch (error){
+        console.error("Failed to fetch user rating:", error)
+      }
   }
 
   const fetchNovelData = async (novelSlug: string) => {
