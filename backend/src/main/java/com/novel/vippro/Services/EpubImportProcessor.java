@@ -71,7 +71,7 @@ public class EpubImportProcessor {
     @Transactional
     public void process(EpubImportMessage message) {
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MICROSECONDS.sleep(10);
             EpubImportJob job = jobRepository.findById(message.getJobId()).orElse(null);
         if (job == null) {
             logger.warn("Received EPUB import message for unknown job {}", message.getJobId());

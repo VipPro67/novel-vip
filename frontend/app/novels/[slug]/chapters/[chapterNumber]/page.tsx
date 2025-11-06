@@ -62,8 +62,6 @@ const READER_SETTINGS_STORAGE_KEY = "readerSettings";
 interface ChapterContent {
   title: string;
   content: string;
-  wordCount: number;
-  readingTime: number;
 }
 
 interface CommentWithReplies extends Comment {
@@ -348,7 +346,10 @@ export default function ChapterPage() {
       }
 
       const content = await response.json();
-      setChapterContent(content);
+      setChapterContent({
+        title: chapterData.title,
+        content: content.content,
+      });
       setError(null);
       setErrorMessage("");
     } catch (error) {
@@ -1144,7 +1145,7 @@ export default function ChapterPage() {
                   href={`/novels/${slug}`}
                   className="text-sm hover:underline"
                 >
-                  {slug}
+                  {chapter.novelTitle}
                 </Link>
               ) : (
                 <span className="text-sm text-muted-foreground">
@@ -1159,26 +1160,16 @@ export default function ChapterPage() {
           </div>
 
           <Card>
-            <CardContent className="p-8" style={cardContentStyle}>
+            <CardContent className="p-3" style={cardContentStyle}>
               <div className="space-y-6">
-                <div className="mb-8">
+                <div className="flex items-center justify-between">
                   <h1 className="text-3xl font-bold mb-2">{chapter.title}</h1>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Chapter {chapterNumber}</span>
-                    {chapterContent?.wordCount && (
-                      <>
-                        <span>•</span>
-                        <span>
-                          {chapterContent.wordCount.toLocaleString()} words
-                        </span>
-                      </>
-                    )}
-                    {chapterContent?.readingTime && (
-                      <>
-                        <span>•</span>
-                        <span>{chapterContent.readingTime} min read</span>
-                      </>
-                    )}
+                  <div className="grid">
+                    <span>{chapterContent?.content.length} words</span>
+                    
+                    <span>
+                      {Math.round(chapterContent?.content.length/1500)} minutes
+                    </span>
                   </div>
                 </div>
               </div>

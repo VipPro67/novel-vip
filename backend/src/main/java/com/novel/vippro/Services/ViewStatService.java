@@ -35,23 +35,28 @@ public class ViewStatService {
 
     @Transactional
     public void recordView(UUID novelId, UUID chapterId) {
-       
+
         UUID userId = UserDetailsImpl.getCurrentUserId();
-        LocalDateTime thereMinutesAgo = LocalDateTime.now().minusMinutes(3);
-        Long recentViews = viewStatRepository.countRecentViewsByUserAndNovel(novelId, userId, thereMinutesAgo);
-        
+        LocalDateTime threeMinutesAgo = LocalDateTime.now().minusMinutes(3);
+
+        Long recentViews = 0L;
+        if (userId != null) {
+            recentViews = viewStatRepository.countRecentViewsByUserAndNovel(novelId, userId, threeMinutesAgo);
+        }
+
         if (recentViews == 0) {
             ViewStat stat = new ViewStat();
             stat.setNovel(novelRepository.getReferenceById(novelId));
             if (chapterId != null) {
                 stat.setChapter(chapterRepository.getReferenceById(chapterId));
             }
-            stat.setUser(userRepository.getReferenceById(userId));
+            if (userId != null) {
+                stat.setUser(userRepository.getReferenceById(userId));
+            }
             stat.setViewDate(LocalDateTime.now());
-            
+
             viewStatRepository.save(stat);
             updateNovelViewCounts(novelId);
-            System.out.println("View recorded for novel " + novelId + " by user " + userId);
         }
     }
 

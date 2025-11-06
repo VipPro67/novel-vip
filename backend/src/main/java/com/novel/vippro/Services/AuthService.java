@@ -56,14 +56,8 @@ public class AuthService {
 	public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
 		try {
 			logger.info("Attempting to authenticate user: {}", loginRequest.getEmail());
-			User user = userRepository.findByEmail(loginRequest.getEmail()).get();
-			if (user == null) {
-				return ResponseEntity
-						.status(403)
-						.body(new ControllerResponse<>(false,
-								"User not found", null, 403));
-
-			}
+			User user = userRepository.findByEmail(loginRequest.getEmail())
+					.orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.getEmail()));
 			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(user.getUsername(),
 							loginRequest.getPassword()));

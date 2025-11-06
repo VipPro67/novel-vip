@@ -105,11 +105,12 @@ public class ChapterService {
             throw new ResourceNotFoundException("Novel", "slug", slug);
         }
         Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novel.getId(), chapterNumber);
+        
         if (chapter == null) {
             throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
                     novel.getId() + " and " + chapterNumber);
         }
-
+        chapter.setNovel(novel);
         return mapper.ChaptertoChapterDetailDTO(chapter);
     }
 
