@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
-import { api, type User } from "@/lib/api"
+import { api, type User } from "@/services/api"
 // Import the new Pagination component
 import { Pagination } from "@/components/ui/pagination"
 

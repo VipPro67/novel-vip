@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { api, type Video } from "@/lib/api"
+import { api, type Video } from "@/services/api"
 import { formatRelativeTime } from "@/lib/utils"
 import { Loader2, Play, Search, Video as VideoIcon } from "lucide-react"
 

@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel, type PageResponse } from "@/lib/api"
+import { api, type Novel, type PageResponse } from "@/services/api"
 
 export function NovelManagement() {
   const router = useRouter()

@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { api, ERole, type RoleRequest } from "@/lib/api"
+import { api} from "@/services/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
+import { ERole, RoleRequest } from "@/models"
 
 export function MyRoleRequests() {
   const [requests, setRequests] = useState<RoleRequest[]>([])

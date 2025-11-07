@@ -2,9 +2,9 @@
 
 import type React from "react"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-
-import { api, type ReaderSettings } from "@/lib/api"
 import { useAuth } from "./auth-provider"
+import { ReaderSettings } from "@/models"
+import { api } from "@/services/api"
 
 interface ReaderSettingsContextValue {
   settings: ReaderSettings | null

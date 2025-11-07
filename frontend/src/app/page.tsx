@@ -9,7 +9,8 @@ import { Header } from "@/components/layout/header"
 import { NovelCard } from "@/components/novel/novel-card"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useAuthModals } from "@/hooks/use-auth-modals"
-import { api, type Novel } from "@/lib/api"
+import { Novel } from "@/models"
+import { api } from "@/services/api"
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth()

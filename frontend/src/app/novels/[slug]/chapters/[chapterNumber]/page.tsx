@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, use } from "react";
 import type { CSSProperties } from "react";
 import { Client } from "@stomp/stompjs";
 import Link from "next/link";
@@ -31,11 +31,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useReaderSettings } from "@/components/providers/reader-settings-provider";
 import {
-  api,
+  Chapter,
   type ChapterDetail,
   type Comment,
   type ReaderSettings,
-} from "@/lib/api";
+} from "@/models";
 import { formatRelativeTime } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ChapterNavigation from "@/components/chapter-navigation";
 import { ReportDialog } from "@/components/report/report-dialog";
+import { api } from "@/services/api";
 
 const READER_SETTINGS_STORAGE_KEY = "readerSettings";
 
@@ -278,6 +279,13 @@ export default function ChapterPage() {
     fetchChapter();
   }, [slug, chapterNumber]);
 
+  useEffect(() => {
+    if (!chapter) {
+      return
+    }
+      updateReadingProgress(chapter);
+  },[chapter]);
+
   const fetchChapter = async () => {
     if (fetchingChapterRef.current) return;
     fetchingChapterRef.current = true;
@@ -371,6 +379,15 @@ export default function ChapterPage() {
     }
   };
 
+  const updateReadingProgress = async (chapter : Chapter) => {
+    try {
+      if(isAuthenticated)
+        await api.updateReadingProgress(chapter.novelId,chapter.chapterNumber)
+    }
+    catch {
+
+    }
+  };
   const handleGenerateAudio = useCallback(async () => {
     if (!chapter?.id) {
       return;

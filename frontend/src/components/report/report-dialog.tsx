@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 import { useRouter } from "next/navigation"
 
 interface ReportDialogProps {

@@ -1,6 +1,6 @@
 import { Client, IMessage } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { Notification } from "./api";
+import { Notification } from "../models";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";

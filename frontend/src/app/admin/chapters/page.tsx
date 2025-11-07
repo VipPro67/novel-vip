@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel } from "@/lib/api"
+import { api, type Novel } from "@/services/api"
 import {
 	Bold,
 	Italic,

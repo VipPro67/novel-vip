@@ -114,7 +114,7 @@ public class NotificationController {
             @ApiResponse(responseCode = "200", description = "Unread count retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
-    @GetMapping("/unread/count")
+    @GetMapping("/unread-count")
     public ControllerResponse<Long> getUnreadCount() {
         Long count = notificationService.getUnreadNotificationsCount();
         return ControllerResponse.success("Unread count retrieved successfully", count);

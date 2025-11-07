@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Upload, X, FileText, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 import { useParams } from "next/navigation"
 
 interface EpubUploadProps {

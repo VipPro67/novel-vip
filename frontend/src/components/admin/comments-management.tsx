@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Comment } from "@/lib/api"
+import { api, type Comment } from "@/services/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
 

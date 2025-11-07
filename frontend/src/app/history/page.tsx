@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination } from "@/hooks/use-pagination";
-import { api, type ReadingHistory } from "@/lib/api";
+import { api } from "@/services/api";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { ReadingHistory } from "@/models";
 
 export default function HistoryPage() {
   return (
@@ -66,10 +67,6 @@ function HistoryContent() {
     }
   };
 
-  const filteredHistory = history.filter((item) =>
-    item.novel?.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -111,7 +108,7 @@ function HistoryContent() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredHistory.length === 0 ? (
+          ) : history.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Clock className="h-12 w-12 text-muted-foreground mb-4" />
@@ -128,7 +125,7 @@ function HistoryContent() {
           ) : (
             <>
               <div className="space-y-4">
-                {filteredHistory.map((item) => (
+                {history.map((item) => (
                   <Card
                     key={item.id}
                     className="hover:shadow-md transition-shadow"
@@ -141,7 +138,7 @@ function HistoryContent() {
                         >
                           <img
                             src={
-                              item.novel?.coverImage ||
+                              item.novel?.imageUrl ||
                               "/placeholder.svg?height=120&width=80"
                             }
                             alt={item.novel?.title || "Novel cover"}
@@ -162,7 +159,7 @@ function HistoryContent() {
                               Chapter {item.chapterNumber}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
-                              {item.progress}% complete
+                              {Math.round(item.lastReadChapterIndex/item.novel.totalChapters)*100}% complete
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -174,7 +171,7 @@ function HistoryContent() {
                         </div>
                         <div className="flex-shrink-0">
                           <Link
-                            href={`/novels/${item.novel?.slug}/chapters/${item.chapterNumber}`}
+                            href={`/novels/${item.novel?.slug}/chapters/${item.lastReadChapterIndex}`}
                           >
                             <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
                               Continue Reading

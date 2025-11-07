@@ -10,8 +10,8 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { useNotifications } from "@/hooks/use-notifications"
-import { api, Notification } from "@/lib/api"
 import clsx from "clsx"
+import { api } from "@/services/api"
 
 export function NotificationBell() {
     const {

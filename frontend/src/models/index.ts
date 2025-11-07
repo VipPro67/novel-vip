@@ -1,4 +1,4 @@
-export * from "./api"
+export * from "./api-response"
 export * from "./bookmark"
 export * from "./category"
 export * from "./chapter"

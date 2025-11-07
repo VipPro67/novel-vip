@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { api, Notification } from "@/lib/api"
+import { api, Notification } from "@/services/api"
 import { useAuth } from "@/components/providers/auth-provider"
 
 export default function NotificationsPage() {

@@ -2,12 +2,12 @@ package com.novel.vippro.Repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.ReadingHistory;
 
 import java.util.List;
@@ -22,6 +22,7 @@ public interface ReadingHistoryRepository extends JpaRepository<ReadingHistory, 
         
         @Query("SELECT h FROM ReadingHistory h WHERE h.user.id = :userId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByUserIdOrderByLastReadAtDesc(UUID userId, Pageable pageable);
+
 
         @Query("SELECT h FROM ReadingHistory h WHERE h.novel.id = :novelId ORDER BY h.lastReadAt DESC")
         Page<ReadingHistory> findByNovelIdOrderByLastReadAtDesc(@Param("novelId") UUID novelId, Pageable pageable);

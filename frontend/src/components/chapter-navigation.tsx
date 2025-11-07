@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronUp, List, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { api, type Chapter } from "@/lib/api"
+import { api, type Chapter } from "@/services/api"
 import { useToast } from "@/hooks/use-toast"
 
 interface ChapterNavigationProps {

@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/header"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { api, type Chapter, type PageResponse } from "@/lib/api"
+import { api, type Chapter, type PageResponse } from "@/services/api"
 import { Loader2, Edit, Plus, Delete } from "lucide-react"
 import { se } from "date-fns/locale"
 

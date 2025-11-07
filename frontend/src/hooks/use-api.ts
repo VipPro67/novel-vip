@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useAuth } from "@/components/providers/auth-provider"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 
 export function useApi() {
   const { user, isAuthenticated } = useAuth()

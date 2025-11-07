@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { api, type CreateVideoPayload, type Video } from "@/lib/api"
+import { api, type CreateVideoPayload, type Video } from "@/services/api"
 import { formatRelativeTime } from "@/lib/utils"
 
 interface VideoFormState extends CreateVideoPayload {}

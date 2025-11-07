@@ -16,7 +16,7 @@ import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox"
 import { ArrowLeft, Upload, X, Plus } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 import Image from "next/image"
 
 interface NovelFormData {

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Notification } from "@/lib/api"
+import { api, type Notification } from "@/services/api"
 
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([])

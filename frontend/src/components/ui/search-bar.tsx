@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSuggest, SuggestItem } from "@/hooks/use-suggest";
-import { api } from "@/lib/api";
+import { api } from "@/services/api";
 
 export default function SearchBar() {
 	const router = useRouter();

@@ -1,8 +1,9 @@
 "use client"
 
+import { ApiResponse, User } from "@/models"
+import { api } from "@/services/api"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { api, ApiResponse, type User } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null

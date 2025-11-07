@@ -10,6 +10,7 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.AdvancedChapterUploadService;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ChapterService;
+import com.novel.vippro.Services.ReadingHistoryService;
 import com.novel.vippro.Services.ViewStatService;
 
 import io.swagger.v3.oas.annotations.Operation;

@@ -5,7 +5,7 @@ import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { useAuth } from "@/components/providers/auth-provider"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 

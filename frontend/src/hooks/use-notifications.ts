@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { api, Notification } from "@/lib/api"
+import { api } from "@/services/api"
 import { connectNotifications, disconnectNotifications } from "@/lib/notifications"
 import { useAuth } from "@/components/providers/auth-provider"
 

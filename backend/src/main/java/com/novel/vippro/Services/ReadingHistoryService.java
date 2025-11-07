@@ -197,16 +197,11 @@ public class ReadingHistoryService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<NovelDTO> getUserNovelReadingHistory(Pageable pageable) {
+    public PageResponse<ReadingHistoryDTO> getUserNovelReadingHistory(Pageable pageable) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         Page<ReadingHistory> historyPage = readingHistoryRepository
                 .findByUserIdOrderByLastReadAtDesc(userId, pageable);
-        List<NovelDTO> novelDTOs = historyPage.stream()
-                .map(ReadingHistory::getNovel)
-                .distinct()
-                .map(mapper::NoveltoDTO)
-                .collect(Collectors.toList());
         return new PageResponse<>(
-                new PageImpl<>(novelDTOs, pageable, historyPage.getTotalElements()));
+                historyPage.map(mapper::ReadingHistorytoDTO));
     }
 }

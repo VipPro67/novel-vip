@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { api, type RoleRequest } from "@/lib/api"
+import { api, type RoleRequest } from "@/services/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
 

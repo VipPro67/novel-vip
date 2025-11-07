@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { NovelCard } from "@/components/novel/novel-card";
-import { api, Tag, type Category, type Genre, type Novel } from "@/lib/api";
+import { api, Tag, type Category, type Genre, type Novel } from "@/services/api";
 import { Pagination } from "@/components/ui/pagination";
 
 type FilterKey = "keyword" | "title" | "author" | "category" | "genre" | "tag";

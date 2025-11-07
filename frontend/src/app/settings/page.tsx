@@ -27,7 +27,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { api, type ReaderSettings } from "@/lib/api";
+import { api, type ReaderSettings } from "@/services/api";
 
 export default function SettingsPage() {
   return (

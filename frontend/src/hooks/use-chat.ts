@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 import { useToast } from "@/hooks/use-toast"
 
 export interface ChatMessage {

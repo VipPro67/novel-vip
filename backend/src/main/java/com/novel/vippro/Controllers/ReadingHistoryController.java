@@ -47,13 +47,13 @@ public class ReadingHistoryController {
 			@ApiResponse(responseCode = "401", description = "Not authenticated")
 	})
 	@GetMapping
-	public ControllerResponse<PageResponse<NovelDTO>> getReadingHistory(
+	public ControllerResponse<PageResponse<ReadingHistoryDTO>> getReadingHistory(
 			@Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,
 			@Parameter(description = "Items per page", example = "10") @RequestParam(defaultValue = "10") int size,
 			@Parameter(description = "Sort field", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
 			@Parameter(description = "Sort direction", example = "desc") @RequestParam(defaultValue = "desc") String sortDir) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(sortDir), sortBy));
-		PageResponse<NovelDTO> history = readingHistoryService.getUserNovelReadingHistory(pageable);
+		PageResponse<ReadingHistoryDTO> history = readingHistoryService.getUserNovelReadingHistory(pageable);
 		return ControllerResponse.success("Reading history retrieved successfully", history);
 	}
 

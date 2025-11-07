@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { NovelCard } from "@/components/novel/novel-card";
-import { api, type Novel } from "@/lib/api";
+import { api, type Novel } from "@/services/api";
 import { Pagination } from "@/components/ui/pagination";
 
 export default function HotNovelsPage() {

@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Star, Eye, BookOpen } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { Novel } from "@/lib/api"
+import type { Novel } from "@/services/api"
 
 interface NovelCardProps {
 	novel: Novel

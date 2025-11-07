@@ -28,7 +28,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/api"
+import { api } from "@/services/api"
 
 interface Genre {
   id: string

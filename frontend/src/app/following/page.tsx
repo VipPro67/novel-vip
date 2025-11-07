@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
 import { useToast } from "@/hooks/use-toast"
 import { usePagination } from "@/hooks/use-pagination"
-import { api, type Novel } from "@/lib/api"
+import { api, type Novel } from "@/services/api"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 

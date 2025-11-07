@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, BookOpen, FileText, Clock, Target, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel } from "@/lib/api"
+import { api, type Novel } from "@/services/api"
 
 interface ChapterFormData {
   novelId: string

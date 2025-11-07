@@ -28,7 +28,7 @@ import { EpubUpload } from "@/components/ui/epub-upload";
 import { ArrowLeft, Upload, X, Loader2, FileText } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { api, type Novel } from "@/lib/api";
+import { api, type Novel } from "@/services/api";
 import Image from "next/image";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
 
