@@ -1,250 +1,28 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+import {
+  ApiResponse,
+  Bookmark,
+  Category,
+  Chapter,
+  ChapterDetail,
+  Comment,
+  CreateVideoPayload,
+  FileMetadata,
+  Novel,
+  Notification,
+  PageResponse,
+  Rating,
+  ReaderSettings,
+  ReadingHistory,
+  Report,
+  Review,
+  RoleRequest,
+  ERole,
+  User,
+  Video,
+} from "@/models"
+import { ApiClient, API_BASE_URL } from "./api-client"
 
-export interface ApiResponse<T> {
-  success: boolean
-  message: string
-  data: T
-  statusCode: number
-}
-
-export interface PageResponse<T> {
-  totalPages: number
-  totalElements: number
-  pageNumber: number
-  pageSize: number
-  content: T[]
-}
-
-export interface User {
-  id: string
-  username: string
-  email: string
-  fullName?: string
-  roles: string[]
-}
-
-export interface Novel {
-  id: string
-  title: string
-  description: string
-  slug: string
-  author: string
-  imageUrl: string
-  status: string
-  categories: Category[] | []
-  genres: Genre[] | []
-  tags: Tag[] | []
-  totalChapters: number
-  totalViews: number
-  monthlyViews: number
-  dailyViews: number
-  rating: number
-  updatedAt: string
-}
-
-export interface FileMetadata {
-  id: string
-  contentType: string
-  publicId: string
-  fileUrl: string
-  uploadedAt: string
-  lastModifiedAt: string
-  fileName: string
-  type: string
-  size: number
-}
-
-export interface Chapter {
-  id: string
-  chapterNumber: number
-  title: string
-  novelId: string
-  novelTitle: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ChapterDetail extends Chapter {
-  jsonUrl?: string
-  audioUrl?: string
-}
-
-export interface Category {
-  id: string
-  name: string
-  description?: string
-}
-
-export interface Genre {
-  id: string
-  name: string
-  description?: string
-}
-
-export interface Tag {
-  id: string
-  name: string
-  description?: string
-}
-
-export interface Comment {
-  id: string
-  content: string
-  userId: string
-  username: string
-  novelId?: string
-  chapterId?: string
-  parentId?: string | null
-  replies?: Comment[]
-  createdAt: string
-  updatedAt: string
-  edited?: boolean
-}
-
-export interface Bookmark {
-  id: string
-  userId: string
-  chapterId: string
-  novelId: string
-  chapterTitle: string
-  novelTitle: string
-  note?: string
-  progress: number
-  createdAt: string
-  updatedAt: string
-}
-
-export interface ReadingHistory {
-  id: string
-  userId: string
-  novelId: string
-  novelTitle: string
-  novelCover?: string
-  chapterId: string
-  chapterTitle: string
-  chapterNumber: number
-  progress: number
-  readingTime: number
-  lastReadAt: string
-  createdAt: string
-}
-
-export interface Video {
-  id: string
-  title: string
-  description?: string
-  videoUrl: string
-  embedUrl: string
-  platform: "YOUTUBE" | "FACEBOOK"
-  externalId?: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreateVideoPayload {
-  title: string
-  description?: string
-  videoUrl: string
-}
-
-export interface Rating {
-  id: string
-  userId: string
-  username: string
-  novelId: string
-  novelTitle: string
-  score: number
-  review?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Review {
-  id: string
-  novelId: string
-  novelTitle: string
-  userId: string
-  username: string
-  userAvatar?: string
-  title: string
-  content: string
-  rating: number
-  helpfulVotes: number
-  unhelpfulVotes: number
-  edited: boolean
-  verifiedPurchase: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Notification {
-  id: string
-  userId: string
-  title: string
-  message: string
-  read: boolean
-  type: "SYSTEM" | "BOOK_UPDATE" | "CHAPTER_UPDATE" | "COMMENT" | "LIKE" | "FOLLOW" | "MESSAGE"
-  reference?: string
-  createdAt: string
-}
-
-export interface ReaderSettings {
-  id: string
-  userId: string
-  fontSize: number
-  fontFamily: string
-  lineHeight: number
-  theme: string
-  marginSize: number
-  paragraphSpacing: number
-  autoScroll: boolean
-  autoScrollSpeed: number
-  keepScreenOn: boolean
-  showProgress: boolean
-  showChapterTitle: boolean
-  showTime: boolean
-  showBattery: boolean
-  textColor: string
-  backgroundColor: string
-  audioEnabled: boolean
-  audioAutoNextChapter: boolean
-  audioSpeed: number
-}
-
-export enum ERole {
-  USER = 0,
-  MODERATOR = 1,
-  ADMIN = 2,
-  AUTHOR = 3,
-}
-
-export interface RoleRequest {
-  id: string
-  userId: string
-  username: string
-  email: string
-  requestedRole: ERole
-  reason: string
-  status: "PENDING" | "APPROVED" | "REJECTED"
-  createdAt: string
-  updatedAt: string
-  processedBy?: string
-  rejectReason?: string
-}
-
-export interface Report {
-  id: string
-  reportType: "NOVEL" | "CHAPTER" | "COMMENT" | "REVIEW" | "USER"
-  targetId: string
-  reason: "SPAM" | "INAPPROPRIATE_CONTENT" | "COPYRIGHT_VIOLATION" | "HARASSMENT" | "MISINFORMATION" | "OTHER"
-  description: string
-  status: "PENDING" | "REVIEWED" | "RESOLVED" | "DISMISSED"
-  reportedBy: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface FeatureRequest {
+interface FeatureRequest {
   id: string
   title: string
   description: string
@@ -259,68 +37,8 @@ export interface FeatureRequest {
   updatedAt: string
 }
 
-class ApiClient {
+class ApiService extends ApiClient {
 
-  setToken(token: string) {
-    this.token = token
-    if (typeof window !== "undefined") {
-      localStorage.setItem("token", token)
-    }
-  }
-
-  clearToken() {
-    this.token = null
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token")
-    }
-  }
-
-  getToken(): string | null {
-    return this.token
-  }
-
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`
-
-    const headers: HeadersInit = { ...options.headers }
-
-    const isFormData = options.body instanceof FormData
-    if (!isFormData) {
-      headers["Content-Type"] = "application/json"
-    }
-
-    // Add Authorization header if token exists
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
-    }
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      })
-      if (!response.ok) {
-        if (response.status === 401) {
-          this.clearToken()
-          throw new Error("Authentication failed. Please login again.")
-        } else if (response.status === 403) {
-          throw new Error("Access denied. Insufficient permissions.")
-        } else if (response.status === 404) {
-          throw new Error("Resource not found.")
-        } else if (response.status >= 500) {
-          throw new Error("Server error. Please try again later.")
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-      }
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error("API Request Error:", error)
-      throw error
-    }
-  }
 
   // Auth endpoints
   async login(email: string, password: string) {
@@ -1334,16 +1052,6 @@ class ApiClient {
   }
 
 
-  private baseURL: string
-  private token: string | null = null
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
-    if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("token")
-    }
-  }
-
   async getNovelReviews(
     novelId: string,
     params: {
@@ -1714,4 +1422,5 @@ class ApiClient {
   }
 }
 
-export const api = new ApiClient(API_BASE_URL)
+export const api = new ApiService(API_BASE_URL)
+export type { FeatureRequest }
