@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
@@ -16,6 +17,10 @@ import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Message;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Repository.MessageRepository;
+import com.novel.vippro.Payload.Response.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 
 @Service
@@ -24,7 +29,7 @@ public class MessageService {
     private MessageRepository messageRepository;
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Autowired
     private GroupService groupService;
@@ -32,10 +37,9 @@ public class MessageService {
     @Autowired
     private Mapper mapper;
 
-    public List<MessageDTO> getAllMessages() {
-        return messageRepository.findAll().stream()
-                .map(mapper::MessagetoDTO)
-                .toList();
+    public PageResponse<MessageDTO> getAllMessages(Pageable pageable) {
+        Page<Message> page = messageRepository.findAll(pageable);
+        return new PageResponse<>(page.map(mapper::MessagetoDTO));
     }
 
     public MessageDTO getMessageById(UUID id) {
@@ -44,10 +48,12 @@ public class MessageService {
         return mapper.MessagetoDTO(message);
     }
 
+    @Transactional
     public MessageDTO createMessage(CreateMessageDTO messageDTO) {
         Message message = mapper.CreateDTOtoMessage(messageDTO);
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
-        User user = userService.getUserById(currentUserId);
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         message.setSender(user);
         if (messageDTO.getGroupId() == null && messageDTO.getReceiverId() == null) {
             throw new RuntimeException("Either groupId or receiverId must be provided");
@@ -55,7 +61,9 @@ public class MessageService {
         if (messageDTO.getGroupId() != null) {
             message.setGroup(mapper.DTOtoGroup(groupService.getGroupById(messageDTO.getGroupId())));
         } else {
-            message.setReceiver(userService.getUserById(messageDTO.getReceiverId()));
+            User receiver = userRepository.findById(messageDTO.getReceiverId())
+                    .orElseThrow(() -> new RuntimeException("Receiver not found"));
+            message.setReceiver(receiver);
         }
         message = messageRepository.save(message);
         messageRepository.flush();
@@ -81,16 +89,18 @@ public class MessageService {
         messageRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<MessageDTO> getMyConversations() {
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
-        User user = userService.getUserById(currentUserId);
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         List<MessageDTO> myConversations = new ArrayList<MessageDTO>();
         List<MessageDTO> privateConversations = getMyPrivateConversations(user);
         List<MessageDTO> groupConversations = getMyGroupConversations(user);
         myConversations.addAll(
                 privateConversations.stream()
                         .filter(m -> m.getCreatedAt().equals(privateConversations.stream()
-                                .filter(m2 -> Objects.equals(m.getReceiverId(), m2.getReceiverId()))
+                                .filter(m2 -> Objects.equals(m.getReceiver().getId(), m2.getReceiver().getId()))
                                 .map(MessageDTO::getCreatedAt)
                                 .max(Comparator.naturalOrder())
                                 .orElse(null)))
@@ -98,7 +108,7 @@ public class MessageService {
         myConversations.addAll(
                 groupConversations.stream()
                         .filter(m -> m.getCreatedAt().equals(groupConversations.stream()
-                                .filter(m2 -> Objects.equals(m.getGroupId(), m2.getGroupId()))
+                                .filter(m2 -> Objects.equals(m.getGroup().getId(), m2.getGroup().getId()))
                                 .map(MessageDTO::getCreatedAt)
                                 .max(Comparator.naturalOrder())
                                 .orElse(null)))
@@ -124,16 +134,9 @@ public class MessageService {
                 .toList();
     }
 
-    public List<MessageDTO> getMessagesByReceiverOrGroup(UUID id) {
-        List<MessageDTO> messages = new ArrayList<>();
-        messages.addAll(messageRepository.findBySenderOrReceiver(id).stream()
-                .map(mapper::MessagetoDTO)
-                .toList());
-        messages.addAll(messageRepository.findByGroupMembers(id).stream()
-                .map(mapper::MessagetoDTO)
-                .toList());
-        messages.sort(Comparator.comparing(MessageDTO::getCreatedAt).reversed());
-        return messages;
-
+    @Transactional(readOnly = true)
+    public PageResponse<MessageDTO> getMessagesByReceiverOrGroup(UUID id, Pageable pageable) {
+        Page<Message> page = messageRepository.getMessagesByReceiverOrGroup(id, pageable);
+        return new PageResponse<>(page.map(mapper::MessagetoDTO));
     }
 }

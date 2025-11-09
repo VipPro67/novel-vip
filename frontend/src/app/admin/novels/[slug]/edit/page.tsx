@@ -193,7 +193,7 @@ export default function EditNovelPage() {
     try {
       let coverImageId = null;
       if (coverImage) {
-        const uploadResponse = await api.uploadFile(coverImage, "NOVEL_COVER");
+        const uploadResponse = await api.updateNovelCover(novel.id, coverImage);
         if (uploadResponse.success) {
           coverImageId = uploadResponse.data.id;
         }

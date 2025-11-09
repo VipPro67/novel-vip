@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -47,8 +49,13 @@ public class EpubImportService {
     public EpubImportJobDTO queueNewNovelImport(MultipartFile epub, String slug, String status) {
         UUID userId = requireAuthenticatedUser();
         logger.info("Queueing EPUB import for new novel slug={} by user={}", slug, userId);
-        FileMetadata metadata = fileService.uploadFile(epub, "epub");
-
+        FileMetadata metadata;
+        try {
+            String publicId = String.format("novels/%s/epubs/", slug);
+            metadata = fileService.uploadFileWithPublicId(epub.getBytes(), publicId, epub.getOriginalFilename(), epub.getContentType(), "epub");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read EPUB file content", e);
+        }
         EpubImportJob job = new EpubImportJob();
         job.setType(EpubImportType.CREATE_NOVEL);
         job.setStatus(EpubImportStatus.QUEUED);
@@ -60,7 +67,7 @@ public class EpubImportService {
         job.setOriginalFileName(epub.getOriginalFilename());
         job = jobRepository.save(job);
 
-        publish(job);
+        publishAfterCommit(job);
         return mapper.EpubImportJobToDTO(job);
     }
 
@@ -91,7 +98,7 @@ public class EpubImportService {
         job.setOriginalFileName(epub.getOriginalFilename());
         job = jobRepository.save(job);
 
-        publish(job);
+        publishAfterCommit(job);
         return mapper.EpubImportJobToDTO(job);
     }
 
@@ -107,6 +114,20 @@ public class EpubImportService {
                 .type(job.getType())
                 .build();
         asyncTaskPublisher.publishEpubImport(message);
+    }
+
+    private void publishAfterCommit(EpubImportJob job) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            EpubImportJob persistedJob = job;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    publish(persistedJob);
+                }
+            });
+            return;
+        }
+        publish(job);
     }
 
     private UUID requireAuthenticatedUser() {

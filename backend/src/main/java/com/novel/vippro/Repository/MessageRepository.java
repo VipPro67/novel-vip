@@ -3,6 +3,8 @@ package com.novel.vippro.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -20,6 +22,6 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Query("SELECT m FROM Message m WHERE m.content LIKE %?1%")
     List<Message> findByContentContaining(String content);
 
-    @Query("SELECT m FROM Message m WHERE (m.group.id = ?1 OR m.receiver.id = ?1) AND m.group IS NOT NULL")
-    List<Message> findByGroupOrReceiver(UUID id);
+    @Query("SELECT m FROM Message m WHERE (m.receiver.id = ?1 AND m.group IS NULL) OR m.group.id = ?1")
+    Page<Message> getMessagesByReceiverOrGroup(UUID id, Pageable pageable);
 }

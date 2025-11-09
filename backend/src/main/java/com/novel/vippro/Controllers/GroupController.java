@@ -50,9 +50,13 @@ public class GroupController {
     @Operation(summary = "Get my group", description = "Retrieve groups the authenticated user is a member of")
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ControllerResponse<List<GroupDTO>> getMyGroups() {
-        List<GroupDTO> myGroup = groupService.getMyGroups();
-        return ControllerResponse.success("User's groups retrieved successfully", myGroup);
+    public ControllerResponse<PageResponse<GroupDTO>> getMyGroups(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ControllerResponse.success("User's groups retrieved successfully", groupService.getMyGroups(pageable));
     }
 
     @Operation(summary = "Get group members by group ID", description = "Retrieve all members of a specific group")

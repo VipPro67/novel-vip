@@ -21,7 +21,7 @@ export function MyProfile(){
         <div className="space-y-4">
           <div>
             <Label htmlFor="username">Username</Label>
-            <Input id="username" value={user.username} disabled />
+            <Input id="username" value={user.fullName || user.username} disabled />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Send, Paperclip, Smile, Plus, MessageSquare, Users, User, Phone, Video, Info } from "lucide-react"
+import { X, Send, Paperclip, Smile, Plus, MessageSquare, Users, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -169,15 +169,6 @@ export function ChatWidget() {
                     <p className="text-slate-400 text-xs mt-1">{activeGroup.memberCount} members</p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="p-2 hover:bg-slate-700 rounded-lg transition-colors" title="Voice call">
-                      <Phone size={18} className="text-slate-300" />
-                    </button>
-                    <button className="p-2 hover:bg-slate-700 rounded-lg transition-colors" title="Video call">
-                      <Video size={18} className="text-slate-300" />
-                    </button>
-                    <button className="p-2 hover:bg-slate-700 rounded-lg transition-colors" title="Group info">
-                      <Info size={18} className="text-slate-300" />
-                    </button>
                     <button
                       onClick={() => setActiveGroupId(null)}
                       className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
@@ -198,11 +189,11 @@ export function ChatWidget() {
                     {messages.map((msg) => (
                       <div key={msg.id} className="flex gap-3 animate-in fade-in">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">
-                          {msg.senderName.charAt(0).toUpperCase()}
+                          {msg.sender.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-white text-sm font-medium">{msg.senderName}</p>
+                            <p className="text-white text-sm font-medium">{msg.sender.username}</p>
                             <span className="text-slate-500 text-xs">{msg.timestamp}</span>
                           </div>
                           <p

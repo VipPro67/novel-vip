@@ -3,7 +3,6 @@ package com.novel.vippro.Services;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.AsyncTaskPublisher;
-import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Messaging.payload.EpubImportMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.EpubImportJob;
@@ -15,9 +14,11 @@ import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Repository.EpubImportJobRepository;
 import com.novel.vippro.Repository.FileMetadataRepository;
 import com.novel.vippro.Repository.NovelRepository;
+import com.novel.vippro.Utils.EpubChapterDTO;
 import com.novel.vippro.Utils.EpubParseResult;
 import com.novel.vippro.Utils.EpubParser;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EpubImportProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(EpubImportProcessor.class);
+    private static final int CHAPTER_BATCH_SIZE = 50;
 
     private final EpubImportJobRepository jobRepository;
     private final FileMetadataRepository fileMetadataRepository;
@@ -71,7 +73,7 @@ public class EpubImportProcessor {
     @Transactional
     public void process(EpubImportMessage message) {
         try {
-            TimeUnit.MICROSECONDS.sleep(10);
+            TimeUnit.MICROSECONDS.sleep(100);
             EpubImportJob job = jobRepository.findById(message.getJobId()).orElse(null);
         if (job == null) {
             logger.warn("Received EPUB import message for unknown job {}", message.getJobId());
@@ -155,15 +157,7 @@ public class EpubImportProcessor {
             }
         }
 
-        int idx = 1;
-        if (parsed.getChapters() != null) {
-            for (var chapterData : parsed.getChapters()) {
-                Chapter chapter = createChapter(job, novel.getId(), idx, chapterData.getTitle(),
-                        chapterData.getContentHtml());
-                idx++;
-                //enqueueAudio(job, novel, chapter);
-            }
-        }
+        createChaptersBulk(job, novel, parsed.getChapters(), 1, false);
 
         Novel refreshed = novelRepository.findById(novel.getId()).orElse(novel);
         try {
@@ -186,45 +180,50 @@ public class EpubImportProcessor {
             logger.info("Novel {} has no existing chapters. Starting from 0.", novel.getId());
         }
 
-        int idx = lastChapterNumber + 1;
-        if (parsed.getChapters() != null) {
-            for (var chapterData : parsed.getChapters()) {
-                Chapter chapter = createChapter(job, novel.getId(), idx, chapterData.getTitle(),
-                        chapterData.getContentHtml());
-                idx++;
-                //enqueueAudio(job, novel, chapter);
-            }
-        }
+        createChaptersBulk(job, novel, parsed.getChapters(), lastChapterNumber + 1, true);
 
         Novel refreshed = novelRepository.findById(novel.getId()).orElse(novel);
         searchService.indexNovels(List.of(refreshed));
     }
 
-    private Chapter createChapter(EpubImportJob job, UUID novelId, int chapterNumber, String title, String htmlContent) {
-        CreateChapterDTO dto = new CreateChapterDTO();
-        dto.setNovelId(novelId);
-        dto.setChapterNumber(chapterNumber);
-        String effectiveTitle = (title == null || title.isBlank()) ? "Chapter " + chapterNumber : title;
-        dto.setTitle(effectiveTitle);
-        dto.setContentHtml(htmlContent == null ? "" : htmlContent);
-        dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
-        Chapter chapter = chapterService.createChapter(dto);
-        job.setChaptersProcessed(job.getChaptersProcessed() + 1);
-        job.setStatusMessage(String.format("Created chapter %d", chapterNumber));
-        jobRepository.save(job);
-        return chapter;
+    private void createChaptersBulk(EpubImportJob job, Novel novel, List<EpubChapterDTO> parsedChapters,
+            int startingChapterNumber, boolean forceSequentialNumbers) {
+        if (parsedChapters == null || parsedChapters.isEmpty()) {
+            return;
+        }
+
+        List<CreateChapterDTO> dtos = new ArrayList<>(parsedChapters.size());
+        int nextChapterNumber = Math.max(1, startingChapterNumber);
+        for (EpubChapterDTO chapterData : parsedChapters) {
+            int chapterNumber = (!forceSequentialNumbers && chapterData.getChapterNumber() > 0)
+                    ? chapterData.getChapterNumber()
+                    : nextChapterNumber;
+            nextChapterNumber = chapterNumber + 1;
+
+            CreateChapterDTO dto = new CreateChapterDTO();
+            dto.setNovelId(novel.getId());
+            dto.setChapterNumber(chapterNumber);
+            dto.setTitle(resolveChapterTitle(chapterData.getTitle(), chapterNumber));
+            dto.setContentHtml(chapterData.getContentHtml() == null ? "" : chapterData.getContentHtml());
+            dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+            dtos.add(dto);
+        }
+
+        for (int i = 0; i < dtos.size(); i += CHAPTER_BATCH_SIZE) {
+            List<CreateChapterDTO> batch = dtos.subList(i, Math.min(i + CHAPTER_BATCH_SIZE, dtos.size()));
+            List<Chapter> created = chapterService.createChaptersBatch(batch, CHAPTER_BATCH_SIZE);
+            job.setChaptersProcessed(job.getChaptersProcessed() + created.size());
+            job.setStatusMessage(String.format("Created %d/%d chapters", job.getChaptersProcessed(),
+                    job.getTotalChapters()));
+            jobRepository.save(job);
+        }
     }
 
-    private void enqueueAudio(EpubImportJob job, Novel novel, Chapter chapter) {
-        ChapterAudioMessage audioMessage = ChapterAudioMessage.builder()
-                .chapterId(chapter.getId())
-                .jobId(job.getId())
-                .novelId(novel.getId())
-                .novelSlug(novel.getSlug())
-                .chapterNumber(chapter.getChapterNumber())
-                .userId(job.getUserId())
-                .build();
-        asyncTaskPublisher.publishChapterAudio(audioMessage);
+    private String resolveChapterTitle(String providedTitle, int chapterNumber) {
+        if (providedTitle == null || providedTitle.isBlank()) {
+            return "Chapter " + chapterNumber;
+        }
+        return providedTitle;
     }
 
     private void markJobCompleted(EpubImportJob job, String message) {

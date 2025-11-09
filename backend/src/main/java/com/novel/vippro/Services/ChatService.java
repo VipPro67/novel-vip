@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
@@ -49,6 +50,7 @@ public class ChatService {
         return ids.get(0) + "." + ids.get(1);
     }
 
+    @Transactional
     public MessageDTO sendToGroupOrDm(CreateMessageDTO dto) {
         if (dto.getGroupId() != null) {
             return sendToGroup(dto.getGroupId(), dto);

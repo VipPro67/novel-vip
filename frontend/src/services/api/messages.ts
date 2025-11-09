@@ -44,6 +44,6 @@ export const createMessagesApi = (client: ApiClient) => ({
     searchParams.append("page", page.toString())
     searchParams.append("size", size.toString())
 
-    return client.request<PageResponse<any>>(`/api/messages/group/${groupId}?${searchParams}`)
+    return client.request<PageResponse<any>>(`/api/messages/by-receiver-or-group/${groupId}?${searchParams}`)
   },
 })

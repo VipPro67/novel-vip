@@ -18,6 +18,7 @@ import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Models.Group;
 import com.novel.vippro.Models.GroupMember;
 import com.novel.vippro.Models.User;
+import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.GroupMemberRepository;
 import com.novel.vippro.Repository.GroupRepository;
 import com.novel.vippro.Repository.UserRepository;
@@ -89,13 +90,13 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
-    public List<GroupDTO> getMyGroups() {
+    public PageResponse<GroupDTO> getMyGroups(Pageable pageable) {
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
-        List<GroupMember> groupMembers = groupMemberRepository.findByUserId(currentUserId);
-        List<GroupDTO> groupDTOs = groupMembers.stream()
-                .map(GroupMember::getGroup)
+        var myGroups = groupMemberRepository.findGroupsByUserId(currentUserId, pageable);
+        PageResponse<GroupDTO> groupDTOs = new PageResponse<>();
+        groupDTOs.setContent(myGroups.getContent().stream()
                 .map(mapper::GroupToDTO)
-                .collect(Collectors.toList());
+                .toList());
         return groupDTOs;
     }
 

@@ -25,7 +25,6 @@ public class UserDTO extends BaseDTO {
         this.email = email;
         this.fullName = fullName;
     }
-
     public UserDTO() {
     }
 }

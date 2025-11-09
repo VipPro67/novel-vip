@@ -280,7 +280,7 @@ public class NovelController {
             @ApiResponse(responseCode = "401", description = "Not authenticated"),
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping()
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
     public ControllerResponse<NovelDTO> createNovel(@RequestBody NovelCreateDTO novelDTO) {
         NovelDTO createdNovel = novelService.createNovel(novelDTO);

@@ -3,12 +3,14 @@
 import { useState, useCallback } from "react"
 import { api } from "@/services/api"
 import { useToast } from "@/hooks/use-toast"
+import { User, Group } from "@/models"
 
 export interface ChatMessage {
   id: string
   content: string
-  senderId: string
-  senderName: string
+  sender: User
+  receiver: User
+  group: Group
   senderAvatar?: string
   timestamp: string
   isSystem?: boolean
@@ -77,8 +79,6 @@ export function useChat() {
         const newMessage: ChatMessage = {
           id: Date.now().toString(),
           content,
-          senderId: "current-user",
-          senderName: "You",
           timestamp: new Date().toLocaleTimeString(),
         }
         setMessages((prev) => [...prev, newMessage])

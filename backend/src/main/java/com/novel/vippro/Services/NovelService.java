@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -35,6 +36,7 @@ import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -77,6 +79,9 @@ public class NovelService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CacheManager cacheManager;
 
 
     @Transactional(readOnly = true)
@@ -351,24 +356,25 @@ public class NovelService {
     }
 
     @Transactional
-    @Caching( evict ={
-        @CacheEvict(value = "novels", key = "#novelId"),
-        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
-    })
+    @CacheEvict(value = "novels", key = "#novelId")
     public NovelDTO updateNovelCover(UUID novelId, MultipartFile coverImage) {
+        Novel novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
         try {
-            Novel novel = novelRepository.findById(novelId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
-            FileMetadata cover = fileService.uploadFile(coverImage, "cover");
-            
+            String publicId = String.format("novels/%s/cover/", novel.getSlug());
+            FileMetadata cover = fileService.uploadFileWithPublicId(
+                    coverImage.getBytes(), publicId, coverImage.getOriginalFilename(), "image/jpeg", "jpeg");
             novel.setCoverImage(cover);
             Novel updatedNovel = novelRepository.save(novel);
+
+            cacheManager.getCache("novels").evict("slug-" + novel.getSlug());
+
             return mapper.NoveltoDTO(updatedNovel);
-        } catch (Exception e) {
-            logger.error("Error uploading cover image: {}", e.getMessage());
-            throw new RuntimeException("Failed to upload cover image", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read image content", e);
         }
     }
+
 
     @Caching( evict ={
         @CacheEvict(value = "novels", key = "#id"),
