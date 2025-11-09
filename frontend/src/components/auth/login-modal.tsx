@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
+import { GoogleLogin, GoogleOAuthProvider, type CredentialResponse } from "@react-oauth/google"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,10 +18,12 @@ export function LoginModal() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
   const { loginOpen, closeLogin, switchToRegister } = useAuthModals()
+  const googleEnabled = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +57,46 @@ export function LoginModal() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast({
+        title: "Google login failed",
+        description: "Unable to retrieve Google credentials",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await loginWithGoogle(credentialResponse.credential)
+      if (response?.success) {
+        toast({ title: "Login successful", description: "Welcome back!" })
+        closeLogin()
+        router.refresh()
+      } else {
+        toast({
+          title: "Google login failed",
+          description: response?.message || "Unable to authenticate with Google",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      const message = error?.message || "Unable to authenticate with Google"
+      toast({ title: "Google login failed", description: message, variant: "destructive" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    toast({
+      title: "Google login failed",
+      description: "The Google sign-in popup was closed or an error occurred",
+      variant: "destructive",
+    })
   }
 
   return (
@@ -108,6 +151,22 @@ export function LoginModal() {
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
+
+        {googleEnabled && (
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            <div className={loading ? "pointer-events-none opacity-60" : ""}>
+              <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}><GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} width="100%" /></GoogleOAuthProvider>
+            </div>
+          </div>
+        )}
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Don't have an account? </span>

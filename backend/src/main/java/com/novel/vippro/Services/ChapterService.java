@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -275,79 +278,78 @@ public class ChapterService {
         return chapter;
     }
 
-    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
+    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
     @Transactional
     public List<Chapter> createChaptersBatch(List<CreateChapterDTO> chapterDTOs, int batchSize) {
         if (chapterDTOs == null || chapterDTOs.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Chapter> toSave = new ArrayList<>(chapterDTOs.size());
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(8, Runtime.getRuntime().availableProcessors() * 2));
+        List<CompletableFuture<Chapter>> futures = new ArrayList<>();
 
-        for (CreateChapterDTO chapterDTO : chapterDTOs) {
-            if (!novelRepository.existsById(chapterDTO.getNovelId())) {
-                throw new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId());
-            }
-            if (chapterRepository.findByNovelIdAndChapterNumber(chapterDTO.getNovelId(),
-                    chapterDTO.getChapterNumber()) != null) {
-                throw new RuntimeException(
-                        "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
-            }
+        for (CreateChapterDTO dto : chapterDTOs) {
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                Novel novel = novelRepository.findById(dto.getNovelId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", dto.getNovelId()));
 
-            Novel chapterNovel = novelRepository.findById(chapterDTO.getNovelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId()));
+                if (chapterRepository.findByNovelIdAndChapterNumber(dto.getNovelId(), dto.getChapterNumber()) != null) {
+                    throw new RuntimeException("Chapter number already exists for this novel.");
+                }
 
-            Chapter chapter = new Chapter();
-            chapter.setChapterNumber(chapterDTO.getChapterNumber());
-            chapter.setTitle(chapterDTO.getTitle());
-            chapter.setNovel(chapterNovel);
+                Chapter chapter = new Chapter();
+                chapter.setChapterNumber(dto.getChapterNumber());
+                chapter.setTitle(dto.getTitle());
+                chapter.setNovel(novel);
 
-            Map<String, Object> contentMap = Map.of(
-                    "novelSlug", chapter.getNovel().getSlug(),
-                    "novelTitle", chapter.getNovel().getTitle(),
-                    "chapterNumber", chapter.getChapterNumber(),
-                    "chapterTitle", chapter.getTitle(),
-                    "content", chapterDTO.getContentHtml());
+                Map<String, Object> contentMap = Map.of(
+                        "novelSlug", novel.getSlug(),
+                        "novelTitle", novel.getTitle(),
+                        "chapterNumber", dto.getChapterNumber(),
+                        "chapterTitle", dto.getTitle(),
+                        "content", dto.getContentHtml());
 
-            String jsonContent;
-            try {
-                jsonContent = objectMapper.writeValueAsString(contentMap);
-            } catch (IOException e) {
-                throw new RuntimeException("Error converting chapter content to JSON: " + e.getMessage(), e);
-            }
+                String jsonContent;
+                try {
+                    jsonContent = objectMapper.writeValueAsString(contentMap);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error converting chapter content to JSON", e);
+                }
 
-            String publicId = String.format("novels/%s/chapters/chap-%d.json",
-                    chapter.getNovel().getSlug(),
-                    chapter.getChapterNumber());
+                String publicId = String.format("novels/%s/chapters/chap-%d.json", novel.getSlug(), dto.getChapterNumber());
+                String jsonUrl;
+                try {
+                    jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
+                } catch (IOException e) {
+                    throw new RuntimeException("Error uploading chapter content to storage", e);
+                }
 
-            String jsonUrl;
-            try {
-                jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
-            } catch (IOException e) {
-                throw new RuntimeException("Error uploading chapter content to storage: " + e.getMessage(), e);
-            }
-            if (jsonUrl == null || jsonUrl.isEmpty()) {
-                throw new RuntimeException("Error uploading chapter content to storage: URL is empty");
-            }
+                if (jsonUrl == null || jsonUrl.isEmpty()) {
+                    throw new RuntimeException("Upload returned empty URL for " + publicId);
+                }
 
-            FileMetadata jsonFile = new FileMetadata();
-            jsonFile.setPublicId(publicId);
-            jsonFile.setContentType("application/json");
-            jsonFile.setFileUrl(jsonUrl);
-            jsonFile.setCreatedAt(Instant.now());
-            chapter.setJsonFile(jsonFile);
-
-            toSave.add(chapter);
+                FileMetadata jsonFile = new FileMetadata();
+                jsonFile.setPublicId(publicId);
+                jsonFile.setContentType("application/json");
+                jsonFile.setFileUrl(jsonUrl);
+                jsonFile.setCreatedAt(Instant.now());
+                chapter.setJsonFile(jsonFile);
+                return chapter;
+            }, executor));
         }
 
-        List<Chapter> saved = new ArrayList<>(toSave.size());
+        List<Chapter> toSave = futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
 
+        List<Chapter> saved = new ArrayList<>(toSave.size());
         for (int i = 0; i < toSave.size(); i += batchSize) {
             int end = Math.min(i + batchSize, toSave.size());
             List<Chapter> chunk = toSave.subList(i, end);
             List<Chapter> chunkSaved = chapterRepository.saveAll(chunk);
             chapterRepository.flush();
             saved.addAll(chunkSaved);
+
             Set<UUID> novelIds = chunkSaved.stream().map(c -> c.getNovel().getId()).collect(Collectors.toSet());
             for (UUID nid : novelIds) {
                 favoriteService.notifyFavorites(nid);
@@ -359,9 +361,10 @@ public class ChapterService {
                 });
             }
         }
+
+        executor.shutdown();
         return saved;
     }
-        
     @Transactional
     public Chapter updateChapter(UUID id, CreateChapterDTO chapterDTO) {
         Chapter chapter = getChapterById(id);

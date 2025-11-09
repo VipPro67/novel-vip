@@ -50,15 +50,15 @@ public class Novel extends BaseEntity {
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_categories", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
-	private Set<Category> categories;
+	private Set<Category> categories = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_tags", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
-	private Set<Tag> tags;
+	private Set<Tag> tags = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "novel_genres", joinColumns = @JoinColumn(name = "novel_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
-	private Set<Genre> genres;
+	private Set<Genre> genres = new HashSet<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "owner_id", referencedColumnName = "id")
@@ -75,11 +75,11 @@ public class Novel extends BaseEntity {
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-chapters")
-	private List<Chapter> chapters;
+	private List<Chapter> chapters = new ArrayList<>();
 
 	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JsonManagedReference("novel-comments")
-	private List<Comment> comments;
+	private List<Comment> comments = new ArrayList<>();
 
 	@Column(name = "total_views", nullable = true)
 	private Long totalViews = 0L;

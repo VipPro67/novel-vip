@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EpubImportProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(EpubImportProcessor.class);
-    private static final int CHAPTER_BATCH_SIZE = 50;
+    private static final int CHAPTER_BATCH_SIZE = 100;
 
     private final EpubImportJobRepository jobRepository;
     private final FileMetadataRepository fileMetadataRepository;

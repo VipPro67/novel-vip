@@ -144,7 +144,7 @@ export default function AddNovelPage() {
         });
             if (response.success) {
                 toast({ title: "Success", description: "Novel created successfully"});
-                router.push("/admin/novels/"+formData.slug);
+                router.push("/admin/novels/"+formData.slug + "/edit");
             }
 
         } catch (err) {

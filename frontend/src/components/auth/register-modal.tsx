@@ -4,6 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,10 +20,11 @@ export function RegisterModal() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
+  const { register, loginWithGoogle } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
   const { registerOpen, closeRegister, switchToLogin } = useAuthModals()
+  const googleEnabled = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,6 +66,46 @@ export function RegisterModal() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast({
+        title: "Google sign up failed",
+        description: "Unable to retrieve Google credentials",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await loginWithGoogle(credentialResponse.credential)
+      if (response?.success) {
+        toast({ title: "Signed in with Google", description: "Welcome to Novel VIP!" })
+        closeRegister()
+        router.refresh()
+      } else {
+        toast({
+          title: "Google sign up failed",
+          description: response?.message || "Unable to complete Google authentication",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      const message = error?.message || "Unable to authenticate with Google"
+      toast({ title: "Google sign up failed", description: message, variant: "destructive" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    toast({
+      title: "Google sign up failed",
+      description: "The Google window was closed or an error occurred",
+      variant: "destructive",
+    })
   }
 
   return (
@@ -143,6 +185,22 @@ export function RegisterModal() {
             {loading ? "Creating account..." : "Create Account"}
           </Button>
         </form>
+
+        {googleEnabled && (
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            <div className={loading ? "pointer-events-none opacity-60" : ""}>
+              <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} width="100%" />
+            </div>
+          </div>
+        )}
 
         <div className="text-center text-sm">
           <span className="text-muted-foreground">Already have an account? </span>

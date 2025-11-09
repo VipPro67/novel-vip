@@ -1,12 +1,17 @@
 package com.novel.vippro.Services;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +22,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.novel.vippro.DTO.Auth.GoogleAccountInfo;
+import com.novel.vippro.DTO.Auth.GoogleAuthRequest;
 import com.novel.vippro.DTO.Auth.LoginRequest;
 import com.novel.vippro.DTO.Auth.RefreshTokenRequest;
 import com.novel.vippro.DTO.Auth.SignupRequest;
@@ -52,6 +64,12 @@ public class AuthService {
 
 	@Autowired
 	RoleApprovalService roleApprovalService;
+
+	@Value("${google.client-id:}")
+	private String googleClientId;
+
+	private final NetHttpTransport netHttpTransport = new NetHttpTransport();
+	private static final GsonFactory GSON_FACTORY = GsonFactory.getDefaultInstance();
 
 	public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
 		try {
@@ -144,6 +162,9 @@ public class AuthService {
 	}
 
 	private String normalizeEmail(String email) {
+		if (email == null) {
+			return null;
+		}
 		email = email.trim().toLowerCase();
 		String[] parts = email.split("@");
 		if (parts.length != 2)
@@ -208,5 +229,172 @@ public class AuthService {
 
 		return ResponseEntity.ok(new ControllerResponse<>(true, "User registered successfully!",
 				"User registered successfully!", 200));
+	}
+
+	public ResponseEntity<ControllerResponse<GoogleAccountInfo>> verifyGoogleAccount(GoogleAuthRequest request) {
+		try {
+			Payload payload = verifyGoogleIdToken(request.getCredential());
+			String email = payload.getEmail();
+			String normalizedEmail = email != null ? normalizeEmail(email) : null;
+			GoogleAccountInfo info = GoogleAccountInfo.builder()
+					.email(normalizedEmail)
+					.emailVerified(Boolean.TRUE.equals(payload.getEmailVerified()))
+					.fullName(valueOrNull(payload.get("name")))
+					.avatar(valueOrNull(payload.get("picture")))
+					.subject(payload.getSubject())
+					.build();
+			return ResponseEntity.ok(new ControllerResponse<>(true, "Google account verified", info, 200));
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			return ResponseEntity.status(400)
+					.body(new ControllerResponse<>(false, e.getMessage(), null, 400));
+		} catch (IllegalStateException e) {
+			logger.error("Google client configuration error: {}", e.getMessage());
+			return ResponseEntity.status(500)
+					.body(new ControllerResponse<>(false, "Google authentication is not configured", null, 500));
+		} catch (GeneralSecurityException | IOException e) {
+			logger.error("Failed to verify Google credential", e);
+			return ResponseEntity.status(502)
+					.body(new ControllerResponse<>(false, "Unable to verify Google credential", null, 502));
+		} catch (Exception e) {
+			logger.error("Unexpected error verifying Google account", e);
+			return ResponseEntity.status(500)
+					.body(new ControllerResponse<>(false, "Unexpected error verifying Google account", null, 500));
+		}
+	}
+
+	public ResponseEntity<ControllerResponse<JwtResponse>> loginOrRegisterWithGoogle(GoogleAuthRequest request) {
+		try {
+			Payload payload = verifyGoogleIdToken(request.getCredential());
+			if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
+				return ResponseEntity.status(400)
+						.body(new ControllerResponse<>(false, "Google email is not verified", null, 400));
+			}
+
+			String email = payload.getEmail();
+			if (email == null || email.isBlank()) {
+				throw new IllegalArgumentException("Google account does not include an email address");
+			}
+			String normalizedEmail = normalizeEmail(email);
+
+			User user = userRepository.findByEmail(normalizedEmail)
+					.map(existing -> updateExistingUserFromGoogle(existing, payload))
+					.orElseGet(() -> createUserFromGooglePayload(payload, normalizedEmail));
+
+			JwtResponse jwtResponse = buildJwtResponse(user);
+			return ResponseEntity.ok(new ControllerResponse<>(true, "Authenticated with Google", jwtResponse, 200));
+		} catch (BadCredentialsException | IllegalArgumentException e) {
+			logger.warn("Google authentication failed: {}", e.getMessage());
+			return ResponseEntity.status(400)
+					.body(new ControllerResponse<>(false, e.getMessage(), null, 400));
+		} catch (IllegalStateException e) {
+			logger.error("Google client configuration error: {}", e.getMessage());
+			return ResponseEntity.status(500)
+					.body(new ControllerResponse<>(false, "Google authentication is not configured", null, 500));
+		} catch (GeneralSecurityException | IOException e) {
+			logger.error("Failed to verify Google credential", e);
+			return ResponseEntity.status(502)
+					.body(new ControllerResponse<>(false, "Unable to verify Google credential", null, 502));
+		} catch (Exception e) {
+			logger.error("Unexpected error while processing Google login", e);
+			return ResponseEntity.status(500)
+					.body(new ControllerResponse<>(false, "Unexpected error during Google authentication", null, 500));
+		}
+	}
+
+	private Payload verifyGoogleIdToken(String credential) throws GeneralSecurityException, IOException {
+		if (credential == null || credential.isBlank()) {
+			throw new IllegalArgumentException("Google credential is required");
+		}
+		if (googleClientId == null || googleClientId.isBlank()) {
+			throw new IllegalStateException("Google client ID is not configured");
+		}
+
+		GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(netHttpTransport, GSON_FACTORY)
+				.setAudience(Collections.singletonList(googleClientId))
+				.build();
+
+		GoogleIdToken idToken = verifier.verify(credential);
+		if (idToken == null) {
+			throw new BadCredentialsException("Invalid Google ID token");
+		}
+		return idToken.getPayload();
+	}
+
+	private User createUserFromGooglePayload(Payload payload, String normalizedEmail) {
+		User user = new User();
+		user.setEmail(normalizedEmail);
+		user.setUsername(generateUniqueUsername(valueOrNull(payload.get("given_name")), normalizedEmail));
+		user.setFullName(valueOrNull(payload.get("name")));
+		user.setAvatar(valueOrNull(payload.get("picture")));
+		user.setPassword(encoder.encode(UUID.randomUUID().toString()));
+
+		Role userRole = roleRepository.findByName(ERole.USER)
+				.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+		user.setRoles(Collections.singletonList(userRole));
+
+		return userRepository.save(user);
+	}
+
+	private User updateExistingUserFromGoogle(User user, Payload payload) {
+		boolean updated = false;
+		String fullName = valueOrNull(payload.get("name"));
+		if (fullName != null && (user.getFullName() == null || user.getFullName().isBlank())) {
+			user.setFullName(fullName);
+			updated = true;
+		}
+
+		String avatar = valueOrNull(payload.get("picture"));
+		if (avatar != null && (user.getAvatar() == null || user.getAvatar().isBlank())) {
+			user.setAvatar(avatar);
+			updated = true;
+		}
+
+		if (updated) {
+			return userRepository.save(user);
+		}
+		return user;
+	}
+
+	private String generateUniqueUsername(String preferredName, String email) {
+		String base = preferredName != null && !preferredName.isBlank()
+				? preferredName
+				: email.split("@")[0];
+		base = base.toLowerCase().replaceAll("[^a-z0-9]", "");
+		if (base.isBlank()) {
+			base = "user";
+		}
+
+		String candidate = base;
+		int suffix = 0;
+		while (userRepository.existsByUsername(candidate)) {
+			suffix++;
+			candidate = base + suffix;
+		}
+		return candidate;
+	}
+
+	private JwtResponse buildJwtResponse(User user) {
+		UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+				userDetails.getAuthorities());
+		String accessToken = jwtUtils.generateJwtToken(authentication);
+		String refreshToken = jwtUtils.generateRefreshToken(userDetails.getUsername());
+		List<String> roles = userDetails.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority)
+				.collect(Collectors.toList());
+
+		return new JwtResponse(accessToken,
+				"Bearer",
+				userDetails.getId(),
+				userDetails.getUsername(),
+				userDetails.getEmail(),
+				roles,
+				refreshToken,
+				jwtUtils.getAccessTokenExpiryDate().toInstant(),
+				jwtUtils.getRefreshTokenExpiryDate().toInstant());
+	}
+
+	private String valueOrNull(Object value) {
+		return value == null ? null : value.toString();
 	}
 }

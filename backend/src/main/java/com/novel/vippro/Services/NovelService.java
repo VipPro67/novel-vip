@@ -83,7 +83,6 @@ public class NovelService {
     @Autowired
     private CacheManager cacheManager;
 
-
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
         List<Novel> novels = novelRepository.findAll();
@@ -92,9 +91,10 @@ public class NovelService {
             return;
         }
         logger.info("Reindexing {} novels...", novels.size());
-            searchService.indexNovels(novels);
+        searchService.indexNovels(novels);
         logger.info("Reindexing completed. {} novels reindexed.", novels.size());
     }
+
     @Cacheable(value = "novels", key = "#id")
     @Transactional(readOnly = true)
     public NovelDTO getNovelById(UUID id) {
@@ -128,11 +128,11 @@ public class NovelService {
 
     @Cacheable(value = "novels", key = "'category-' + #categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public PageResponse<NovelDTO> getNovelsByCategory(UUID category, Pageable pageable) {  
+    public PageResponse<NovelDTO> getNovelsByCategory(UUID category, Pageable pageable) {
         Page<Novel> novels = novelRepository.findByCategoriesId(category, pageable);
         return new PageResponse<>(novels.map(mapper::NoveltoDTO));
     }
-    
+
     @Cacheable(value = "novels", key = "'genre-' + #genre + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public PageResponse<NovelDTO> getNovelsByGenre(UUID genre, Pageable pageable) {
@@ -180,7 +180,8 @@ public class NovelService {
                     pageable);
 
             if (novels.isEmpty() && filters.getKeyword() != null) {
-                logger.info("No novels found using criteria. Falling back to keyword search for: {}", filters.getKeyword());
+                logger.info("No novels found using criteria. Falling back to keyword search for: {}",
+                        filters.getKeyword());
                 novels = novelRepository.searchByKeyword(filters.getKeyword(), pageable);
                 searchService.indexNovels(novels.getContent());
                 logger.info("Reindexing completed. {} novels reindexed.", novels.getTotalElements());
@@ -236,23 +237,25 @@ public class NovelService {
         novel.setTotalChapters(0);
         novel.setComments(null);
 
-        // Handle categories - only use existing categories
-        if (novelDTO.getCategories() != null && !novelDTO.getCategories().isEmpty()) {
-            List<Category> categories = new ArrayList<>();
+        // Handle categories
+        if (novelDTO.getCategories() != null) {
+            // Clear existing categories
+            novel.getCategories().clear();
 
-            for (String categoryName : novelDTO.getCategories()) {
-                try {
-                    Category category = categoryRepository.findByNameIgnoreCase(categoryName)
-                            .orElseThrow(() -> new ResourceNotFoundException("Category", "name", categoryName));
-                    categories.add(category);
-                } catch (ResourceNotFoundException e) {
-                    logger.warn("Category not found: {}", categoryName);
-                    // Skip this category and continue with others
+            // Add new categories if provided
+            if (!novelDTO.getCategories().isEmpty()) {
+                Set<String> categoryNames = new HashSet<>(novelDTO.getCategories());
+                for (String categoryName : categoryNames) {
+                    try {
+                        Category category = categoryRepository.findByNameIgnoreCase(categoryName)
+                                .orElseThrow(() -> new ResourceNotFoundException("Category", "name", categoryName));
+                        novel.getCategories().add(category);
+                    } catch (ResourceNotFoundException e) {
+                        logger.warn("Category not found: {}", categoryName);
+                        // Skip this category and continue with others
+                    }
                 }
             }
-
-            // Add found categories to the novel
-            novel.getCategories().addAll(categories);
         }
 
         // Handle tags - only use existing tags
@@ -308,7 +311,8 @@ public class NovelService {
 
         if (epubResult.getCoverImage() != null) {
             try {
-                FileMetadata cover = fileService.uploadFile(epubResult.getCoverImage(), epubResult.getCoverImageName(), "image/jpeg", "cover");
+                FileMetadata cover = fileService.uploadFile(epubResult.getCoverImage(), epubResult.getCoverImageName(),
+                        "image/jpeg", "cover");
                 saved.setCoverImage(cover);
                 novelRepository.save(saved);
                 saved = novelRepository.findById(saved.getId()).orElse(saved);
@@ -343,10 +347,13 @@ public class NovelService {
     @Transactional
     protected Novel saveNovelInitial(EpubParseResult epubResult, String slug, String status) {
         Novel novel = new Novel();
-        novel.setTitle(epubResult.getTitle() == null || epubResult.getTitle().isBlank() ? epubResult.getAuthor() + " - Import" : epubResult.getTitle());
+        novel.setTitle(
+                epubResult.getTitle() == null || epubResult.getTitle().isBlank() ? epubResult.getAuthor() + " - Import"
+                        : epubResult.getTitle());
         novel.setSlug(slug);
         novel.setDescription("Imported from EPUB: " + (epubResult.getTitle() != null ? epubResult.getTitle() : ""));
-        novel.setAuthor(epubResult.getAuthor() == null || epubResult.getAuthor().isBlank() ? "Unknown" : epubResult.getAuthor());
+        novel.setAuthor(epubResult.getAuthor() == null || epubResult.getAuthor().isBlank() ? "Unknown"
+                : epubResult.getAuthor());
         novel.setTitleNormalized(novel.getTitle().toLowerCase());
         novel.setStatus(status == null ? "ongoing" : status);
         novel.setRating(0);
@@ -375,10 +382,9 @@ public class NovelService {
         }
     }
 
-
-    @Caching( evict ={
-        @CacheEvict(value = "novels", key = "#id"),
-        @CacheEvict(value = "novels", key = "'slug-' + #novelDTO.slug")
+    @Caching(evict = {
+            @CacheEvict(value = "novels", key = "#id"),
+            @CacheEvict(value = "novels", key = "'slug-' + #novelDTO.slug")
     })
     @Transactional
     public NovelDTO updateNovel(UUID id, NovelCreateDTO novelDTO) {
@@ -387,7 +393,7 @@ public class NovelService {
 
         // Update novel properties
         novel.setTitle(novelDTO.getTitle());
-        //novel.setSlug(novelDTO.getSlug()); dont allow slug change :)
+        // novel.setSlug(novelDTO.getSlug()); dont allow slug change :)
         novel.setDescription(novelDTO.getDescription());
         novel.setAuthor(novelDTO.getAuthor());
         novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
@@ -458,9 +464,9 @@ public class NovelService {
         return mapper.NoveltoDTO(updatedNovel);
     }
 
-    @Caching( evict ={
-        @CacheEvict(value = "novels", key = "#id"),
-        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
+    @Caching(evict = {
+            @CacheEvict(value = "novels", key = "#id"),
+            @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
     })
     @Transactional
     public void deleteNovel(UUID id) {
@@ -488,9 +494,9 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
-    @Caching( evict ={
-        @CacheEvict(value = "novels", key = "#novelId"),
-        @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
+    @Caching(evict = {
+            @CacheEvict(value = "novels", key = "#novelId"),
+            @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
     })
     @Transactional
     public NovelDTO addChaptersFromEpub(UUID novelId, EpubParseResult epubResult) {
@@ -528,7 +534,8 @@ public class NovelService {
                         chapterService.createChapter(dto);
                         logger.info("Created chapter {} for novel {} (fallback)", retryIdx, novelId);
                     } catch (Exception ex) {
-                        logger.error("Failed to create chapter {} for novel {} in fallback: {}", retryIdx, novelId, ex.getMessage());
+                        logger.error("Failed to create chapter {} for novel {} in fallback: {}", retryIdx, novelId,
+                                ex.getMessage());
                     }
                     retryIdx++;
                 }
@@ -537,15 +544,14 @@ public class NovelService {
 
         // Reload and index the updated novel
         novel = novelRepository.findById(novelId).orElseThrow();
-        try{
+        try {
             searchService.indexNovels(List.of(novel));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Error indexing novel: {}", e.getMessage());
         }
 
-        // Notification for novel owner 
+        // Notification for novel owner
         return mapper.NoveltoDTO(novel);
     }
-    
+
 }

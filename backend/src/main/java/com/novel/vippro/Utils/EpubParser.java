@@ -95,30 +95,43 @@ public class EpubParser {
                     }
 
                     for (String href : spineOrder) {
-                        // skip nav/toc files which sometimes appear in the spine
-                        String hrefLower = href.toLowerCase();
-                        String hrefBase = href.contains("/") ? href.substring(href.lastIndexOf('/') + 1) : href;
-                        if ((navBaseName != null && hrefBase.equalsIgnoreCase(navBaseName))
-                                || hrefLower.contains("nav")
-                                || hrefLower.contains("toc")) {
-                            continue;
-                        }
-                        // normalize path relative to package doc
-                        String base = "";
-                        int lastSlash = rootfilePath.lastIndexOf('/');
-                        if (lastSlash > 0) base = rootfilePath.substring(0, lastSlash + 1);
-                        String fullPath = base + href;
-                        byte[] itemData = files.get(fullPath);
-                        if (itemData == null) itemData = files.get(href);
-                        if (itemData == null) continue;
-
-                        String html = new String(itemData, StandardCharsets.UTF_8);
-                        EpubChapterDTO chap = new EpubChapterDTO();
-                        chap.setChapterNumber(idx++);
-                        chap.setTitle(href);
-                        chap.setContentHtml(html);
-                        chapters.add(chap);
+                    String hrefLower = href.toLowerCase();
+                    String hrefBase = href.contains("/") ? href.substring(href.lastIndexOf('/') + 1) : href;
+                    if ((navBaseName != null && hrefBase.equalsIgnoreCase(navBaseName))
+                            || hrefLower.contains("nav")
+                            || hrefLower.contains("toc")) {
+                        continue;
                     }
+
+                    String base = "";
+                    int lastSlash = rootfilePath.lastIndexOf('/');
+                    if (lastSlash > 0) base = rootfilePath.substring(0, lastSlash + 1);
+                    String fullPath = base + href;
+                    byte[] itemData = files.getOrDefault(fullPath, files.get(href));
+                    if (itemData == null) continue;
+
+                    String html = new String(itemData, StandardCharsets.UTF_8);
+                    org.jsoup.nodes.Document doc2 = org.jsoup.Jsoup.parse(html);
+
+                    // extract only <p> tags
+                    StringBuilder contentBuilder = new StringBuilder();
+                    for (org.jsoup.nodes.Element p : doc2.select("p")) {
+                        contentBuilder.append(p.outerHtml());
+                    }
+                    String content = contentBuilder.toString().trim();
+
+                    EpubChapterDTO chap = new EpubChapterDTO();
+                    chap.setChapterNumber(idx++);
+                    // use first heading or fallback to file name
+                    String title = Optional.ofNullable(doc2.selectFirst("h1, h2"))
+                            .map(org.jsoup.nodes.Element::text)
+                            .filter(t -> !t.isBlank())
+                            .orElse(href);
+                    chap.setTitle(title);
+                    chap.setContentHtml(content.isEmpty() ? html : content);
+                    chapters.add(chap);
+                }
+
                 }
             } catch (Exception ignored) {
             }

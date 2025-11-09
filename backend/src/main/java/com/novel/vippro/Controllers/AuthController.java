@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.novel.vippro.DTO.Auth.GoogleAuthRequest;
+import com.novel.vippro.DTO.Auth.GoogleAccountInfo;
 import com.novel.vippro.DTO.Auth.LoginRequest;
 import com.novel.vippro.DTO.Auth.RefreshTokenRequest;
 import com.novel.vippro.DTO.Auth.SignupRequest;
@@ -58,5 +60,17 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<ControllerResponse<JwtResponse>> refresh(@RequestBody RefreshTokenRequest req) {
         return authService.refreshAccessToken(req);
+    }
+
+    @Operation(summary = "Verify Google account", description = "Verify the provided Google ID token and return basic account info")
+    @PostMapping("/google/verify")
+    public ResponseEntity<ControllerResponse<GoogleAccountInfo>> verifyGoogleAccount(@Valid @RequestBody GoogleAuthRequest request) {
+        return authService.verifyGoogleAccount(request);
+    }
+
+    @Operation(summary = "Sign in with Google", description = "Verify Google ID token, create an account if needed, and return application JWT tokens")
+    @PostMapping("/google")
+    public ResponseEntity<ControllerResponse<JwtResponse>> loginWithGoogle(@Valid @RequestBody GoogleAuthRequest request) {
+        return authService.loginOrRegisterWithGoogle(request);
     }
 }

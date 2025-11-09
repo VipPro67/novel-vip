@@ -8,23 +8,20 @@ import { createContext, useContext, useEffect, useState } from "react"
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<AuthResponse>
+  loginWithGoogle: (credential: string) => Promise<AuthResponse>
   register: (username: string, email: string, password: string) => Promise<ApiResponse<string>>
   logout: () => void
   loading: boolean
   isAuthenticated: boolean
   hasRole: (role: string) => boolean
 }
-interface AuthResponse {
-  success: boolean
-  message?: string
-  data?: {
-    accessToken?: string
-    id?: string
-    username?: string
-    email?: string
-    roles?: string[]
-  }
-}
+type AuthResponse = ApiResponse<{
+  accessToken?: string
+  id?: string
+  username?: string
+  email?: string
+  roles?: string[]
+}>
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -81,6 +78,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const buildUserFromAuthData = (payload?: AuthResponse["data"]): User | null => {
+    if (!payload?.accessToken && (!payload?.id || !payload?.username || !payload?.email)) {
+      return null
+    }
+
+    const decodedToken = payload?.accessToken ? decodeJWT(payload.accessToken) : null
+    const id = decodedToken?.userId || payload?.id
+    const username = decodedToken?.sub || payload?.username
+    const email = decodedToken?.email || payload?.email
+
+    if (!id || !username || !email) {
+      return null
+    }
+
+    return {
+      id: String(id),
+      username: String(username),
+      email: String(email),
+      roles: decodedToken?.roles || payload?.roles || [],
+    }
+  }
+
+  const applyAuthResponse = (response?: AuthResponse) => {
+    if (!response?.success || !response.data) {
+      return
+    }
+
+    const userData = buildUserFromAuthData(response.data)
+    if (userData) {
+      setUser(userData)
+    }
+  }
+
   const fetchUserProfile = async () => {
     try {
       const response = await api.getUserProfile()
@@ -100,27 +130,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await api.login(email, password)
-      if (response.success && response.data.accessToken) {
-        const decodedToken = decodeJWT(response.data.accessToken)
-        if (decodedToken) {
-          const userData: User = {
-            id: decodedToken.userId || response.data.id,
-            username: decodedToken.sub || response.data.username,
-            email: decodedToken.email || response.data.email,
-            roles: decodedToken.roles || response.data.roles || [],
-          }
-          setUser(userData)
-          return response
-        }
-      }
-      console.log(response.message)
+      applyAuthResponse(response)
       return response
     } catch (error) {
       console.error("Login failed:", error)
       return {
         success: false,
         message: "An error occurred",
-      }
+        data: undefined,
+        statusCode: 500,
+      } as AuthResponse
+    }
+  }
+
+  const loginWithGoogle = async (credential: string): Promise<AuthResponse> => {
+    try {
+      const response = await api.loginWithGoogle(credential)
+      applyAuthResponse(response)
+      return response
+    } catch (error) {
+      console.error("Google login failed:", error)
+      return {
+        success: false,
+        message: "Unable to authenticate with Google",
+        data: undefined,
+        statusCode: 500,
+      } as AuthResponse
     }
   }
 
@@ -152,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     login,
+    loginWithGoogle,
     register,
     logout,
     loading,
