@@ -148,7 +148,7 @@ export default function EditChapterPage() {
 
   if (initialLoading) {
     return (
-      <AuthGuard requireRole="ADMIN">
+      <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
         <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-center h-64">
@@ -162,7 +162,7 @@ export default function EditChapterPage() {
 
   if (!chapter) {
     return (
-      <AuthGuard requireRole="ADMIN">
+      <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
         <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
             <div className="text-center">
@@ -178,7 +178,7 @@ export default function EditChapterPage() {
   }
 
   return (
-    <AuthGuard requireRole="ADMIN">
+    <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
       <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 export default function AdminDashboard() {
   const { user, hasRole } = useAuth()
   return (
-    <AuthGuard requireRole="ADMIN">
+    <AuthGuard requireRole = {["ADMIN", "AUTHOR", "MODERATOR"]}>
       <AdminDashboardContent />
     </AuthGuard>
   )

@@ -9,7 +9,7 @@ import Link from "next/link"
 
 export default function AdminRoleApprovalsPage() {
   return (
-    <AuthGuard requireAdmin>
+    <AuthGuard requireRole={["AUTHOR"]}>
       <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">

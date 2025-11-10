@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 interface AuthGuardProps {
   children: React.ReactNode
-  requireRole?: string
+  requireRole?: string[]
   fallback?: React.ReactNode
 }
 

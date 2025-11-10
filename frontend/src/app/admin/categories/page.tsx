@@ -120,7 +120,7 @@ export default function AdminCategoriesPage() {
   )
 
   return (
-    <AuthGuard requireAdmin>
+    <AuthGuard requireRole="ADMIN">
       <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">

@@ -107,7 +107,7 @@ export default function AddChapterPage() {
   }
 
   return (
-  <AuthGuard requireRole="ADMIN">
+  <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
       <div className="min-h-screen bg-background">
         <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">

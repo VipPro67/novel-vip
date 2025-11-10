@@ -14,7 +14,7 @@ interface AuthContextType {
   logout: () => void
   loading: boolean
   isAuthenticated: boolean
-  hasRole: (role: string) => boolean
+  hasRole: (role: string[]) => boolean
 }
 type AuthResponse = ApiResponse<{
   accessToken?: string
@@ -175,12 +175,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  const hasRole = (role: string): boolean => {
+  const hasRole = (role: string[]): boolean => {
     if (!user) {
       return false
     }
-    for (const r of user.roles) {
-      if (r === role) {
+    for (const r of role) {
+      if (user.roles.includes(r)) {
         return true
       }
     }
