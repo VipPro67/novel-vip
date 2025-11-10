@@ -44,22 +44,26 @@ public class ReportService {
     @Autowired
     private Mapper mapper;
 
+    @Transactional(readOnly = true)
     public PageResponse<ReportDTO> getAllReports(Pageable pageable) {
         return new PageResponse<>(reportRepository.findAll(pageable)
                 .map(mapper::ReporttoDTO));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReportDTO> getPendingReports(Pageable pageable) {
         return new PageResponse<>(
                 reportRepository.findByStatusOrderByCreatedAtDesc(Report.ReportStatus.PENDING, pageable)
                         .map(mapper::ReporttoDTO));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReportDTO> getUserReports(UUID userId, Pageable pageable) {
         return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)
                 .map(mapper::ReporttoDTO));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReportDTO> getNovelReports(UUID novelId, Pageable pageable) {
         return new PageResponse<>(reportRepository.findByNovelIdOrderByCreatedAtDesc(novelId, pageable)
                 .map(mapper::ReporttoDTO));
@@ -126,12 +130,14 @@ public class ReportService {
         return mapper.ReporttoDTO(reportRepository.save(report));
     }
 
+    @Transactional(readOnly = true)
     public ReportDTO getReport(UUID id) {
         return reportRepository.findById(id)
                 .map(mapper::ReporttoDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", id));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReportDTO> getMyReport(Pageable pageable) {        
         UUID userId = UserDetailsImpl.getCurrentUserId();
         return new PageResponse<>(reportRepository.findByReporterIdOrderByCreatedAtDesc(userId, pageable)

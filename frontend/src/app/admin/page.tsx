@@ -32,7 +32,7 @@ function AdminDashboardContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardStats()
+    //fetchDashboardStats()
   }, [])
 
   const fetchDashboardStats = async () => {

@@ -51,6 +51,12 @@ public class AuthController {
         return authService.registerUser(signUpRequest);
     }
 
+    @Operation(summary = "Verify email", description = "Confirm a user's email address using the token sent by email")
+    @GetMapping("/verify-email")
+    public ResponseEntity<ControllerResponse<String>> verifyEmail(@RequestParam("token") String token) {
+        return authService.verifyEmail(token);
+    }
+
     @Operation(summary = "Refresh access token", description = "Refresh the access token using a valid refresh token")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Access token refreshed successfully", content = @Content(schema = @Schema(implementation = JwtResponse.class))),

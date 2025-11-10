@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { api, type Report } from "@/services/api"
+import { api } from "@/services/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, CheckCircle2, Clock, XCircle, FileText, MessageSquare, BookOpen, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Report } from "@/models"
 
 const statusConfig = {
   PENDING: {
@@ -176,15 +177,12 @@ export default function MyReportsPage() {
         <div className="space-y-4">
           {reports.map((report) => {
             const StatusIcon = statusConfig[report.status].icon
-            const TypeIcon = reportTypeConfig[report.reportType].icon
-
             return (
               <Card key={report.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <TypeIcon className="h-4 w-4 text-muted-foreground" />
                         <CardTitle className="text-lg">{reportTypeConfig[report.reportType].label} Report</CardTitle>
                       </div>
                       <CardDescription className="flex items-center gap-2">

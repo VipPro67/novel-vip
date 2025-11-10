@@ -2,6 +2,11 @@ import type { ApiResponse } from "@/models"
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
 
+export type ApiError = Error & {
+  status?: number
+  body?: ApiResponse<unknown> | null
+}
+
 export class ApiClient {
   protected token: string | null = null
 
@@ -48,26 +53,49 @@ export class ApiClient {
         headers,
       })
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          this.clearToken()
-          
-          throw new Error("Authentication failed. Please login again.")
-        }
-        if (response.status === 403) {
-          throw new Error("Access denied. Insufficient permissions.")
-        }
-        if (response.status === 404) {
-          throw new Error("Resource not found.")
-        }
-        if (response.status >= 500) {
-          throw new Error("Server error. Please try again later.")
-        }
+      const contentType = response.headers.get("content-type") || ""
+      const responseText = await response.text()
+      let parsedBody: ApiResponse<T> | null = null
 
-        throw new Error(`HTTP error! status: ${response.status}`)
+      if (responseText && contentType.includes("application/json")) {
+        try {
+          parsedBody = JSON.parse(responseText) as ApiResponse<T>
+        } catch (parseError) {
+          console.warn("Failed to parse JSON response", parseError)
+        }
       }
 
-      return (await response.json()) as ApiResponse<T>
+      if (!response.ok) {
+        let fallbackMessage = `Request failed with status ${response.status}`
+        if (response.status === 401) {
+          this.clearToken()
+          fallbackMessage = "Authentication failed. Please login again."
+        } else if (response.status === 403) {
+          fallbackMessage = "Access denied. Insufficient permissions."
+        } else if (response.status === 404) {
+          fallbackMessage = "Resource not found."
+        } else if (response.status >= 500) {
+          fallbackMessage = "Server error. Please try again later."
+        }
+
+        const message = parsedBody?.message || fallbackMessage
+        const error: ApiError = Object.assign(new Error(message), {
+          status: response.status,
+          body: parsedBody as ApiResponse<unknown> | null,
+        })
+        throw error
+      }
+
+      if (parsedBody) {
+        return parsedBody
+      }
+
+      return {
+        success: true,
+        message: "",
+        data: undefined as T,
+        statusCode: response.status,
+      }
     } catch (error) {
       console.error("API Request Error:", error)
       throw error

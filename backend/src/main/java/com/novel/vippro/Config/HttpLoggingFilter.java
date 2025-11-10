@@ -36,7 +36,7 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 		chain.doFilter(wrappedRequest, wrappedResponse);
 		long duration = System.currentTimeMillis() - start;
 
-		String requestBody = getPayload(wrappedRequest.getContentAsByteArray(), request.getCharacterEncoding());
+		// String requestBody = getPayload(wrappedRequest.getContentAsByteArray(), request.getCharacterEncoding());
 
 		String queryString = request.getQueryString();
 		String fullUri = request.getRequestURI()
@@ -51,15 +51,15 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 				wrappedResponse.getStatus(),
 				duration);
 
-		if (requestBody != null && !requestBody.isBlank()) {
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				Map<String, Object> bodyMap = mapper.readValue(requestBody, new TypeReference<>() {});
-				logger.info("Request Body: {}", bodyMap);
-			} catch (Exception e) {
-				logger.info("Request Body: {}", requestBody);
-			}
-		}
+		// if (requestBody != null && !requestBody.isBlank() ) {
+		// 	ObjectMapper mapper = new ObjectMapper();
+		// 	try {
+		// 		Map<String, Object> bodyMap = mapper.readValue(requestBody, new TypeReference<>() {});
+		// 		logger.info("Request Body: {}", bodyMap);
+		// 	} catch (Exception e) {
+		// 		logger.info("Request Body: {}", requestBody);
+		// 	}
+		// }
 		wrappedResponse.copyBodyToResponse();
 	}
 

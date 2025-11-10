@@ -1,5 +1,9 @@
 package com.novel.vippro.DTO.Report;
 
+import com.novel.vippro.DTO.Chapter.ChapterDTO;
+import com.novel.vippro.DTO.Comment.CommentDTO;
+import com.novel.vippro.DTO.Novel.NovelDTO;
+import com.novel.vippro.DTO.User.UserDTO;
 import com.novel.vippro.DTO.base.BaseDTO;
 import com.novel.vippro.Models.Report.ReportStatus;
 
@@ -14,13 +18,10 @@ import java.util.UUID;
 @Setter
 public class ReportDTO extends BaseDTO{
     private UUID id;
-    private UUID reporterId;
-    private String reporterUsername;
-    private UUID novelId;
-    private String novelTitle;
-    private UUID chapterId;
-    private String chapterTitle;
-    private UUID commentId;
+    private UserDTO reporter;
+    private NovelDTO novel;
+    private ChapterDTO chapter;
+    private CommentDTO comment;
     private String reason;
     private String description;
     private ReportStatus status;

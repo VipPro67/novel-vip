@@ -33,4 +33,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
                         @Param("email") String email,
                         @Param("fullName") String fullName,
                         Pageable pageable);
+
+        Optional<User> findByEmailVerificationToken(String emailVerificationToken);
 }

@@ -2,6 +2,7 @@
 
 import { ApiResponse, User } from "@/models"
 import { api } from "@/services/api"
+import type { ApiError } from "@/services/api-client"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 
@@ -134,11 +135,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return response
     } catch (error) {
       console.error("Login failed:", error)
+      const apiError = error as ApiError | Error
       return {
         success: false,
-        message: "An error occurred",
+        message: apiError instanceof Error ? apiError.message : "An error occurred",
         data: undefined,
-        statusCode: 500,
+        statusCode: (apiError as ApiError)?.status ?? 500,
       } as AuthResponse
     }
   }
@@ -150,11 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return response
     } catch (error) {
       console.error("Google login failed:", error)
+      const apiError = error as ApiError | Error
       return {
         success: false,
-        message: "Unable to authenticate with Google",
+        message: apiError instanceof Error ? apiError.message : "Unable to authenticate with Google",
         data: undefined,
-        statusCode: 500,
+        statusCode: (apiError as ApiError)?.status ?? 500,
       } as AuthResponse
     }
   }

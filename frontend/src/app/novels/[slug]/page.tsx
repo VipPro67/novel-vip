@@ -45,9 +45,10 @@ import {
 import { Header } from "@/components/layout/header"
 import { useAuth } from "@/components/providers/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel, type Chapter, type Comment } from "@/services/api"
+import { api} from "@/services/api"
 import { formatRelativeTime } from "@/lib/utils"
 import { ReportDialog } from "@/components/report/report-dialog"
+import { Comment, Chapter, Novel } from "@/models"
 
 interface CommentWithReplies extends Comment {
   replies: CommentWithReplies[]

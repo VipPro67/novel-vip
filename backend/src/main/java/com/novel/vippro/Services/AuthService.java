@@ -2,6 +2,8 @@ package com.novel.vippro.Services;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -65,17 +68,31 @@ public class AuthService {
 	@Autowired
 	RoleApprovalService roleApprovalService;
 
+	@Autowired
+	EmailService emailService;
+
 	@Value("${google.client-id:}")
 	private String googleClientId;
+
+	@Value("${auth.email-verification.expiration-hours:24}")
+	private long emailVerificationExpirationHours;
 
 	private final NetHttpTransport netHttpTransport = new NetHttpTransport();
 	private static final GsonFactory GSON_FACTORY = GsonFactory.getDefaultInstance();
 
 	public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
 		try {
-			logger.info("Attempting to authenticate user: {}", loginRequest.getEmail());
-			User user = userRepository.findByEmail(loginRequest.getEmail())
+			String normalizedEmail = normalizeEmail(loginRequest.getEmail());
+			logger.info("Attempting to authenticate user: {}", normalizedEmail);
+			User user = userRepository.findByEmail(normalizedEmail)
 					.orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.getEmail()));
+			if (Boolean.FALSE.equals(user.getEmailVerified())) {
+				sendVerificationEmailSilently(user, false);
+				return ResponseEntity.status(403)
+						.body(new ControllerResponse<>(false,
+								"Please verify your email before signing in. We've sent you a fresh verification link.",
+								null, 403));
+			}
 			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(user.getUsername(),
 							loginRequest.getPassword()));
@@ -224,11 +241,61 @@ public class AuthService {
 				.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 		roles.add(userRole);
 		user.setRoles(roles);
+		prepareVerificationToken(user);
 
+		User savedUser = userRepository.save(user);
+		try {
+			emailService.sendEmailVerification(savedUser, getVerificationDuration());
+		} catch (MailException ex) {
+			logger.error("Failed to send verification email to {}", savedUser.getEmail(), ex);
+			userRepository.delete(savedUser);
+			return ResponseEntity.status(500)
+					.body(new ControllerResponse<>(false,
+							"We couldn't send the verification email. Please try again in a moment.",
+							null, 500));
+		}
+
+		return ResponseEntity.ok(new ControllerResponse<>(true,
+				"Account created. Check your inbox to verify your email before signing in.",
+				"Verification email sent", 200));
+	}
+
+	public ResponseEntity<ControllerResponse<String>> verifyEmail(String token) {
+		if (token == null || token.isBlank()) {
+			return ResponseEntity.badRequest()
+					.body(new ControllerResponse<>(false, "Verification token is required", null, 400));
+		}
+
+		User user = userRepository.findByEmailVerificationToken(token).orElse(null);
+		if (user == null) {
+			return ResponseEntity.status(400)
+					.body(new ControllerResponse<>(false, "Invalid or unknown verification token.", null, 400));
+		}
+
+		if (Boolean.TRUE.equals(user.getEmailVerified())) {
+			return ResponseEntity.ok(new ControllerResponse<>(true,
+					"Email is already verified. You can sign in now.",
+					"Email already verified", 200));
+		}
+
+		if (isVerificationTokenExpired(user)) {
+			sendVerificationEmailSilently(user, true);
+			return ResponseEntity.status(400)
+					.body(new ControllerResponse<>(false,
+							"This verification link has expired. We've sent a new link to your email.",
+							null, 400));
+		}
+
+		user.setEmailVerified(Boolean.TRUE);
+		user.setEmailVerifiedAt(Instant.now());
+		user.setEmailVerificationToken(null);
+		user.setEmailVerificationExpiresAt(null);
+		user.setEmailVerificationSentAt(null);
 		userRepository.save(user);
 
-		return ResponseEntity.ok(new ControllerResponse<>(true, "User registered successfully!",
-				"User registered successfully!", 200));
+		return ResponseEntity.ok(new ControllerResponse<>(true,
+				"Email verified successfully. You can now sign in.",
+				"Email verified", 200));
 	}
 
 	public ResponseEntity<ControllerResponse<GoogleAccountInfo>> verifyGoogleAccount(GoogleAuthRequest request) {
@@ -327,6 +394,11 @@ public class AuthService {
 		user.setFullName(valueOrNull(payload.get("name")));
 		user.setAvatar(valueOrNull(payload.get("picture")));
 		user.setPassword(encoder.encode(UUID.randomUUID().toString()));
+		user.setEmailVerified(Boolean.TRUE);
+		user.setEmailVerifiedAt(Instant.now());
+		user.setEmailVerificationToken(null);
+		user.setEmailVerificationExpiresAt(null);
+		user.setEmailVerificationSentAt(null);
 
 		Role userRole = roleRepository.findByName(ERole.USER)
 				.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
@@ -346,6 +418,15 @@ public class AuthService {
 		String avatar = valueOrNull(payload.get("picture"));
 		if (avatar != null && (user.getAvatar() == null || user.getAvatar().isBlank())) {
 			user.setAvatar(avatar);
+			updated = true;
+		}
+
+		if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+			user.setEmailVerified(Boolean.TRUE);
+			user.setEmailVerifiedAt(Instant.now());
+			user.setEmailVerificationToken(null);
+			user.setEmailVerificationExpiresAt(null);
+			user.setEmailVerificationSentAt(null);
 			updated = true;
 		}
 
@@ -392,6 +473,40 @@ public class AuthService {
 				refreshToken,
 				jwtUtils.getAccessTokenExpiryDate().toInstant(),
 				jwtUtils.getRefreshTokenExpiryDate().toInstant());
+	}
+
+	private Duration getVerificationDuration() {
+		long hours = emailVerificationExpirationHours > 0 ? emailVerificationExpirationHours : 24L;
+		return Duration.ofHours(hours);
+	}
+
+	private void prepareVerificationToken(User user) {
+		Instant now = Instant.now();
+		user.setEmailVerificationToken(UUID.randomUUID().toString());
+		user.setEmailVerificationSentAt(now);
+		user.setEmailVerificationExpiresAt(now.plus(getVerificationDuration()));
+		user.setEmailVerified(Boolean.FALSE);
+		user.setEmailVerifiedAt(null);
+	}
+
+	private boolean isVerificationTokenExpired(User user) {
+		Instant expiresAt = user.getEmailVerificationExpiresAt();
+		return expiresAt != null && Instant.now().isAfter(expiresAt);
+	}
+
+	private void sendVerificationEmailSilently(User user, boolean forceNewToken) {
+		try {
+			if (forceNewToken || user.getEmailVerificationToken() == null || isVerificationTokenExpired(user)) {
+				prepareVerificationToken(user);
+			} else {
+				user.setEmailVerificationSentAt(Instant.now());
+				user.setEmailVerificationExpiresAt(Instant.now().plus(getVerificationDuration()));
+			}
+			userRepository.save(user);
+			emailService.sendEmailVerification(user, getVerificationDuration());
+		} catch (Exception e) {
+			logger.error("Unable to send verification email to {}", user.getEmail(), e);
+		}
 	}
 
 	private String valueOrNull(Object value) {

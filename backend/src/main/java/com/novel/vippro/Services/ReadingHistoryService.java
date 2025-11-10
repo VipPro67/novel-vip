@@ -1,11 +1,9 @@
 package com.novel.vippro.Services;
 
-import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.ReadingHistory.ReadingHistoryDTO;
 import com.novel.vippro.DTO.ReadingHistory.ReadingStatsDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
-import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.ReadingHistory;
 import com.novel.vippro.Models.User;
@@ -18,7 +16,6 @@ import com.novel.vippro.Security.UserDetailsImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -29,7 +26,6 @@ import com.novel.vippro.Events.ReadingProgressEvent;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ReadingHistoryService {

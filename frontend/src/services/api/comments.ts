@@ -40,7 +40,7 @@ export const createCommentsApi = (client: ApiClient) => ({
     return client.request<PageResponse<Comment>>(`/api/comments/chapter/${chapterId}?${searchParams}`)
   },
 
-  async addComment(data: { content: string; novelId?: string; chapterId?: string }) {
+  async addComment(data: { content: string; novelId?: string; chapterId?: string, parentId?: string}) {
     return client.request<Comment>("/api/comments", {
       method: "POST",
       body: JSON.stringify(data),

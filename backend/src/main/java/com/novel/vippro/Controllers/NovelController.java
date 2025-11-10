@@ -81,7 +81,6 @@ public class NovelController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<NovelDTO> novels = novelService.getAllNovels(pageable);
-        logger.info("Retrieved {} novels", novels.getContent().size());
         return ControllerResponse.success("Novels retrieved successfully", novels);
     }
 

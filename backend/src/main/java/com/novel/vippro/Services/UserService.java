@@ -53,6 +53,7 @@ public class UserService {
     }
 
     @Cacheable(value = "users", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort.toString()")
+    @Transactional(readOnly = true)
     public PageResponse<UserDTO> getAllUsers(Pageable pageable) {
         Page<User> userPage = userRepository.findAll(pageable);
         return new PageResponse<>(userPage.map(mapper::UsertoUserDTO));

@@ -26,18 +26,18 @@ export const createAdminUsersApi = (client: ApiClient) => ({
       searchParams.append("search", params.search.trim())
     }
 
-    return client.request<PageResponse<User>>(`/api/admin/users?${searchParams}`)
+    return client.request<PageResponse<User>>(`/api/users?${searchParams}`)
   },
 
   async updateUserRoles(userId: string, roles: string[]) {
-    return client.request<User>(`/api/admin/users/${userId}/roles`, {
+    return client.request<User>(`/api/users/${userId}/roles`, {
       method: "PUT",
       body: JSON.stringify({ roles }),
     })
   },
 
   async deleteUser(userId: string) {
-    return client.request<void>(`/api/admin/users/${userId}`, {
+    return client.request<void>(`/api/users/${userId}`, {
       method: "DELETE",
     })
   },

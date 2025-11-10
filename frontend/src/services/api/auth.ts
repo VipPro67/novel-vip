@@ -29,6 +29,10 @@ export const createAuthApi = (client: ApiClient) => ({
     })
   },
 
+  async verifyEmail(token: string): Promise<ApiResponse<string>> {
+    return client.request(`/api/auth/verify-email?token=${encodeURIComponent(token)}`)
+  },
+
   async loginWithGoogle(credential: string) {
     const response = await client.request<{
       id: string

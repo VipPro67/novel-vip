@@ -45,8 +45,8 @@ export function RegisterModal() {
 
       if (result?.success) {
         toast({
-          title: "Registration successful",
-          description: "Welcome! You can now sign in.",
+          title: "Verify your email",
+          description: `We sent a confirmation link to ${email}. Please verify before signing in.`,
         })
         closeRegister()
         switchToLogin()
