@@ -31,7 +31,7 @@ public class NovelMapper {
     public NovelDTO NoveltoDTO(Novel novel) {
         NovelDTO novelDTO = modelMapper.map(novel, NovelDTO.class);
         if (novel.getCoverImage() != null) {
-            String imageUrl = fileStorageService.generateFileUrl(novel.getCoverImage().getPublicId(), 500);
+            String imageUrl = fileStorageService.generateFileUrl(novel.getCoverImage().getPublicId(), 43200);
             novelDTO.setImageUrl(imageUrl);
         }
         return novelDTO;

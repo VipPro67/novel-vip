@@ -36,6 +36,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue emailVerificationQueue() {
+        return new Queue(MessageQueues.EMAIL_VERIFICATION, true, false, false);
+    }
+
+    @Bean
     public MessageConverter jsonMessageConverter() {
             return new Jackson2JsonMessageConverter();
     }

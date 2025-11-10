@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,6 +40,7 @@ import com.novel.vippro.Models.Role;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.JwtResponse;
+import com.novel.vippro.Messaging.EmailVerificationPublisher;
 import com.novel.vippro.Repository.RoleRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
@@ -69,7 +69,7 @@ public class AuthService {
 	RoleApprovalService roleApprovalService;
 
 	@Autowired
-	EmailService emailService;
+	EmailVerificationPublisher emailVerificationPublisher;
 
 	@Value("${google.client-id:}")
 	private String googleClientId;
@@ -244,14 +244,15 @@ public class AuthService {
 		prepareVerificationToken(user);
 
 		User savedUser = userRepository.save(user);
+		Duration validity = getVerificationDuration();
 		try {
-			emailService.sendEmailVerification(savedUser, getVerificationDuration());
-		} catch (MailException ex) {
-			logger.error("Failed to send verification email to {}", savedUser.getEmail(), ex);
+			queueEmailVerification(savedUser, validity);
+		} catch (RuntimeException ex) {
+			logger.error("Failed to enqueue verification email for {}", savedUser.getEmail(), ex);
 			userRepository.delete(savedUser);
 			return ResponseEntity.status(500)
 					.body(new ControllerResponse<>(false,
-							"We couldn't send the verification email. Please try again in a moment.",
+							"We couldn't queue the verification email. Please try again in a moment.",
 							null, 500));
 		}
 
@@ -494,18 +495,28 @@ public class AuthService {
 		return expiresAt != null && Instant.now().isAfter(expiresAt);
 	}
 
+	private void queueEmailVerification(User user, Duration validity) {
+		if (user == null || user.getId() == null) {
+			throw new IllegalStateException("User must be persisted before queuing verification email");
+		}
+		Duration effectiveValidity = validity != null ? validity : getVerificationDuration();
+		emailVerificationPublisher.publishEmailVerification(user.getId(), effectiveValidity);
+	}
+
 	private void sendVerificationEmailSilently(User user, boolean forceNewToken) {
 		try {
+			Duration validity = getVerificationDuration();
 			if (forceNewToken || user.getEmailVerificationToken() == null || isVerificationTokenExpired(user)) {
 				prepareVerificationToken(user);
 			} else {
-				user.setEmailVerificationSentAt(Instant.now());
-				user.setEmailVerificationExpiresAt(Instant.now().plus(getVerificationDuration()));
+				Instant now = Instant.now();
+				user.setEmailVerificationSentAt(now);
+				user.setEmailVerificationExpiresAt(now.plus(validity));
 			}
 			userRepository.save(user);
-			emailService.sendEmailVerification(user, getVerificationDuration());
+			queueEmailVerification(user, validity);
 		} catch (Exception e) {
-			logger.error("Unable to send verification email to {}", user.getEmail(), e);
+			logger.error("Unable to queue verification email for {}", user.getEmail(), e);
 		}
 	}
 

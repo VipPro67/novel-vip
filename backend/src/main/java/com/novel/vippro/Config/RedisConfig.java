@@ -21,41 +21,43 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class RedisConfig {
-    @Value("${REDIS_HOST}")
-    private String redisHost;
+	@Value("${REDIS_HOST}")
+	private String redisHost;
 
-    @Value("${REDIS_PORT}")
-    private int redisPort;
+	@Value("${REDIS_PORT}")
+	private int redisPort;
 
-    @Value("${REDIS_USERNAME:}")
-    private String redisUsername;
+	@Value("${REDIS_USERNAME:}")
+	private String redisUsername;
 
-    @Value("${REDIS_PASSWORD:}")
-    private String redisPassword;
+	@Value("${REDIS_PASSWORD:}")
+	private String redisPassword;
 
-    @Value("${REDIS_SSL:false}")
-    private boolean redisSsl;
+	@Value("${REDIS_SSL:false}")
+	private boolean redisSsl;
 
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-        config.setHostName(redisHost);
-        config.setPort(redisPort);
-        if (redisUsername != null && !redisUsername.isBlank()) {
-            config.setUsername(redisUsername);
-        }
-        if (redisPassword != null && !redisPassword.isBlank()) {
-            config.setPassword(RedisPassword.of(redisPassword));
-        }
+	@Bean
+	public RedisConnectionFactory redisConnectionFactory() {
+		RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+		config.setHostName(redisHost);
+		config.setPort(redisPort);
+		if (redisUsername != null && !redisUsername.isBlank()) {
+			config.setUsername(redisUsername);
+		}
+		if (redisPassword != null && !redisPassword.isBlank()) {
+			config.setPassword(RedisPassword.of(redisPassword));
+		}
 
-        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder().useSsl()
-            .build();
+		LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder().useSsl()
+				.build();
 
-        return new LettuceConnectionFactory(config, clientConfig);
-    }
+		return new LettuceConnectionFactory(config, clientConfig);
+	}
 
 	@Bean
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
@@ -89,18 +91,30 @@ public class RedisConfig {
 				objectMapper.getPolymorphicTypeValidator(),
 				ObjectMapper.DefaultTyping.NON_FINAL,
 				JsonTypeInfo.As.PROPERTY);
-		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
-				Object.class);
 
-		RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-				.serializeKeysWith(RedisSerializationContext.SerializationPair
-						.fromSerializer(new StringRedisSerializer()))
-				.serializeValuesWith(
-						RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
+
+		RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+				.serializeKeysWith(
+						RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
 				.entryTtl(Duration.ofMinutes(10));
 
+		Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
+
+		cacheConfigs.put("recommendations", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+		cacheConfigs.put("novels", defaultConfig.entryTtl(Duration.ofHours(6)));
+		cacheConfigs.put("chapters", defaultConfig.entryTtl(Duration.ofHours(6)));
+		cacheConfigs.put("comments", defaultConfig.entryTtl(Duration.ofHours(6)));
+		cacheConfigs.put("users", defaultConfig.entryTtl(Duration.ofDays(1)));
+		cacheConfigs.put("categories", defaultConfig.entryTtl(Duration.ofDays(1)));
+		cacheConfigs.put("genres", defaultConfig.entryTtl(Duration.ofDays(1)));
+		cacheConfigs.put("tags", defaultConfig.entryTtl(Duration.ofDays(1)));
+
 		return RedisCacheManager.builder(factory)
-				.cacheDefaults(cacheConfig)
+				.cacheDefaults(defaultConfig)
+				.withInitialCacheConfigurations(cacheConfigs)
 				.build();
 	}
+
 }

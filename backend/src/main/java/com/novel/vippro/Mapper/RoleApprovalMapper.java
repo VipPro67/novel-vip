@@ -13,6 +13,7 @@ public class RoleApprovalMapper {
 
 	public RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest) {
 		var dto = new RoleApprovalDTO();
+		dto.setId(roleApprovalRequest.getId());
 		dto.setUserId(roleApprovalRequest.getUser().getId());
 		dto.setUsername(roleApprovalRequest.getUser().getUsername());
 		dto.setRequestedRole(roleApprovalRequest.getRequestedRole().getName());

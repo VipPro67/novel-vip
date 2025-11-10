@@ -43,9 +43,10 @@ public class RoleApprovalService {
     private Mapper mapper;
 
     @Transactional
-    public RoleApprovalDTO createRoleApprovalRequest(User user, RoleRequestDTO request) {
+    public RoleApprovalDTO createRoleApprovalRequest(RoleRequestDTO request) {
         // Check if user already has a pending request for this role
-
+        User user = userRepository.findById(UserDetailsImpl.getCurrentUserId())
+                .orElseThrow(() -> new RuntimeException("Error: User not found"));
         Role requestedRoleEntity = roleRepository.findByName(request.getRequestedRole())
                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
         ERole requestedRole = request.getRequestedRole();   

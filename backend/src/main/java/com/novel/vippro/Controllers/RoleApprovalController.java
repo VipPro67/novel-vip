@@ -42,18 +42,13 @@ public class RoleApprovalController {
     @Autowired
     private RoleApprovalService roleApprovalService;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Operation(summary = "Request a new role", description = "Submit a request to gain a new role")
     @PostMapping("/request")
     public ControllerResponse<?> requestRole(@RequestBody RoleRequestDTO request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("Error: User not found"));
         return ControllerResponse.success("Role request submitted successfully",
-                roleApprovalService.createRoleApprovalRequest(user, request));
+                roleApprovalService.createRoleApprovalRequest(request));
     }
 
     @Operation(summary = "Approve a role request", description = "Approve a pending role request")
