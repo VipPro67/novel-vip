@@ -1,0 +1,47 @@
+{
+  "Header": {
+    "brand": "Novel VIP Pro",
+    "nav": {
+      "home": "Home",
+      "hot": "Hot",
+      "top": "Top",
+      "latest": "Latest",
+      "videos": "Videos"
+    },
+    "actions": {
+      "profile": "Profile",
+      "following": "Following Novels",
+      "history": "Reading History",
+      "featureRequests": "Feature Requests",
+      "reports": "My Reports",
+      "settings": "Settings",
+      "admin": "Admin Panel",
+      "logout": "Log out",
+      "signIn": "Sign In",
+      "signUp": "Sign Up"
+    }
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "languages": {
+      "vi": "Tiếng Việt",
+      "en": "English"
+    }
+  },
+  "Home": {
+    "heroTitle": "Discover Amazing Stories",
+    "heroDescription": "Dive into a world of captivating novels, from fantasy epics to romantic tales. Your next favorite story awaits.",
+    "heroPrimary": "Browse Novels",
+    "heroSecondary": "Start Reading Free",
+    "continueReading": "Continue Reading",
+    "viewAll": "View All",
+    "recentlyRead": "View All",
+    "hot": "Hot Novels",
+    "top": "Top Rated",
+    "latest": "Latest Updates",
+    "ctaTitle": "Ready to Start Your Journey?",
+    "ctaSubtitle": "Join thousands of readers discovering their next favorite story every day.",
+    "ctaPrimary": "Sign Up Free",
+    "ctaSecondary": "Browse Novels"
+  }
+}

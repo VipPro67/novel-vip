@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSuggest, SuggestItem } from "@/hooks/use-suggest";

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname, useRouter } from "@/navigation"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Skeleton } from "@/components/ui/skeleton"
 

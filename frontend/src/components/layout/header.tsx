@@ -1,22 +1,10 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import {
-  BookOpen,
-  Search,
-  User,
-  LogOut,
-  Settings,
-  Shield,
-  Menu,
-  BookmarkIcon,
-  Clock,
-  Lightbulb,
-  Flag,
-} from "lucide-react"
+import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { Link, usePathname, useRouter } from "@/navigation"
+import { BookOpen, Search, User, LogOut, Settings, Shield, BookmarkIcon, Clock, Lightbulb, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,12 +16,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { NotificationBell } from "../ui/notification-bell"
 import { useAuth } from "@/components/providers/auth-provider"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { useState } from "react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import SearchBar from "../ui/search-bar"
 import { useAuthModals } from "@/hooks/use-auth-modals"
+import { LocaleSwitcher } from "@/components/locale-switcher"
 
 export function Header() {
+  const t = useTranslations("Header")
   const { user, logout, isAuthenticated, hasRole } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
@@ -54,11 +42,11 @@ export function Header() {
   }
 
   const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Hot", href: "/novels/hot" },
-    { name: "Top", href: "/novels/top" },
-    { name: "Latest", href: "/novels/latest" },
-    { name: "Videos", href: "/videos" },
+    { name: t("nav.home"), href: "/" },
+    { name: t("nav.hot"), href: "/novels/hot" },
+    { name: t("nav.top"), href: "/novels/top" },
+    { name: t("nav.latest"), href: "/novels/latest" },
+    { name: t("nav.videos"), href: "/videos" },
   ]
 
   return (
@@ -68,7 +56,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <BookOpen className="h-8 w-8 text-primary" />
-            <span className="hidden sm:inline text-xl font-bold">Novel VIP Pro</span>
+            <span className="hidden sm:inline text-xl font-bold">{t("brand")}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -119,50 +107,51 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/profile")}>
                     <User className="mr-2 h-4 w-4" />
-                    Profile
+                    {t("actions.profile")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/following")}>
                     <BookmarkIcon className="mr-2 h-4 w-4" />
-                    Following Novels
+                    {t("actions.following")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/history")}>
                     <Clock className="mr-2 h-4 w-4" />
-                    Reading History
+                    {t("actions.history")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/feature-requests")}>
                     <Lightbulb className="mr-2 h-4 w-4" />
-                    Feature Requests
+                    {t("actions.featureRequests")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/my-reports")}>
                     <Flag className="mr-2 h-4 w-4" />
-                    My Reports
+                    {t("actions.reports")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleProtectedNavigation("/settings")}>
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    {t("actions.settings")}
                   </DropdownMenuItem>
                   {hasRole("admin") && (
                     <DropdownMenuItem onClick={() => router.push("/admin")}>
                       <Shield className="mr-2 h-4 w-4" />
-                      Admin Panel
+                      {t("actions.admin")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    {t("actions.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" onClick={openLogin}>
-                  Sign In
+                  {t("actions.signIn")}
                 </Button>
-                <Button onClick={openRegister}>Sign Up</Button>
+                <Button onClick={openRegister}>{t("actions.signUp")}</Button>
               </div>
             )}
+            <LocaleSwitcher />
           </div>
         </div>
       </div>

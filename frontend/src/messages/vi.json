@@ -1,0 +1,46 @@
+{
+  "Header": {
+    "brand": "Novel VIP Pro",
+    "nav": {
+      "home": "Trang chủ",
+      "hot": "Phổ biến",
+      "top": "Xếp hạng",
+      "latest": "Mới nhất",
+      "videos": "Video"
+    },
+    "actions": {
+      "profile": "Hồ sơ",
+      "following": "Truyện đang theo dõi",
+      "history": "Lịch sử đọc",
+      "featureRequests": "Đề xuất tính năng",
+      "reports": "Báo cáo của tôi",
+      "settings": "Cài đặt",
+      "admin": "Bảng điều khiển",
+      "logout": "Đăng xuất",
+      "signIn": "Đăng nhập",
+      "signUp": "Đăng ký"
+    }
+  },
+  "LocaleSwitcher": {
+    "label": "Ngôn ngữ",
+    "languages": {
+      "vi": "Tiếng Việt",
+      "en": "Tiếng Anh"
+    }
+  },
+  "Home": {
+    "heroTitle": "Khám phá những câu chuyện tuyệt vời",
+    "heroDescription": "Đắm mình trong thế giới tiểu thuyết hấp dẫn, từ sử thi fantasy đến chuyện tình lãng mạn. Câu chuyện yêu thích tiếp theo đang chờ bạn.",
+    "heroPrimary": "Khám phá truyện",
+    "heroSecondary": "Đọc miễn phí ngay",
+    "continueReading": "Đọc tiếp",
+    "viewAll": "Xem tất cả",
+    "hot": "Truyện hot",
+    "top": "Xếp hạng cao",
+    "latest": "Cập nhật mới",
+    "ctaTitle": "Sẵn sàng bắt đầu hành trình?",
+    "ctaSubtitle": "Gia nhập hàng nghìn độc giả tìm thấy câu chuyện yêu thích mỗi ngày.",
+    "ctaPrimary": "Đăng ký miễn phí",
+    "ctaSecondary": "Khám phá truyện"
+  }
+}

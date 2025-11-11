@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
 import { api } from "@/services/api"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/navigation"
 
 interface ReportDialogProps {
   reportType: "NOVEL" | "CHAPTER" | "COMMENT" | "REVIEW" | "USER"

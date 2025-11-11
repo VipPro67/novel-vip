@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/navigation"
 import { Eye, EyeOff, BookOpen } from "lucide-react"
 import { GoogleLogin, GoogleOAuthProvider, type CredentialResponse } from "@react-oauth/google"
 import { Button } from "@/components/ui/button"
