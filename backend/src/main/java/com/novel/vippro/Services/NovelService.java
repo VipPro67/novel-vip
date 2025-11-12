@@ -345,7 +345,7 @@ public class NovelService {
     }
 
     @Transactional
-    protected Novel saveNovelInitial(EpubParseResult epubResult, String slug, String status) {
+    public Novel saveNovelInitial(EpubParseResult epubResult, String slug, String status) {
         Novel novel = new Novel();
         novel.setTitle(
                 epubResult.getTitle() == null || epubResult.getTitle().isBlank() ? epubResult.getAuthor() + " - Import"

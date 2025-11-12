@@ -1,7 +1,7 @@
 package com.novel.vippro.Messaging;
 
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
-import com.novel.vippro.Services.ChapterAudioProcessor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

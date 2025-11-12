@@ -1,4 +1,4 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Services.ThirdParty;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,6 +29,7 @@ import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Mapper.NovelMapper;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NovelDocument;
+import com.novel.vippro.Services.SearchService;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;

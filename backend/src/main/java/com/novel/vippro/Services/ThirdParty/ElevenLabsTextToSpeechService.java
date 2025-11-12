@@ -1,4 +1,4 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Services.ThirdParty;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,6 +15,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.novel.vippro.Models.FileMetadata;
+import com.novel.vippro.Services.FileService;
+import com.novel.vippro.Services.TextToSpeechService;
 
 @Service("elevenLabsTTS")
 @ConditionalOnProperty(name = "texttospeech.provider", havingValue = "elevenlabs")

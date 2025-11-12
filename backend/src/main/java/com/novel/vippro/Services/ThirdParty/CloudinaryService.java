@@ -1,0 +1,114 @@
+package com.novel.vippro.Services.ThirdParty;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.api.ApiResponse;
+import com.cloudinary.utils.ObjectUtils;
+import com.novel.vippro.Services.FileStorageService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Map;
+
+@Service("cloudinaryService")
+@ConditionalOnProperty(name = "storage.provider", havingValue = "cloudinary")
+public class CloudinaryService implements FileStorageService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CloudinaryService.class);
+
+    private final Cloudinary cloudinary;
+
+    public CloudinaryService(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
+
+    @Override
+    public String uploadFile(byte[] fileData, String publicId, String contentType) throws IOException {
+        Map<String, String> resourceType = determineResourceType(contentType);
+        logger.info("Uploading file with publicId: {}, resourceType: {}", publicId, resourceType);
+        //check file exsits or not before upload
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = cloudinary.uploader().upload(fileData, ObjectUtils.asMap(
+                "resource_type", resourceType.get("resourceType"),
+                "public_id", publicId));
+        
+        Object url = result.get("secure_url");
+        return url != null ? url.toString() : (String) result.get("url");
+    }
+
+    @Override
+    public byte[] downloadFile(String publicId) throws IOException {
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+
+            String url = cloudinary.url()
+                    .resourceType(resourceType)
+                    .generate(publicId);
+
+            // Here you would implement the actual download logic.
+            // This remains a placeholder that callers should override with HTTP download logic if needed.
+            logger.warn("downloadFile is not fully implemented. Generated URL: {}", url);
+            return new byte[0];
+        } catch (Exception e) {
+            throw new IOException("Failed to download file from Cloudinary", e);
+        }
+    }
+
+    @Override
+    public void deleteFile(String publicId) throws IOException {
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = cloudinary.uploader().destroy(publicId,
+                    ObjectUtils.asMap("resource_type", resourceType));
+
+            if (!"ok".equals(result.get("result"))) {
+                throw new IOException("Failed to delete file from Cloudinary");
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to delete file from Cloudinary", e);
+        }
+    }
+
+    private Map<String, String> determineResourceType(String contentType) {
+        if (contentType.startsWith("image/")) {
+            return Map.of("resourceType", "image", "format", contentType.substring(6));
+        } else if (contentType.startsWith("video/")) {
+            return Map.of("resourceType", "video", "format", contentType.substring(6));
+        } else if (contentType.startsWith("audio/")) {
+            return Map.of("resourceType", "video", "format", contentType.substring(6));
+        } else if (contentType.startsWith("application/json")) {
+            return Map.of("resourceType", "raw", "format", contentType.substring(6));
+        } else {
+            throw new IllegalArgumentException("Unsupported content type: " + contentType);
+        }
+    }
+
+    @Override
+    public String generateFileUrl(String publicId, int expirationInSeconds){
+        try {
+            ApiResponse apiResponse = cloudinary.api().resource(publicId, ObjectUtils.emptyMap());
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resource = apiResponse;
+            String resourceType = (String) resource.get("resource_type");
+
+            return cloudinary.url()
+                    .resourceType(resourceType)
+                    .generate(publicId);
+        } catch (Exception e) {
+            logger.error("Failed to generate file URL from Cloudinary", e);
+            return null;
+        }
+    }
+}

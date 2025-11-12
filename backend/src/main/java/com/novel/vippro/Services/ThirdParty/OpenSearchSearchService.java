@@ -1,4 +1,4 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Services.ThirdParty;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +38,7 @@ import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Mapper.NovelMapper;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NovelDocument;
+import com.novel.vippro.Services.SearchService;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;

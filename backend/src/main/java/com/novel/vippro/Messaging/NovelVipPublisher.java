@@ -1,4 +1,4 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Messaging;
 
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;

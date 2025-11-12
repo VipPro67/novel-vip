@@ -1,8 +1,10 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Services.ThirdParty;
 
 import com.google.cloud.texttospeech.v1.*;
 import com.google.protobuf.ByteString;
 import com.novel.vippro.Models.FileMetadata;
+import com.novel.vippro.Services.FileService;
+import com.novel.vippro.Services.TextToSpeechService;
 import com.google.auth.oauth2.GoogleCredentials;
 
 import org.slf4j.Logger;

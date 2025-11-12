@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
-import com.novel.vippro.Services.NovelVipPublisher;
 
 @Component
 @ConditionalOnProperty(name = "app.messaging.provider", havingValue = "activemq")

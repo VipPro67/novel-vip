@@ -1,9 +1,12 @@
-package com.novel.vippro.Services;
+package com.novel.vippro.Messaging;
 
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.NotificationType;
+import com.novel.vippro.Services.ChapterService;
+import com.novel.vippro.Services.NotificationService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
