@@ -5,7 +5,7 @@ import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
-import com.novel.vippro.DTO.Epub.EpubImportJobDTO;
+import com.novel.vippro.DTO.System.SystemJobDTO;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
 import com.novel.vippro.DTO.File.FileMetadataDTO;
@@ -79,7 +79,7 @@ public class MapperFacade implements Mapper {
 	@Autowired
 	private RatingMapper ratingMapper;
 	@Autowired
-	private EpubImportJobMapper epubImportJobMapper;
+	private SystemJobMapper systemJobMapper;
 	@Autowired
 	private VideoMapper videoMapper;
 
@@ -433,8 +433,8 @@ public class MapperFacade implements Mapper {
 	}
 
 	@Override
-	public EpubImportJobDTO EpubImportJobToDTO(EpubImportJob job) {
-		return epubImportJobMapper.toDTO(job);
+	public SystemJobDTO SystemJobToDTO(SystemJob job) {
+		return systemJobMapper.toDTO(job);
 	}
 
 	@Override

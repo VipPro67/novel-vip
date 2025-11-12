@@ -1,14 +1,15 @@
 package com.novel.vippro.Services;
 
-import com.novel.vippro.DTO.Epub.EpubImportJobDTO;
+import com.novel.vippro.DTO.System.SystemJobDTO;
 import com.novel.vippro.Mapper.Mapper;
-import com.novel.vippro.Messaging.AsyncTaskPublisher;
+import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Messaging.payload.EpubImportMessage;
-import com.novel.vippro.Models.EpubImportJob;
-import com.novel.vippro.Models.EpubImportStatus;
 import com.novel.vippro.Models.EpubImportType;
 import com.novel.vippro.Models.FileMetadata;
-import com.novel.vippro.Repository.EpubImportJobRepository;
+import com.novel.vippro.Models.SystemJob;
+import com.novel.vippro.Models.SystemJobStatus;
+import com.novel.vippro.Models.SystemJobType;
+import com.novel.vippro.Repository.SystemJobRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 
@@ -28,25 +29,25 @@ public class EpubImportService {
     private static final Logger logger = LoggerFactory.getLogger(EpubImportService.class);
 
     private final FileService fileService;
-    private final EpubImportJobRepository jobRepository;
+    private final SystemJobRepository jobRepository;
     private final Mapper mapper;
-    private final AsyncTaskPublisher asyncTaskPublisher;
+    private final MessagePublisher messagePublisher;
     private final NovelRepository novelRepository;
 
     public EpubImportService(FileService fileService,
-            EpubImportJobRepository jobRepository,
+            SystemJobRepository jobRepository,
             Mapper mapper,
-            AsyncTaskPublisher asyncTaskPublisher,
+            MessagePublisher messagePublisher,
             NovelRepository novelRepository) {
         this.fileService = fileService;
         this.jobRepository = jobRepository;
         this.mapper = mapper;
-        this.asyncTaskPublisher = asyncTaskPublisher;
+        this.messagePublisher = messagePublisher;
         this.novelRepository = novelRepository;
     }
 
     @Transactional
-    public EpubImportJobDTO queueNewNovelImport(MultipartFile epub, String slug, String status) {
+    public SystemJobDTO queueNewNovelImport(MultipartFile epub, String slug, String status) {
         UUID userId = requireAuthenticatedUser();
         logger.info("Queueing EPUB import for new novel slug={} by user={}", slug, userId);
         FileMetadata metadata;
@@ -56,9 +57,10 @@ public class EpubImportService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to read EPUB file content", e);
         }
-        EpubImportJob job = new EpubImportJob();
-        job.setType(EpubImportType.CREATE_NOVEL);
-        job.setStatus(EpubImportStatus.QUEUED);
+        SystemJob job = new SystemJob();
+        job.setJobType(SystemJobType.EPUB_IMPORT);
+        job.setImportType(EpubImportType.CREATE_NOVEL);
+        job.setStatus(SystemJobStatus.QUEUED);
         job.setImportFile(metadata);
         job.setUserId(userId);
         job.setSlug(slug);
@@ -68,11 +70,11 @@ public class EpubImportService {
         job = jobRepository.save(job);
 
         publishAfterCommit(job);
-        return mapper.EpubImportJobToDTO(job);
+        return mapper.SystemJobToDTO(job);
     }
 
     @Transactional
-    public EpubImportJobDTO queueChaptersImport(UUID novelId, MultipartFile epub) {
+    public SystemJobDTO queueChaptersImport(UUID novelId, MultipartFile epub) {
         UUID userId = requireAuthenticatedUser();
         var novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new IllegalArgumentException("Novel not found with id " + novelId));
@@ -87,9 +89,10 @@ public class EpubImportService {
         }
 
 
-        EpubImportJob job = new EpubImportJob();
-        job.setType(EpubImportType.APPEND_CHAPTERS);
-        job.setStatus(EpubImportStatus.QUEUED);
+        SystemJob job = new SystemJob();
+        job.setJobType(SystemJobType.EPUB_IMPORT);
+        job.setImportType(EpubImportType.APPEND_CHAPTERS);
+        job.setStatus(SystemJobStatus.QUEUED);
         job.setImportFile(metadata);
         job.setUserId(userId);
         job.setNovelId(novelId);
@@ -99,10 +102,10 @@ public class EpubImportService {
         job = jobRepository.save(job);
 
         publishAfterCommit(job);
-        return mapper.EpubImportJobToDTO(job);
+        return mapper.SystemJobToDTO(job);
     }
 
-    private void publish(EpubImportJob job) {
+    private void publish(SystemJob job) {
         EpubImportMessage message = EpubImportMessage.builder()
                 .jobId(job.getId())
                 .userId(job.getUserId())
@@ -111,14 +114,14 @@ public class EpubImportService {
                 .slug(job.getSlug())
                 .requestedStatus(job.getRequestedStatus())
                 .originalFileName(job.getOriginalFileName())
-                .type(job.getType())
+                .type(job.getImportType())
                 .build();
-        asyncTaskPublisher.publishEpubImport(message);
+        messagePublisher.publishEpubImport(message);
     }
 
-    private void publishAfterCommit(EpubImportJob job) {
+    private void publishAfterCommit(SystemJob job) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            EpubImportJob persistedJob = job;
+            SystemJob persistedJob = job;
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {

@@ -1,20 +1,24 @@
-package com.novel.vippro.DTO.Epub;
+package com.novel.vippro.DTO.System;
 
-import com.novel.vippro.Models.EpubImportStatus;
 import com.novel.vippro.Models.EpubImportType;
+import com.novel.vippro.Models.SystemJobStatus;
+import com.novel.vippro.Models.SystemJobType;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.Data;
 
 @Data
-public class EpubImportJobDTO {
+public class SystemJobDTO {
     private UUID id;
-    private EpubImportStatus status;
-    private EpubImportType type;
-    private UUID novelId;
+    private SystemJobType jobType;
+    private SystemJobStatus status;
+    private EpubImportType importType;
     private UUID userId;
+    private UUID novelId;
     private String slug;
     private String requestedStatus;
+    private UUID chapterId;
+    private Integer chapterNumber;
     private String statusMessage;
     private int totalChapters;
     private int chaptersProcessed;

@@ -4,15 +4,15 @@ import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.EpubImportMessage;
 import com.novel.vippro.Models.Chapter;
-import com.novel.vippro.Models.EpubImportJob;
-import com.novel.vippro.Models.EpubImportStatus;
 import com.novel.vippro.Models.EpubImportType;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.NotificationType;
-import com.novel.vippro.Repository.EpubImportJobRepository;
+import com.novel.vippro.Models.SystemJob;
+import com.novel.vippro.Models.SystemJobStatus;
 import com.novel.vippro.Repository.FileMetadataRepository;
 import com.novel.vippro.Repository.NovelRepository;
+import com.novel.vippro.Repository.SystemJobRepository;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.FileService;
 import com.novel.vippro.Services.FileStorageService;
@@ -42,7 +42,7 @@ public class EpubImportProcessor {
     private static final Logger logger = LoggerFactory.getLogger(EpubImportProcessor.class);
     private static final int CHAPTER_BATCH_SIZE = 100;
 
-    private final EpubImportJobRepository jobRepository;
+    private final SystemJobRepository jobRepository;
     private final FileMetadataRepository fileMetadataRepository;
     private final FileStorageService fileStorageService;
     private final FileService fileService;
@@ -50,10 +50,9 @@ public class EpubImportProcessor {
     private final NovelService novelService;
     private final NovelRepository novelRepository;
     private final SearchService searchService;
-    private final AsyncTaskPublisher asyncTaskPublisher;
     private final NotificationService notificationService;
 
-    public EpubImportProcessor(EpubImportJobRepository jobRepository,
+    public EpubImportProcessor(SystemJobRepository jobRepository,
             FileMetadataRepository fileMetadataRepository,
             FileStorageService fileStorageService,
             FileService fileService,
@@ -61,7 +60,6 @@ public class EpubImportProcessor {
             NovelService novelService,
             NovelRepository novelRepository,
             SearchService searchService,
-            AsyncTaskPublisher asyncTaskPublisher,
             NotificationService notificationService) {
         this.jobRepository = jobRepository;
         this.fileMetadataRepository = fileMetadataRepository;
@@ -71,7 +69,6 @@ public class EpubImportProcessor {
         this.novelService = novelService;
         this.novelRepository = novelRepository;
         this.searchService = searchService;
-        this.asyncTaskPublisher = asyncTaskPublisher;
         this.notificationService = notificationService;
     }
 
@@ -79,15 +76,15 @@ public class EpubImportProcessor {
     public void process(EpubImportMessage message) {
         try {
             TimeUnit.MICROSECONDS.sleep(100);
-            EpubImportJob job = jobRepository.findById(message.getJobId()).orElse(null);
-        if (job == null) {
-            logger.warn("Received EPUB import message for unknown job {}", message.getJobId());
-            return;
-        }
+            SystemJob job = jobRepository.findById(message.getJobId()).orElse(null);
+            if (job == null) {
+                logger.warn("Received EPUB import message for unknown job {}", message.getJobId());
+                return;
+            }
 
-        try {
-            logger.info("Processing EPUB import job {}", job.getId());
-            job.setStatus(EpubImportStatus.PARSING);
+            try {
+                logger.info("Processing EPUB import job {}", job.getId());
+            job.setStatus(SystemJobStatus.PARSING);
             job.setStatusMessage("Parsing EPUB file");
             jobRepository.save(job);
 
@@ -100,27 +97,27 @@ public class EpubImportProcessor {
             job.setAudioCompleted(0);
             jobRepository.save(job);
 
-            if (job.getType() == EpubImportType.CREATE_NOVEL) {
+            if (job.getImportType() == EpubImportType.CREATE_NOVEL) {
                 processCreateNovel(job, parsed);
             } else {
                 processAppendChapters(job, parsed);
             }
 
-            job.setStatus(EpubImportStatus.CHAPTERS_CREATED);
+            job.setStatus(SystemJobStatus.CHAPTERS_CREATED);
             job.setStatusMessage(String.format("Created %d chapters", job.getChaptersProcessed()));
             jobRepository.save(job);
 
             if (job.getTotalChapters() == 0) {
                 markJobCompleted(job, "EPUB import completed. No chapters detected.");
             } else {
-                job.setStatus(EpubImportStatus.WAITING_FOR_AUDIO);
+                job.setStatus(SystemJobStatus.WAITING_FOR_AUDIO);
                 job.setStatusMessage(String.format("Waiting for audio generation (%d chapters queued)",
                         job.getTotalChapters()));
                 jobRepository.save(job);
             }
         } catch (Exception ex) {
             logger.error("Failed to process EPUB import job {}", job.getId(), ex);
-            job.setStatus(EpubImportStatus.FAILED);
+            job.setStatus(SystemJobStatus.FAILED);
             job.setStatusMessage("Failed: " + ex.getMessage());
             job.setCompletedAt(Instant.now());
             jobRepository.save(job);
@@ -131,7 +128,7 @@ public class EpubImportProcessor {
         }
     }
 
-    private FileMetadata resolveFile(EpubImportMessage message, EpubImportJob job) {
+    private FileMetadata resolveFile(EpubImportMessage message, SystemJob job) {
         FileMetadata file = job.getImportFile();
         if (file == null && message.getFileMetadataId() != null) {
             file = fileMetadataRepository.findById(message.getFileMetadataId())
@@ -145,7 +142,7 @@ public class EpubImportProcessor {
         return file;
     }
 
-    private void processCreateNovel(EpubImportJob job, EpubParseResult parsed) {
+    private void processCreateNovel(SystemJob job, EpubParseResult parsed) {
         Novel novel = novelService.saveNovelInitial(parsed, job.getSlug(), job.getRequestedStatus());
         job.setNovelId(novel.getId());
         job.setSlug(novel.getSlug());
@@ -172,7 +169,7 @@ public class EpubImportProcessor {
         }
     }
 
-    private void processAppendChapters(EpubImportJob job, EpubParseResult parsed) {
+    private void processAppendChapters(SystemJob job, EpubParseResult parsed) {
         if (job.getNovelId() == null) {
             throw new IllegalStateException("Append chapters job missing novel id");
         }
@@ -191,7 +188,7 @@ public class EpubImportProcessor {
         searchService.indexNovels(List.of(refreshed));
     }
 
-    private void createChaptersBulk(EpubImportJob job, Novel novel, List<EpubChapterDTO> parsedChapters,
+    private void createChaptersBulk(SystemJob job, Novel novel, List<EpubChapterDTO> parsedChapters,
             int startingChapterNumber, boolean forceSequentialNumbers) {
         if (parsedChapters == null || parsedChapters.isEmpty()) {
             return;
@@ -231,15 +228,15 @@ public class EpubImportProcessor {
         return providedTitle;
     }
 
-    private void markJobCompleted(EpubImportJob job, String message) {
-        job.setStatus(EpubImportStatus.COMPLETED);
+    private void markJobCompleted(SystemJob job, String message) {
+        job.setStatus(SystemJobStatus.COMPLETED);
         job.setStatusMessage(message);
         job.setCompletedAt(Instant.now());
         jobRepository.save(job);
         notifyUser(job, "EPUB import completed", message, NotificationType.SYSTEM, job.getSlug());
     }
 
-    private void notifyUser(EpubImportJob job, String title, String message, NotificationType type, String reference) {
+    private void notifyUser(SystemJob job, String title, String message, NotificationType type, String reference) {
         if (job.getUserId() == null) {
             return;
         }
@@ -264,7 +261,7 @@ public class EpubImportProcessor {
         boolean updated = false;
         for (int attempt = 0; attempt < 3 && !updated; attempt++) {
             try {
-                EpubImportJob job = jobRepository.findById(jobId).orElse(null);
+                SystemJob job = jobRepository.findById(jobId).orElse(null);
                 if (job == null) {
                     return;
                 }
@@ -288,11 +285,11 @@ public class EpubImportProcessor {
         if (jobId == null) {
             return;
         }
-        EpubImportJob job = jobRepository.findById(jobId).orElse(null);
+        SystemJob job = jobRepository.findById(jobId).orElse(null);
         if (job == null) {
             return;
         }
-        job.setStatus(EpubImportStatus.FAILED);
+        job.setStatus(SystemJobStatus.FAILED);
         job.setStatusMessage(reason);
         job.setCompletedAt(Instant.now());
         jobRepository.save(job);

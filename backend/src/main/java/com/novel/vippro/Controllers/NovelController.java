@@ -1,7 +1,7 @@
 package com.novel.vippro.Controllers;
 
 import com.novel.vippro.DTO.Comment.CommentDTO;
-import com.novel.vippro.DTO.Epub.EpubImportJobDTO;
+import com.novel.vippro.DTO.System.SystemJobDTO;
 import com.novel.vippro.DTO.Novel.NovelCreateDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.Novel.NovelSearchDTO;
@@ -289,12 +289,12 @@ public class NovelController {
     @Operation(summary = "Import EPUB and create novel", description = "Upload an EPUB file and import it as a novel (creates novel + chapters)", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
-    public ControllerResponse<EpubImportJobDTO> importEpub(
+    public ControllerResponse<SystemJobDTO> importEpub(
             @RequestPart("epub") MultipartFile epub,
             @RequestParam(value = "slug") String slug,
             @RequestParam(value = "status", required = false) String status) {
         try {
-            EpubImportJobDTO job = epubImportService.queueNewNovelImport(epub, slug, status);
+            SystemJobDTO job = epubImportService.queueNewNovelImport(epub, slug, status);
             return ControllerResponse.success("EPUB import queued successfully", job);
         } catch (Exception e) {
             logger.error("Failed to queue epub import: {}", e.getMessage(), e);
@@ -305,11 +305,11 @@ public class NovelController {
     @Operation(summary = "Add chapters from EPUB", description = "Add chapters to a novel from an EPUB file", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(path = "/{novelId}/import-epub", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
-    public ControllerResponse<EpubImportJobDTO> addChaptersFromEpub(
+    public ControllerResponse<SystemJobDTO> addChaptersFromEpub(
             @Parameter(description = "Novel ID") @PathVariable UUID novelId,
             @RequestPart("epub") MultipartFile epub) {
         try {
-            EpubImportJobDTO job = epubImportService.queueChaptersImport(novelId, epub);
+            SystemJobDTO job = epubImportService.queueChaptersImport(novelId, epub);
             return ControllerResponse.success("EPUB import queued successfully", job);
         } catch (Exception e) {
             logger.error("Failed to queue chapter import from epub: {}", e.getMessage(), e);

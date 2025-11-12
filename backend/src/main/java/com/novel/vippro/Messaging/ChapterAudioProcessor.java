@@ -58,7 +58,7 @@ public class ChapterAudioProcessor {
         dto.setMessage(String.format("Audio for %s - Chapter %d is ready.",
                 chapter.getNovel().getTitle(), chapter.getChapterNumber()));
         dto.setType(NotificationType.CHAPTER_UPDATE);
-        dto.setReference(chapter.getNovel().getSlug());
+        dto.setReference(chapter.getNovel().getSlug()+"/chapters/"+chapter.getChapterNumber());
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {

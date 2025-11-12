@@ -21,6 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -35,15 +36,19 @@ import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
-import com.novel.vippro.Messaging.AsyncTaskPublisher;
+import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.FileMetadata;
 import com.novel.vippro.Models.Novel;
+import com.novel.vippro.Models.SystemJob;
+import com.novel.vippro.Models.SystemJobStatus;
+import com.novel.vippro.Models.SystemJobType;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.FileMetadataRepository;
 import com.novel.vippro.Repository.NovelRepository;
+import com.novel.vippro.Repository.SystemJobRepository;
 
 @Service
 public class ChapterService {
@@ -74,7 +79,13 @@ public class ChapterService {
     private FileMetadataRepository fileMetadataRepository;
 
     @Autowired
-    private AsyncTaskPublisher asyncTaskPublisher;
+    private MessagePublisher messagePublisher;
+
+    @Autowired
+    private SystemJobRepository systemJobRepository;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     private static final Logger logger = LogManager.getLogger(ChapterService.class);
 
@@ -440,7 +451,6 @@ public class ChapterService {
         Map<String, Object> content = getChapterContent(chapter);
         String textToConvert = chapter.getTitle() + "\n" + content.get("content");
         textToConvert = textToConvert.replaceAll("</?(?!h2\\b)[^>]*>", "");
-
         FileMetadata audioFile;
         try {
             logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
@@ -454,6 +464,8 @@ public class ChapterService {
         fileMetadataRepository.save(audioFile);
         chapter.setAudioFile(audioFile);
         chapterRepository.save(chapter);
+        cacheManager.getCache("chapters").evict(chapter.getId());
+        cacheManager.getCache("chapters").evict("'novel-slug-' + " + chapter.getNovel().getSlug() + " + '-chapter-' + " + chapter.getChapterNumber());
         return chapter;
     }
 
@@ -469,15 +481,30 @@ public class ChapterService {
         if (chapter.getAudioFile() != null) {
             return false;
         }
+        SystemJob job = new SystemJob();
+        job.setJobType(SystemJobType.CHAPTER_AUDIO);
+        job.setStatus(SystemJobStatus.QUEUED);
+        job.setUserId(userId);
+        Novel novel = chapter.getNovel();
+        if (novel != null) {
+            job.setNovelId(novel.getId());
+            job.setSlug(novel.getSlug());
+        }
+        job.setChapterId(chapter.getId());
+        job.setChapterNumber(chapter.getChapterNumber());
+        job.setStatusMessage("Queued chapter audio generation");
+        job = systemJobRepository.save(job);
+        UUID targetNovelId = novel != null ? novel.getId() : null;
+        String targetNovelSlug = novel != null ? novel.getSlug() : null;
         ChapterAudioMessage message = ChapterAudioMessage.builder()
                 .chapterId(chapter.getId())
                 .chapterNumber(chapter.getChapterNumber())
-                .novelId(chapter.getNovel().getId())
-                .novelSlug(chapter.getNovel().getSlug())
-                .jobId(null)
+                .novelId(targetNovelId)
+                .novelSlug(targetNovelSlug)
+                .jobId(job.getId())
                 .userId(userId)
                 .build();
-        asyncTaskPublisher.publishChapterAudio(message);
+        messagePublisher.publishChapterAudio(message);
         return true;
     }
 

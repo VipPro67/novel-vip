@@ -37,11 +37,15 @@ import com.novel.vippro.DTO.Auth.SignupRequest;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Models.ERole;
 import com.novel.vippro.Models.Role;
+import com.novel.vippro.Models.SystemJob;
+import com.novel.vippro.Models.SystemJobStatus;
+import com.novel.vippro.Models.SystemJobType;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.JwtResponse;
-import com.novel.vippro.Messaging.EmailVerificationPublisher;
+import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Repository.RoleRepository;
+import com.novel.vippro.Repository.SystemJobRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Security.JWT.JwtUtils;
@@ -69,7 +73,10 @@ public class AuthService {
 	RoleApprovalService roleApprovalService;
 
 	@Autowired
-	EmailVerificationPublisher emailVerificationPublisher;
+	MessagePublisher messagePublisher;
+
+	@Autowired
+	SystemJobRepository systemJobRepository;
 
 	@Value("${google.client-id:}")
 	private String googleClientId;
@@ -500,7 +507,13 @@ public class AuthService {
 			throw new IllegalStateException("User must be persisted before queuing verification email");
 		}
 		Duration effectiveValidity = validity != null ? validity : getVerificationDuration();
-		emailVerificationPublisher.publishEmailVerification(user.getId(), effectiveValidity);
+		SystemJob job = new SystemJob();
+		job.setJobType(SystemJobType.EMAIL_VERIFICATION);
+		job.setStatus(SystemJobStatus.QUEUED);
+		job.setUserId(user.getId());
+		job.setStatusMessage("Queued email verification");
+		systemJobRepository.save(job);
+		messagePublisher.publishEmailVerification(user.getId(), effectiveValidity);
 	}
 
 	private void sendVerificationEmailSilently(User user, boolean forceNewToken) {

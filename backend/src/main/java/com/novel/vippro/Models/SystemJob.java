@@ -18,15 +18,18 @@ import lombok.Setter;
 @Table(name = "epub_import_jobs")
 @Getter
 @Setter
-public class EpubImportJob extends BaseEntity {
+public class SystemJob extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EpubImportStatus status = EpubImportStatus.QUEUED;
+    private SystemJobType jobType = SystemJobType.EPUB_IMPORT;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EpubImportType type;
+    private SystemJobStatus status = SystemJobStatus.QUEUED;
+
+    @Enumerated(EnumType.STRING)
+    private EpubImportType importType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_metadata_id")
@@ -40,6 +43,10 @@ public class EpubImportJob extends BaseEntity {
     private String slug;
 
     private String requestedStatus;
+
+    private UUID chapterId;
+
+    private Integer chapterNumber;
 
     @Column(length = 2048)
     private String statusMessage;

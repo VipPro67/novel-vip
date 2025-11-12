@@ -1,6 +1,6 @@
 package com.novel.vippro.Models;
 
-public enum EpubImportStatus {
+public enum SystemJobStatus {
     QUEUED,
     PARSING,
     CHAPTERS_CREATED,
