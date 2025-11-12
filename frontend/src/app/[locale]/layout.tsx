@@ -2,8 +2,8 @@ import type { ReactNode } from "react"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import { notFound } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
-import { getMessages, setRequestLocale } from "next-intl/server"
-import { locales, type Locale } from "@/i18n/config"
+import { getLocale, getMessages, setRequestLocale } from "next-intl/server"
+import { locales, type Locale, defaultLocale } from "@/i18n/config"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { ReaderSettingsProvider } from "@/components/providers/reader-settings-provider"
@@ -15,20 +15,19 @@ import { Toaster } from "@/components/ui/toaster"
 
 type LocaleLayoutProps = {
   children: ReactNode
-  params: Promise<{
-    locale: string
-  }>
 }
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
 }
 
-export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
-  const { locale } = await params
-  if (!locales.includes(locale as Locale)) {
+export default async function LocaleLayout({ children }: LocaleLayoutProps) {
+  const detectedLocale = await getLocale()
+  const localeCandidate = (detectedLocale ?? defaultLocale) as Locale
+  if (!locales.includes(localeCandidate)) {
     notFound()
   }
+  const locale = localeCandidate
 
   setRequestLocale(locale)
 

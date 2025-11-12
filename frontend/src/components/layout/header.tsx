@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/navigation"
 import { BookOpen, Search, User, LogOut, Settings, Shield, BookmarkIcon, Clock, Lightbulb, Flag } from "lucide-react"
@@ -27,6 +27,19 @@ export function Header() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const { openLogin, openRegister } = useAuthModals()
+  const [hidden, setHidden] = useState(false)
+  const [lastScroll, setLastScroll] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const current = window.scrollY
+      if (current > lastScroll && current > 80) setHidden(true)
+      else setHidden(false)
+      setLastScroll(current)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [lastScroll])
 
   const handleProtectedNavigation = (path: string) => {
     if (!isAuthenticated) {
@@ -50,7 +63,9 @@ export function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header  className={`sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur transition-transform duration-300 ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      }`}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -151,7 +166,6 @@ export function Header() {
                 <Button onClick={openRegister}>{t("actions.signUp")}</Button>
               </div>
             )}
-            <LocaleSwitcher />
           </div>
         </div>
       </div>
