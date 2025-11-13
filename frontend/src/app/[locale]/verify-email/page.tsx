@@ -1,7 +1,7 @@
 "use client"
 
 import { Link } from "@/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "@/navigation"
 import { CheckCircle2, Loader2, XCircle } from "lucide-react"
 
@@ -11,7 +11,7 @@ import type { ApiError } from "@/services/api-client"
 
 type Status = "idle" | "loading" | "success" | "error"
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
   const [status, setStatus] = useState<Status>("idle")
@@ -78,5 +78,24 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </section>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-xl rounded-lg border bg-card p-8 text-center shadow-sm">
+            <div className="mb-6 flex justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+            <p className="text-base text-muted-foreground">Loading...</p>
+          </div>
+        </section>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   )
 }

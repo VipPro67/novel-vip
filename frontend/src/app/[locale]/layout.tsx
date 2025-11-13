@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import { notFound } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages, setRequestLocale } from "next-intl/server"
+import { getMessages, setRequestLocale } from "next-intl/server"
 import { locales, type Locale, defaultLocale } from "@/i18n/config"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
@@ -15,23 +15,25 @@ import { Toaster } from "@/components/ui/toaster"
 
 type LocaleLayoutProps = {
   children: ReactNode
+  params: Promise<{ locale: string }>
 }
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }))
 }
 
-export default async function LocaleLayout({ children }: LocaleLayoutProps) {
-  const detectedLocale = await getLocale()
-  const localeCandidate = (detectedLocale ?? defaultLocale) as Locale
-  if (!locales.includes(localeCandidate)) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
+  const { locale: localeParam } = await params
+
+  if (!locales.includes(localeParam as Locale)) {
     notFound()
   }
-  const locale = localeCandidate
+
+  const locale = localeParam as Locale
 
   setRequestLocale(locale)
 
-  const messages = await getMessages()
+  const messages = await getMessages({ locale })
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
   const content = (

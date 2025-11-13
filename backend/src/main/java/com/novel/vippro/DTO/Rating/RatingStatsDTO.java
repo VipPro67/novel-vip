@@ -1,10 +1,10 @@
 package com.novel.vippro.DTO.Rating;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class RatingStatsDTO {
-    private double averageRating;
-    private long totalRatings;
-    private int[] ratingDistribution; // Array of counts for each rating (1-5)
-}
+@Builder
+public record RatingStatsDTO(
+    double averageRating,
+    long totalRatings,
+    int[] ratingDistribution
+) {}

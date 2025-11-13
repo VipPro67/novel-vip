@@ -1,27 +1,35 @@
 package com.novel.vippro.DTO.Novel;
 
-import lombok.Data;
+import lombok.Builder;
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.DTO.Tag.TagDTO;
-import com.novel.vippro.DTO.base.BaseDTO;
 
+import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
-@Data
-public class NovelDTO extends BaseDTO {
-    private String title;
-    private String description;
-    private String author;
-    private String slug;
-    private String imageUrl;
-    private Set<CategoryDTO> categories;
-    private Set<TagDTO> tags;
-    private Set<GenreDTO> genres;
-    private String status;
-    private Integer totalChapters;
-    private Integer totalViews;
-    private Integer monthlyViews;
-    private Integer dailyViews;
-    private Integer rating;
-}
+@Builder
+public record NovelDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    String title,
+    String description,
+    String author,
+    String slug,
+    String imageUrl,
+    Set<CategoryDTO> categories,
+    Set<TagDTO> tags,
+    Set<GenreDTO> genres,
+    String status,
+    Integer totalChapters,
+    Integer totalViews,
+    Integer monthlyViews,
+    Integer dailyViews,
+    Integer rating
+) {}

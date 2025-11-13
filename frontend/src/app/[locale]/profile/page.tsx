@@ -26,13 +26,6 @@ function ProfileContent() {
     <div className="min-h-screen bg-background">
       <main className="container py-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold">My Profile</h1>
-            <p className="text-muted-foreground">
-              Manage your profile information and role requests
-            </p>
-          </div>
-
           <div className="space-y-6">
             <MyProfile />
 

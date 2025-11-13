@@ -13,6 +13,7 @@ import { api } from "@/services/api";
 import { Link } from "@/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ReadingHistory } from "@/models";
+import { useTranslations } from "next-intl";
 
 export default function HistoryPage() {
   return (
@@ -27,7 +28,7 @@ function HistoryContent() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
-
+  const t = useTranslations("History");
   const {
     currentPage,
     totalPages,
@@ -75,9 +76,9 @@ function HistoryContent() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 60) return `${diffMins} ${t('minutes')} ${t('timeAgo')}`;
+    if (diffHours < 24) return `${diffHours} ${t('hours')} ${t('timeAgo')}`;
+    if (diffDays < 7) return `${diffDays} ${t('days')} ${t('timeAgo')}`;
     return date.toLocaleDateString();
   };
 
@@ -86,9 +87,9 @@ function HistoryContent() {
       <main className="container py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Reading History</h1>
+            <h1 className="text-3xl font-bold">{t('title')}</h1>
             <p className="text-muted-foreground">
-              Your recently read chapters and novels
+             {t('recentlyRead.description')}
             </p>
           </div>
 
@@ -96,7 +97,7 @@ function HistoryContent() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search your reading history..."
+                placeholder={t('search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -113,7 +114,7 @@ function HistoryContent() {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Clock className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
-                  No reading history
+                 {t('noHistoryMessage')}
                 </h3>
                 <p className="text-muted-foreground text-center">
                   {searchQuery
@@ -152,14 +153,14 @@ function HistoryContent() {
                             </h3>
                           </Link>
                           <p className="text-sm text-muted-foreground mb-2">
-                            by {item.novel?.author}
+                            {item.novel?.author}
                           </p>
                           <div className="flex items-center gap-2 mb-2">
                             <Badge variant="outline">
-                              Chapter {item.chapterNumber}
+                              Chapter {item.lastReadChapterIndex}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
-                              {Math.round(item.lastReadChapterIndex/item.novel.totalChapters)*100}% complete
+                              {Math.round(item.lastReadChapterIndex/item.novel.totalChapters)*100}% {t("completed")}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">

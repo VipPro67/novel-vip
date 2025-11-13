@@ -2,18 +2,17 @@ package com.novel.vippro.DTO.Novel;
 
 import java.util.stream.Stream;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class NovelSearchDTO {
-
-    private String keyword;
-    private String title;
-    private String author;
-    private String category;
-    private String genre;
-    private String tag;
-
+@Builder
+public record NovelSearchDTO(
+    String keyword,
+    String title,
+    String author,
+    String category,
+    String genre,
+    String tag
+) {
     public boolean hasFilters() {
         return Stream.of(keyword, title, author, category, genre, tag)
                 .anyMatch(value -> value != null && !value.trim().isEmpty());
@@ -52,14 +51,14 @@ public class NovelSearchDTO {
     }
 
     public NovelSearchDTO cleanedCopy() {
-        NovelSearchDTO copy = new NovelSearchDTO();
-        copy.setKeyword(normalizedKeyword());
-        copy.setTitle(normalizedTitle());
-        copy.setAuthor(normalizedAuthor());
-        copy.setCategory(normalizedCategory());
-        copy.setGenre(normalizedGenre());
-        copy.setTag(normalizedTag());
-        return copy;
+        return NovelSearchDTO.builder()
+                .keyword(normalizedKeyword())
+                .title(normalizedTitle())
+                .author(normalizedAuthor())
+                .category(normalizedCategory())
+                .genre(normalizedGenre())
+                .tag(normalizedTag())
+                .build();
     }
 
     private String normalize(String value) {

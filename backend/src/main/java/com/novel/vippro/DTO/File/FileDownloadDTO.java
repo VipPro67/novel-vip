@@ -1,11 +1,11 @@
 package com.novel.vippro.DTO.File;
 
-import lombok.Data;
+import lombok.Builder;
 import org.springframework.core.io.Resource;
 
-@Data
-public class FileDownloadDTO {
-    private String fileName;
-    private String contentType;
-    private Resource resource;
-}
+@Builder
+public record FileDownloadDTO(
+    String fileName,
+    String contentType,
+    Resource resource
+) {}

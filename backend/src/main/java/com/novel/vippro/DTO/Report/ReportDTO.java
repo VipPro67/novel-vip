@@ -4,26 +4,26 @@ import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.User.UserDTO;
-import com.novel.vippro.DTO.base.BaseDTO;
 import com.novel.vippro.Models.Report.ReportStatus;
-
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.Builder;
+import java.time.Instant;
 import java.util.UUID;
 
-@Data
-@Getter
-@Setter
-public class ReportDTO extends BaseDTO{
-    private UUID id;
-    private UserDTO reporter;
-    private NovelDTO novel;
-    private ChapterDTO chapter;
-    private CommentDTO comment;
-    private String reason;
-    private String description;
-    private ReportStatus status;
-    private String adminResponse;
-}
+@Builder
+public record ReportDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UserDTO reporter,
+    NovelDTO novel,
+    ChapterDTO chapter,
+    CommentDTO comment,
+    String reason,
+    String description,
+    ReportStatus status,
+    String adminResponse
+) {}

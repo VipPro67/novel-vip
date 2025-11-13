@@ -43,5 +43,65 @@
     "ctaSubtitle": "Join thousands of readers discovering their next favorite story every day.",
     "ctaPrimary": "Sign Up Free",
     "ctaSecondary": "Browse Novels"
+  },
+  "Profile": {
+    "title": "My Profile",
+    "manageProfileInformation": "Manage your profile information",
+    "username": "Username",
+    "email": "Email",
+    "roles": "Roles",
+    "myRoleRequests": {
+      "title": "Role Requests",
+      "myRoleRequest": "My Role Requests",
+      "viewStatus": "See your role request statuses",
+      "tableHeaders": {
+        "requestedRole": "Role Requested",
+        "status": "Status",
+        "requestedDate": "Date Requested",
+        "reviewedDate": "Date Reviewed",
+        "reviewer": "Reviewer Name"
+      },
+      "noRequestsFound": "No role requests"
+    },
+    "roleRequestForm": {
+      "title": "Request a Role",
+      "description": "Request additional permissions for your account",
+      "requestedRole": {
+        "label": "Select Role",
+        "placeholder": "Select role"
+      },
+      "reason": {
+        "label": "Reason for your request",
+        "characterCount": "characters"
+      },
+      "submitButton": {
+        "text": "Submit"
+      }
+    }
+  },
+  "Following": {
+    "description": "Your bookmarked and followed novels",
+    "title": "Following Novels",
+    "noNovelsFound": "You aren't following any novels",
+    "novelCard": {
+      "totalChapters": "chapters"
+    },
+    "searchPlaceholder": "Search your followed novels..."
+  },
+  "History": {
+    "title": "Reading History",
+    "timeAgo": "ago",
+    "minutes": "minutes",
+    "hours": "hours",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years",
+    "completed": "completed",
+    "recentlyRead": {
+      "description": "Recently read chapters and novels"
+    },
+    "noHistoryMessage": "Your reading history is empty",
+    "search" : "Search"
   }
 }

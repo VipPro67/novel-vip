@@ -11,12 +11,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/services/api"
+import { useTranslations } from "next-intl"
 
 interface RoleRequestFormProps {
   onRequestSubmitted?: () => void
 }
 
 export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
+  const t = useTranslations("Profile")
   const [requestedRole, setRequestedRole] = useState("")
   const [reason, setReason] = useState("")
   const [loading, setLoading] = useState(false)
@@ -69,17 +71,17 @@ export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Shield className="h-5 w-5" />
-          <span>Request Role</span>
+          <span>{t('roleRequestForm.title')}</span>
         </CardTitle>
-        <CardDescription>Request additional permissions for your account</CardDescription>
+        <CardDescription>{t('roleRequestForm.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="role">Requested Role</Label>
+            <Label htmlFor="role">{t('roleRequestForm.requestedRole.label')}</Label>
             <Select value={requestedRole} onValueChange={setRequestedRole}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a role to request" />
+                <SelectValue placeholder={t('roleRequestForm.requestedRole.placeholder')} />
               </SelectTrigger>
               <SelectContent>
                 {availableRoles.map((role) => (
@@ -95,7 +97,7 @@ export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason for Request</Label>
+            <Label htmlFor="reason">{t('roleRequestForm.reason.label')}</Label>
             <Textarea
               id="reason"
               placeholder="Please explain why you need this role and how you plan to use it..."
@@ -104,7 +106,7 @@ export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
               rows={4}
               maxLength={500}
             />
-            <p className="text-xs text-muted-foreground">{reason.length}/500 characters</p>
+            <p className="text-xs text-muted-foreground">{reason.length}/500 {t('roleRequestForm.reason.characterCount')}</p>
           </div>
 
           <Button type="submit" disabled={loading} className="w-full">
@@ -113,7 +115,7 @@ export function RoleRequestForm({ onRequestSubmitted }: RoleRequestFormProps) {
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Submit Request
+               {t('roleRequestForm.submitButton.text')}
               </>
             )}
           </Button>

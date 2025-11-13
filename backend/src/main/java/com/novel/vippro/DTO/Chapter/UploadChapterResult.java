@@ -1,14 +1,12 @@
 package com.novel.vippro.DTO.Chapter;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-@AllArgsConstructor
-public class UploadChapterResult {
-    private Integer chapterNumber;
-    private String title;
-    private boolean success;
-    private String message;
-    private String fileName;
-}
+@Builder
+public record UploadChapterResult(
+    Integer chapterNumber,
+    String title,
+    boolean success,
+    String message,
+    String fileName
+) {}

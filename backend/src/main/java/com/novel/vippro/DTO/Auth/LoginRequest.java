@@ -1,15 +1,13 @@
 package com.novel.vippro.DTO.Auth;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Getter
-@Setter
-public class LoginRequest {
-	@NotBlank
-	private String email;
+@Builder
+public record LoginRequest(
+    @NotBlank
+    String email,
 
-	@NotBlank
-	private String password;
-}
+    @NotBlank
+    String password
+) {}
