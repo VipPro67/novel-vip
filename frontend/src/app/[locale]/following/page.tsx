@@ -12,6 +12,7 @@ import { usePagination } from "@/hooks/use-pagination"
 import { api, type Novel } from "@/services/api"
 import { Link } from "@/navigation"
 import { Badge } from "@/components/ui/badge"
+import { useTranslations } from "next-intl"
 
 export default function FollowingPage() {
   return (
@@ -26,7 +27,7 @@ function FollowingContent() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
-
+  const t = useTranslations("Following")
   const { currentPage, totalPages, handlePageChange, updateTotalPages, getPaginationParams } = usePagination({
     initialPage: 0,
     initialSize: 12,
@@ -67,15 +68,15 @@ function FollowingContent() {
       <main className="container py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Following Novels</h1>
-            <p className="text-muted-foreground">Novels you've bookmarked and are following</p>
+            <h1 className="text-3xl font-bold">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('description')}</p>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search your following novels..."
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -91,7 +92,7 @@ function FollowingContent() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookmarkIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No following novels</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('noNovelsFound')}</h3>
                 <p className="text-muted-foreground text-center">
                   {searchQuery ? "No novels match your search" : "Start following novels to see them here"}
                 </p>
@@ -120,7 +121,7 @@ function FollowingContent() {
                             {novel.status}
                           </Badge>
                           {novel.totalChapters && (
-                            <span className="text-xs text-muted-foreground">{novel.totalChapters} chapters</span>
+                            <span className="text-xs text-muted-foreground">{novel.totalChapters} {t('novelCard.totalChapters')}</span>
                           )}
                         </div>
                       </CardContent>

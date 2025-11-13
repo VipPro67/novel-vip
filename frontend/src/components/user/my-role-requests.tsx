@@ -10,8 +10,10 @@ import { api} from "@/services/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
 import { ERole, RoleRequest } from "@/models"
+import { useTranslations } from "next-intl"
 
 export function MyRoleRequests() {
+  const t = useTranslations("Profile")
   const [requests, setRequests] = useState<RoleRequest[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -93,9 +95,9 @@ export function MyRoleRequests() {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Shield className="h-5 w-5" />
-          <span>My Role Requests</span>
+          <span>{t('myRoleRequests.myRoleRequest')}</span>
         </CardTitle>
-        <CardDescription>View the status of your role requests</CardDescription>
+        <CardDescription>{t('myRoleRequests.viewStatus')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -104,11 +106,11 @@ export function MyRoleRequests() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Requested Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Requested Date</TableHead>
-                  <TableHead>Reviewed Date</TableHead>
-                  <TableHead>Reviewer</TableHead>
+                  <TableHead>{t('myRoleRequests.tableHeaders.requestedRole')}</TableHead>
+                  <TableHead>{t('myRoleRequests.tableHeaders.status')}</TableHead>
+                  <TableHead>{t('myRoleRequests.tableHeaders.requestedDate')}</TableHead>
+                  <TableHead>{t('myRoleRequests.tableHeaders.reviewedDate')}</TableHead>
+                  <TableHead>{t('myRoleRequests.tableHeaders.reviewer')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -137,7 +139,7 @@ export function MyRoleRequests() {
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <Shield className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">No role requests found</p>
+                        <p className="text-muted-foreground">{t('myRoleRequests.noRequestsFound')}</p>
                       </div>
                     </TableCell>
                   </TableRow>

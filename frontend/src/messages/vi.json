@@ -42,5 +42,65 @@
     "ctaSubtitle": "Gia nhập hàng nghìn độc giả tìm thấy câu chuyện yêu thích mỗi ngày.",
     "ctaPrimary": "Đăng ký miễn phí",
     "ctaSecondary": "Khám phá truyện"
+  },
+  "Profile": {
+    "title": "Hồ sơ của tôi",
+    "manageProfileInformation": "Quản lý thông tin hồ sơ của bạn",
+    "username": "Tên người dùng",
+    "email": "Email",
+    "roles": "Vai trò",
+    "myRoleRequests": {
+      "title": "Yêu cầu vai trò",
+      "myRoleRequest": "Yêu cầu vai trò của tôi",
+      "viewStatus": "Xem trạng thái yêu cầu vai trò của bạn",
+      "tableHeaders": {
+        "requestedRole": "Vai trò được yêu cầu",
+        "status": "Trạng thái",
+        "requestedDate": "Ngày yêu cầu",
+        "reviewedDate": "Ngày đã xem xét",
+        "reviewer": "Tên người đánh giá"
+      },
+      "noRequestsFound": "Không có yêu cầu vai trò nào"
+    },
+    "roleRequestForm": {
+      "title": "Yêu cầu một vai trò",
+      "description": "Yêu cầu quyền bổ sung cho tài khoản của bạn",
+      "requestedRole": {
+        "label": "Chọn vai trò",
+        "placeholder": "Chọn vai trò"
+      },
+      "reason": {
+        "label": "Lý do cho yêu cầu của bạn",
+        "characterCount": "ký tự"
+      },
+      "submitButton": {
+        "text": "Gửi"
+      }
+    }
+  },
+  "Following": {
+    "description": "Tiểu thuyết đã đánh dấu và đang theo dõi của bạn",
+    "title": "Tiểu thuyết đang theo dõi",
+    "noNovelsFound": "Bạn chưa theo dõi tiểu thuyết nào",
+    "novelCard": {
+      "totalChapters": "chương"
+    },
+    "searchPlaceholder": "Tìm kiếm truyện bạn theo dõi..."
+  },
+  "History": {
+    "title": "Lịch sử đọc",
+    "timeAgo": "trước",
+    "minutes": "phút",
+    "hours": "giờ",
+    "days": "ngày",
+    "weeks": "tuần",
+    "months": "tháng",
+    "years": "năm",
+    "completed": "hoàn thành",
+    "recentlyRead": {
+      "description": "Chương và tiểu thuyết đã đọc gần đây"
+    },
+    "noHistoryMessage": "Lịch sử đọc của bạn đang trống",
+    "search" : "Tìm kiếm"
   }
 }
