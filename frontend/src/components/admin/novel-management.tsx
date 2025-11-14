@@ -21,9 +21,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel, type PageResponse } from "@/services/api"
+import { api } from "@/services/api"
+import { useTranslations } from "next-intl"
+import { Novel, PageResponse } from "@/models"
 
 export function NovelManagement() {
+  const t = useTranslations("AdminNovels")
   const router = useRouter()
   const { toast } = useToast()
 
@@ -90,8 +93,8 @@ export function NovelManagement() {
     } catch (error) {
       console.error("Failed to fetch novels:", error)
       toast({
-        title: "Error",
-        description: "Failed to load novels",
+        title: t("toasts.errorLoadTitle"),
+        description: t("toasts.errorLoadDesc"),
         variant: "destructive",
       })
     } finally {
@@ -108,16 +111,16 @@ export function NovelManagement() {
 
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Novel deleted successfully",
+          title: t("toasts.deleteSuccessTitle"),
+          description: t("toasts.deleteSuccessDesc"),
         })
         fetchNovels() // Refresh the list
       }
     } catch (error) {
       console.error("Failed to delete novel:", error)
       toast({
-        title: "Error",
-        description: "Failed to delete novel",
+        title: t("toasts.errorLoadTitle"),
+        description: t("toasts.deleteErrorDesc"),
         variant: "destructive",
       })
     } finally {
@@ -153,12 +156,12 @@ export function NovelManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Novel Management</h1>
-          <p className="text-muted-foreground">Manage your novels and chapters</p>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={() => router.push("/admin/novels/add")}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Novel
+          {t("addNovel")}
         </Button>
       </div>
 
@@ -166,7 +169,7 @@ export function NovelManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Novels</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("stats.total")}</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -175,7 +178,7 @@ export function NovelManagement() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Published</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("stats.published")}</CardTitle>
             <Badge variant="default" className="h-4 w-4 rounded-full p-0" />
           </CardHeader>
           <CardContent>
@@ -184,7 +187,7 @@ export function NovelManagement() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("stats.drafts")}</CardTitle>
             <Badge variant="secondary" className="h-4 w-4 rounded-full p-0" />
           </CardHeader>
           <CardContent>
@@ -193,7 +196,7 @@ export function NovelManagement() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("stats.avgRating")}</CardTitle>
             <span className="text-yellow-500">★</span>
           </CardHeader>
           <CardContent>
@@ -207,7 +210,7 @@ export function NovelManagement() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search novels..."
+            placeholder={t("placeholders.search")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -216,14 +219,14 @@ export function NovelManagement() {
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
             <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t("placeholders.filterStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="ongoing">Ongoing</SelectItem>
+            <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+            <SelectItem value="published">{t("filters.published")}</SelectItem>
+            <SelectItem value="draft">{t("filters.draft")}</SelectItem>
+            <SelectItem value="completed">{t("filters.completed")}</SelectItem>
+            <SelectItem value="ongoing">{t("filters.ongoing")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -249,13 +252,13 @@ export function NovelManagement() {
           ) : novels.length === 0 ? (
             <div className="p-8 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No novels found</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("empty.noNovels")}</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm ? "No novels match your search criteria." : "Get started by creating your first novel."}
+                {searchTerm ? t("empty.noMatch") : t("empty.getStarted")}
               </p>
               <Button onClick={() => router.push("/admin/novels/add")}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Novel
+                {t("addNovel")}
               </Button>
             </div>
           ) : (

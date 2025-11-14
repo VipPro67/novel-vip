@@ -2,35 +2,24 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Review.ReviewDTO;
 import com.novel.vippro.Models.Review;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ReviewMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface ReviewMapper {
 
-	public ReviewDTO ReviewtoDTO(Review review) {
-		ReviewDTO dto = modelMapper.map(review, ReviewDTO.class);
-        if(review.getNovel() != null) {
-            dto.setNovelId(review.getNovel().getId());
-            dto.setNovelTitle(review.getNovel().getTitle());
-        }
-        if(review.getUser() != null) {
-            dto.setUserId(review.getUser().getId());
-            dto.setUsername(review.getUser().getUsername());
-            dto.setUserAvatar(review.getUser().getAvatar());
-        }
-        return dto;
-	}
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "novelTitle", source = "novel.title")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "userAvatar", source = "user.avatar")
+    ReviewDTO ReviewtoDTO(Review review);
 
-	public Review DTOtoReview(ReviewDTO reviewDTO) {
-		return modelMapper.map(reviewDTO, Review.class);
-	}
+    Review DTOtoReview(ReviewDTO reviewDTO);
 
-	public void updateReviewFromDTO(ReviewDTO dto, Review review) {
-		modelMapper.map(dto, review);
-	}
-
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateReviewFromDTO(ReviewDTO dto, @MappingTarget Review review);
 }

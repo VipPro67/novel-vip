@@ -3,20 +3,16 @@ package com.novel.vippro.Mapper;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsDTO;
 import com.novel.vippro.DTO.ReaderSetting.ReaderSettingsUpdateDTO;
 import com.novel.vippro.Models.ReaderSettings;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ReaderSettingsMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface ReaderSettingsMapper {
 
-	public ReaderSettingsDTO ReaderSettingsToReaderSettingsDTO(ReaderSettings readerSettings) {
-		return modelMapper.map(readerSettings, ReaderSettingsDTO.class);
-	}
+    ReaderSettingsDTO ReaderSettingsToReaderSettingsDTO(ReaderSettings readerSettings);
 
-	public void updateReaderSettingsFromDTO(ReaderSettingsUpdateDTO dto, ReaderSettings settings) {
-		modelMapper.map(dto, settings);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateReaderSettingsFromDTO(ReaderSettingsUpdateDTO dto, @MappingTarget ReaderSettings settings);
 }

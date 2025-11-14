@@ -102,6 +102,291 @@
       "description": "Recently read chapters and novels"
     },
     "noHistoryMessage": "Your reading history is empty",
-    "search" : "Search"
+    "search" : "Search",
+    "continue" : "Continue Reading"
+  }
+  ,
+  "FeatureRequests": {
+    "title": "Feature Requests",
+    "subtitle": "Share your ideas and vote on features you'd like to see",
+    "newRequest": "New Request",
+    "submitDialogTitle": "Submit Feature Request",
+    "submitDialogDescription": "Share your idea for improving Novel VIP Pro",
+    "labels": {
+      "title": "Title *",
+      "category": "Category",
+      "description": "Description *"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit Request"
+    },
+    "filters": {
+      "sortBy": "Sort by",
+      "mostVoted": "Most Voted",
+      "mostRecent": "Most Recent",
+      "status": "Status",
+      "allStatus": "All Status",
+      "pending": "Pending",
+      "underReview": "Under Review",
+      "planned": "Planned",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "placeholders": {
+      "title": "Brief description of your feature",
+      "description": "Explain your feature request in detail..."
+    },
+    "emptyList": "No feature requests found. Be the first to submit one!",
+    "by": "by",
+    "toast": {
+      "voteAddedTitle": "Vote added",
+      "voteAddedDesc": "Thanks for your vote!",
+      "voteRemovedTitle": "Vote removed",
+      "voteRemovedDesc": "Your vote has been removed",
+      "errorLoadTitle": "Error",
+      "errorLoadDesc": "Failed to load feature requests",
+      "errorVoteDesc": "Failed to vote. Please try again.",
+      "validationErrorTitle": "Error",
+      "validationErrorDesc": "Please fill in all required fields",
+      "errorSubmitDesc": "Failed to submit feature request. Please try again.",
+      "successSubmitTitle": "Success",
+      "successSubmitDesc": "Your feature request has been submitted!"
+    }
+  }
+  ,
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings and preferences",
+    "tabs": {
+      "notifications": "Notifications",
+      "appearance": "Appearance"
+    },
+    "notificationSettings": {
+      "title": "Notification Settings",
+      "description": "Configure how you receive notifications",
+      "notImplemented": "Notification settings will be implemented here."
+    },
+    "appearanceSettings": {
+      "title": "Appearance Settings",
+      "description": "Customize the look and feel of your reader experience",
+      "appearanceUpdatedTitle": "Appearance updated",
+      "appearanceUpdatedDesc": "Your reader preferences have been saved.",
+      "updateFailedTitle": "Update failed",
+      "updateFailedDesc": "Failed to update reader settings",
+      "refreshFailedTitle": "Refresh failed",
+      "refreshFailedDesc": "Failed to refresh reader settings",
+      "settingsRefreshedTitle": "Settings refreshed",
+      "settingsRefreshedDesc": "Latest reader preferences loaded from the server.",
+      "loadingPrefs": "Loading reader preferences.",
+      "notAvailable": "Reader settings are not available.",
+      "typography": "Typography",
+      "typographyDesc": "Tune fonts and spacing for a comfortable reading experience.",
+      "fontFamily": "Font family",
+      "selectFont": "Select a font",
+      "fontSize": "Font size (px)",
+      "lineHeight": "Line height",
+      "paragraphSpacing": "Paragraph spacing (px)",
+      "display": "Display",
+      "displayDesc": "Control colors, theme, and layout for the chapter reader.",
+      "theme": "Theme",
+      "selectTheme": "Select a theme",
+      "marginSize": "Page padding (px)",
+      "textColor": "Text color",
+      "backgroundColor": "Background color",
+      "autoScroll": "Auto scroll",
+      "autoScrollDesc": "Automatically scroll the chapter while reading.",
+      "keepScreenOn": "Keep screen awake",
+      "keepScreenOnDesc": "Prevent your device from sleeping while reading.",
+      "showProgress": "Show progress bar",
+      "showProgressDesc": "Display reading progress at the bottom of the chapter.",
+      "showChapterTitle": "Show chapter title",
+      "showChapterTitleDesc": "Keep the chapter title visible while reading.",
+      "showTime": "Show current time",
+      "showTimeDesc": "Display the current time in the reader header.",
+      "showBattery": "Show battery level",
+      "showBatteryDesc": "Display your device battery level in the reader header.",
+      "audioPlayback": "Audio playback",
+      "audioPlaybackDesc": "Configure audio narration preferences.",
+      "audioSpeed": "Narration speed",
+      "audioSpeedHint": "0.5x to 3x speed.",
+      "autoScrollSpeed": "Auto scroll speed",
+      "autoScrollSpeedHint": "Higher values scroll faster.",
+      "audioEnabled": "Enable audio narration",
+      "audioEnabledDesc": "Play generated audio while reading.",
+      "audioAutoNextChapter": "Auto play next chapter",
+      "audioAutoNextChapterDesc": "Automatically start narration for the next chapter when finished.",
+      "save": "Save changes",
+      "discard": "Discard changes",
+      "refresh": "Refresh from server",
+      "settingsRefreshed": "Settings refreshed"
+    }
+  }
+  ,
+  "Report": {
+    "trigger": "Report",
+    "title": "Report {type}",
+    "description": "Help us maintain a safe and respectful community by reporting inappropriate content.",
+    "reporting": "Reporting: {title}",
+    "labels": {
+      "reason": "Reason for report",
+      "description": "Additional details"
+    },
+    "placeholders": {
+      "selectReason": "Select a reason",
+      "description": "Please provide more details about why you're reporting this content..."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit Report",
+      "submitting": "Submitting..."
+    },
+    "toasts": {
+      "validationErrorTitle": "Error",
+      "validationErrorDesc": "Please select a reason and provide a description",
+      "successTitle": "Report submitted",
+      "successDesc": "Thank you for helping us maintain a safe community. We will review your report.",
+      "errorSubmitDesc": "Failed to submit report. Please try again."
+    },
+    "reasons": {
+      "MISSING_INFO": "Missing Information",
+      "MISSING_CHAPTER": "Missing Chapter",
+      "WRONG_INFO": "Wrong Information",
+      "COPYRIGHT_VIOLATION": "Copyright Issue",
+      "OTHER": "Other",
+      "WRONG_CHAPTER": "Wrong Chapter",
+      "ERROR_CONTENT": "Error in Content",
+      "MISSING_CONTENT": "Missing Content",
+      "POOR_QUALITY": "Poor Quality",
+      "SPAM": "Spam",
+      "VIOLENCE": "Violence/Harassment",
+      "INAPPROPRIATE_CONTENT": "Inappropriate Content",
+      "MISINFORMATION": "Misinformation",
+      "COPYRIGHT_VIOLATION_GENERIC": "Copyright Violation",
+      "HARASSMENT": "Harassment"
+    }
+  }
+  ,
+  "Admin": {
+    "featureRequests": {
+      "title": "Feature Requests",
+      "subtitle": "Manage and prioritize feature requests from users"
+    }
+  }
+  ,
+  "AdminVideos": {
+    "title": "Video Library",
+    "subtitle": "Manage videos embedded across the platform."
+  },
+  "Search": {
+    "title": "Search Novels",
+    "findHint": "Find your next favorite story",
+    "resultsFor": "Results for \"{query}\"",
+    "keywordPlaceholder": "Search keywords across the library...",
+    "searching": "Searching...",
+    "search": "Search",
+    "filterTitle": "Filter by title",
+    "filterAuthor": "Filter by author",
+    "allCategories": "All categories",
+    "allGenres": "All genres",
+    "allTags": "All tags"
+    ,
+    "filterLabels": {
+      "keyword": "Keyword",
+      "title": "Title",
+      "author": "Author",
+      "category": "Category",
+      "genre": "Genre",
+      "tag": "Tag"
+    }
+  }
+  ,
+  "AdminNovels": {
+    "title": "Novel Management",
+    "subtitle": "Manage your novels and chapters",
+    "addNovel": "Add Novel",
+    "stats": {
+      "total": "Total Novels",
+      "published": "Published",
+      "drafts": "Drafts",
+      "avgRating": "Avg Rating"
+    },
+    "placeholders": {
+      "search": "Search novels...",
+      "filterStatus": "Filter by status"
+    },
+    "filters": {
+      "allStatus": "All Status",
+      "published": "Published",
+      "draft": "Draft",
+      "completed": "Completed",
+      "ongoing": "Ongoing"
+    },
+    "empty": {
+      "noNovels": "No novels found",
+      "noMatch": "No novels match your search criteria.",
+      "getStarted": "Get started by creating your first novel."
+    },
+    "toasts": {
+      "errorLoadTitle": "Error",
+      "errorLoadDesc": "Failed to load novels",
+      "deleteSuccessTitle": "Success",
+      "deleteSuccessDesc": "Novel deleted successfully",
+      "deleteErrorDesc": "Failed to delete novel"
+    }
+  }
+  ,
+  "Auth": {
+    "login": {
+      "title": "Welcome Back",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "orContinueWith": "Or continue with",
+      "noAccount": "Don't have an account? ",
+      "signUp": "Sign up"
+    },
+    "register": {
+      "title": "Create Account",
+      "username": "Username",
+      "usernamePlaceholder": "Choose a username",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "submit": "Create Account",
+      "submitting": "Creating account...",
+      "orContinueWith": "Or continue with",
+      "hasAccount": "Already have an account? ",
+      "signIn": "Sign in"
+    },
+    "toasts": {
+      "loginSuccessTitle": "Login successful",
+      "loginSuccessDesc": "Welcome back!",
+      "loginFailedTitle": "Login failed",
+      "loginFailedDefault": "Invalid email or password",
+      "googleLoginFailedTitle": "Google login failed",
+      "googleLoginFailedNoCredential": "Unable to retrieve Google credentials",
+      "googleLoginFailedDefault": "Unable to authenticate with Google",
+      "googleLoginFailedPopup": "The Google sign-in popup was closed or an error occurred",
+      "passwordMismatchTitle": "Password mismatch",
+      "passwordMismatchDesc": "Passwords do not match",
+      "registrationFailedTitle": "Registration failed",
+      "registrationFailedDefault": "Username or email already exists",
+      "verifyEmailTitle": "Verify your email",
+      "verifyEmailDesc": "We sent a confirmation link to {email}. Please verify before signing in.",
+      "googleSignUpFailedTitle": "Google sign up failed",
+      "googleSignUpFailedNoCredential": "Unable to retrieve Google credentials",
+      "googleSignUpFailedDefault": "Unable to complete Google authentication",
+      "googleSignInSuccess": "Signed in with Google",
+      "googleSignInSuccessDesc": "Welcome to Novel VIP!",
+      "googleSignUpFailedPopup": "The Google window was closed or an error occurred"
+    }
   }
 }

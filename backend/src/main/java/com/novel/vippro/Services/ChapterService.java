@@ -225,21 +225,21 @@ public class ChapterService {
     @Transactional
     public Chapter createChapter(CreateChapterDTO chapterDTO) {
 
-        if (!novelRepository.existsById(chapterDTO.getNovelId())) {
-            throw new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId());
+        if (!novelRepository.existsById(chapterDTO.novelId())) {
+            throw new ResourceNotFoundException("Novel", "id", chapterDTO.novelId());
         }
-        if (chapterRepository.findByNovelIdAndChapterNumber(chapterDTO.getNovelId(),
-                chapterDTO.getChapterNumber()) != null) {
+        if (chapterRepository.findByNovelIdAndChapterNumber(chapterDTO.novelId(),
+                chapterDTO.chapterNumber()) != null) {
             throw new RuntimeException(
                     "Chapter number already exists for this novel. Please choose a different number or update the existing chapter.");
         }
 
-        Novel chapterNovel = novelRepository.findById(chapterDTO.getNovelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", chapterDTO.getNovelId()));
+        Novel chapterNovel = novelRepository.findById(chapterDTO.novelId())
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", chapterDTO.novelId()));
 
         Chapter chapter = new Chapter();
-        chapter.setChapterNumber(chapterDTO.getChapterNumber());
-        chapter.setTitle(chapterDTO.getTitle());
+        chapter.setChapterNumber(chapterDTO.chapterNumber());
+        chapter.setTitle(chapterDTO.title());
         chapter.setNovel(chapterNovel);
 
         Map<String, Object> contentMap = Map.of(
@@ -247,7 +247,7 @@ public class ChapterService {
                 "novelTitle", chapter.getNovel().getTitle(),
                 "chapterNumber", chapter.getChapterNumber(),
                 "chapterTitle", chapter.getTitle(),
-                "content", chapterDTO.getContentHtml());
+                "content", chapterDTO.contentHtml());
 
         String jsonContent;
         try {
@@ -301,24 +301,24 @@ public class ChapterService {
 
         for (CreateChapterDTO dto : chapterDTOs) {
             futures.add(CompletableFuture.supplyAsync(() -> {
-                Novel novel = novelRepository.findById(dto.getNovelId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", dto.getNovelId()));
+                Novel novel = novelRepository.findById(dto.novelId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", dto.novelId()));
 
-                if (chapterRepository.findByNovelIdAndChapterNumber(dto.getNovelId(), dto.getChapterNumber()) != null) {
+                if (chapterRepository.findByNovelIdAndChapterNumber(dto.novelId(), dto.chapterNumber()) != null) {
                     throw new RuntimeException("Chapter number already exists for this novel.");
                 }
 
                 Chapter chapter = new Chapter();
-                chapter.setChapterNumber(dto.getChapterNumber());
-                chapter.setTitle(dto.getTitle());
+                chapter.setChapterNumber(dto.chapterNumber());
+                chapter.setTitle(dto.title());
                 chapter.setNovel(novel);
 
                 Map<String, Object> contentMap = Map.of(
                         "novelSlug", novel.getSlug(),
                         "novelTitle", novel.getTitle(),
-                        "chapterNumber", dto.getChapterNumber(),
-                        "chapterTitle", dto.getTitle(),
-                        "content", dto.getContentHtml());
+                        "chapterNumber", dto.chapterNumber(),
+                        "chapterTitle", dto.title(),
+                        "content", dto.contentHtml());
 
                 String jsonContent;
                 try {
@@ -327,7 +327,7 @@ public class ChapterService {
                     throw new RuntimeException("Error converting chapter content to JSON", e);
                 }
 
-                String publicId = String.format("novels/%s/chapters/chap-%d.json", novel.getSlug(), dto.getChapterNumber());
+                String publicId = String.format("novels/%s/chapters/chap-%d.json", novel.getSlug(), dto.chapterNumber());
                 String jsonUrl;
                 try {
                     jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
@@ -379,12 +379,12 @@ public class ChapterService {
     @Transactional
     public Chapter updateChapter(UUID id, CreateChapterDTO chapterDTO) {
         Chapter chapter = getChapterById(id);
-        chapter.setChapterNumber(chapterDTO.getChapterNumber());
-        chapter.setTitle(chapterDTO.getTitle());
+        chapter.setChapterNumber(chapterDTO.chapterNumber());
+        chapter.setTitle(chapterDTO.title());
 
-        if (chapterDTO.getNovelId() != null) {
-            chapter.setNovel(novelRepository.findById(chapterDTO.getNovelId())
-                    .orElseThrow(() -> new RuntimeException("Novel not found with id: " + chapterDTO.getNovelId())));
+        if (chapterDTO.novelId() != null) {
+            chapter.setNovel(novelRepository.findById(chapterDTO.novelId())
+                    .orElseThrow(() -> new RuntimeException("Novel not found with id: " + chapterDTO.novelId())));
         }
 
         Map<String, Object> contentMap = Map.of(
@@ -392,7 +392,7 @@ public class ChapterService {
                 "novelTitle", chapter.getNovel().getTitle(),
                 "chapterNumber", chapter.getChapterNumber(),
                 "chapterTitle", chapter.getTitle(),
-                "content", chapterDTO.getContent());
+                "content", chapterDTO.content());
 
         String jsonContent;
         try {

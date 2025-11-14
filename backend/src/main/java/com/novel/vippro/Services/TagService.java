@@ -38,7 +38,7 @@ public class TagService {
     public TagDTO updateTag(UUID id, TagDTO tagDTO) {
         Tag tag = tagRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tag", "id", id));
-        tag.setName(tagDTO.getName());
+        tag.setName(tagDTO.name());
         Tag updatedTag = tagRepository.save(tag);
         return mapper.TagtoDTO(updatedTag);
     }

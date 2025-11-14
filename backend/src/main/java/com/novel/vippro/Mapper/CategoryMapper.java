@@ -2,34 +2,22 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Category.CategoryDTO;
 import com.novel.vippro.Models.Category;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class CategoryMapper {
+@Mapper(componentModel = "spring")
+public interface CategoryMapper {
 
-	@Autowired
-	private ModelMapper modelMapper;
+    CategoryDTO CategorytoDTO(Category category);
 
-	public CategoryDTO CategorytoDTO(Category category) {
-		return modelMapper.map(category, CategoryDTO.class);
-	}
+    Category DTOtoCategory(CategoryDTO categoryDTO);
 
-	public Category DTOtoCategory(CategoryDTO categoryDTO) {
-		return modelMapper.map(categoryDTO, Category.class);
-	}
+    List<CategoryDTO> CategoryListtoDTOList(List<Category> categories);
 
-	public List<CategoryDTO> CategoryListtoDTOList(List<Category> categories) {
-		return categories.stream()
-				.map(this::CategorytoDTO)
-				.collect(Collectors.toList());
-	}
-
-	public void updateCategoryFromDTO(CategoryDTO dto, Category category) {
-		modelMapper.map(dto, category);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateCategoryFromDTO(CategoryDTO dto, @MappingTarget Category category);
 }

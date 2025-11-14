@@ -103,15 +103,16 @@ public class FavoriteService {
         for (Favorite favorite : favorites) {
             User user = favorite.getUser();
             if (user != null) {
-                CreateNotificationDTO notificationDTO = new CreateNotificationDTO();
-                notificationDTO.setUserId(user.getId());
-                notificationDTO.setTitle("New Chapter Available");
-                notificationDTO.setMessage("A new chapter has been added to novel: " + novel.getTitle());
-                notificationDTO.setType(NotificationType.CHAPTER_UPDATE);
-                notificationDTO.setReference(novel.getSlug());
+                CreateNotificationDTO notificationDTO = CreateNotificationDTO.builder()
+                        .userId(user.getId())
+                        .title("New Chapter Available")
+                        .message("A new chapter has been added to novel: " + novel.getTitle())
+                        .type(NotificationType.CHAPTER_UPDATE)
+                        .reference(novel.getSlug())
+                        .build();
                 notificationService.createNotification(notificationDTO);
             }
         }
-        
+
     }
 }

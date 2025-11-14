@@ -2,24 +2,20 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.Models.Notification;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class NotificationMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface NotificationMapper {
 
-	public NotificationDTO NotificationtoDTO(Notification notification) {
-		return modelMapper.map(notification, NotificationDTO.class);
-	}
+    @Mapping(target = "userId", source = "user.id")
+    NotificationDTO NotificationtoDTO(Notification notification);
 
-	public void updateNotificationFromDTO(NotificationDTO dto, Notification notification) {
-		modelMapper.map(dto, notification);
-	}
+    Notification DTOtoNotification(NotificationDTO notificationDTO);
 
-	public Notification DTOtoNotification(NotificationDTO notificationDTO) {
-		return modelMapper.map(notificationDTO, Notification.class);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateNotificationFromDTO(NotificationDTO dto, @MappingTarget Notification notification);
 }
