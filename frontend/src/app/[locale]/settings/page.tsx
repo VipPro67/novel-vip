@@ -27,7 +27,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { api, type ReaderSettings } from "@/services/api";
+import { api } from "@/services/api";
+import { useTranslations } from "next-intl";
+import { ReaderSettings } from "@/models";
 
 export default function SettingsPage() {
   return (
@@ -38,15 +40,15 @@ export default function SettingsPage() {
 }
 
 function SettingsContent() {
+  const t = useTranslations("Settings");
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences
-            </p>
+            <h1 className="text-3xl font-bold">{t("title")}</h1>
+            <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
 
           <Tabs defaultValue="appearance" className="space-y-4">
@@ -56,28 +58,28 @@ function SettingsContent() {
                 className="flex items-center space-x-2"
               >
                 <Bell className="h-4 w-4" />
-                <span>Notifications</span>
+                <span>{t("tabs.notifications")}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="appearance"
                 className="flex items-center space-x-2"
               >
                 <Palette className="h-4 w-4" />
-                <span>Appearance</span>
+                <span>{t("tabs.appearance")}</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="notifications" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Notification Settings</CardTitle>
+                  <CardTitle>{t("notificationSettings.title")}</CardTitle>
                   <CardDescription>
-                    Configure how you receive notifications
+                    {t("notificationSettings.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Notification settings will be implemented here.
+                    {t("notificationSettings.notImplemented")}
                   </p>
                 </CardContent>
               </Card>
@@ -86,9 +88,9 @@ function SettingsContent() {
             <TabsContent value="appearance" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Appearance Settings</CardTitle>
+                  <CardTitle>{t("appearanceSettings.title")}</CardTitle>
                   <CardDescription>
-                    Customize the look and feel of your reader experience
+                    {t("appearanceSettings.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -123,6 +125,7 @@ type DecimalSettingKey = "lineHeight" | "audioSpeed";
 
 function AppearanceSettingsForm() {
   const { toast } = useToast();
+  const t = useTranslations("Settings");
   const { settings, loading, saving, error, updateSettings, refreshSettings } =
     useReaderSettings();
   const [formValues, setFormValues] = useState<ReaderSettings | null>(null);
@@ -259,15 +262,15 @@ function AppearanceSettingsForm() {
       if (updated) {
         setFormValues(updated);
         toast({
-          title: "Appearance updated",
-          description: "Your reader preferences have been saved.",
+          title: t("appearanceSettings.appearanceUpdatedTitle"),
+          description: t("appearanceSettings.appearanceUpdatedDesc"),
         });
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to update reader settings";
+        err instanceof Error ? err.message : t("appearanceSettings.updateFailedDesc");
       toast({
-        title: "Update failed",
+        title: t("appearanceSettings.updateFailedTitle"),
         description: message,
         variant: "destructive",
       });
@@ -281,16 +284,16 @@ function AppearanceSettingsForm() {
         setFormValues(refreshed);
       }
       toast({
-        title: "Settings refreshed",
-        description: "Latest reader preferences loaded from the server.",
+        title: t("appearanceSettings.settingsRefreshedTitle"),
+        description: t("appearanceSettings.settingsRefreshedDesc"),
       });
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : "Failed to refresh reader settings";
+          : t("appearanceSettings.refreshFailedDesc");
       toast({
-        title: "Refresh failed",
+        title: t("appearanceSettings.refreshFailedTitle"),
         description: message,
         variant: "destructive",
       });
@@ -305,7 +308,7 @@ function AppearanceSettingsForm() {
     return (
       <div className="flex items-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Loading reader preferences.</span>
+        <span>{t("appearanceSettings.loadingPrefs")}</span>
       </div>
     );
   }
@@ -313,7 +316,7 @@ function AppearanceSettingsForm() {
   if (!formValues) {
     return (
       <p className="text-sm text-muted-foreground">
-        Reader settings are not available.
+        {t("appearanceSettings.notAvailable")}
       </p>
     );
   }
@@ -325,33 +328,33 @@ function AppearanceSettingsForm() {
   }> = [
     {
       key: "autoScroll",
-      label: "Auto scroll",
-      description: "Automatically scroll the chapter while reading.",
+      label: t("appearanceSettings.autoScroll"),
+      description: t("appearanceSettings.autoScrollDesc"),
     },
     {
       key: "keepScreenOn",
-      label: "Keep screen awake",
-      description: "Prevent your device from sleeping while reading.",
+      label: t("appearanceSettings.keepScreenOn"),
+      description: t("appearanceSettings.keepScreenOnDesc"),
     },
     {
       key: "showProgress",
-      label: "Show progress bar",
-      description: "Display reading progress at the bottom of the chapter.",
+      label: t("appearanceSettings.showProgress"),
+      description: t("appearanceSettings.showProgressDesc"),
     },
     {
       key: "showChapterTitle",
-      label: "Show chapter title",
-      description: "Keep the chapter title visible while reading.",
+      label: t("appearanceSettings.showChapterTitle"),
+      description: t("appearanceSettings.showChapterTitleDesc"),
     },
     {
       key: "showTime",
-      label: "Show current time",
-      description: "Display the current time in the reader header.",
+      label: t("appearanceSettings.showTime"),
+      description: t("appearanceSettings.showTimeDesc"),
     },
     {
       key: "showBattery",
-      label: "Show battery level",
-      description: "Display your device battery level in the reader header.",
+      label: t("appearanceSettings.showBattery"),
+      description: t("appearanceSettings.showBatteryDesc"),
     },
   ];
 
@@ -362,14 +365,13 @@ function AppearanceSettingsForm() {
   }> = [
     {
       key: "audioEnabled",
-      label: "Enable audio narration",
-      description: "Play generated audio while reading.",
+      label: t("appearanceSettings.audioEnabled"),
+      description: t("appearanceSettings.audioEnabledDesc"),
     },
     {
       key: "audioAutoNextChapter",
-      label: "Auto play next chapter",
-      description:
-        "Automatically start narration for the next chapter when finished.",
+      label: t("appearanceSettings.audioAutoNextChapter"),
+      description: t("appearanceSettings.audioAutoNextChapterDesc"),
     },
   ];
 
@@ -379,21 +381,21 @@ function AppearanceSettingsForm() {
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">Typography</h3>
+          <h3 className="text-lg font-semibold">{t("appearanceSettings.typography")}</h3>
           <p className="text-sm text-muted-foreground">
-            Tune fonts and spacing for a comfortable reading experience.
+            {t("appearanceSettings.typographyDesc")}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="fontFamily">Font family</Label>
+            <Label htmlFor="fontFamily">{t("appearanceSettings.fontFamily")}</Label>
             <Select
               value={formValues.fontFamily}
               onValueChange={handleSelectChange("fontFamily")}
               disabled={optionsLoading || saving}
             >
               <SelectTrigger id="fontFamily">
-                <SelectValue placeholder="Select a font" />
+                <SelectValue placeholder={t("appearanceSettings.selectFont")} />
               </SelectTrigger>
               <SelectContent>
                 {fontOptions.length === 0 ? (
@@ -411,7 +413,7 @@ function AppearanceSettingsForm() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="fontSize">Font size (px)</Label>
+            <Label htmlFor="fontSize">{t("appearanceSettings.fontSize")}</Label>
             <Input
               id="fontSize"
               type="number"
@@ -424,7 +426,7 @@ function AppearanceSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lineHeight">Line height</Label>
+            <Label htmlFor="lineHeight">{t("appearanceSettings.lineHeight")}</Label>
             <Input
               id="lineHeight"
               type="number"
@@ -438,7 +440,7 @@ function AppearanceSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="paragraphSpacing">Paragraph spacing (px)</Label>
+            <Label htmlFor="paragraphSpacing">{t("appearanceSettings.paragraphSpacing")}</Label>
             <Input
               id="paragraphSpacing"
               type="number"
@@ -455,21 +457,21 @@ function AppearanceSettingsForm() {
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">Display</h3>
+          <h3 className="text-lg font-semibold">{t("appearanceSettings.display")}</h3>
           <p className="text-sm text-muted-foreground">
-            Control colors, theme, and layout for the chapter reader.
+            {t("appearanceSettings.displayDesc")}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="theme">Theme</Label>
+            <Label htmlFor="theme">{t("appearanceSettings.theme")}</Label>
             <Select
               value={formValues.theme}
               onValueChange={handleSelectChange("theme")}
               disabled={optionsLoading || saving}
             >
               <SelectTrigger id="theme">
-                <SelectValue placeholder="Select a theme" />
+                <SelectValue placeholder={t("appearanceSettings.selectTheme")} />
               </SelectTrigger>
               <SelectContent>
                 {themeOptions.length === 0 ? (
@@ -487,7 +489,7 @@ function AppearanceSettingsForm() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="marginSize">Page padding (px)</Label>
+            <Label htmlFor="marginSize">{t("appearanceSettings.marginSize")}</Label>
             <Input
               id="marginSize"
               type="number"
@@ -500,7 +502,7 @@ function AppearanceSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="textColor">Text color</Label>
+            <Label htmlFor="textColor">{t("appearanceSettings.textColor")}</Label>
             <Input
               id="textColor"
               type="color"
@@ -511,7 +513,7 @@ function AppearanceSettingsForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="backgroundColor">Background color</Label>
+            <Label htmlFor="backgroundColor">{t("appearanceSettings.backgroundColor")}</Label>
             <Input
               id="backgroundColor"
               type="color"
@@ -545,14 +547,14 @@ function AppearanceSettingsForm() {
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">Audio playback</h3>
+          <h3 className="text-lg font-semibold">{t("appearanceSettings.audioPlayback")}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure audio narration preferences.
+            {t("appearanceSettings.audioPlaybackDesc")}
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="audioSpeed">Narration speed</Label>
+            <Label htmlFor="audioSpeed">{t("appearanceSettings.audioSpeed")}</Label>
             <Input
               id="audioSpeed"
               type="number"
@@ -564,10 +566,10 @@ function AppearanceSettingsForm() {
               onChange={handleDecimalChange("audioSpeed")}
               disabled={saving}
             />
-            <p className="text-xs text-muted-foreground">0.5x to 3x speed.</p>
+            <p className="text-xs text-muted-foreground">{t("appearanceSettings.audioSpeedHint")}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="autoScrollSpeed">Auto scroll speed</Label>
+            <Label htmlFor="autoScrollSpeed">{t("appearanceSettings.autoScrollSpeed")}</Label>
             <Input
               id="autoScrollSpeed"
               type="number"
@@ -579,7 +581,7 @@ function AppearanceSettingsForm() {
               disabled={saving}
             />
             <p className="text-xs text-muted-foreground">
-              Higher values scroll faster.
+              {t("appearanceSettings.autoScrollSpeedHint")}
             </p>
           </div>
         </div>
@@ -611,7 +613,7 @@ function AppearanceSettingsForm() {
           onClick={handleDiscardChanges}
           disabled={!isDirty || saving}
         >
-          Discard changes
+          {t("appearanceSettings.discard")}
         </Button>
         <Button
           type="button"
@@ -620,11 +622,11 @@ function AppearanceSettingsForm() {
           disabled={saving}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh from server
+          {t("appearanceSettings.refresh")}
         </Button>
         <Button type="submit" disabled={!isDirty || saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save changes
+          {t("appearanceSettings.save")}
         </Button>
       </div>
     </form>

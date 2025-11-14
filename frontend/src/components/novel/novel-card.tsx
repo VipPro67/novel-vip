@@ -32,7 +32,7 @@ export function NovelCard({ novel }: NovelCardProps) {
 				<CardContent className="p-2 sm:p-3 md:p-4">
 					{/* Title and Author */}
 					<h3 className="font-semibold text-xs sm:text-sm mb-1 line-clamp-2 leading-tight">{novel.title}</h3>
-					<p className="text-xs text-muted-foreground mb-2 hidden sm:block">by {novel.author}</p>
+					<p className="text-xs text-muted-foreground mb-2 hidden sm:block">{novel.author}</p>
 
 					{/* Stats - Simplified on mobile */}
 					<div className="flex items-center justify-between text-xs text-muted-foreground mb-2">

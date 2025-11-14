@@ -175,7 +175,7 @@ function HistoryContent() {
                             href={`/novels/${item.novel?.slug}/chapters/${item.lastReadChapterIndex}`}
                           >
                             <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                              Continue Reading
+                               {t("continue")}
                             </button>
                           </Link>
                         </div>

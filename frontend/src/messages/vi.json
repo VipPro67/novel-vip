@@ -101,6 +101,291 @@
       "description": "Chương và tiểu thuyết đã đọc gần đây"
     },
     "noHistoryMessage": "Lịch sử đọc của bạn đang trống",
-    "search" : "Tìm kiếm"
+    "search" : "Tìm kiếm",
+    "continue" : "Tiếp tục đọc"
+  }
+  ,
+  "FeatureRequests": {
+    "title": "Đề xuất tính năng",
+    "subtitle": "Chia sẻ ý tưởng và bình chọn các tính năng bạn muốn thấy",
+    "newRequest": "Đề xuất mới",
+    "submitDialogTitle": "Gửi đề xuất tính năng",
+    "submitDialogDescription": "Chia sẻ ý tưởng để cải thiện Novel VIP Pro",
+    "labels": {
+      "title": "Tiêu đề *",
+      "category": "Loại",
+      "description": "Mô tả *"
+    },
+    "buttons": {
+      "cancel": "Huỷ",
+      "submit": "Gửi đề xuất"
+    },
+    "filters": {
+      "sortBy": "Sắp xếp theo",
+      "mostVoted": "Được bình chọn nhiều nhất",
+      "mostRecent": "Mới nhất",
+      "status": "Trạng thái",
+      "allStatus": "Tất cả trạng thái",
+      "pending": "Đang chờ",
+      "underReview": "Đang xem xét",
+      "planned": "Đã lên kế hoạch",
+      "inProgress": "Đang tiến hành",
+      "completed": "Hoàn thành",
+      "rejected": "Từ chối"
+    },
+    "placeholders": {
+      "title": "Mô tả ngắn gọn về tính năng của bạn",
+      "description": "Giải thích chi tiết yêu cầu tính năng của bạn..."
+    },
+    "emptyList": "Không tìm thấy đề xuất nào. Hãy là người đầu tiên gửi đề xuất!",
+    "by": "bởi",
+    "toast": {
+      "voteAddedTitle": "Đã thêm bình chọn",
+      "voteAddedDesc": "Cảm ơn bạn đã bình chọn!",
+      "voteRemovedTitle": "Đã huỷ bình chọn",
+      "voteRemovedDesc": "Bình chọn của bạn đã bị huỷ",
+      "errorLoadTitle": "Lỗi",
+      "errorLoadDesc": "Tải đề xuất thất bại",
+      "errorVoteDesc": "Bình chọn thất bại. Vui lòng thử lại.",
+      "validationErrorTitle": "Lỗi",
+      "validationErrorDesc": "Vui lòng điền tất cả trường bắt buộc",
+      "errorSubmitDesc": "Gửi đề xuất thất bại. Vui lòng thử lại.",
+      "successSubmitTitle": "Thành công",
+      "successSubmitDesc": "Đề xuất của bạn đã được gửi!"
+    }
+  }
+  ,
+  "Settings": {
+    "title": "Cài đặt",
+    "subtitle": "Quản lý cài đặt và tuỳ chọn tài khoản của bạn",
+    "tabs": {
+      "notifications": "Thông báo",
+      "appearance": "Giao diện"
+    },
+    "notificationSettings": {
+      "title": "Cài đặt thông báo",
+      "description": "Cấu hình cách bạn nhận thông báo",
+      "notImplemented": "Cài đặt thông báo sẽ được triển khai tại đây."
+    },
+    "appearanceSettings": {
+      "title": "Cài đặt giao diện",
+      "description": "Tùy chỉnh giao diện và trải nghiệm đọc của bạn",
+      "appearanceUpdatedTitle": "Đã cập nhật giao diện",
+      "appearanceUpdatedDesc": "Tuỳ chọn đọc của bạn đã được lưu.",
+      "updateFailedTitle": "Cập nhật thất bại",
+      "updateFailedDesc": "Không thể cập nhật cài đặt đọc",
+      "refreshFailedTitle": "Làm mới thất bại",
+      "refreshFailedDesc": "Không thể làm mới cài đặt đọc",
+      "settingsRefreshedTitle": "Đã làm mới cài đặt",
+      "settingsRefreshedDesc": "Tuỳ chọn đọc mới nhất đã được tải từ máy chủ.",
+      "loadingPrefs": "Đang tải tuỳ chọn đọc.",
+      "notAvailable": "Cài đặt đọc không khả dụng.",
+      "typography": "Kiểu chữ",
+      "typographyDesc": "Tinh chỉnh phông chữ và khoảng cách để có trải nghiệm đọc thoải mái.",
+      "fontFamily": "Phông chữ",
+      "selectFont": "Chọn phông chữ",
+      "fontSize": "Kích thước phông chữ (px)",
+      "lineHeight": "Chiều cao dòng",
+      "paragraphSpacing": "Khoảng cách đoạn (px)",
+      "display": "Hiển thị",
+      "displayDesc": "Kiểm soát màu sắc, chủ đề và bố cục cho trình đọc chương.",
+      "theme": "Chủ đề",
+      "selectTheme": "Chọn chủ đề",
+      "marginSize": "Khoảng đệm trang (px)",
+      "textColor": "Màu văn bản",
+      "backgroundColor": "Màu nền",
+      "autoScroll": "Tự động cuộn",
+      "autoScrollDesc": "Tự động cuộn chương trong khi đang đọc.",
+      "keepScreenOn": "Giữ màn hình sáng",
+      "keepScreenOnDesc": "Ngăn chặn thiết bị của bạn vào chế độ ngủ khi đang đọc.",
+      "showProgress": "Hiển thị thanh tiến độ",
+      "showProgressDesc": "Hiển thị tiến độ đọc ở dưới cùng chương.",
+      "showChapterTitle": "Hiển thị tiêu đề chương",
+      "showChapterTitleDesc": "Giữ tiêu đề chương hiển thị khi đang đọc.",
+      "showTime": "Hiển thị thời gian hiện tại",
+      "showTimeDesc": "Hiển thị thời gian hiện tại trong tiêu đề trình đọc.",
+      "showBattery": "Hiển thị mức pin",
+      "showBatteryDesc": "Hiển thị mức pin thiết bị của bạn trong tiêu đề trình đọc.",
+      "audioPlayback": "Phát âm thanh",
+      "audioPlaybackDesc": "Cấu hình tuỳ chọn lạc đạo âm thanh.",
+      "audioSpeed": "Tốc độ lạc đạo",
+      "audioSpeedHint": "Tốc độ 0.5x đến 3x.",
+      "autoScrollSpeed": "Tốc độ cuộn tự động",
+      "autoScrollSpeedHint": "Giá trị cao hơn cuộn nhanh hơn.",
+      "audioEnabled": "Bật đọc giọng nói",
+      "audioEnabledDesc": "Phát âm thanh được tạo ra trong khi đang đọc.",
+      "audioAutoNextChapter": "Tự động phát chương tiếp theo",
+      "audioAutoNextChapterDesc": "Tự động bắt đầu lạc đạo cho chương tiếp theo khi hoàn thành.",
+      "save": "Lưu thay đổi",
+      "discard": "Bỏ thay đổi",
+      "refresh": "Làm mới từ máy chủ",
+      "settingsRefreshed": "Đã làm mới cài đặt"
+    }
+  }
+  ,
+  "Report": {
+    "trigger": "Báo cáo",
+    "title": "Báo cáo {type}",
+    "description": "Giúp chúng tôi duy trì một cộng đồng an toàn và tôn trọng bằng cách báo cáo nội dung không phù hợp.",
+    "reporting": "Báo cáo: {title}",
+    "labels": {
+      "reason": "Lý do báo cáo",
+      "description": "Chi tiết bổ sung"
+    },
+    "placeholders": {
+      "selectReason": "Chọn lý do",
+      "description": "Vui lòng cung cấp thêm chi tiết về lý do bạn báo cáo nội dung này..."
+    },
+    "buttons": {
+      "cancel": "Huỷ",
+      "submit": "Gửi báo cáo",
+      "submitting": "Đang gửi..."
+    },
+    "toasts": {
+      "validationErrorTitle": "Lỗi",
+      "validationErrorDesc": "Vui lòng chọn lý do và cung cấp mô tả",
+      "successTitle": "Đã gửi báo cáo",
+      "successDesc": "Cảm ơn bạn đã giúp chúng tôi duy trì một cộng đồng an toàn. Chúng tôi sẽ xem xét báo cáo của bạn.",
+      "errorSubmitDesc": "Gửi báo cáo thất bại. Vui lòng thử lại."
+    },
+    "reasons": {
+      "MISSING_INFO": "Thiếu thông tin",
+      "MISSING_CHAPTER": "Thiếu chương",
+      "WRONG_INFO": "Thông tin sai",
+      "COPYRIGHT_VIOLATION": "Vấn đề bản quyền",
+      "OTHER": "Khác",
+      "WRONG_CHAPTER": "Chương sai",
+      "ERROR_CONTENT": "Lỗi nội dung",
+      "MISSING_CONTENT": "Thiếu nội dung",
+      "POOR_QUALITY": "Chất lượng kém",
+      "SPAM": "Spam",
+      "VIOLENCE": "Bạo lực/Quấy rối",
+      "INAPPROPRIATE_CONTENT": "Nội dung không phù hợp",
+      "MISINFORMATION": "Thông tin sai lệch",
+      "COPYRIGHT_VIOLATION_GENERIC": "Vi phạm bản quyền",
+      "HARASSMENT": "Quấy rối"
+    }
+  }
+  ,
+  "Admin": {
+    "featureRequests": {
+      "title": "Đề xuất tính năng",
+      "subtitle": "Quản lý và ưu tiên các đề xuất tính năng từ người dùng"
+    }
+  }
+  ,
+  "AdminVideos": {
+    "title": "Thư viện video",
+    "subtitle": "Quản lý video nhúng trên nền tảng."
+  },
+   "Search": {
+     "title": "Tìm truyện",
+     "findHint": "Tìm câu chuyện yêu thích tiếp theo của bạn",
+     "resultsFor": "Kết quả cho \"{query}\"",
+     "keywordPlaceholder": "Tìm kiếm từ khóa trong thư viện...",
+     "searching": "Đang tìm...",
+     "search": "Tìm",
+     "filterTitle": "Lọc theo tiêu đề",
+     "filterAuthor": "Lọc theo tác giả",
+     "allCategories": "Tất cả thể loại",
+     "allGenres": "Tất cả thể loại",
+     "allTags": "Tất cả thẻ"
+    ,
+    "filterLabels": {
+      "keyword": "Từ khoá",
+      "title": "Tiêu đề",
+      "author": "Tác giả",
+      "category": "Thể loại",
+      "genre": "Thể loại",
+      "tag": "Thẻ"
+    }
+   }
+  ,
+  "AdminNovels": {
+    "title": "Quản lý truyện",
+    "subtitle": "Quản lý truyện và chương của bạn",
+    "addNovel": "Thêm truyện",
+    "stats": {
+      "total": "Tổng truyện",
+      "published": "Đã xuất bản",
+      "drafts": "Bản nháp",
+      "avgRating": "Đánh giá trung bình"
+    },
+    "placeholders": {
+      "search": "Tìm truyện...",
+      "filterStatus": "Lọc theo trạng thái"
+    },
+    "filters": {
+      "allStatus": "Tất cả trạng thái",
+      "published": "Đã xuất bản",
+      "draft": "Bản nháp",
+      "completed": "Hoàn thành",
+      "ongoing": "Đang tiếp diễn"
+    },
+    "empty": {
+      "noNovels": "Không tìm thấy truyện",
+      "noMatch": "Không có truyện nào phù hợp với tiêu chí tìm kiếm của bạn.",
+      "getStarted": "Bắt đầu bằng cách tạo truyện đầu tiên của bạn."
+    },
+    "toasts": {
+      "errorLoadTitle": "Lỗi",
+      "errorLoadDesc": "Tải truyện thất bại",
+      "deleteSuccessTitle": "Thành công",
+      "deleteSuccessDesc": "Truyện đã bị xoá thành công",
+      "deleteErrorDesc": "Xoá truyện thất bại"
+    }
+  }
+  ,
+  "Auth": {
+    "login": {
+      "title": "Chào mừng quay trở lại",
+      "email": "Email",
+      "emailPlaceholder": "Nhập email của bạn",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu của bạn",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập...",
+      "orContinueWith": "Hoặc tiếp tục bằng",
+      "noAccount": "Bạn chưa có tài khoản? ",
+      "signUp": "Đăng ký"
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "username": "Tên người dùng",
+      "usernamePlaceholder": "Chọn tên người dùng",
+      "email": "Email",
+      "emailPlaceholder": "Nhập email của bạn",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Tạo mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPasswordPlaceholder": "Xác nhận mật khẩu của bạn",
+      "submit": "Tạo tài khoản",
+      "submitting": "Đang tạo tài khoản...",
+      "orContinueWith": "Hoặc tiếp tục bằng",
+      "hasAccount": "Bạn đã có tài khoản? ",
+      "signIn": "Đăng nhập"
+    },
+    "toasts": {
+      "loginSuccessTitle": "Đăng nhập thành công",
+      "loginSuccessDesc": "Chào mừng quay trở lại!",
+      "loginFailedTitle": "Đăng nhập thất bại",
+      "loginFailedDefault": "Email hoặc mật khẩu không hợp lệ",
+      "googleLoginFailedTitle": "Đăng nhập Google thất bại",
+      "googleLoginFailedNoCredential": "Không thể lấy thông tin Google",
+      "googleLoginFailedDefault": "Không thể xác thực bằng Google",
+      "googleLoginFailedPopup": "Cửa sổ đăng nhập Google đã bị đóng hoặc có lỗi xảy ra",
+      "passwordMismatchTitle": "Mật khẩu không khớp",
+      "passwordMismatchDesc": "Mật khẩu không khớp",
+      "registrationFailedTitle": "Đăng ký thất bại",
+      "registrationFailedDefault": "Tên người dùng hoặc email đã tồn tại",
+      "verifyEmailTitle": "Xác minh email của bạn",
+      "verifyEmailDesc": "Chúng tôi đã gửi liên kết xác nhận đến {email}. Vui lòng xác minh trước khi đăng nhập.",
+      "googleSignUpFailedTitle": "Đăng ký Google thất bại",
+      "googleSignUpFailedNoCredential": "Không thể lấy thông tin Google",
+      "googleSignUpFailedDefault": "Không thể hoàn tất xác thực Google",
+      "googleSignInSuccess": "Đã đăng nhập bằng Google",
+      "googleSignInSuccessDesc": "Chào mừng đến với Novel VIP!",
+      "googleSignUpFailedPopup": "Cửa sổ Google đã bị đóng hoặc có lỗi xảy ra"
+    }
   }
 }

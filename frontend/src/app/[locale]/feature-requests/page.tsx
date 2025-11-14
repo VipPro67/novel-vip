@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ThumbsUp, Plus, Loader2, TrendingUp, Clock, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslations } from "next-intl"
 
 const STATUS_COLORS = {
   PENDING: "bg-gray-500",
@@ -33,18 +34,12 @@ const STATUS_COLORS = {
   REJECTED: "bg-red-500",
 }
 
-const STATUS_LABELS = {
-  PENDING: "Pending",
-  UNDER_REVIEW: "Under Review",
-  PLANNED: "Planned",
-  IN_PROGRESS: "In Progress",
-  COMPLETED: "Completed",
-  REJECTED: "Rejected",
-}
+// status label translations are created inside component using the translation hook
 
 const CATEGORIES = ["UI/UX Improvement", "New Feature", "Performance", "Mobile App", "Content", "Other"]
 
 export default function FeatureRequestsPage() {
+  const t = useTranslations("FeatureRequests")
   const [featureRequests, setFeatureRequests] = useState<FeatureRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState("createdAt")
@@ -58,6 +53,15 @@ export default function FeatureRequestsPage() {
     description: "",
     category: CATEGORIES[0],
   })
+
+  const STATUS_LABELS = {
+    PENDING: t("filters.pending"),
+    UNDER_REVIEW: t("filters.underReview"),
+    PLANNED: t("filters.planned"),
+    IN_PROGRESS: t("filters.inProgress"),
+    COMPLETED: t("filters.completed"),
+    REJECTED: t("filters.rejected"),
+  }
 
   useEffect(() => {
     fetchFeatureRequests()
@@ -81,8 +85,8 @@ export default function FeatureRequestsPage() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to load feature requests",
+        title: t("toast.errorLoadTitle"),
+        description: t("toast.errorLoadDesc"),
         variant: "destructive",
       })
     } finally {
@@ -112,13 +116,13 @@ export default function FeatureRequestsPage() {
       )
 
       toast({
-        title: hasVoted ? "Vote removed" : "Vote added",
-        description: hasVoted ? "Your vote has been removed" : "Thanks for your vote!",
+        title: hasVoted ? t("toast.voteRemovedTitle") : t("toast.voteAddedTitle"),
+        description: hasVoted ? t("toast.voteRemovedDesc") : t("toast.voteAddedDesc"),
       })
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to vote. Please try again.",
+        title: t("toast.errorLoadTitle"),
+        description: t("toast.errorVoteDesc"),
         variant: "destructive",
       })
     }
@@ -129,8 +133,8 @@ export default function FeatureRequestsPage() {
 
     if (!formData.title.trim() || !formData.description.trim()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: t("toast.validationErrorTitle"),
+        description: t("toast.validationErrorDesc"),
         variant: "destructive",
       })
       return
@@ -142,8 +146,8 @@ export default function FeatureRequestsPage() {
 
       if (response.success) {
         toast({
-          title: "Success",
-          description: "Your feature request has been submitted!",
+          title: t("toast.successSubmitTitle"),
+          description: t("toast.successSubmitDesc"),
         })
         setIsDialogOpen(false)
         setFormData({
@@ -155,8 +159,8 @@ export default function FeatureRequestsPage() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to submit feature request. Please try again.",
+        title: t("toast.errorLoadTitle"),
+        description: t("toast.errorSubmitDesc"),
         variant: "destructive",
       })
     } finally {
@@ -170,35 +174,35 @@ export default function FeatureRequestsPage() {
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Feature Requests</h1>
-              <p className="text-muted-foreground mt-1">Share your ideas and vote on features you'd like to see</p>
+              <h1 className="text-3xl font-bold">{t("title")}</h1>
+              <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  New Request
+                  {t("newRequest")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[525px]">
                 <form onSubmit={handleSubmit}>
                   <DialogHeader>
-                    <DialogTitle>Submit Feature Request</DialogTitle>
-                    <DialogDescription>Share your idea for improving Novel VIP Pro</DialogDescription>
+                    <DialogTitle>{t("submitDialogTitle")}</DialogTitle>
+                    <DialogDescription>{t("submitDialogDescription")}</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="title">Title *</Label>
+                      <Label htmlFor="title">{t("labels.title")}</Label>
                       <Input
                         id="title"
-                        placeholder="Brief description of your feature"
+                        placeholder={t("placeholders.title")}
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         required
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="category">Category</Label>
+                      <Label htmlFor="category">{t("labels.category")}</Label>
                       <Select
                         value={formData.category}
                         onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -216,10 +220,10 @@ export default function FeatureRequestsPage() {
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="description">Description *</Label>
+                      <Label htmlFor="description">{t("labels.description")}</Label>
                       <Textarea
                         id="description"
-                        placeholder="Explain your feature request in detail..."
+                        placeholder={t("placeholders.description")}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={5}
@@ -229,11 +233,11 @@ export default function FeatureRequestsPage() {
                   </div>
                   <DialogFooter>
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
+                      {t("buttons.cancel")}
                     </Button>
                     <Button type="submit" disabled={submitting}>
                       {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Submit Request
+                      {t("buttons.submit")}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -244,7 +248,7 @@ export default function FeatureRequestsPage() {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <Label className="text-sm mb-2 block">Sort by</Label>
+              <Label className="text-sm mb-2 block">{t("filters.sortBy")}</Label>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue />
@@ -253,31 +257,31 @@ export default function FeatureRequestsPage() {
                   <SelectItem value="voteCount">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
-                      Most Voted
+                      {t("filters.mostVoted")}
                     </div>
                   </SelectItem>
                   <SelectItem value="createdAt">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Most Recent
+                      {t("filters.mostRecent")}
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex-1">
-              <Label className="text-sm mb-2 block">Status</Label>
+              <Label className="text-sm mb-2 block">{t("filters.status")}</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
-                  <SelectItem value="PLANNED">Planned</SelectItem>
-                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="all">{t("filters.allStatus")}</SelectItem>
+                  <SelectItem value="PENDING">{t("filters.pending")}</SelectItem>
+                  <SelectItem value="UNDER_REVIEW">{t("filters.underReview")}</SelectItem>
+                  <SelectItem value="PLANNED">{t("filters.planned")}</SelectItem>
+                  <SelectItem value="IN_PROGRESS">{t("filters.inProgress")}</SelectItem>
+                  <SelectItem value="COMPLETED">{t("filters.completed")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -290,11 +294,9 @@ export default function FeatureRequestsPage() {
             </div>
           ) : featureRequests.length === 0 ? (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
+                <CardContent className="flex flex-col items-center justify-center py-12">
                 <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground text-center">
-                  No feature requests found. Be the first to submit one!
-                </p>
+                <p className="text-muted-foreground text-center">{t("emptyList")}</p>
               </CardContent>
             </Card>
           ) : (
@@ -310,7 +312,7 @@ export default function FeatureRequestsPage() {
                         </div>
                         <CardTitle className="text-xl mb-2">{request.title}</CardTitle>
                         <CardDescription className="text-sm">
-                          by {request.createdByUsername} • {new Date(request.createdAt).toLocaleDateString()}
+                          {t("by")} {request.createdByUsername} • {new Date(request.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </div>
                       <Button

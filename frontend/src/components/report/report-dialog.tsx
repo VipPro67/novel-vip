@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/providers/auth-provider"
 import { api } from "@/services/api"
 import { useRouter } from "@/navigation"
+import { useTranslations } from "next-intl"
 
 interface ReportDialogProps {
   reportType: "NOVEL" | "CHAPTER" | "COMMENT" | "REVIEW" | "USER"
@@ -63,6 +64,7 @@ const GENERIC_REASONS = [
 ] as const
 
 export function ReportDialog({ reportType, targetId, targetTitle, trigger }: ReportDialogProps) {
+  const t = useTranslations("Report")
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState<string>("")
   const [description, setDescription] = useState("")
@@ -72,15 +74,18 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
   const router = useRouter()
 
   const getReasons = () => {
+    const map = (arr: readonly { value: string; label: string }[]) =>
+      arr.map((r) => ({ value: r.value, label: t(`reasons.${r.value}`) }))
+
     switch (reportType) {
       case "NOVEL":
-        return NOVEL_REASONS
+        return map(NOVEL_REASONS)
       case "CHAPTER":
-        return CHAPTER_REASONS
+        return map(CHAPTER_REASONS)
       case "COMMENT":
-        return COMMENT_REASONS
+        return map(COMMENT_REASONS)
       default:
-        return GENERIC_REASONS
+        return map(GENERIC_REASONS)
     }
   }
 
@@ -92,8 +97,8 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
 
     if (!reason || !description.trim()) {
       toast({
-        title: "Error",
-        description: "Please select a reason and provide a description",
+        title: t("toasts.validationErrorTitle"),
+        description: t("toasts.validationErrorDesc"),
         variant: "destructive",
       })
       return
@@ -110,8 +115,8 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
 
       if (response.success) {
         toast({
-          title: "Report submitted",
-          description: "Thank you for helping us maintain a safe community. We will review your report.",
+          title: t("toasts.successTitle"),
+          description: t("toasts.successDesc"),
         })
         setOpen(false)
         setReason("")
@@ -120,8 +125,8 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
     } catch (error) {
       console.error("Failed to submit report:", error)
       toast({
-        title: "Error",
-        description: "Failed to submit report. Please try again.",
+        title: t("toasts.validationErrorTitle"),
+        description: t("toasts.errorSubmitDesc"),
         variant: "destructive",
       })
     } finally {
@@ -154,25 +159,27 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
         {trigger || (
           <Button variant="ghost" size="sm">
             <Flag className="h-4 w-4 mr-2" />
-            Report
+            {t("trigger")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Report {getReportTypeLabel()}</DialogTitle>
+          <DialogTitle>{t.rich("title", { type: getReportTypeLabel() })}</DialogTitle>
           <DialogDescription>
-            Help us maintain a safe and respectful community by reporting inappropriate content.
-            {targetTitle && <span className="block mt-2 font-medium text-foreground">Reporting: {targetTitle}</span>}
+            {t("description")}
+            {targetTitle && (
+              <span className="block mt-2 font-medium text-foreground">{t.rich("reporting", { title: targetTitle })}</span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason for report</Label>
+            <Label htmlFor="reason">{t("labels.reason")}</Label>
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger id="reason">
-                <SelectValue placeholder="Select a reason" />
+                <SelectValue placeholder={t("placeholders.selectReason")} />
               </SelectTrigger>
               <SelectContent>
                 {reasons.map((r) => (
@@ -185,10 +192,10 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Additional details</Label>
+            <Label htmlFor="description">{t("labels.description")}</Label>
             <Textarea
               id="description"
-              placeholder="Please provide more details about why you're reporting this content..."
+              placeholder={t("placeholders.description")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[120px]"
@@ -201,18 +208,18 @@ export function ReportDialog({ reportType, targetId, targetTitle, trigger }: Rep
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
-            Cancel
+            {t("buttons.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={!reason || !description.trim() || submitting}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                {t("buttons.submitting")}
               </>
             ) : (
               <>
                 <Flag className="mr-2 h-4 w-4" />
-                Submit Report
+                {t("buttons.submit")}
               </>
             )}
           </Button>

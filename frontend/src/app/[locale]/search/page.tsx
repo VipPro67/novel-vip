@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "@/navigation";
 import { Search, Grid, List, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ const cleanFilters = (filters: SearchFilters): SearchFilters => {
 };
 
 export default function SearchPage() {
+  const t = useTranslations("Search")
   const [novels, setNovels] = useState<Novel[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -266,10 +268,11 @@ export default function SearchPage() {
 
   const activeFilters = useMemo(() => {
     if (!lastSubmittedFilters) return [];
+    const t = useTranslations("Search");
     return (Object.entries(lastSubmittedFilters) as [FilterKey, string][]).map(
       ([key, value]) => ({
         key,
-        label: `${filterLabels[key]}: ${value}`,
+        label: `${t(`filterLabels.${key}`)}: ${value}`,
       })
     );
   }, [lastSubmittedFilters]);
@@ -333,12 +336,12 @@ export default function SearchPage() {
                     <div className="flex flex-col space-y-4">
                         <div className="flex items-center space-x-3">
                             <Search className="h-8 w-8 text-primary" />
-                            <div>
-                                <h1 className="text-3xl font-bold">Search Novels</h1>
-                                <p className="text-muted-foreground">
-                                    {searchQuery ? `Results for "${searchQuery}"` : "Find your next favorite story"}
-                                </p>
-                            </div>
+                          <div>
+                            <h1 className="text-3xl font-bold">{t("title")}</h1>
+                            <p className="text-muted-foreground">
+                              {searchQuery ? t.rich("resultsFor", { query: searchQuery }) : t("findHint")}
+                            </p>
+                          </div>
                         </div>
 
             {/* Search Form */}
@@ -347,25 +350,25 @@ export default function SearchPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search keywords across the library..."
+                    placeholder={t("keywordPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Searching..." : "Search"}
+                  {loading ? t("searching") : t("search")}
                 </Button>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Input
-                  placeholder="Filter by title"
+                    <Input
+                  placeholder={t("filterTitle")}
                   value={titleFilter}
                   onChange={(e) => setTitleFilter(e.target.value)}
                 />
                 <Input
-                  placeholder="Filter by author"
+                  placeholder={t("filterAuthor")}
                   value={authorFilter}
                   onChange={(e) => setAuthorFilter(e.target.value)}
                 />
@@ -373,11 +376,11 @@ export default function SearchPage() {
                   value={selectedCategory || "all"}
                   onValueChange={setSelectedCategory}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All categories" />
+                    <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("allCategories")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All categories</SelectItem>
+                    <SelectItem value="all">{t("allCategories")}</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.name}>
                         {category.name}
@@ -390,10 +393,10 @@ export default function SearchPage() {
                   onValueChange={setSelectedGenre}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All genres" />
+                    <SelectValue placeholder={t("allGenres")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All genres</SelectItem>
+                    <SelectItem value="all">{t("allGenres")}</SelectItem>
                     {genres.map((genre) => (
                       <SelectItem key={genre.id} value={genre.name}>
                         {genre.name}
@@ -406,10 +409,10 @@ export default function SearchPage() {
                   onValueChange={setSelectedTag}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All tags" />
+                    <SelectValue placeholder={t("allTags")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All tags</SelectItem>
+                    <SelectItem value="all">{t("allTags")}</SelectItem>
                     {tags.map((tag) => (
                       <SelectItem key={tag.id} value={tag.name}>
                         {tag.name}
