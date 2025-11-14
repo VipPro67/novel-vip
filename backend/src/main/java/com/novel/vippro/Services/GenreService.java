@@ -38,7 +38,7 @@ public class GenreService {
     public GenreDTO updateGenre(UUID id, GenreDTO genreDTO) {
         Genre genre = genreRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Genre", "id", id));
-        genre.setName(genreDTO.getName());
+        genre.setName(genreDTO.name());
         Genre updatedGenre = genreRepository.save(genre);
         return mapper.GenretoDTO(updatedGenre);
     }

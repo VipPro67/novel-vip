@@ -2,34 +2,22 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Genre.GenreDTO;
 import com.novel.vippro.Models.Genre;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class GenreMapper {
+@Mapper(componentModel = "spring")
+public interface GenreMapper {
 
-	@Autowired
-	private ModelMapper modelMapper;
+    GenreDTO GenretoDTO(Genre genre);
 
-	public GenreDTO GenretoDTO(Genre genre) {
-		return modelMapper.map(genre, GenreDTO.class);
-	}
+    Genre DTOtoGenre(GenreDTO genreDTO);
 
-	public Genre DTOtoGenre(GenreDTO genreDTO) {
-		return modelMapper.map(genreDTO, Genre.class);
-	}
+    List<GenreDTO> GenreListtoDTOList(List<Genre> genres);
 
-	public List<GenreDTO> GenreListtoDTOList(List<Genre> genres) {
-		return genres.stream()
-				.map(this::GenretoDTO)
-				.collect(Collectors.toList());
-	}
-
-	public void updateGenreFromDTO(GenreDTO dto, Genre genre) {
-		modelMapper.map(dto, genre);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateGenreFromDTO(GenreDTO dto, @MappingTarget Genre genre);
 }

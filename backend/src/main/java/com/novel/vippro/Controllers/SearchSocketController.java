@@ -60,8 +60,9 @@ public class SearchSocketController {
 
         Future<?> task = executor.submit(() -> {
             Pageable pageable = PageRequest.of(0, 5); // limit suggestions
-            NovelSearchDTO searchDTO = new NovelSearchDTO();
-            searchDTO.setKeyword(query);
+            NovelSearchDTO searchDTO = NovelSearchDTO.builder()
+                    .keyword(query)
+                    .build();
             PageResponse<NovelDTO> page = novelService.searchNovels(searchDTO, pageable);
             messagingTemplate.convertAndSend("/topic/search", page.getContent());
         });

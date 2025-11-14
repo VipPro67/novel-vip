@@ -2,24 +2,18 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Report.ReportDTO;
 import com.novel.vippro.Models.Report;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ReportMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring", uses = { UserMapper.class, NovelMapper.class, ChapterMapper.class, CommentMapper.class })
+public interface ReportMapper {
 
-	public ReportDTO ReporttoDTO(Report report) {
-		return modelMapper.map(report, ReportDTO.class);
-	}
+    ReportDTO ReporttoDTO(Report report);
 
-	public Report DTOtoReport(ReportDTO reportDTO) {
-		return modelMapper.map(reportDTO, Report.class);
-	}
+    Report DTOtoReport(ReportDTO reportDTO);
 
-	public void updateReportFromDTO(ReportDTO dto, Report report) {
-		modelMapper.map(dto, report);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateReportFromDTO(ReportDTO dto, @MappingTarget Report report);
 }

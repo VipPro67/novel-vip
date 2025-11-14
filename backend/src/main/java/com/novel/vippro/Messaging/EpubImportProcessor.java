@@ -202,12 +202,13 @@ public class EpubImportProcessor {
                     : nextChapterNumber;
             nextChapterNumber = chapterNumber + 1;
 
-            CreateChapterDTO dto = new CreateChapterDTO();
-            dto.setNovelId(novel.getId());
-            dto.setChapterNumber(chapterNumber);
-            dto.setTitle(resolveChapterTitle(chapterData.getTitle(), chapterNumber));
-            dto.setContentHtml(chapterData.getContentHtml() == null ? "" : chapterData.getContentHtml());
-            dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+            CreateChapterDTO dto = CreateChapterDTO.builder()
+                    .novelId(novel.getId())
+                    .chapterNumber(chapterNumber)
+                    .title(resolveChapterTitle(chapterData.getTitle(), chapterNumber))
+                    .contentHtml(chapterData.getContentHtml() == null ? "" : chapterData.getContentHtml())
+                    .format(CreateChapterDTO.ContentFormat.HTML)
+                    .build();
             dtos.add(dto);
         }
 
@@ -240,12 +241,13 @@ public class EpubImportProcessor {
         if (job.getUserId() == null) {
             return;
         }
-        CreateNotificationDTO dto = new CreateNotificationDTO();
-        dto.setUserId(job.getUserId());
-        dto.setTitle(title);
-        dto.setMessage(message);
-        dto.setType(type);
-        dto.setReference(reference);
+        CreateNotificationDTO dto = CreateNotificationDTO.builder()
+                .userId(job.getUserId())
+                .title(title)
+                .message(message)
+                .type(type)
+                .reference(reference)
+                .build();
         try {
             notificationService.createNotification(dto);
         } catch (Exception ex) {

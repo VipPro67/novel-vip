@@ -72,15 +72,16 @@ public class AdvancedChapterUploadService {
                 case DOCX -> parseDocxToHtml(file.getInputStream(), titleParam);
             };
 
-            CreateChapterDTO dto = new CreateChapterDTO();
-            dto.setNovelId(novelId);
-            dto.setChapterNumber(chapterNo);
-            dto.setTitle(conv.title() != null ? conv.title() : ("Chapter " + chapterNo));
-            dto.setContentHtml(conv.html()); 
+            CreateChapterDTO dto = CreateChapterDTO.builder()
+                    .novelId(novelId)
+                    .chapterNumber(chapterNo)
+                    .title(conv.title() != null ? conv.title() : ("Chapter " + chapterNo))
+                    .contentHtml(conv.html())
+                    .build();
 
-            chapterService.createChapter(dto); 
+            chapterService.createChapter(dto);
 
-            return new UploadChapterResult(chapterNo, dto.getTitle(), true, "Created", originalName);
+            return new UploadChapterResult(chapterNo, dto.title(), true, "Created", originalName);
 
         } catch (Exception e) {
             return new UploadChapterResult(null, null, false,

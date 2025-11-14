@@ -63,7 +63,7 @@ public class ReviewService {
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        Novel novel = novelRepository.findById(reviewDTO.getNovelId())
+        Novel novel = novelRepository.findById(reviewDTO.novelId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
 
         reviewRepository.findByNovelAndUser(novel, currentUser).ifPresent(review -> {
@@ -73,9 +73,9 @@ public class ReviewService {
         Review review = new Review();
         review.setNovel(novel);
         review.setUser(currentUser);
-        review.setTitle(reviewDTO.getTitle());
-        review.setContent(reviewDTO.getContent());
-        review.setRating(reviewDTO.getRating());
+        review.setTitle(reviewDTO.title());
+        review.setContent(reviewDTO.content());
+        review.setRating(reviewDTO.rating());
         review.setVerifiedPurchase(false);
 
         return mapper.ReviewtoDTO(reviewRepository.save(review));
@@ -94,9 +94,9 @@ public class ReviewService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized to update this review");
         }
 
-        review.setTitle(reviewDTO.getTitle());
-        review.setContent(reviewDTO.getContent());
-        review.setRating(reviewDTO.getRating());
+        review.setTitle(reviewDTO.title());
+        review.setContent(reviewDTO.content());
+        review.setRating(reviewDTO.rating());
         review.setEdited(true);
 
         return mapper.ReviewtoDTO(reviewRepository.save(review));
@@ -124,10 +124,9 @@ public class ReviewService {
         Novel novel = novelRepository.findById(novelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Novel not found"));
 
-        ReviewSummaryDTO summary = new ReviewSummaryDTO();
-        summary.setAverageRating(reviewRepository.calculateAverageRating(novel).orElse(0.0));
-        summary.setTotalReviews(reviewRepository.countByNovel(novel));
-        summary.setVerifiedPurchases(reviewRepository.countVerifiedPurchases(novel));
+        double averageRating = reviewRepository.calculateAverageRating(novel).orElse(0.0);
+        long totalReviews = reviewRepository.countByNovel(novel);
+        long verifiedPurchases = reviewRepository.countVerifiedPurchases(novel);
 
         // Get rating distribution
         List<Object[]> distribution = reviewRepository.getRatingDistribution(novel);
@@ -135,21 +134,25 @@ public class ReviewService {
         for (Object[] result : distribution) {
             ratingDistribution.put((Integer) result[0], (Long) result[1]);
         }
-        summary.setRatingDistribution(ratingDistribution);
+        ReviewSummaryDTO.ReviewSummaryDTOBuilder summaryBuilder = ReviewSummaryDTO.builder()
+                .averageRating(averageRating)
+                .totalReviews(totalReviews)
+                .verifiedPurchases(verifiedPurchases)
+                .ratingDistribution(ratingDistribution);
 
         // Get latest review
         List<Review> latestReviews = reviewRepository.findLatestReviews(novel, PageRequest.of(0, 1));
         if (!latestReviews.isEmpty()) {
-            summary.setLatestReview(mapper.ReviewtoDTO(latestReviews.get(0)));
+            summaryBuilder.latestReview(mapper.ReviewtoDTO(latestReviews.get(0)));
         }
 
         // Get most helpful review
         List<Review> helpfulReviews = reviewRepository.findMostHelpfulReviews(novel, PageRequest.of(0, 1));
         if (!helpfulReviews.isEmpty()) {
-            summary.setMostHelpfulReview(mapper.ReviewtoDTO(helpfulReviews.get(0)));
+            summaryBuilder.mostHelpfulReview(mapper.ReviewtoDTO(helpfulReviews.get(0)));
         }
 
-        return summary;
+        return summaryBuilder.build();
     }
 
     @Transactional

@@ -41,15 +41,15 @@ public class NotificationService {
 
     @Transactional
     public NotificationDTO createNotification(CreateNotificationDTO notificationDTO) {
-        User user = userRepository.findById(notificationDTO.getUserId())
+        User user = userRepository.findById(notificationDTO.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         Notification notification = new Notification();
         notification.setUser(user);
-        notification.setTitle(notificationDTO.getTitle());
-        notification.setMessage(notificationDTO.getMessage());
-        notification.setType(notificationDTO.getType());
-        notification.setReference(notificationDTO.getReference());
+        notification.setTitle(notificationDTO.title());
+        notification.setMessage(notificationDTO.message());
+        notification.setType(notificationDTO.type());
+        notification.setReference(notificationDTO.reference());
         Notification saved = notificationRepository.save(notification);
         NotificationDTO dto = mapper.NotificationtoDTO(saved);
         messagePublisher.publishNotification(dto);

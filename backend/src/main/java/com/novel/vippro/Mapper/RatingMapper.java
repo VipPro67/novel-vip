@@ -2,25 +2,23 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Rating.RatingDTO;
 import com.novel.vippro.Models.Rating;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class RatingMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface RatingMapper {
 
-	public RatingDTO RatingtoDTO(Rating rating) {
-		return modelMapper.map(rating, RatingDTO.class);
-	}
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "novelTitle", source = "novel.title")
+    RatingDTO RatingtoDTO(Rating rating);
 
-	public void updateRatingFromDTO(RatingDTO dto, Rating rating) {
-		modelMapper.map(dto, rating);
-	}
+    Rating DTOtoRating(RatingDTO ratingDTO);
 
-	public Rating DTOtoRating(RatingDTO ratingDTO) {
-		return modelMapper.map(ratingDTO, Rating.class);
-	}
-
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateRatingFromDTO(RatingDTO dto, @MappingTarget Rating rating);
 }

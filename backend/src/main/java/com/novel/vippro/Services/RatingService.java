@@ -64,8 +64,8 @@ public class RatingService {
 
         rating.setUser(user);
         rating.setNovel(novel);
-        rating.setScore(ratingDTO.getScore());
-        rating.setReview(ratingDTO.getReview());
+        rating.setScore(ratingDTO.score());
+        rating.setReview(ratingDTO.review());
 
         Rating savedRating = ratingRepository.save(rating);
         updateNovelRating(novel);
@@ -75,16 +75,14 @@ public class RatingService {
 
     public RatingDTO getUserRating(UUID novelId) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
-    return ratingRepository.findByUserIdAndNovelId(userId, novelId)
+        return ratingRepository.findByUserIdAndNovelId(userId, novelId)
             .map(mapper::RatingtoDTO)
-            .orElseGet(() -> {
-                RatingDTO defaultRating = new RatingDTO();
-                defaultRating.setUserId(userId);
-                defaultRating.setNovelId(novelId);
-                defaultRating.setScore(0);
-                defaultRating.setReview("");
-                return defaultRating;
-            });
+            .orElseGet(() -> RatingDTO.builder()
+                    .userId(userId)
+                    .novelId(novelId)
+                    .score(0)
+                    .review("")
+                    .build());
     }
 
 
@@ -108,19 +106,20 @@ public class RatingService {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
 
-        RatingStatsDTO stats = new RatingStatsDTO();
-        stats.setTotalRatings(ratingRepository.countByNovelId(novelId));
-        stats.setAverageRating(ratingRepository.getAverageRatingByNovelId(novelId) != null
+        double averageRating = ratingRepository.getAverageRatingByNovelId(novelId) != null
                 ? ratingRepository.getAverageRatingByNovelId(novelId)
-                : 0.0);
+                : 0.0;
 
         int[] distribution = new int[5];
         for (int i = 1; i <= 5; i++) {
             distribution[i - 1] = ratingRepository.countByNovelIdAndScore(novelId, i);
         }
-        stats.setRatingDistribution(distribution);
 
-        return stats;
+        return RatingStatsDTO.builder()
+                .totalRatings(ratingRepository.countByNovelId(novelId))
+                .averageRating(averageRating)
+                .ratingDistribution(distribution)
+                .build();
     }
 
     @Transactional
@@ -141,8 +140,8 @@ public class RatingService {
             throw new BadRequestException("Not authorized to update this rating");
         }
 
-        rating.setScore(ratingDTO.getScore());
-        rating.setReview(ratingDTO.getReview());
+        rating.setScore(ratingDTO.score());
+        rating.setReview(ratingDTO.review());
 
         Rating updatedRating = ratingRepository.save(rating);
         updateNovelRating(rating.getNovel());
@@ -181,27 +180,27 @@ public class RatingService {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
 
-        RatingSummaryDTO summary = new RatingSummaryDTO();
-        summary.setAverageRating(ratingRepository.getAverageRatingByNovelId(novelId) != null
+        double averageRating = ratingRepository.getAverageRatingByNovelId(novelId) != null
                 ? ratingRepository.getAverageRatingByNovelId(novelId)
-                : 0.0);
-        summary.setTotalRatings(ratingRepository.countByNovelId(novelId));
-        summary.setDistribution(getRatingDistribution(novelId));
+                : 0.0;
 
-        // Get latest rating
+        RatingSummaryDTO.RatingSummaryDTOBuilder summaryBuilder = RatingSummaryDTO.builder()
+                .averageRating(averageRating)
+                .totalRatings(ratingRepository.countByNovelId(novelId))
+                .distribution(getRatingDistribution(novelId));
+
         ratingRepository.findFirstByNovelIdOrderByCreatedAtDesc(novelId)
-                .ifPresent(rating -> summary.setLatestRating(mapper.RatingtoDTO(rating)));
+                .ifPresent(rating -> summaryBuilder.latestRating(mapper.RatingtoDTO(rating)));
 
-        // Get current user's rating if authenticated
         try {
             UUID userId = UserDetailsImpl.getCurrentUserId();
             ratingRepository.findByUserIdAndNovelId(userId, novelId)
-                    .ifPresent(rating -> summary.setUserRating(mapper.RatingtoDTO(rating)));
+                    .ifPresent(rating -> summaryBuilder.userRating(mapper.RatingtoDTO(rating)));
         } catch (Exception e) {
             // User not authenticated, skip user rating
         }
 
-        return summary;
+        return summaryBuilder.build();
     }
 
     public RatingStatsDTO getNovelRatingStats(UUID novelId) {
@@ -209,12 +208,13 @@ public class RatingService {
             throw new ResourceNotFoundException("Novel", "id", novelId);
         }
 
-        RatingStatsDTO stats = new RatingStatsDTO();
-        stats.setAverageRating(ratingRepository.getAverageRatingByNovelId(novelId) != null
+        double averageRating = ratingRepository.getAverageRatingByNovelId(novelId) != null
                 ? ratingRepository.getAverageRatingByNovelId(novelId)
-                : 0.0);
-        stats.setTotalRatings(ratingRepository.countByNovelId(novelId));
+                : 0.0;
 
-        return stats;
+        return RatingStatsDTO.builder()
+                .averageRating(averageRating)
+                .totalRatings(ratingRepository.countByNovelId(novelId))
+                .build();
     }
 }

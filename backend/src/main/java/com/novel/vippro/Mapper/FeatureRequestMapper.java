@@ -3,32 +3,24 @@ package com.novel.vippro.Mapper;
 import com.novel.vippro.DTO.FeatureRequest.CreateFeatureRequestDTO;
 import com.novel.vippro.DTO.FeatureRequest.FeatureRequestDTO;
 import com.novel.vippro.Models.FeatureRequest;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class FeatureRequestMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface FeatureRequestMapper {
 
-	public FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request) {
-		FeatureRequestDTO dto = modelMapper.map(request, FeatureRequestDTO.class);
-        dto.setUserId(request.getRequester().getId());
-        dto.setFullName(request.getRequester().getFullName());
-        dto.setUsername(request.getRequester().getUsername());
-        return dto;
-	}
+    @Mapping(target = "userId", source = "requester.id")
+    @Mapping(target = "fullName", source = "requester.fullName")
+    @Mapping(target = "username", source = "requester.username")
+    FeatureRequestDTO RequesttoRequestDTO(FeatureRequest request);
 
-	public FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO) {
-		return modelMapper.map(requestDTO, FeatureRequest.class);
-	}
+    FeatureRequest RequestDTOtoRequest(FeatureRequestDTO requestDTO);
 
-	public FeatureRequest CreateFeatureRequestDTOtoFeatureRequest(CreateFeatureRequestDTO requestDTO) {
-		return modelMapper.map(requestDTO, FeatureRequest.class);
-	}
+    FeatureRequest CreateFeatureRequestDTOtoFeatureRequest(CreateFeatureRequestDTO requestDTO);
 
-	public void updateFeatureRequestFromDTO(FeatureRequestDTO dto, FeatureRequest featureRequest) {
-		modelMapper.map(dto, featureRequest);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateFeatureRequestFromDTO(FeatureRequestDTO dto, @MappingTarget FeatureRequest featureRequest);
 }

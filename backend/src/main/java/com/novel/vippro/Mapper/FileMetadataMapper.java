@@ -1,32 +1,19 @@
 package com.novel.vippro.Mapper;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.novel.vippro.DTO.File.FileMetadataDTO;
 import com.novel.vippro.Models.FileMetadata;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class FileMetadataMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface FileMetadataMapper {
 
-	public FileMetadataDTO FileMetadataToDTO(FileMetadata metadata) {
-		if (metadata == null) {
-			return null;
-		}
-		return modelMapper.map(metadata, FileMetadataDTO.class);
-	}
+    FileMetadataDTO FileMetadataToDTO(FileMetadata metadata);
 
-	public FileMetadata DTOToFileMetadata(FileMetadataDTO dto) {
-		if (dto == null) {
-			return null;
-		}
-		return modelMapper.map(dto, FileMetadata.class);
-	}
+    FileMetadata DTOToFileMetadata(FileMetadataDTO dto);
 
-	public void updateFileMetadataFromDTO(FileMetadataDTO dto, FileMetadata fileMetadata) {
-		modelMapper.map(dto, fileMetadata);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateFileMetadataFromDTO(FileMetadataDTO dto, @MappingTarget FileMetadata fileMetadata);
 }

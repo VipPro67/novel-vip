@@ -4,28 +4,20 @@ import com.novel.vippro.DTO.Group.CreateGroupDTO;
 import com.novel.vippro.DTO.Group.GroupDTO;
 import com.novel.vippro.DTO.Group.UpdateGroupDTO;
 import com.novel.vippro.Models.Group;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class GroupMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface GroupMapper {
 
-	public GroupDTO GroupToDTO(Group group) {
-		return modelMapper.map(group, GroupDTO.class);
-	}
+    GroupDTO GroupToDTO(Group group);
 
-	public Group DTOtoGroup(GroupDTO groupDTO) {
-		return modelMapper.map(groupDTO, Group.class);
-	}
+    Group DTOtoGroup(GroupDTO groupDTO);
 
-	public Group CreateDTOtoGroup(CreateGroupDTO groupDTO) {
-		return modelMapper.map(groupDTO, Group.class);
-	}
+    Group CreateDTOtoGroup(CreateGroupDTO groupDTO);
 
-	public void updateGroupFromDTO(UpdateGroupDTO dto, Group group) {
-		modelMapper.map(dto, group);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateGroupFromDTO(UpdateGroupDTO dto, @MappingTarget Group group);
 }

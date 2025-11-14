@@ -3,28 +3,20 @@ package com.novel.vippro.Mapper;
 import com.novel.vippro.DTO.Message.CreateMessageDTO;
 import com.novel.vippro.DTO.Message.MessageDTO;
 import com.novel.vippro.Models.Message;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class MessageMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface MessageMapper {
 
-	public MessageDTO MessagetoDTO(Message message) {
-		return modelMapper.map(message, MessageDTO.class);
-	}
+    MessageDTO MessagetoDTO(Message message);
 
-	public Message DTOtoMessage(MessageDTO messageDTO) {
-		return modelMapper.map(messageDTO, Message.class);
-	}
+    Message DTOtoMessage(MessageDTO messageDTO);
 
-	public Message CreateDTOtoMessage(CreateMessageDTO messageDTO) {
-		return modelMapper.map(messageDTO, Message.class);
-	}
+    Message CreateDTOtoMessage(CreateMessageDTO messageDTO);
 
-	public void updateMessageFromDTO(MessageDTO dto, Message message) {
-		modelMapper.map(dto, message);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateMessageFromDTO(MessageDTO dto, @MappingTarget Message message);
 }

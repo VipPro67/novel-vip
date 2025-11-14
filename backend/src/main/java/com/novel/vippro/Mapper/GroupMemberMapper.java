@@ -2,24 +2,18 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.GroupMember.GroupMemberDTO;
 import com.novel.vippro.Models.GroupMember;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class GroupMemberMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface GroupMemberMapper {
 
-	public GroupMemberDTO GroupMembertoDTO(GroupMember groupMember) {
-		return modelMapper.map(groupMember, GroupMemberDTO.class);
-	}
+    GroupMemberDTO GroupMembertoDTO(GroupMember groupMember);
 
-	public GroupMember DTOtoGroupMember(GroupMemberDTO groupMemberDTO) {
-		return modelMapper.map(groupMemberDTO, GroupMember.class);
-	}
+    GroupMember DTOtoGroupMember(GroupMemberDTO groupMemberDTO);
 
-	public void updateGroupMemberFromDTO(GroupMemberDTO dto, GroupMember groupMember) {
-		modelMapper.map(dto, groupMember);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateGroupMemberFromDTO(GroupMemberDTO dto, @MappingTarget GroupMember groupMember);
 }

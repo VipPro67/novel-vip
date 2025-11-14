@@ -77,40 +77,40 @@ public class ReportService {
 
         Report report = new Report();
         report.setReporter(reporter);
-        report.setReason(reportDTO.getReason());
-        report.setDescription(reportDTO.getDescription());
+        report.setReason(reportDTO.reason());
+        report.setDescription(reportDTO.description());
 
         // Set the reported content (novel, chapter, or comment)
-        if (reportDTO.getNovelId() != null) {
-            Novel novel = novelRepository.findById(reportDTO.getNovelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", reportDTO.getNovelId()));
+        if (reportDTO.novelId() != null) {
+            Novel novel = novelRepository.findById(reportDTO.novelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", reportDTO.novelId()));
             report.setNovel(novel);
 
             // Check if already reported
             if (reportRepository.existsByReporterIdAndNovelIdAndStatus(
-                    userId, reportDTO.getNovelId(), Report.ReportStatus.PENDING)) {
+                    userId, reportDTO.novelId(), Report.ReportStatus.PENDING)) {
                 throw new BadRequestException("You have already reported this novel");
             }
         }
 
-        if (reportDTO.getChapterId() != null) {
-            Chapter chapter = chapterRepository.findById(reportDTO.getChapterId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", reportDTO.getChapterId()));
+        if (reportDTO.chapterId() != null) {
+            Chapter chapter = chapterRepository.findById(reportDTO.chapterId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", reportDTO.chapterId()));
             report.setChapter(chapter);
 
             if (reportRepository.existsByReporterIdAndChapterIdAndStatus(
-                    userId, reportDTO.getChapterId(), Report.ReportStatus.PENDING)) {
+                    userId, reportDTO.chapterId(), Report.ReportStatus.PENDING)) {
                 throw new BadRequestException("You have already reported this chapter");
             }
         }
 
-        if (reportDTO.getCommentId() != null) {
-            Comment comment = commentRepository.findById(reportDTO.getCommentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", reportDTO.getCommentId()));
+        if (reportDTO.commentId() != null) {
+            Comment comment = commentRepository.findById(reportDTO.commentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", reportDTO.commentId()));
             report.setComment(comment);
 
             if (reportRepository.existsByReporterIdAndCommentIdAndStatus(
-                    userId, reportDTO.getCommentId(), Report.ReportStatus.PENDING)) {
+                    userId, reportDTO.commentId(), Report.ReportStatus.PENDING)) {
                 throw new BadRequestException("You have already reported this comment");
             }
         }
@@ -123,8 +123,8 @@ public class ReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report", "id", reportId));
 
-        report.setStatus(updateDTO.getStatus());
-        report.setAdminResponse(updateDTO.getAdminResponse());
+        report.setStatus(updateDTO.status());
+        report.setAdminResponse(updateDTO.adminResponse());
         report.setResolvedAt(Instant.now());
 
         return mapper.ReporttoDTO(reportRepository.save(report));

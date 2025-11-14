@@ -107,14 +107,14 @@ public class CommentService {
                     .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
             comment.setParent(parentComment);
             if (!parentComment.getUser().getId().equals(user.getId())) {
-                CreateNotificationDTO notificationDTO = new CreateNotificationDTO();
-                notificationDTO.setUserId(parentComment.getUser().getId());
-                notificationDTO.setTitle(user.getUsername() + " replied to your comment");
-                notificationDTO
-                        .setMessage("You have a new reply on your comment: " + parentComment.getContent() + " at " +
+                CreateNotificationDTO notificationDTO = CreateNotificationDTO.builder()
+                        .userId(parentComment.getUser().getId())
+                        .title(user.getUsername() + " replied to your comment")
+                        .message("You have a new reply on your comment: " + parentComment.getContent() + " at " +
                                 (comment.getNovel() != null ? "Novel: " + comment.getNovel().getTitle()
-                                        : "Chapter: " + comment.getChapter().getTitle()));
-                notificationDTO.setType(NotificationType.COMMENT);
+                                        : "Chapter: " + comment.getChapter().getTitle()))
+                        .type(NotificationType.COMMENT)
+                        .build();
                 notificationService.createNotification(notificationDTO);
 
             }

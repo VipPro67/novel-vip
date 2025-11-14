@@ -2,33 +2,22 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Tag.TagDTO;
 import com.novel.vippro.Models.Tag;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class TagMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface TagMapper {
 
-	public TagDTO TagtoDTO(Tag tag) {
-		return modelMapper.map(tag, TagDTO.class);
-	}
+    TagDTO TagtoDTO(Tag tag);
 
-	public Tag DTOtoTag(TagDTO tagDTO) {
-		return modelMapper.map(tagDTO, Tag.class);
-	}
+    Tag DTOtoTag(TagDTO tagDTO);
 
-	public List<TagDTO> TagListtoDTOList(List<Tag> tags) {
-		return tags.stream()
-				.map(this::TagtoDTO)
-				.collect(Collectors.toList());
-	}
+    List<TagDTO> TagListtoDTOList(List<Tag> tags);
 
-	public void updateTagFromDTO(TagDTO dto, Tag tag) {
-		modelMapper.map(dto, tag);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateTagFromDTO(TagDTO dto, @MappingTarget Tag tag);
 }
