@@ -1,18 +1,18 @@
 package com.novel.vippro.DTO.Notification;
 
-import lombok.Data;
+import lombok.Builder;
 import java.util.UUID;
 
-@Data
-public class NotificationPreferencesDTO {
-    private UUID userId;
-    private boolean emailNotifications;
-    private boolean pushNotifications;
-    private boolean inAppNotifications;
-    private boolean bookUpdates;
-    private boolean chapterUpdates;
-    private boolean comments;
-    private boolean likes;
-    private boolean follows;
-    private boolean messages;
-}
+@Builder
+public record NotificationPreferencesDTO(
+    UUID userId,
+    boolean emailNotifications,
+    boolean pushNotifications,
+    boolean inAppNotifications,
+    boolean bookUpdates,
+    boolean chapterUpdates,
+    boolean comments,
+    boolean likes,
+    boolean follows,
+    boolean messages
+) {}

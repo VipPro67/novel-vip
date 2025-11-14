@@ -1,16 +1,11 @@
 package com.novel.vippro.DTO.User;
 
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Data
-@Getter
-@Setter
-public class UserUpdateDTO {
+@Builder
+public record UserUpdateDTO(
     @Size(max = 120)
-    private String fullName;
-
-    private String avatar;
-}
+    String fullName,
+    String avatar
+) {}

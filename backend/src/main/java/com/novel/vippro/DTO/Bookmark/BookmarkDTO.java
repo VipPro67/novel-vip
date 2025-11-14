@@ -1,18 +1,23 @@
 package com.novel.vippro.DTO.Bookmark;
 
-import lombok.Data;
+import lombok.Builder;
+import java.time.Instant;
 import java.util.UUID;
 
-import com.novel.vippro.DTO.base.BaseDTO;
-
-@Data
-public class BookmarkDTO extends BaseDTO {
-    private UUID id;
-    private UUID userId;
-    private UUID chapterId;
-    private UUID novelId;
-    private String chapterTitle;
-    private String novelTitle;
-    private String note;
-    private Integer progress;
-}
+@Builder
+public record BookmarkDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UUID userId,
+    UUID chapterId,
+    UUID novelId,
+    String chapterTitle,
+    String novelTitle,
+    String note,
+    Integer progress
+) {}

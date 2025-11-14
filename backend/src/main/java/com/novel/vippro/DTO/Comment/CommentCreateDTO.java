@@ -1,15 +1,15 @@
 package com.novel.vippro.DTO.Comment;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Builder;
 import java.util.UUID;
 
-@Data
-public class CommentCreateDTO {
+@Builder
+public record CommentCreateDTO(
     @NotBlank(message = "Content is required")
-    private String content;
+    String content,
 
-    private UUID novelId;
-    private UUID chapterId;
-    private UUID parentId; // Optional, for replies to other comments
-}
+    UUID novelId,
+    UUID chapterId,
+    UUID parentId
+) {}

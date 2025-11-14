@@ -1,40 +1,31 @@
 package com.novel.vippro.DTO.ReadingHistory;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import lombok.Builder;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
-
-@Data
-@Getter
-@Setter
-public class ReadingStatsDTO {
-    private long totalNovelsRead;
-    private long totalChaptersRead;
-    private Duration totalReadingTime;
-    private Map<String, Long> novelsByCategory;
-    private Map<String, Long> chaptersByNovel;
-    private Map<String, Duration> readingTimeByNovel;
-    private Map<String, Long> readingFrequencyByDayOfWeek;
-    private Map<String, Long> readingFrequencyByHourOfDay;
-
-    // Additional fields needed by the service
+@Builder
+public record ReadingStatsDTO(
+    long totalNovelsRead,
+    long totalChaptersRead,
+    Duration totalReadingTime,
+    Map<String, Long> novelsByCategory,
+    Map<String, Long> chaptersByNovel,
+    Map<String, Duration> readingTimeByNovel,
+    Map<String, Long> readingFrequencyByDayOfWeek,
+    Map<String, Long> readingFrequencyByHourOfDay,
     @JsonProperty("lastReadAt")
     @JsonDeserialize(using = InstantDeserializer.class)
-    private Instant lastReadAt;
-    private long minutesSpentReading;
-    private double averageReadingTimePerChapter;
-    private String mostReadGenre;
-    private String favoriteAuthor;
-    private String currentlyReading;
-    private int completedNovels;
-    private double completionRate;
-}
+    Instant lastReadAt,
+    long minutesSpentReading,
+    double averageReadingTimePerChapter,
+    String mostReadGenre,
+    String favoriteAuthor,
+    String currentlyReading,
+    int completedNovels,
+    double completionRate
+) {}

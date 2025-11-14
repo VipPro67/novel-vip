@@ -1,18 +1,23 @@
 package com.novel.vippro.DTO.Notification;
 
-import lombok.Data;
+import com.novel.vippro.Models.NotificationType;
+import lombok.Builder;
+import java.time.Instant;
 import java.util.UUID;
 
-import com.novel.vippro.DTO.base.BaseDTO;
-import com.novel.vippro.Models.NotificationType;
-
-@Data
-public class NotificationDTO extends BaseDTO {
-    private UUID id;
-    private UUID userId;
-    private String title;
-    private String message;
-    private boolean read;
-    private NotificationType type;
-    private String reference; 
-}
+@Builder
+public record NotificationDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UUID userId,
+    String title,
+    String message,
+    boolean read,
+    NotificationType type,
+    String reference
+) {}

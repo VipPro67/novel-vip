@@ -1,9 +1,9 @@
 package com.novel.vippro.DTO.Bookmark;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class BookmarkUpdateDTO {
-    private String note;
-    private Integer progress;
-}
+@Builder
+public record BookmarkUpdateDTO(
+    String note,
+    Integer progress
+) {}

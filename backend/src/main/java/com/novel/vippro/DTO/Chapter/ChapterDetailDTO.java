@@ -1,22 +1,22 @@
 package com.novel.vippro.DTO.Chapter;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
-import com.novel.vippro.DTO.base.BaseDTO;
-
+import lombok.Builder;
+import java.time.Instant;
 import java.util.UUID;
 
-@Data
-@Getter
-@Setter
-public class ChapterDetailDTO extends BaseDTO {
-    private UUID id;
-    private Integer chapterNumber;
-    private String title;
-    private UUID novelId;
-    private String novelTitle;
-    private String jsonUrl;
-    private String audioUrl;
-}
+@Builder
+public record ChapterDetailDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    Integer chapterNumber,
+    String title,
+    UUID novelId,
+    String novelTitle,
+    String jsonUrl,
+    String audioUrl
+) {}

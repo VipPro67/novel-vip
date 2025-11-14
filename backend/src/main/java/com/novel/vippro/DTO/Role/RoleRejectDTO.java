@@ -1,13 +1,10 @@
 package com.novel.vippro.DTO.Role;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Getter
-@Setter
-public class RoleRejectDTO {
+@Builder
+public record RoleRejectDTO(
     @NotBlank
-    private String reason;
-
-}
+    String reason
+) {}

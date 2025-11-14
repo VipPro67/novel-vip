@@ -1,36 +1,34 @@
 package com.novel.vippro.DTO.Novel;
 
-import lombok.Data;
+import lombok.Builder;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
-@Data
-public class NovelCreateDTO {
+@Builder
+public record NovelCreateDTO(
     @NotBlank(message = "Title is required")
     @Size(min = 1, max = 255, message = "Title must be between 1 and 255 characters")
-    private String title;
+    String title,
 
     @NotBlank(message = "Slug is required")
     @Size(min = 1, max = 255, message = "Slug must be between 1 and 255 characters")
-    private String slug;
+    String slug,
 
-    private String description;
+    String description,
 
     @NotBlank(message = "Author is required")
     @Size(min = 1, max = 255, message = "Author must be between 1 and 255 characters")
-    private String author;
+    String author,
 
     @NotBlank(message = "Status is required")
-    private String status;
+    String status,
 
-    private List<String> categories;
+    List<String> categories,
 
-    private List<String> genres;
+    List<String> genres,
 
-    private List<String> tags;
-}
+    List<String> tags
+) {}

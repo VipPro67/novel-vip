@@ -1,16 +1,21 @@
 package com.novel.vippro.DTO.ReadingHistory;
 
-import lombok.Data;
+import com.novel.vippro.DTO.Novel.NovelDTO;
+import lombok.Builder;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.novel.vippro.DTO.Novel.NovelDTO;
-import com.novel.vippro.DTO.base.BaseDTO;
-
-@Data
-public class ReadingHistoryDTO extends BaseDTO {
-    private UUID userId;
-    private NovelDTO novel;
-    private int lastReadChapterIndex;
-    private Instant lastReadAt;
-}
+@Builder
+public record ReadingHistoryDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UUID userId,
+    NovelDTO novel,
+    int lastReadChapterIndex,
+    Instant lastReadAt
+) {}

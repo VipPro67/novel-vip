@@ -1,26 +1,28 @@
 package com.novel.vippro.DTO.Review;
 
-import lombok.Getter;
-import lombok.Setter;
-
-import com.novel.vippro.DTO.base.BaseDTO;
-
+import lombok.Builder;
+import java.time.Instant;
 import java.util.UUID;
 
-@Getter
-@Setter
-public class ReviewDTO extends BaseDTO {
-    private UUID id;
-    private UUID novelId;
-    private String novelTitle;
-    private UUID userId;
-    private String username;
-    private String userAvatar;
-    private String title;
-    private String content;
-    private int rating;
-    private boolean isVerifiedPurchase;
-    private int helpfulVotes;
-    private int unhelpfulVotes;
-    private boolean isEdited;
-}
+@Builder
+public record ReviewDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UUID novelId,
+    String novelTitle,
+    UUID userId,
+    String username,
+    String userAvatar,
+    String title,
+    String content,
+    int rating,
+    boolean isVerifiedPurchase,
+    int helpfulVotes,
+    int unhelpfulVotes,
+    boolean isEdited
+) {}
