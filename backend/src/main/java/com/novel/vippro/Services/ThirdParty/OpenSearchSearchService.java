@@ -147,38 +147,38 @@ public class OpenSearchSearchService implements SearchService {
 
             NovelSearchDTO filters = searchDTO.cleanedCopy();
 
-            if (filters.getKeyword() != null) {
+            if (filters.keyword() != null) {
                 ObjectNode multiMatch = objectMapper.createObjectNode();
                 multiMatch.putArray("fields")
                         .add("title^3")
                         .add("description^2")
                         .add("author");
-                multiMatch.put("query", filters.getKeyword());
+                multiMatch.put("query", filters.keyword());
                 mustClauses.add(objectMapper.createObjectNode().set("multi_match", multiMatch));
             }
-            if (filters.getTitle() != null) {
+            if (filters.title() != null) {
                 ObjectNode matchPhrase = objectMapper.createObjectNode();
-                matchPhrase.put("title", filters.getTitle());
+                matchPhrase.put("title", filters.title());
                 mustClauses.add(objectMapper.createObjectNode().set("match_phrase", matchPhrase));
             }
-            if (filters.getAuthor() != null) {
+            if (filters.author() != null) {
                 ObjectNode matchPhrase = objectMapper.createObjectNode();
-                matchPhrase.put("author", filters.getAuthor());
+                matchPhrase.put("author", filters.author());
                 mustClauses.add(objectMapper.createObjectNode().set("match_phrase", matchPhrase));
             }
-            if (filters.getCategory() != null) {
+            if (filters.category() != null) {
                 ObjectNode term = objectMapper.createObjectNode();
-                term.put("categories", filters.getCategory());
+                term.put("categories", filters.category());
                 mustClauses.add(objectMapper.createObjectNode().set("term", term));
             }
-            if (filters.getGenre() != null) {
+            if (filters.genre() != null) {
                 ObjectNode term = objectMapper.createObjectNode();
-                term.put("genres", filters.getGenre());
+                term.put("genres", filters.genre());
                 mustClauses.add(objectMapper.createObjectNode().set("term", term));
             }
-            if (filters.getTag() != null) {
+            if (filters.tag() != null) {
                 ObjectNode term = objectMapper.createObjectNode();
-                term.put("tags", filters.getTag());
+                term.put("tags", filters.tag());
                 mustClauses.add(objectMapper.createObjectNode().set("term", term));
             }
 

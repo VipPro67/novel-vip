@@ -28,13 +28,7 @@ public abstract class ChapterMapper {
 
     @Mapping(target = "novelId", source = "novel.id")
     @Mapping(target = "novelTitle", source = "novel.title")
-    public abstract ChapterDTO ChaptertoChapterDTO(Chapter chapter);
-
-    @Mapping(target = "novelId", source = "novel.id")
-    @Mapping(target = "novelTitle", source = "novel.title")
     public abstract ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
-
-    public abstract List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     public abstract void updateChapterFromDTO(ChapterDTO dto, @MappingTarget Chapter chapter);

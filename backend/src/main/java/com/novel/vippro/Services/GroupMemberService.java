@@ -49,7 +49,7 @@ public class GroupMemberService {
         if (currentUserGroupMember == null || !currentUserGroupMember.getIsAdmin()) {
             throw new RuntimeException("You are not authorized to add members to this group");
         }
-        GroupMember existingGroupMember = groupMemberRepository.findByUserIdAndGroupId(groupMemberDTO.getUserId(),
+        GroupMember existingGroupMember = groupMemberRepository.findByUserIdAndGroupId(groupMemberDTO.userId(),
                 groupId);
         if (existingGroupMember != null) {
             throw new RuntimeException("User is already a member of the group");
@@ -57,11 +57,11 @@ public class GroupMemberService {
 
         GroupMember groupMember = mapper.DTOtoGroupMember(groupMemberDTO);
         GroupDTO group = groupService.getGroupById(groupId);
-        User user = userService.getUserById(groupMemberDTO.getUserId());
+        User user = userService.getUserById(groupMemberDTO.userId());
         groupMember.setGroup(mapper.DTOtoGroup(group));
         groupMember.setUser(user);
-        groupMember.setIsAdmin(groupMemberDTO.getIsAdmin());
-        groupMember.setDisplayName(groupMemberDTO.getDisplayName());
+        groupMember.setIsAdmin(groupMemberDTO.isAdmin());
+        groupMember.setDisplayName(groupMemberDTO.displayName());
         groupMember = groupMemberRepository.save(groupMember);
         return mapper.GroupMembertoDTO(groupMember);
     }

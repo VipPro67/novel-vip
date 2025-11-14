@@ -14,14 +14,14 @@ public class NovelVipPublisher {
 
     public void publishNotification(NotificationDTO notification) {
         messagingTemplate.convertAndSend(
-                "/topic/user." + notification.getUserId(),
+                "/topic/user." + notification.userId(),
                 notification);
     }
 
     public void publishComment(CommentDTO comment) {
-        StringBuilder destination = new StringBuilder("/topic/novel.").append(comment.getNovelId());
-        if (comment.getChapterId() != null) {
-            destination.append(".chapter.").append(comment.getChapterId());
+        StringBuilder destination = new StringBuilder("/topic/novel.").append(comment.novelId());
+        if (comment.chapterId() != null) {
+            destination.append(".chapter.").append(comment.chapterId());
         }
         messagingTemplate.convertAndSend(destination.toString(), comment);
     }

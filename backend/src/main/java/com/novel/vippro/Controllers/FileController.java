@@ -75,7 +75,7 @@ public class FileController {
         public Resource downloadFile(
                         @Parameter(description = "File ID", required = true) @PathVariable UUID id) {
                 FileDownloadDTO fileDownload = fileService.downloadFile(id);
-                return fileDownload.getResource();
+                return fileDownload.resource();
         }
 
         @Operation(summary = "Delete file", description = "Delete a file from the system")

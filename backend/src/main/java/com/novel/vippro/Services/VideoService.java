@@ -32,7 +32,7 @@ public class VideoService {
 
     @Transactional
     public VideoDTO createVideo(CreateVideoDTO request) {
-        String rawUrl = Optional.ofNullable(request.getVideoUrl())
+        String rawUrl = Optional.ofNullable(request.videoUrl())
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .orElseThrow(() -> new IllegalArgumentException("Video URL must not be empty"));

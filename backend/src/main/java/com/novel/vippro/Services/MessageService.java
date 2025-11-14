@@ -55,13 +55,13 @@ public class MessageService {
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         message.setSender(user);
-        if (messageDTO.getGroupId() == null && messageDTO.getReceiverId() == null) {
+        if (messageDTO.groupId() == null && messageDTO.receiverId() == null) {
             throw new RuntimeException("Either groupId or receiverId must be provided");
         }
-        if (messageDTO.getGroupId() != null) {
-            message.setGroup(mapper.DTOtoGroup(groupService.getGroupById(messageDTO.getGroupId())));
+        if (messageDTO.groupId() != null) {
+            message.setGroup(mapper.DTOtoGroup(groupService.getGroupById(messageDTO.groupId())));
         } else {
-            User receiver = userRepository.findById(messageDTO.getReceiverId())
+            User receiver = userRepository.findById(messageDTO.receiverId())
                     .orElseThrow(() -> new RuntimeException("Receiver not found"));
             message.setReceiver(receiver);
         }
@@ -73,7 +73,7 @@ public class MessageService {
     public List<MessageDTO> searchMessages(String content) {
         return messageRepository.findByContentContaining(content).stream()
                 .map(mapper::MessagetoDTO)
-                .sorted(Comparator.comparing(MessageDTO::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(MessageDTO::createdAt).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -94,43 +94,37 @@ public class MessageService {
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        List<MessageDTO> myConversations = new ArrayList<MessageDTO>();
-        List<MessageDTO> privateConversations = getMyPrivateConversations(user);
-        List<MessageDTO> groupConversations = getMyGroupConversations(user);
+        List<Message> myConversations = new ArrayList<Message>();
+        List<Message> privateConversations = getMyPrivateConversations(user);
+        List<Message> groupConversations = getMyGroupConversations(user);
         myConversations.addAll(
                 privateConversations.stream()
                         .filter(m -> m.getCreatedAt().equals(privateConversations.stream()
-                                .filter(m2 -> Objects.equals(m.getReceiver().getId(), m2.getReceiver().getId()))
-                                .map(MessageDTO::getCreatedAt)
-                                .max(Comparator.naturalOrder())
-                                .orElse(null)))
+                                .filter(m2 -> Objects.equals(m.getReceiver().getId(), m2.getReceiver().getId()))))
                         .collect(Collectors.toList()));
         myConversations.addAll(
                 groupConversations.stream()
                         .filter(m -> m.getCreatedAt().equals(groupConversations.stream()
-                                .filter(m2 -> Objects.equals(m.getGroup().getId(), m2.getGroup().getId()))
-                                .map(MessageDTO::getCreatedAt)
-                                .max(Comparator.naturalOrder())
-                                .orElse(null)))
+                                .filter(m2 -> Objects.equals(m.getGroup().getId(), m2.getGroup().getId()))))
                         .collect(Collectors.toList()));
         // Sort by createdAt in descending order
-        myConversations.sort(Comparator.comparing(MessageDTO::getCreatedAt).reversed());
+        myConversations.sort(Comparator.comparing(Message::getCreatedAt).reversed());
         // Remove duplicates
         myConversations = myConversations.stream()
                 .distinct()
                 .collect(Collectors.toList());
-        return myConversations;
+        return myConversations.stream()
+                .map(mapper::MessagetoDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<MessageDTO> getMyPrivateConversations(User user) {
+    public List<Message> getMyPrivateConversations(User user) {
         return messageRepository.findBySenderOrReceiver(user.getId()).stream()
-                .map(mapper::MessagetoDTO)
                 .toList();
     }
 
-    public List<MessageDTO> getMyGroupConversations(User user) {
+    public List<Message> getMyGroupConversations(User user) {
         return messageRepository.findByGroupMembers(user.getId()).stream()
-                .map(mapper::MessagetoDTO)
                 .toList();
     }
 

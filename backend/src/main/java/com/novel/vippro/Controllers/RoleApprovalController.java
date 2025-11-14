@@ -78,7 +78,7 @@ public class RoleApprovalController {
                         "Role request rejected successfully",
                         roleApprovalService.rejectRoleRequest(requestId,
                                 userDetails.getUsername(),
-                                request.getReason()));
+                                request.reason()));
     }
 
     @Operation(summary = "Get all pending role requests", description = "Retrieve all pending role requests for admin review")

@@ -89,10 +89,13 @@ public class RedisConfig {
 		objectMapper.registerModule(new JavaTimeModule());
 		objectMapper.activateDefaultTyping(
 				objectMapper.getPolymorphicTypeValidator(),
-				ObjectMapper.DefaultTyping.NON_FINAL,
-				JsonTypeInfo.As.PROPERTY);
+				ObjectMapper.DefaultTyping.EVERYTHING,
+				JsonTypeInfo.As.PROPERTY
+		);
 
-		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
+		Jackson2JsonRedisSerializer<Object> serializer =
+				new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
+
 
 		RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
 				.serializeKeysWith(

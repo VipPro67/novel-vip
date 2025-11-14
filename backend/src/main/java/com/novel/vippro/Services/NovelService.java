@@ -171,18 +171,18 @@ public class NovelService {
         if (novels.isEmpty()) {
             logger.info("Elasticsearch search returned no results. Falling back to database query.");
             novels = novelRepository.searchByCriteria(
-                    filters.getKeyword(),
-                    filters.getTitle(),
-                    filters.getAuthor(),
-                    filters.getCategory(),
-                    filters.getGenre(),
-                    filters.getTag(),
+                    filters.keyword(),
+                    filters.title(),
+                    filters.author(),
+                    filters.category(),
+                    filters.genre(),
+                    filters.tag(),
                     pageable);
 
-            if (novels.isEmpty() && filters.getKeyword() != null) {
+            if (novels.isEmpty() && filters.keyword() != null) {
                 logger.info("No novels found using criteria. Falling back to keyword search for: {}",
-                        filters.getKeyword());
-                novels = novelRepository.searchByKeyword(filters.getKeyword(), pageable);
+                        filters.keyword());
+                novels = novelRepository.searchByKeyword(filters.keyword(), pageable);
                 searchService.indexNovels(novels.getContent());
                 logger.info("Reindexing completed. {} novels reindexed.", novels.getTotalElements());
             }

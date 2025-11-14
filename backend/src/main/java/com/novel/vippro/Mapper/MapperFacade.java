@@ -39,28 +39,28 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MapperFacade implements Mapper {
 
-private final NovelMapper novelMapper;
-private final ChapterMapper chapterMapper;
-private final CategoryMapper categoryMapper;
-private final BookmarkMapper bookmarkMapper;
-private final UserMapper userMapper;
-private final CommentMapper commentMapper;
-private final FileMetadataMapper fileMetadataMapper;
-private final ReaderSettingsMapper readerSettingsMapper;
-private final FeatureRequestMapper featureRequestMapper;
-private final TagMapper tagMapper;
-private final GenreMapper genreMapper;
-private final ReadingHistoryMapper readingHistoryMapper;
-private final NotificationMapper notificationMapper;
-private final GroupMemberMapper groupMemberMapper;
-private final MessageMapper messageMapper;
-private final GroupMapper groupMapper;
-private final RoleApprovalMapper roleApprovalMapper;
-private final ReviewMapper reviewMapper;
-private final ReportMapper reportMapper;
-private final RatingMapper ratingMapper;
-private final SystemJobMapper systemJobMapper;
-private final VideoMapper videoMapper;
+	private final NovelMapper novelMapper;
+	private final ChapterMapper chapterMapper;
+	private final CategoryMapper categoryMapper;
+	private final BookmarkMapper bookmarkMapper;
+	private final UserMapper userMapper;
+	private final CommentMapper commentMapper;
+	private final FileMetadataMapper fileMetadataMapper;
+	private final ReaderSettingsMapper readerSettingsMapper;
+	private final FeatureRequestMapper featureRequestMapper;
+	private final TagMapper tagMapper;
+	private final GenreMapper genreMapper;
+	private final ReadingHistoryMapper readingHistoryMapper;
+	private final NotificationMapper notificationMapper;
+	private final GroupMemberMapper groupMemberMapper;
+	private final MessageMapper messageMapper;
+	private final GroupMapper groupMapper;
+	private final RoleApprovalMapper roleApprovalMapper;
+	private final ReviewMapper reviewMapper;
+	private final ReportMapper reportMapper;
+	private final RatingMapper ratingMapper;
+	private final SystemJobMapper systemJobMapper;
+	private final VideoMapper videoMapper;
 
 	// Novel-related mappings
 	@Override
@@ -96,12 +96,7 @@ private final VideoMapper videoMapper;
 
 	@Override
 	public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
-		return chapterMapper.ChaptertoChapterDTO(chapter);
-	}
-
-	@Override
-	public List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters) {
-		return chapterMapper.ChapterListtoDTOList(chapters);
+		return chapterMapper.ChaptertoDTO(chapter);
 	}
 
 	@Override
@@ -243,11 +238,11 @@ private final VideoMapper videoMapper;
 		return readingHistoryMapper.ReadingHistoryListtoDTOList(readingHistories);
 	}
 
-// Notification-related mappings
-@Override
-public NotificationDTO NotificationtoDTO(Notification notification) {
-return notificationMapper.NotificationtoDTO(notification);
-}
+	// Notification-related mappings
+	@Override
+	public NotificationDTO NotificationtoDTO(Notification notification) {
+		return notificationMapper.NotificationtoDTO(notification);
+	}
 
 	@Override
 	public Notification DTOtoNotification(NotificationDTO notificationDTO) {

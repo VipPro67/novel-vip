@@ -91,35 +91,35 @@ public class ElasticsearchSearchService implements SearchService {
 
             NativeQuery searchQuery = NativeQuery.builder()
                     .withQuery(q -> q.bool(b -> {
-                        if (filters.getKeyword() != null) {
+                        if (filters.keyword() != null) {
                             clauseAdded[0] = true;
                             b.must(m -> m.multiMatch(mm -> mm
                                     .fields("title^3", "description^2", "author")
-                                    .query(filters.getKeyword())));
+                                    .query(filters.keyword())));
                         }
-                        if (filters.getTitle() != null) {
+                        if (filters.title() != null) {
                             clauseAdded[0] = true;
                             b.must(m -> m.matchPhrase(mp -> mp
                                     .field("title")
-                                    .query(filters.getTitle())));
+                                    .query(filters.title())));
                         }
-                        if (filters.getAuthor() != null) {
+                        if (filters.author() != null) {
                             clauseAdded[0] = true;
                             b.must(m -> m.matchPhrase(mp -> mp
                                     .field("author")
-                                    .query(filters.getAuthor())));
+                                    .query(filters.author())));
                         }
-                        if (filters.getCategory() != null) {
+                        if (filters.category() != null) {
                             clauseAdded[0] = true;
                             b.must(m -> m.term(t -> t
                                     .field("categories")
-                                    .value(v -> v.stringValue(filters.getCategory()))));
+                                    .value(v -> v.stringValue(filters.category()))));
                         }
-                        if (filters.getGenre() != null) {
+                        if (filters.genre() != null) {
                             clauseAdded[0] = true;
                             b.must(m -> m.term(t -> t
                                     .field("genres")
-                                    .value(v -> v.stringValue(filters.getGenre()))));
+                                    .value(v -> v.stringValue(filters.genre()))));
                         }
                         if (!clauseAdded[0]) {
                             b.must(m -> m.matchAll(ma -> ma));

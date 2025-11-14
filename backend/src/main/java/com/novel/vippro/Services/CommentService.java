@@ -84,27 +84,27 @@ public class CommentService {
     @Transactional
     public CommentDTO addComment(CommentCreateDTO commentDTO) {
         Comment comment = new Comment();
-        comment.setContent(commentDTO.getContent());
+        comment.setContent(commentDTO.content());
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUserId));
         comment.setUser(user);
 
-        if (commentDTO.getNovelId() != null) {
-            Novel novel = novelRepository.findById(commentDTO.getNovelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", commentDTO.getNovelId()));
+        if (commentDTO.novelId() != null) {
+            Novel novel = novelRepository.findById(commentDTO.novelId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", commentDTO.novelId()));
             comment.setNovel(novel);
         }
 
-        if (commentDTO.getChapterId() != null) {
-            Chapter chapter = chapterRepository.findById(commentDTO.getChapterId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", commentDTO.getChapterId()));
+        if (commentDTO.chapterId() != null) {
+            Chapter chapter = chapterRepository.findById(commentDTO.chapterId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", commentDTO.chapterId()));
             comment.setChapter(chapter);
         }
 
-        if (commentDTO.getParentId() != null) {
-            Comment parentComment = commentRepository.findById(commentDTO.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.getParentId()));
+        if (commentDTO.parentId() != null) {
+            Comment parentComment = commentRepository.findById(commentDTO.parentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Comment", "id", commentDTO.parentId()));
             comment.setParent(parentComment);
             if (!parentComment.getUser().getId().equals(user.getId())) {
                 CreateNotificationDTO notificationDTO = CreateNotificationDTO.builder()
@@ -138,7 +138,7 @@ public class CommentService {
             throw new AccessDeniedException("You do not have permission to edit this comment");
         }
 
-        comment.setContent(commentDTO.getContent());
+        comment.setContent(commentDTO.content());
         return mapper.CommenttoDTO(commentRepository.save(comment));
     }
 

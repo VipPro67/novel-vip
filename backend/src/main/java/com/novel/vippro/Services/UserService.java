@@ -108,13 +108,13 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         // Update full name if provided
-        if (updateDTO.getFullName() != null && !updateDTO.getFullName().isEmpty()) {
-            user.setFullName(updateDTO.getFullName());
+        if (updateDTO.fullName() != null && !updateDTO.fullName().isEmpty()) {
+            user.setFullName(updateDTO.fullName());
         }
 
         // Update avatar if provided
-        if (updateDTO.getAvatar() != null && !updateDTO.getAvatar().isEmpty()) {
-            user.setAvatar(updateDTO.getAvatar());
+        if (updateDTO.avatar() != null && !updateDTO.avatar().isEmpty()) {
+            user.setAvatar(updateDTO.avatar());
         }
 
         // ...existing code...
@@ -125,8 +125,8 @@ public class UserService {
 
     @Transactional
     public void changePassword(ChangePasswordDTO changePasswordDTO) {
-        String oldPassword = changePasswordDTO.getOldPassword();
-        String newPassword = changePasswordDTO.getNewPassword();
+        String oldPassword = changePasswordDTO.oldPassword();
+        String newPassword = changePasswordDTO.newPassword();
         if (!changePasswordDTO.isPasswordMatching()) {
             throw new BadRequestException("New password and confirm password do not match");
         }
@@ -147,15 +147,15 @@ public class UserService {
     public PageResponse<UserDTO> searchUsers(UserSearchDTO searchDTO) {
         // Create sort object
         Sort sort = Sort.by(
-                searchDTO.getSortDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
-                searchDTO.getSortBy());
+                searchDTO.sortDirection().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                searchDTO.sortBy());
 
         // Create pageable object
-        Pageable pageable = PageRequest.of(searchDTO.getPage(), searchDTO.getSize(), sort);
+        Pageable pageable = PageRequest.of(searchDTO.page(), searchDTO.size(), sort);
 
         // Use the custom search method if search parameters are provided
-        Page<User> userPage = userRepository.searchUsers(searchDTO.getUsername(), searchDTO.getEmail(),
-                searchDTO.getRole(), pageable);
+        Page<User> userPage = userRepository.searchUsers(searchDTO.username(), searchDTO.email(),
+                searchDTO.role(), pageable);
         return new PageResponse<>(userPage.map(mapper::UsertoUserDTO));
 
     }

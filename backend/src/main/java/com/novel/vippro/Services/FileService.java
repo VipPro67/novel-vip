@@ -145,8 +145,8 @@ public class FileService {
         FileMetadata metadata = fileMetadataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));
 
-        metadata.setFileName(updateDTO.getFileName());
-        metadata.setType(updateDTO.getType());
+        metadata.setFileName(updateDTO.fileName());
+        metadata.setType(updateDTO.type());
         metadata.setUpdatedAt(Instant.now());
         metadata = fileMetadataRepository.save(metadata);
         return mapper.FileMetadataToDTO(metadata);
