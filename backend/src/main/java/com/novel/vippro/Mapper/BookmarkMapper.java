@@ -1,27 +1,19 @@
 package com.novel.vippro.Mapper;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.novel.vippro.DTO.Bookmark.BookmarkDTO;
 import com.novel.vippro.Models.Bookmark;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class BookmarkMapper {
+@Mapper(componentModel = "spring")
+public interface BookmarkMapper {
 
-	@Autowired
-	private ModelMapper modelMapper;
+    BookmarkDTO BookmarktoDTO(Bookmark bookmark);
 
-	public BookmarkDTO BookmarktoDTO(Bookmark bookmark) {
-		return modelMapper.map(bookmark, BookmarkDTO.class);
-	}
+    Bookmark DTOtoBookmark(BookmarkDTO bookmarkDTO);
 
-	public Bookmark DTOtoBookmark(BookmarkDTO bookmarkDTO) {
-		return modelMapper.map(bookmarkDTO, Bookmark.class);
-	}
-
-	public void updateBookmarkFromDTO(BookmarkDTO dto, Bookmark bookmark) {
-		modelMapper.map(dto, bookmark);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateBookmarkFromDTO(BookmarkDTO dto, @MappingTarget Bookmark bookmark);
 }

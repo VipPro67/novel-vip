@@ -2,34 +2,22 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.Models.RoleApprovalRequest;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class RoleApprovalMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface RoleApprovalMapper {
 
-	public RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest) {
-		var dto = new RoleApprovalDTO();
-		dto.setId(roleApprovalRequest.getId());
-		dto.setUserId(roleApprovalRequest.getUser().getId());
-		dto.setUsername(roleApprovalRequest.getUser().getUsername());
-		dto.setRequestedRole(roleApprovalRequest.getRequestedRole().getName());
-		dto.setStatus(roleApprovalRequest.getStatus());
-		dto.setCreatedAt(roleApprovalRequest.getCreatedAt());
-		dto.setUpdatedAt(roleApprovalRequest.getUpdatedAt());
-		dto.setProcessedBy(roleApprovalRequest.getRejectionReason());
-		dto.setRejectionReason(roleApprovalRequest.getRejectionReason());
-		return dto;
-	}
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "requestedRole", source = "requestedRole.name")
+    RoleApprovalDTO RoleApprovalRequestToDTO(RoleApprovalRequest roleApprovalRequest);
 
-	public RoleApprovalRequest DTOtoRoleApprovalRequest(RoleApprovalDTO roleApprovalDTO) {
-		return modelMapper.map(roleApprovalDTO, RoleApprovalRequest.class);
-	}
+    RoleApprovalRequest DTOtoRoleApprovalRequest(RoleApprovalDTO roleApprovalDTO);
 
-	public void updateRoleApprovalRequestFromDTO(RoleApprovalDTO dto, RoleApprovalRequest roleApprovalRequest) {
-		modelMapper.map(dto, roleApprovalRequest);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateRoleApprovalRequestFromDTO(RoleApprovalDTO dto, @MappingTarget RoleApprovalRequest roleApprovalRequest);
 }

@@ -110,12 +110,11 @@ public class FileService {
         try {
             byte[] fileContent = fileStorageService.downloadFile(metadata.getPublicId());
 
-            FileDownloadDTO downloadDTO = new FileDownloadDTO();
-            downloadDTO.setFileName(metadata.getFileName());
-            downloadDTO.setContentType(metadata.getContentType());
-            downloadDTO.setResource(new ByteArrayResource(fileContent));
-
-            return downloadDTO;
+            return FileDownloadDTO.builder()
+                    .fileName(metadata.getFileName())
+                    .contentType(metadata.getContentType())
+                    .resource(new ByteArrayResource(fileContent))
+                    .build();
         } catch (IOException e) {
             throw new RuntimeException("Failed to download file", e);
         }

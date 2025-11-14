@@ -2,38 +2,22 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.Models.Comment;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class CommentMapper {
-	@Autowired
-	private ModelMapper modelMapper;
+@Mapper(componentModel = "spring")
+public interface CommentMapper {
 
-	public CommentDTO CommenttoDTO(Comment comment) {
-		CommentDTO dto = modelMapper.map(comment, CommentDTO.class);
-		if (comment.getNovel() != null) {
-			dto.setNovelId(comment.getNovel().getId());
-		} else {
-			dto.setNovelId(null);
-		}
-		if (comment.getChapter() != null) {
-			dto.setChapterId(comment.getChapter().getId());
-		} else {
-			dto.setChapterId(null);
-		}
-		if(comment.getParent() != null) {
-			dto.setParentId(comment.getParent().getId());
-		} else {
-			dto.setParentId(null);
-		}
-		dto.setUserId(comment.getUser().getId());
-		dto.setUsername(comment.getUser().getUsername());
-		return dto;
-	}
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "chapterId", source = "chapter.id")
+    @Mapping(target = "parentId", source = "parent.id")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    CommentDTO CommenttoDTO(Comment comment);
 
-	public void updateCommentFromDTO(CommentDTO dto, Comment comment) {
-		modelMapper.map(dto, comment);
-	}
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateCommentFromDTO(CommentDTO dto, @MappingTarget Comment comment);
 }
