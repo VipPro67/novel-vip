@@ -78,7 +78,7 @@ public class ChapterController {
             @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumberDTO(novelId, chapterNumber);
-        viewStatService.recordView(novelId, chapter.getId());
+        viewStatService.recordView(novelId, chapter.id());
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
     }
 
@@ -93,7 +93,7 @@ public class ChapterController {
             @Parameter(description = "Novel slug", required = true) @PathVariable String slug,
             @Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
         ChapterDetailDTO chapter = chapterService.getChapterByNumber2DTO(slug, chapterNumber);
-        viewStatService.recordView(chapter.getNovelId(), chapter.getId());
+        viewStatService.recordView(chapter.novelId(), chapter.id());
         return ControllerResponse.success("Chapter retrieved successfully", chapter);
     }
 

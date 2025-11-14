@@ -29,15 +29,21 @@ public class ChatService {
     }
 
     public MessageDTO sendToGroup(UUID groupId, CreateMessageDTO dto) {
-        dto.setGroupId(groupId);
-        MessageDTO saved = messageService.createMessage(dto);
+        var groupMessage = CreateMessageDTO.builder()
+                        .groupId(groupId)
+                        .content(dto.content())
+                        .build();
+        MessageDTO saved = messageService.createMessage(groupMessage);
         messagingTemplate.convertAndSend("/topic/group." + groupId, saved);
         return saved;
     }
 
     public MessageDTO sendDirect(UUID receiverId, CreateMessageDTO dto) {
-        dto.setReceiverId(receiverId);
-        MessageDTO saved = messageService.createMessage(dto);
+        var directMessage = CreateMessageDTO.builder()
+                            .receiverId(receiverId)
+                            .content(dto.content())
+                            .build();
+        MessageDTO saved = messageService.createMessage(directMessage);
         UUID currentUserId = UserDetailsImpl.getCurrentUserId();
         String channel = formatDmChannel(currentUserId, receiverId);
         messagingTemplate.convertAndSend("/topic/dm." + channel, saved);
@@ -52,11 +58,11 @@ public class ChatService {
 
     @Transactional
     public MessageDTO sendToGroupOrDm(CreateMessageDTO dto) {
-        if (dto.getGroupId() != null) {
-            return sendToGroup(dto.getGroupId(), dto);
+        if (dto.groupId() != null) {
+            return sendToGroup(dto.groupId(), dto);
         }
-        if (dto.getReceiverId() != null) {
-            return sendDirect(dto.getReceiverId(), dto);
+        if (dto.receiverId() != null) {
+            return sendDirect(dto.receiverId(), dto);
         }
         return messageService.createMessage(dto);
     }

@@ -28,13 +28,7 @@ public abstract class ChapterMapper {
 
     @Mapping(target = "novelId", source = "novel.id")
     @Mapping(target = "novelTitle", source = "novel.title")
-    public abstract ChapterDTO ChaptertoChapterDTO(Chapter chapter);
-
-    @Mapping(target = "novelId", source = "novel.id")
-    @Mapping(target = "novelTitle", source = "novel.title")
     public abstract ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
-
-    public abstract List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     public abstract void updateChapterFromDTO(ChapterDTO dto, @MappingTarget Chapter chapter);
@@ -45,10 +39,10 @@ public abstract class ChapterMapper {
             return;
         }
         if (chapter.getAudioFile() != null) {
-            builder.audioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 3600));
+            builder.audioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 21600));
         }
         if (chapter.getJsonFile() != null) {
-            builder.jsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 3600));
+            builder.jsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 21600));
         }
     }
 }

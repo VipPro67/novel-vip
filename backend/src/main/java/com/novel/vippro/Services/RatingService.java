@@ -73,6 +73,7 @@ public class RatingService {
         return mapper.RatingtoDTO(savedRating);
     }
 
+    @Transactional(readOnly = true)
     public RatingDTO getUserRating(UUID novelId) {
         UUID userId = UserDetailsImpl.getCurrentUserId();
         return ratingRepository.findByUserIdAndNovelId(userId, novelId)
