@@ -474,15 +474,7 @@ public class ChapterService {
         cacheManager.getCache("chapters").evict(chapter.getId());
         cacheManager.getCache("chapters").evict("'novel-slug-' + " + chapter.getNovel().getSlug() + " + '-chapter-' + " + chapter.getChapterNumber());
         logger.info("Audio generation completed for chapter id: {}", chapter.getId());
-        var noti = CreateNotificationDTO.builder()
-                .title("Chapter audio ready")
-                .message(String.format("Audio for %s - Chapter %d is ready.",
-                        chapter.getNovel().getTitle(), chapter.getChapterNumber()))
-                .type(NotificationType.CHAPTER_UPDATE)
-                .reference(chapter.getNovel().getSlug() + "/chapters/" + chapter.getChapterNumber())
-                .build();
-        notificationService.createNotification(noti);
-        return chapter; 
+        return chapter;
     }
 
     @Transactional

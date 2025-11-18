@@ -56,7 +56,7 @@ public class ChapterAudioProcessor {
 
     @CacheEvict
     private void notifySuccess(ChapterAudioMessage message, Chapter chapter) {
-        if (message.getUserId() == null || message.getJobId() != null) {
+        if (message.getUserId() == null) {
             return;
         }
         CreateNotificationDTO dto = CreateNotificationDTO.builder()
