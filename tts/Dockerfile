@@ -3,17 +3,16 @@ FROM python:3.12-slim
 ARG INSTALL_FFMPEG=false
 WORKDIR /app
 
-# Install ffmpeg conditionally
-RUN if [ "$INSTALL_FFMPEG" = "true" ]; then \
-    apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*; \
-    fi
+# Install SSL certificates + optionally ffmpeg
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    update-ca-certificates && \
+    if [ "$INSTALL_FFMPEG" = "true" ]; then apt-get install -y ffmpeg; fi && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install them
 COPY requirements.txt /app
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the app directory
 COPY app/ /app
 
-# Command to run the server
 CMD ["python", "/app/server.py"]
