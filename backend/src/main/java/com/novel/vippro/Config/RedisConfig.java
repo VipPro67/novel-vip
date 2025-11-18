@@ -3,6 +3,7 @@ package com.novel.vippro.Config;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,8 +19,9 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
@@ -72,10 +74,13 @@ public class RedisConfig {
 		return mapper;
 	}
 
+	private RedisSerializer<Object> redisValueSerializer() {
+		return new LenientGenericJackson2JsonRedisSerializer(createRedisObjectMapper());
+	}
+
 	@Bean
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
-		ObjectMapper redisObjectMapper = createRedisObjectMapper();
-		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+		RedisSerializer<Object> serializer = redisValueSerializer();
 
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(factory);
@@ -91,8 +96,7 @@ public class RedisConfig {
 
 	@Bean
 	public CacheManager cacheManager(RedisConnectionFactory factory) {
-		ObjectMapper redisObjectMapper = createRedisObjectMapper();
-		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+		RedisSerializer<Object> serializer = redisValueSerializer();
 
 		RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
 				.serializeKeysWith(
@@ -110,6 +114,35 @@ public class RedisConfig {
 				.cacheDefaults(config)
 				.withInitialCacheConfigurations(cacheConfigs)
 				.build();
+	}
+
+	private static final class LenientGenericJackson2JsonRedisSerializer extends GenericJackson2JsonRedisSerializer {
+
+		LenientGenericJackson2JsonRedisSerializer(ObjectMapper mapper) {
+			super(mapper);
+		}
+
+		@Override
+		public Object deserialize(byte[] bytes) {
+			try {
+				return super.deserialize(bytes);
+			} catch (SerializationException ex) {
+				if (containsInvalidTypeId(ex)) {
+					return null;
+				}
+				throw ex;
+			}
+		}
+
+		private boolean containsInvalidTypeId(Throwable throwable) {
+			while (throwable != null) {
+				if (throwable instanceof InvalidTypeIdException) {
+					return true;
+				}
+				throwable = throwable.getCause();
+			}
+			return false;
+		}
 	}
 
 }
