@@ -1,15 +1,14 @@
 package com.novel.vippro.DTO.Notification;
 
-import lombok.Data;
+import com.novel.vippro.Models.NotificationType;
+import lombok.Builder;
 import java.util.UUID;
 
-import com.novel.vippro.Models.NotificationType;
-
-@Data
-public class CreateNotificationDTO {
-    private UUID userId;
-    private String title;
-    private String message;
-    private NotificationType type;
-    private String reference; 
-}
+@Builder
+public record CreateNotificationDTO(
+    UUID userId,
+    String title,
+    String message,
+    NotificationType type,
+    String reference
+) {}

@@ -4,58 +4,45 @@ import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Services.FileStorageService;
-
-import org.modelmapper.ModelMapper;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class ChapterMapper {
+@Mapper(componentModel = "spring")
+public abstract class ChapterMapper {
 
-	@Autowired
-	private ModelMapper modelMapper;
+    @Autowired
+    @Qualifier("s3FileStorageService")
+    protected FileStorageService fileStorageService;
 
-	@Autowired
-	@Qualifier("s3FileStorageService")
-	private FileStorageService fileStorageService;
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "novelTitle", source = "novel.title")
+    public abstract ChapterDTO ChaptertoDTO(Chapter chapter);
 
-	public ChapterDTO ChaptertoDTO(Chapter chapter) {
-		return modelMapper.map(chapter, ChapterDTO.class);
-	}
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "novelTitle", source = "novel.title")
+    public abstract ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
 
-	public ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter) {
-		ChapterDetailDTO chapterDetailDTO = modelMapper.map(chapter, ChapterDetailDTO.class);
-		chapterDetailDTO.setNovelId(chapter.getNovel().getId());
-		chapterDetailDTO.setNovelTitle(chapter.getNovel().getTitle());
-        if(chapter.getAudioFile()!=null)
-        {
-            chapterDetailDTO.setAudioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 3600));
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    public abstract void updateChapterFromDTO(ChapterDTO dto, @MappingTarget Chapter chapter);
+
+    @AfterMapping
+    protected void enrichDetailDto(Chapter chapter, @MappingTarget ChapterDetailDTO.ChapterDetailDTOBuilder builder) {
+        if (chapter == null) {
+            return;
         }
-        if(chapter.getJsonFile()!=null)
-        {
-            chapterDetailDTO.setJsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 3600));
+        if (chapter.getAudioFile() != null) {
+            builder.audioUrl(fileStorageService.generateFileUrl(chapter.getAudioFile().getPublicId(), 21600));
         }
-		return chapterDetailDTO;
-	}
-
-	public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
-		ChapterDTO dto = modelMapper.map(chapter, ChapterDTO.class);
-        dto.setNovelId(chapter.getNovel().getId());
-        dto.setNovelTitle(chapter.getNovel().getTitle());
-        return dto;
-	}
-
-	public List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters) {
-		return chapters.stream()
-				.map(this::ChaptertoDTO)
-				.collect(Collectors.toList());
-	}
-
-	public void updateChapterFromDTO(ChapterDTO dto, Chapter chapter) {
-		modelMapper.map(dto, chapter);
-	}
+        if (chapter.getJsonFile() != null) {
+            builder.jsonUrl(fileStorageService.generateFileUrl(chapter.getJsonFile().getPublicId(), 21600));
+        }
+    }
 }

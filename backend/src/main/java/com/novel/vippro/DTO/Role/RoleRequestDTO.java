@@ -1,24 +1,12 @@
 package com.novel.vippro.DTO.Role;
 
 import com.novel.vippro.Models.ERole;
-
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Getter
-@Setter
-public class RoleRequestDTO {
+@Builder
+public record RoleRequestDTO(
     @NotNull
-    private ERole requestedRole;
-
-    private String reason;
-
-    public ERole getRequestedRole() {
-        return requestedRole;
-    }
-
-    public void setRequestedRole(ERole requestedRole) {
-        this.requestedRole = requestedRole;
-    }
-}
+    ERole requestedRole,
+    String reason
+) {}

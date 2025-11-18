@@ -1,19 +1,15 @@
 package com.novel.vippro.DTO.User;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Data
-@Getter
-@Setter
-public class UserSearchDTO {
-    private String username;
-    private String email;
-    private String role;
-    private Boolean active;
-    private Integer page = 0;
-    private Integer size = 10;
-    private String sortBy = "username";
-    private String sortDirection = "asc";
-}
+@Builder
+public record UserSearchDTO(
+    String username,
+    String email,
+    String role,
+    Boolean active,
+    Integer page,
+    Integer size,
+    String sortBy,
+    String sortDirection
+) {}

@@ -1,10 +1,10 @@
 package com.novel.vippro.DTO.Comment;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class CommentUpdateDTO {
+@Builder
+public record CommentUpdateDTO(
     @NotBlank(message = "Content is required")
-    private String content;
-}
+    String content
+) {}

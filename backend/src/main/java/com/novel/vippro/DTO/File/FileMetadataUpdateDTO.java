@@ -1,11 +1,11 @@
 package com.novel.vippro.DTO.File;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class FileMetadataUpdateDTO {
+@Builder
+public record FileMetadataUpdateDTO(
     @NotBlank(message = "File name is required")
-    private String fileName;
-    private String type;
-}
+    String fileName,
+    String type
+) {}

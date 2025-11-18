@@ -2,6 +2,7 @@ package com.novel.vippro.Config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -59,60 +61,53 @@ public class RedisConfig {
 		return new LettuceConnectionFactory(config, clientConfig);
 	}
 
+	private ObjectMapper createRedisObjectMapper() {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		mapper.activateDefaultTyping(
+				mapper.getPolymorphicTypeValidator(),
+				ObjectMapper.DefaultTyping.EVERYTHING,
+				JsonTypeInfo.As.PROPERTY);
+		return mapper;
+	}
+
 	@Bean
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+		ObjectMapper redisObjectMapper = createRedisObjectMapper();
+		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
 		template.setConnectionFactory(factory);
-
-		// Configure Jackson serializer with type information and JSR-310 support
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.activateDefaultTyping(
-				objectMapper.getPolymorphicTypeValidator(),
-				ObjectMapper.DefaultTyping.NON_FINAL,
-				JsonTypeInfo.As.PROPERTY);
-		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper,
-				Object.class);
 
 		template.setKeySerializer(new StringRedisSerializer());
 		template.setValueSerializer(serializer);
 		template.setHashKeySerializer(new StringRedisSerializer());
 		template.setHashValueSerializer(serializer);
-		template.afterPropertiesSet();
 
+		template.afterPropertiesSet();
 		return template;
 	}
 
 	@Bean
 	public CacheManager cacheManager(RedisConnectionFactory factory) {
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new JavaTimeModule());
-		objectMapper.activateDefaultTyping(
-				objectMapper.getPolymorphicTypeValidator(),
-				ObjectMapper.DefaultTyping.NON_FINAL,
-				JsonTypeInfo.As.PROPERTY);
+		ObjectMapper redisObjectMapper = createRedisObjectMapper();
+		GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
 
-		Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
-
-		RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+		RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
 				.serializeKeysWith(
 						RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+				.serializeValuesWith(
+						RedisSerializationContext.SerializationPair.fromSerializer(serializer))
 				.entryTtl(Duration.ofMinutes(10));
 
 		Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
-
-		cacheConfigs.put("recommendations", defaultConfig.entryTtl(Duration.ofMinutes(30)));
-		cacheConfigs.put("novels", defaultConfig.entryTtl(Duration.ofHours(6)));
-		cacheConfigs.put("chapters", defaultConfig.entryTtl(Duration.ofHours(6)));
-		cacheConfigs.put("comments", defaultConfig.entryTtl(Duration.ofHours(6)));
-		cacheConfigs.put("users", defaultConfig.entryTtl(Duration.ofDays(1)));
-		cacheConfigs.put("categories", defaultConfig.entryTtl(Duration.ofDays(1)));
-		cacheConfigs.put("genres", defaultConfig.entryTtl(Duration.ofDays(1)));
-		cacheConfigs.put("tags", defaultConfig.entryTtl(Duration.ofDays(1)));
+		cacheConfigs.put("novels", config.entryTtl(Duration.ofHours(6)));
+		cacheConfigs.put("chapters", config.entryTtl(Duration.ofHours(6)));
+		cacheConfigs.put("users", config.entryTtl(Duration.ofDays(1)));
 
 		return RedisCacheManager.builder(factory)
-				.cacheDefaults(defaultConfig)
+				.cacheDefaults(config)
 				.withInitialCacheConfigurations(cacheConfigs)
 				.build();
 	}

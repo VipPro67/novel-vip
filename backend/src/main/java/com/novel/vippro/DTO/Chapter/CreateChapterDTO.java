@@ -1,16 +1,17 @@
 package com.novel.vippro.DTO.Chapter;
-import lombok.Data;
+
+import lombok.Builder;
 import java.util.UUID;
 
-@Data
-public class CreateChapterDTO {
+@Builder
+public record CreateChapterDTO(
+    Integer chapterNumber,
+    UUID novelId,
+    String title,
+    String contentType,
+    String content,
+    String contentHtml,
+    ContentFormat format
+) {
     public enum ContentFormat { TEXT , HTML }
-
-    private Integer chapterNumber;
-    private UUID novelId;
-    private String title;
-    private String contentType;
-    private String content;
-    private String contentHtml;
-    private ContentFormat format;   
 }

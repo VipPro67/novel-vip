@@ -5,26 +5,26 @@ import com.novel.vippro.Models.SystemJobStatus;
 import com.novel.vippro.Models.SystemJobType;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class SystemJobDTO {
-    private UUID id;
-    private SystemJobType jobType;
-    private SystemJobStatus status;
-    private EpubImportType importType;
-    private UUID userId;
-    private UUID novelId;
-    private String slug;
-    private String requestedStatus;
-    private UUID chapterId;
-    private Integer chapterNumber;
-    private String statusMessage;
-    private int totalChapters;
-    private int chaptersProcessed;
-    private int audioCompleted;
-    private Instant createdAt;
-    private Instant updatedAt;
-    private Instant completedAt;
-    private String originalFileName;
-}
+@Builder
+public record SystemJobDTO(
+    UUID id,
+    SystemJobType jobType,
+    SystemJobStatus status,
+    EpubImportType importType,
+    UUID userId,
+    UUID novelId,
+    String slug,
+    String requestedStatus,
+    UUID chapterId,
+    Integer chapterNumber,
+    String statusMessage,
+    int totalChapters,
+    int chaptersProcessed,
+    int audioCompleted,
+    Instant createdAt,
+    Instant updatedAt,
+    Instant completedAt,
+    String originalFileName
+) {}

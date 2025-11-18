@@ -1,15 +1,13 @@
 package com.novel.vippro.DTO.Message;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
-@Data
-public class CreateMessageDTO {
-
-    private UUID receiverId;
-    private UUID groupId;
+@Builder
+public record CreateMessageDTO(
+    UUID receiverId,
+    UUID groupId,
     @NotBlank(message = "Content cannot be blank")
-    private String content;
-}
+    String content
+) {}

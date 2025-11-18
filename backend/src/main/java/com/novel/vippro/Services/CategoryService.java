@@ -48,8 +48,8 @@ public class CategoryService {
     public CategoryDTO updateCategory(UUID id, CategoryDTO categoryDetails) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
-        category.setName(categoryDetails.getName());
-        category.setDescription(categoryDetails.getDescription());
+        category.setName(categoryDetails.name());
+        category.setDescription(categoryDetails.description());
         categoryRepository.save(category);
         return mapper.CategorytoDTO(category);
     }

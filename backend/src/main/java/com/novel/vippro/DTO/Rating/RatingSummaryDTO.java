@@ -1,13 +1,13 @@
 package com.novel.vippro.DTO.Rating;
 
-import lombok.Data;
+import lombok.Builder;
 import java.util.Map;
 
-@Data
-public class RatingSummaryDTO {
-    private double averageRating;
-    private long totalRatings;
-    private Map<Integer, Long> distribution; // Rating value -> Count
-    private RatingDTO latestRating;
-    private RatingDTO userRating; // Current user's rating if exists
-}
+@Builder
+public record RatingSummaryDTO(
+    double averageRating,
+    long totalRatings,
+    Map<Integer, Long> distribution,
+    RatingDTO latestRating,
+    RatingDTO userRating
+) {}

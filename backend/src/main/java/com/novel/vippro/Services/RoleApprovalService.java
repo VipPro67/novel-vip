@@ -47,9 +47,9 @@ public class RoleApprovalService {
         // Check if user already has a pending request for this role
         User user = userRepository.findById(UserDetailsImpl.getCurrentUserId())
                 .orElseThrow(() -> new RuntimeException("Error: User not found"));
-        Role requestedRoleEntity = roleRepository.findByName(request.getRequestedRole())
+        Role requestedRoleEntity = roleRepository.findByName(request.requestedRole())
                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
-        ERole requestedRole = request.getRequestedRole();   
+        ERole requestedRole = request.requestedRole();   
         Optional<RoleApprovalRequest> existingRequest = roleApprovalRequestRepository
                 .findByUserAndStatus(user, "PENDING", requestedRoleEntity);
 
@@ -69,7 +69,7 @@ public class RoleApprovalService {
         Role role = roleRepository.findByName(requestedRole)
                 .orElseThrow(() -> new RuntimeException("Error: Role not found"));
 
-        RoleApprovalRequest roleRequest = new RoleApprovalRequest(user, role, request.getReason());
+        RoleApprovalRequest roleRequest = new RoleApprovalRequest(user, role, request.reason());
         roleApprovalRequestRepository.save(roleRequest);
 
         logger.info("Created role approval request for user {} requesting role {}",

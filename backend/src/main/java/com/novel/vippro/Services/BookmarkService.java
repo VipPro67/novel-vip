@@ -60,17 +60,17 @@ public class BookmarkService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        Novel novel = novelRepository.findById(bookmarkDTO.getNovelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", bookmarkDTO.getNovelId()));
+        Novel novel = novelRepository.findById(bookmarkDTO.novelId())
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", bookmarkDTO.novelId()));
 
-        Chapter chapter = chapterRepository.findById(bookmarkDTO.getChapterId())
-                .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", bookmarkDTO.getChapterId()));
+        Chapter chapter = chapterRepository.findById(bookmarkDTO.chapterId())
+                .orElseThrow(() -> new ResourceNotFoundException("Chapter", "id", bookmarkDTO.chapterId()));
 
         // Check if bookmark already exists
-        Bookmark existingBookmark = bookmarkRepository.findByUserIdAndChapterId(userId, bookmarkDTO.getChapterId());
+        Bookmark existingBookmark = bookmarkRepository.findByUserIdAndChapterId(userId, bookmarkDTO.chapterId());
         if (existingBookmark != null) {
             // Update existing bookmark
-            existingBookmark.setNote(bookmarkDTO.getNote());
+            existingBookmark.setNote(bookmarkDTO.note());
             return mapper.BookmarktoDTO(bookmarkRepository.save(existingBookmark));
         }
 
@@ -79,7 +79,7 @@ public class BookmarkService {
         bookmark.setUser(user);
         bookmark.setNovel(novel);
         bookmark.setChapter(chapter);
-        bookmark.setNote(bookmarkDTO.getNote());
+        bookmark.setNote(bookmarkDTO.note());
 
         return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }
@@ -89,7 +89,7 @@ public class BookmarkService {
         Bookmark bookmark = bookmarkRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bookmark", "id", id));
 
-        bookmark.setNote(bookmarkDTO.getNote());
+        bookmark.setNote(bookmarkDTO.note());
 
         return mapper.BookmarktoDTO(bookmarkRepository.save(bookmark));
     }

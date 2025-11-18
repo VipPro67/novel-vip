@@ -1,13 +1,10 @@
 package com.novel.vippro.DTO.Auth;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
 
-@Getter
-@Setter
-public class GoogleAuthRequest {
-
+@Builder
+public record GoogleAuthRequest(
     @NotBlank
-    private String credential;
-}
+    String credential
+) {}

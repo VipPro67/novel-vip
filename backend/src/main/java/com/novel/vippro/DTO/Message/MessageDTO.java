@@ -1,19 +1,23 @@
 package com.novel.vippro.DTO.Message;
 
-import java.util.UUID;
-
 import com.novel.vippro.DTO.Group.GroupDTO;
 import com.novel.vippro.DTO.User.UserDTO;
-import com.novel.vippro.DTO.base.BaseDTO;
+import lombok.Builder;
+import java.time.Instant;
+import java.util.UUID;
 
-import lombok.Data;
-
-@Data
-public class MessageDTO extends BaseDTO {
-    private UUID id;
-    private UserDTO sender;
-    private UserDTO receiver;
-    private GroupDTO group;
-    private String content;
-    private Boolean isRead;
-}
+@Builder
+public record MessageDTO(
+    UUID id,
+    Boolean isActive,
+    Boolean isDeleted,
+    UUID createdBy,
+    UUID updatedBy,
+    Instant createdAt,
+    Instant updatedAt,
+    UserDTO sender,
+    UserDTO receiver,
+    GroupDTO group,
+    String content,
+    Boolean isRead
+) {}

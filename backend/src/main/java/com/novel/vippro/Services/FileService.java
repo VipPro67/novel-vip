@@ -110,12 +110,11 @@ public class FileService {
         try {
             byte[] fileContent = fileStorageService.downloadFile(metadata.getPublicId());
 
-            FileDownloadDTO downloadDTO = new FileDownloadDTO();
-            downloadDTO.setFileName(metadata.getFileName());
-            downloadDTO.setContentType(metadata.getContentType());
-            downloadDTO.setResource(new ByteArrayResource(fileContent));
-
-            return downloadDTO;
+            return FileDownloadDTO.builder()
+                    .fileName(metadata.getFileName())
+                    .contentType(metadata.getContentType())
+                    .resource(new ByteArrayResource(fileContent))
+                    .build();
         } catch (IOException e) {
             throw new RuntimeException("Failed to download file", e);
         }
@@ -146,8 +145,8 @@ public class FileService {
         FileMetadata metadata = fileMetadataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));
 
-        metadata.setFileName(updateDTO.getFileName());
-        metadata.setType(updateDTO.getType());
+        metadata.setFileName(updateDTO.fileName());
+        metadata.setType(updateDTO.type());
         metadata.setUpdatedAt(Instant.now());
         metadata = fileMetadataRepository.save(metadata);
         return mapper.FileMetadataToDTO(metadata);

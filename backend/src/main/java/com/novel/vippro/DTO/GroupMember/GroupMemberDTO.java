@@ -1,15 +1,14 @@
 package com.novel.vippro.DTO.GroupMember;
 
+import lombok.Builder;
 import java.util.UUID;
 
-import lombok.Data;
-
-@Data
-public class GroupMemberDTO {
-    private UUID id;
-    private UUID userId;
-    private UUID groupId;
-    private Boolean isAdmin;
-    private String displayName;
-    private String joinedAt;
-}
+@Builder
+public record GroupMemberDTO(
+    UUID id,
+    UUID userId,
+    UUID groupId,
+    Boolean isAdmin,
+    String displayName,
+    String joinedAt
+) {}

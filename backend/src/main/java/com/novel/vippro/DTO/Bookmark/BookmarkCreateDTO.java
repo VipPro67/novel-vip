@@ -1,18 +1,18 @@
 package com.novel.vippro.DTO.Bookmark;
 
-import lombok.Data;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import java.util.UUID;
 
-@Data
-public class BookmarkCreateDTO {
+@Builder
+public record BookmarkCreateDTO(
     @NotNull(message = "Chapter ID is required")
-    private UUID chapterId;
+    UUID chapterId,
 
     @NotNull(message = "Novel ID is required")
-    private UUID novelId;
+    UUID novelId,
 
-    private String note;
+    String note,
 
-    private Integer progress;
-}
+    Integer progress
+) {}

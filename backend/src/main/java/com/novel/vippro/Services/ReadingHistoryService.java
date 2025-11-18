@@ -115,81 +115,79 @@ public class ReadingHistoryService {
 
     public ReadingStatsDTO getReadingStats() {
         UUID userId = UserDetailsImpl.getCurrentUserId();
-        ReadingStatsDTO stats = new ReadingStatsDTO();
+        long totalNovelsRead = readingHistoryRepository.countTotalNovelsRead(userId);
 
-        // Get total chapters and novels read
-        stats.setTotalNovelsRead(readingHistoryRepository.countTotalNovelsRead(userId));
-
-        // Calculate reading time and average
         List<ReadingHistory> history = readingHistoryRepository
                 .findByUserIdOrderByLastReadAtDesc(userId, Pageable.unpaged())
                 .getContent();
 
         long totalMinutes = 0;
         Instant lastReadTime = null;
+        String currentlyReading = null;
 
         for (ReadingHistory entry : history) {
             if (lastReadTime == null) {
                 lastReadTime = entry.getUpdatedAt();
-                stats.setLastReadAt(lastReadTime);
             }
             // Assume average reading time of 5 minutes per chapter if not specified
             totalMinutes += 5;
         }
 
-        stats.setMinutesSpentReading(totalMinutes);
-        stats.setAverageReadingTimePerChapter(history.isEmpty() ? 0
-                : (double) totalMinutes / history.size());
+        double avgPerChapter = history.isEmpty() ? 0 : (double) totalMinutes / history.size();
 
         // Get most read genre
         List<Object[]> genres = readingHistoryRepository.findMostReadGenre(userId);
-        if (!genres.isEmpty()) {
-            stats.setMostReadGenre((String) genres.get(0)[0]);
-        }
+        String mostReadGenre = !genres.isEmpty() ? (String) genres.get(0)[0] : null;
 
         // Get favorite author
         List<Object[]> authors = readingHistoryRepository.findFavoriteAuthor(userId);
-        if (!authors.isEmpty()) {
-            stats.setFavoriteAuthor((String) authors.get(0)[0]);
+        String favoriteAuthor = !authors.isEmpty() ? (String) authors.get(0)[0] : null;
+
+        var currentEntry = readingHistoryRepository.findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, null);
+        if (currentEntry.isPresent()) {
+            currentlyReading = currentEntry.get().getNovel().getTitle();
         }
 
-        // Get currently reading novel
-        readingHistoryRepository.findFirstByUserIdAndNovelIdOrderByLastReadAtDesc(userId, null)
-                .ifPresent(current -> stats.setCurrentlyReading(current.getNovel().getTitle()));
-
-        return stats;
+        return ReadingStatsDTO.builder()
+                .totalNovelsRead(totalNovelsRead)
+                .lastReadAt(lastReadTime)
+                .minutesSpentReading(totalMinutes)
+                .averageReadingTimePerChapter(avgPerChapter)
+                .mostReadGenre(mostReadGenre)
+                .favoriteAuthor(favoriteAuthor)
+                .currentlyReading(currentlyReading)
+                .build();
     }
 
     public ReadingStatsDTO getUserReadingStats() {
         UUID userId = UserDetailsImpl.getCurrentUserId();
-        ReadingStatsDTO stats = new ReadingStatsDTO();
+        long totalNovels = readingHistoryRepository.countTotalNovelsRead(userId);
 
-        // Calculate basic stats
-        stats.setTotalNovelsRead((int) readingHistoryRepository.countTotalNovelsRead(userId));
-
-        // Get most read genre
         List<Object[]> genres = readingHistoryRepository.findMostReadGenre(userId);
-        if (!genres.isEmpty()) {
-            stats.setMostReadGenre((String) genres.get(0)[0]);
-        }
+        String mostReadGenre = !genres.isEmpty() ? (String) genres.get(0)[0] : null;
 
-        // Get favorite author
         List<Object[]> authors = readingHistoryRepository.findFavoriteAuthor(userId);
-        if (!authors.isEmpty()) {
-            stats.setFavoriteAuthor((String) authors.get(0)[0]);
-        }
+        String favoriteAuthor = !authors.isEmpty() ? (String) authors.get(0)[0] : null;
 
-        // Get currently reading novel
-        readingHistoryRepository.findByUserIdOrderByLastReadAtDesc(userId, Pageable.ofSize(1))
+        String currentlyReading = null;
+        Instant lastReadAt = null;
+
+        var latestHistory = readingHistoryRepository.findByUserIdOrderByLastReadAtDesc(userId, Pageable.ofSize(1))
                 .getContent()
                 .stream()
-                .findFirst()
-                .ifPresent(history -> {
-                    stats.setCurrentlyReading(history.getNovel().getTitle());
-                    stats.setLastReadAt(history.getUpdatedAt());
-                });
+                .findFirst();
+        if (latestHistory.isPresent()) {
+            currentlyReading = latestHistory.get().getNovel().getTitle();
+            lastReadAt = latestHistory.get().getUpdatedAt();
+        }
 
-        return stats;
+        return ReadingStatsDTO.builder()
+                .totalNovelsRead(totalNovels)
+                .mostReadGenre(mostReadGenre)
+                .favoriteAuthor(favoriteAuthor)
+                .currentlyReading(currentlyReading)
+                .lastReadAt(lastReadAt)
+                .build();
     }
 
     @Transactional(readOnly = true)

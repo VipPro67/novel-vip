@@ -30,58 +30,37 @@ import com.novel.vippro.DTO.User.UserDTO;
 import com.novel.vippro.DTO.Video.CreateVideoDTO;
 import com.novel.vippro.DTO.Video.VideoDTO;
 import com.novel.vippro.Models.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component("mapper")
+@RequiredArgsConstructor
 public class MapperFacade implements Mapper {
 
-	@Autowired
-	private NovelMapper novelMapper;
-	@Autowired
-	private ChapterMapper chapterMapper;
-	@Autowired
-	private CategoryMapper categoryMapper;
-	@Autowired
-	private BookmarkMapper bookmarkMapper;
-	@Autowired
-	private UserMapper userMapper;
-	@Autowired
-	private CommentMapper commentMapper;
-	@Autowired
-	private FileMetadataMapper fileMetadataMapper;
-	@Autowired
-	private ReaderSettingsMapper readerSettingsMapper;
-	@Autowired
-	private FeatureRequestMapper featureRequestMapper;
-	@Autowired
-	private TagMapper tagMapper;
-	@Autowired
-	private GenreMapper genreMapper;
-	@Autowired
-	private ReadingHistoryMapper readingHistoryMapper;
-	@Autowired
-	private NotificationMapper notificationMapper;
-	@Autowired
-	private GroupMemberMapper groupMemberMapper;
-	@Autowired
-	private MessageMapper messageMapper;
-	@Autowired
-	private GroupMapper groupMapper;
-	@Autowired
-	private RoleApprovalMapper roleApprovalMapper;
-	@Autowired
-	private ReviewMapper reviewMapper;
-	@Autowired
-	private ReportMapper reportMapper;
-	@Autowired
-	private RatingMapper ratingMapper;
-	@Autowired
-	private SystemJobMapper systemJobMapper;
-	@Autowired
-	private VideoMapper videoMapper;
+	private final NovelMapper novelMapper;
+	private final ChapterMapper chapterMapper;
+	private final CategoryMapper categoryMapper;
+	private final BookmarkMapper bookmarkMapper;
+	private final UserMapper userMapper;
+	private final CommentMapper commentMapper;
+	private final FileMetadataMapper fileMetadataMapper;
+	private final ReaderSettingsMapper readerSettingsMapper;
+	private final FeatureRequestMapper featureRequestMapper;
+	private final TagMapper tagMapper;
+	private final GenreMapper genreMapper;
+	private final ReadingHistoryMapper readingHistoryMapper;
+	private final NotificationMapper notificationMapper;
+	private final GroupMemberMapper groupMemberMapper;
+	private final MessageMapper messageMapper;
+	private final GroupMapper groupMapper;
+	private final RoleApprovalMapper roleApprovalMapper;
+	private final ReviewMapper reviewMapper;
+	private final ReportMapper reportMapper;
+	private final RatingMapper ratingMapper;
+	private final SystemJobMapper systemJobMapper;
+	private final VideoMapper videoMapper;
 
 	// Novel-related mappings
 	@Override
@@ -117,12 +96,7 @@ public class MapperFacade implements Mapper {
 
 	@Override
 	public ChapterDTO ChaptertoChapterDTO(Chapter chapter) {
-		return chapterMapper.ChaptertoChapterDTO(chapter);
-	}
-
-	@Override
-	public List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters) {
-		return chapterMapper.ChapterListtoDTOList(chapters);
+		return chapterMapper.ChaptertoDTO(chapter);
 	}
 
 	@Override
@@ -267,9 +241,7 @@ public class MapperFacade implements Mapper {
 	// Notification-related mappings
 	@Override
 	public NotificationDTO NotificationtoDTO(Notification notification) {
-		NotificationDTO dto = notificationMapper.NotificationtoDTO(notification);
-		dto.setUserId(notification.getUser().getId());
-		return dto;
+		return notificationMapper.NotificationtoDTO(notification);
 	}
 
 	@Override

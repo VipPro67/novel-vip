@@ -50,8 +50,6 @@ public interface Mapper {
 
     ChapterDTO ChaptertoChapterDTO(Chapter chapter);
 
-    List<ChapterDTO> ChapterListtoDTOList(List<Chapter> chapters);
-
     void updateChapterFromDTO(ChapterDTO dto, Chapter chapter);
 
     // Category-related mappings

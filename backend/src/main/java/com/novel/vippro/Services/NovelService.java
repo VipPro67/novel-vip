@@ -157,7 +157,7 @@ public class NovelService {
     @Cacheable(value = "novels", key = "'search-' + (#searchDTO != null ? #searchDTO.cacheKey() : '') + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     @Transactional(readOnly = true)
     public PageResponse<NovelDTO> searchNovels(NovelSearchDTO searchDTO, Pageable pageable) {
-        NovelSearchDTO filters = searchDTO == null ? new NovelSearchDTO() : searchDTO.cleanedCopy();
+        NovelSearchDTO filters = searchDTO == null ? NovelSearchDTO.builder().build() : searchDTO.cleanedCopy();
 
         if (!filters.hasFilters()) {
             logger.info("Search requested without filters. Returning empty page.");
@@ -171,18 +171,18 @@ public class NovelService {
         if (novels.isEmpty()) {
             logger.info("Elasticsearch search returned no results. Falling back to database query.");
             novels = novelRepository.searchByCriteria(
-                    filters.getKeyword(),
-                    filters.getTitle(),
-                    filters.getAuthor(),
-                    filters.getCategory(),
-                    filters.getGenre(),
-                    filters.getTag(),
+                    filters.keyword(),
+                    filters.title(),
+                    filters.author(),
+                    filters.category(),
+                    filters.genre(),
+                    filters.tag(),
                     pageable);
 
-            if (novels.isEmpty() && filters.getKeyword() != null) {
+            if (novels.isEmpty() && filters.keyword() != null) {
                 logger.info("No novels found using criteria. Falling back to keyword search for: {}",
-                        filters.getKeyword());
-                novels = novelRepository.searchByKeyword(filters.getKeyword(), pageable);
+                        filters.keyword());
+                novels = novelRepository.searchByKeyword(filters.keyword(), pageable);
                 searchService.indexNovels(novels.getContent());
                 logger.info("Reindexing completed. {} novels reindexed.", novels.getTotalElements());
             }
@@ -223,12 +223,12 @@ public class NovelService {
     @CacheEvict(value = "novels", allEntries = true)
     public NovelDTO createNovel(NovelCreateDTO novelDTO) {
         Novel novel = new Novel();
-        novel.setTitle(novelDTO.getTitle());
-        novel.setSlug(novelDTO.getSlug());
-        novel.setDescription(novelDTO.getDescription());
-        novel.setAuthor(novelDTO.getAuthor());
-        novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
-        novel.setStatus(novelDTO.getStatus());
+        novel.setTitle(novelDTO.title());
+        novel.setSlug(novelDTO.slug());
+        novel.setDescription(novelDTO.description());
+        novel.setAuthor(novelDTO.author());
+        novel.setTitleNormalized(novelDTO.title().toLowerCase());
+        novel.setStatus(novelDTO.status());
         UUID ownerId = UserDetailsImpl.getCurrentUserId();
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", ownerId));
@@ -238,13 +238,13 @@ public class NovelService {
         novel.setComments(null);
 
         // Handle categories
-        if (novelDTO.getCategories() != null) {
+        if (novelDTO.categories() != null) {
             // Clear existing categories
             novel.getCategories().clear();
 
             // Add new categories if provided
-            if (!novelDTO.getCategories().isEmpty()) {
-                Set<String> categoryNames = new HashSet<>(novelDTO.getCategories());
+            if (!novelDTO.categories().isEmpty()) {
+                Set<String> categoryNames = new HashSet<>(novelDTO.categories());
                 for (String categoryName : categoryNames) {
                     try {
                         Category category = categoryRepository.findByNameIgnoreCase(categoryName)
@@ -259,10 +259,10 @@ public class NovelService {
         }
 
         // Handle tags - only use existing tags
-        if (novelDTO.getTags() != null && !novelDTO.getTags().isEmpty()) {
+        if (novelDTO.tags() != null && !novelDTO.tags().isEmpty()) {
             Set<Tag> tags = new HashSet<>();
 
-            for (String tagName : novelDTO.getTags()) {
+            for (String tagName : novelDTO.tags()) {
                 try {
                     Tag tag = tagRepository.findByNameIgnoreCase(tagName)
                             .orElseThrow(() -> new ResourceNotFoundException("Tag", "name", tagName));
@@ -278,10 +278,10 @@ public class NovelService {
         }
 
         // Handle genres - only use existing genres
-        if (novelDTO.getGenres() != null && !novelDTO.getGenres().isEmpty()) {
+        if (novelDTO.genres() != null && !novelDTO.genres().isEmpty()) {
             Set<Genre> genres = new HashSet<>();
 
-            for (String genreName : novelDTO.getGenres()) {
+            for (String genreName : novelDTO.genres()) {
                 try {
                     Genre genre = genreRepository.findByNameIgnoreCase(genreName)
                             .orElseThrow(() -> new ResourceNotFoundException("Genre", "name", genreName));
@@ -325,12 +325,13 @@ public class NovelService {
             int idx = 1;
             for (var c : epubResult.getChapters()) {
                 try {
-                    CreateChapterDTO dto = new CreateChapterDTO();
-                    dto.setChapterNumber(idx);
-                    dto.setNovelId(saved.getId());
-                    dto.setTitle(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx);
-                    dto.setContentHtml(c.getContentHtml() == null ? "" : c.getContentHtml());
-                    dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+                    CreateChapterDTO dto = CreateChapterDTO.builder()
+                            .chapterNumber(idx)
+                            .novelId(saved.getId())
+                            .title(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx)
+                            .contentHtml(c.getContentHtml() == null ? "" : c.getContentHtml())
+                            .format(CreateChapterDTO.ContentFormat.HTML)
+                            .build();
                     chapterService.createChapter(dto);
                 } catch (Exception e) {
                     logger.error("Failed to create chapter {} for novel {}: {}", idx, saved.getId(), e.getMessage());
@@ -392,21 +393,21 @@ public class NovelService {
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
 
         // Update novel properties
-        novel.setTitle(novelDTO.getTitle());
-        // novel.setSlug(novelDTO.getSlug()); dont allow slug change :)
-        novel.setDescription(novelDTO.getDescription());
-        novel.setAuthor(novelDTO.getAuthor());
-        novel.setTitleNormalized(novelDTO.getTitle().toLowerCase());
-        novel.setStatus(novelDTO.getStatus());
+        novel.setTitle(novelDTO.title());
+        // novel.setSlug(novelDTO.slug()); dont allow slug change :)
+        novel.setDescription(novelDTO.description());
+        novel.setAuthor(novelDTO.author());
+        novel.setTitleNormalized(novelDTO.title().toLowerCase());
+        novel.setStatus(novelDTO.status());
 
         // Handle categories
-        if (novelDTO.getCategories() != null) {
+        if (novelDTO.categories() != null) {
             // Clear existing categories
             novel.getCategories().clear();
 
             // Add new categories if provided
-            if (!novelDTO.getCategories().isEmpty()) {
-                Set<String> categoryNames = new HashSet<>(novelDTO.getCategories());
+            if (!novelDTO.categories().isEmpty()) {
+                Set<String> categoryNames = new HashSet<>(novelDTO.categories());
                 for (String categoryName : categoryNames) {
                     try {
                         Category category = categoryRepository.findByNameIgnoreCase(categoryName)
@@ -421,10 +422,10 @@ public class NovelService {
         }
 
         // Handle tags - only use existing tags
-        if (novelDTO.getTags() != null && !novelDTO.getTags().isEmpty()) {
+        if (novelDTO.tags() != null && !novelDTO.tags().isEmpty()) {
             Set<Tag> tags = new HashSet<>();
 
-            for (String tagName : novelDTO.getTags()) {
+            for (String tagName : novelDTO.tags()) {
                 try {
                     Tag tag = tagRepository.findByNameIgnoreCase(tagName)
                             .orElseThrow(() -> new ResourceNotFoundException("Tag", "name", tagName));
@@ -440,10 +441,10 @@ public class NovelService {
         }
 
         // Handle genres - only use existing genres
-        if (novelDTO.getGenres() != null && !novelDTO.getGenres().isEmpty()) {
+        if (novelDTO.genres() != null && !novelDTO.genres().isEmpty()) {
             Set<Genre> genres = new HashSet<>();
 
-            for (String genreName : novelDTO.getGenres()) {
+            for (String genreName : novelDTO.genres()) {
                 try {
                     Genre genre = genreRepository.findByNameIgnoreCase(genreName)
                             .orElseThrow(() -> new ResourceNotFoundException("Genre", "name", genreName));
@@ -512,12 +513,13 @@ public class NovelService {
             int idx = startingIndex;
             List<CreateChapterDTO> dtos = new java.util.ArrayList<>();
             for (var c : epubResult.getChapters()) {
-                CreateChapterDTO dto = new CreateChapterDTO();
-                dto.setChapterNumber(idx);
-                dto.setNovelId(novelId);
-                dto.setTitle(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx);
-                dto.setContentHtml(c.getContentHtml() == null ? "" : c.getContentHtml());
-                dto.setFormat(CreateChapterDTO.ContentFormat.HTML);
+                CreateChapterDTO dto = CreateChapterDTO.builder()
+                        .chapterNumber(idx)
+                        .novelId(novelId)
+                        .title(c.getTitle() != null && !c.getTitle().isBlank() ? c.getTitle() : "Chapter " + idx)
+                        .contentHtml(c.getContentHtml() == null ? "" : c.getContentHtml())
+                        .format(CreateChapterDTO.ContentFormat.HTML)
+                        .build();
                 dtos.add(dto);
                 idx++;
             }

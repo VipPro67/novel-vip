@@ -89,10 +89,10 @@ public class AuthService {
 
 	public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
 		try {
-			String normalizedEmail = normalizeEmail(loginRequest.getEmail());
+			String normalizedEmail = normalizeEmail(loginRequest.email());
 			logger.info("Attempting to authenticate user: {}", normalizedEmail);
 			User user = userRepository.findByEmail(normalizedEmail)
-					.orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.getEmail()));
+					.orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.email()));
 			if (Boolean.FALSE.equals(user.getEmailVerified())) {
 				sendVerificationEmailSilently(user, false);
 				return ResponseEntity.status(403)
@@ -102,7 +102,7 @@ public class AuthService {
 			}
 			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(user.getUsername(),
-							loginRequest.getPassword()));
+							loginRequest.password()));
 
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			String jwt = jwtUtils.generateJwtToken(authentication);
@@ -126,7 +126,7 @@ public class AuthService {
 					.ok(new ControllerResponse<>(true, "User authenticated successfully",
 							jwtResponse, 200));
 		} catch (BadCredentialsException e) {
-			logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.getEmail());
+			logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.email());
 			return ResponseEntity
 					.status(401)
 					.body(new ControllerResponse<>(false, "Invalid username or password", null,
@@ -137,7 +137,7 @@ public class AuthService {
 					.status(404)
 					.body(new ControllerResponse<>(false, "User not found", null, 404));
 		} catch (Exception e) {
-			logger.error("Unexpected error during authentication for user {}: {}", loginRequest.getEmail(),
+			logger.error("Unexpected error during authentication for user {}: {}", loginRequest.email(),
 					e.getMessage());
 			return ResponseEntity
 					.status(500)
@@ -147,7 +147,7 @@ public class AuthService {
 	}
 
 	public ResponseEntity<ControllerResponse<JwtResponse>> refreshAccessToken(RefreshTokenRequest req) {
-		String requestToken = req.getRefreshToken();
+		String requestToken = req.refreshToken();
 		if (requestToken == null || requestToken.isEmpty()) {
 			return ResponseEntity
 					.badRequest()
@@ -206,8 +206,8 @@ public class AuthService {
 	}
 
 	public ResponseEntity<ControllerResponse<String>> registerUser(SignupRequest signUpRequest) {
-		String username = signUpRequest.getUsername().trim();
-		String email = normalizeEmail(signUpRequest.getEmail());
+		String username = signUpRequest.username().trim();
+		String email = normalizeEmail(signUpRequest.email());
 
 		// Username validation: only letters and digits
 		if (!username.matches("^[a-zA-Z0-9]+$")) {
@@ -241,7 +241,7 @@ public class AuthService {
 		User user = new User();
 		user.setUsername(username);
 		user.setEmail(email);
-		user.setPassword(encoder.encode(signUpRequest.getPassword()));
+		user.setPassword(encoder.encode(signUpRequest.password()));
 
 		List<Role> roles = new ArrayList<>();
 		Role userRole = roleRepository.findByName(ERole.USER)
@@ -308,7 +308,7 @@ public class AuthService {
 
 	public ResponseEntity<ControllerResponse<GoogleAccountInfo>> verifyGoogleAccount(GoogleAuthRequest request) {
 		try {
-			Payload payload = verifyGoogleIdToken(request.getCredential());
+			Payload payload = verifyGoogleIdToken(request.credential());
 			String email = payload.getEmail();
 			String normalizedEmail = email != null ? normalizeEmail(email) : null;
 			GoogleAccountInfo info = GoogleAccountInfo.builder()
@@ -339,7 +339,7 @@ public class AuthService {
 
 	public ResponseEntity<ControllerResponse<JwtResponse>> loginOrRegisterWithGoogle(GoogleAuthRequest request) {
 		try {
-			Payload payload = verifyGoogleIdToken(request.getCredential());
+			Payload payload = verifyGoogleIdToken(request.credential());
 			if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
 				return ResponseEntity.status(400)
 						.body(new ControllerResponse<>(false, "Google email is not verified", null, 400));
