@@ -4,8 +4,11 @@ import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.NotificationType;
+import com.novel.vippro.Models.SystemJob;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.NotificationService;
+
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +38,11 @@ public class ChapterAudioProcessor {
     @Transactional
     public void process(ChapterAudioMessage message) {
         try {
-            logger.info("Processing chapter audio message for chapter {}", message.getChapterId());
+            TimeUnit.MICROSECONDS.sleep(100);
+            if (message.getChapterId() == null) {
+                logger.warn("Chapter ID is null in ChapterAudioMessage, skipping processing.");
+                return;
+            }
             Chapter chapter = chapterService.ensureChapterAudioGenerated(message.getChapterId());
             epubImportProcessor.markChapterAudioComplete(message.getJobId());
             notifySuccess(message, chapter);

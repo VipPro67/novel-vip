@@ -34,12 +34,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
+import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
+import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.FileMetadata;
+import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.SystemJob;
 import com.novel.vippro.Models.SystemJobStatus;
@@ -86,6 +89,10 @@ public class ChapterService {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private NotificationService notificationService;
+
 
     private static final Logger logger = LogManager.getLogger(ChapterService.class);
 
@@ -466,7 +473,16 @@ public class ChapterService {
         chapterRepository.save(chapter);
         cacheManager.getCache("chapters").evict(chapter.getId());
         cacheManager.getCache("chapters").evict("'novel-slug-' + " + chapter.getNovel().getSlug() + " + '-chapter-' + " + chapter.getChapterNumber());
-        return chapter;
+        logger.info("Audio generation completed for chapter id: {}", chapter.getId());
+        var noti = CreateNotificationDTO.builder()
+                .title("Chapter audio ready")
+                .message(String.format("Audio for %s - Chapter %d is ready.",
+                        chapter.getNovel().getTitle(), chapter.getChapterNumber()))
+                .type(NotificationType.CHAPTER_UPDATE)
+                .reference(chapter.getNovel().getSlug() + "/chapters/" + chapter.getChapterNumber())
+                .build();
+        notificationService.createNotification(noti);
+        return chapter; 
     }
 
     @Transactional

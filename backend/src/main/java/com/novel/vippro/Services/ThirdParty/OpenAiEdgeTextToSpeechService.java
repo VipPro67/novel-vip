@@ -87,6 +87,9 @@ public class OpenAiEdgeTextToSpeechService implements TextToSpeechService {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("OpenAI Edge TTS API key is not configured.");
         }
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalStateException("OpenAI Edge TTS base URL is not configured.");
+        }
     }
 
     private String buildSynthesisUrl() {

@@ -51,6 +51,7 @@ public class S3FileStorageService implements FileStorageService {
 
             s3Client.putObject(request, RequestBody.fromBytes(fileData));
             URL url = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(publicId));
+            logger.info("Uploaded file to S3. publicId: {}, url: {}", publicId, url);
             return url.toExternalForm();
         } catch (SdkException e) {
             logger.error("Failed to upload file to S3. publicId: {}", publicId, e);

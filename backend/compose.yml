@@ -183,14 +183,14 @@ services  :
   #     FILEBEAT_TEMPLATE: ${FILEBEAT_TEMPLATE:-novel-backend-logs}
   #     FILEBEAT_TEMPLATE_PATTERN: ${FILEBEAT_TEMPLATE_PATTERN:-novel-backend-logs-*}
 
-  # texttospeech:
-  #   build:
-  #     context: ../tts
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "5050:5050"
-  #   env_file:
-  #     - ../tts/.env
+  texttospeech:
+    build:
+      context: ../tts
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5050"
+    env_file:
+      - ../tts/.env
     
 volumes:
   postgres_data: {}
