@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import com.novel.vippro.DTO.Auth.GoogleAuthRequest;
 import com.novel.vippro.DTO.Auth.GoogleAccountInfo;
 import com.novel.vippro.DTO.Auth.LoginRequest;
-import com.novel.vippro.DTO.Auth.RefreshTokenRequest;
 import com.novel.vippro.DTO.Auth.SignupRequest;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.JwtResponse;
@@ -64,8 +63,9 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<ControllerResponse<JwtResponse>> refresh(@RequestBody RefreshTokenRequest req) {
-        return authService.refreshAccessToken(req);
+    public ResponseEntity<ControllerResponse<JwtResponse>> refresh(
+                    @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        return authService.refreshAccessToken(refreshToken);
     }
 
     @Operation(summary = "Verify Google account", description = "Verify the provided Google ID token and return basic account info")

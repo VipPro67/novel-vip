@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,7 +34,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.novel.vippro.DTO.Auth.GoogleAccountInfo;
 import com.novel.vippro.DTO.Auth.GoogleAuthRequest;
 import com.novel.vippro.DTO.Auth.LoginRequest;
-import com.novel.vippro.DTO.Auth.RefreshTokenRequest;
 import com.novel.vippro.DTO.Auth.SignupRequest;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Models.ERole;
@@ -72,8 +73,8 @@ public class AuthService {
 	@Autowired
 	RoleApprovalService roleApprovalService;
 
-	@Autowired
-	MessagePublisher messagePublisher;
+        @Autowired
+        MessagePublisher messagePublisher;
 
 	@Autowired
 	SystemJobRepository systemJobRepository;
@@ -85,11 +86,11 @@ public class AuthService {
 	private long emailVerificationExpirationHours;
 
 	private final NetHttpTransport netHttpTransport = new NetHttpTransport();
-	private static final GsonFactory GSON_FACTORY = GsonFactory.getDefaultInstance();
+        private static final GsonFactory GSON_FACTORY = GsonFactory.getDefaultInstance();
 
-	public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
-		try {
-			String normalizedEmail = normalizeEmail(loginRequest.email());
+        public ResponseEntity<ControllerResponse<JwtResponse>> authenticateUser(LoginRequest loginRequest) {
+                try {
+                        String normalizedEmail = normalizeEmail(loginRequest.email());
 			logger.info("Attempting to authenticate user: {}", normalizedEmail);
 			User user = userRepository.findByEmail(normalizedEmail)
 					.orElseThrow(() -> new ResourceNotFoundException("User", "email", loginRequest.email()));
@@ -107,24 +108,28 @@ public class AuthService {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			String jwt = jwtUtils.generateJwtToken(authentication);
 			logger.info("jwt", jwt);
-			String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
+                        String refreshToken = jwtUtils.generateRefreshToken(user.getUsername());
 
-			UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 			List<String> roles = userDetails.getAuthorities().stream()
 					.map(GrantedAuthority::getAuthority)
 					.collect(Collectors.toList());
 
-			JwtResponse jwtResponse = new JwtResponse(jwt, "Bearer",
-					userDetails.getId(),
-					userDetails.getUsername(),
-					userDetails.getEmail(),
-					roles, refreshToken, jwtUtils.getAccessTokenExpiryDate().toInstant(),
-					jwtUtils.getRefreshTokenExpiryDate().toInstant());
+                        JwtResponse jwtResponse = new JwtResponse(jwt, "Bearer",
+                                        userDetails.getId(),
+                                        userDetails.getUsername(),
+                                        userDetails.getEmail(),
+                                        roles, jwtUtils.getAccessTokenExpiryDate().toInstant(),
+                                        jwtUtils.getRefreshTokenExpiryDate().toInstant());
 
-			logger.info("User {} authenticated successfully", userDetails.getUsername());
-			return ResponseEntity
-					.ok(new ControllerResponse<>(true, "User authenticated successfully",
-							jwtResponse, 200));
+                        logger.info("User {} authenticated successfully", userDetails.getUsername());
+                        ResponseCookie refreshCookie = createRefreshTokenCookie(refreshToken);
+
+                        return ResponseEntity
+                                        .ok()
+                                        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                        .body(new ControllerResponse<>(true, "User authenticated successfully",
+                                                        jwtResponse, 200));
 		} catch (BadCredentialsException e) {
 			logger.warn("Authentication failed for user {}: Invalid credentials", loginRequest.email());
 			return ResponseEntity
@@ -146,24 +151,23 @@ public class AuthService {
 		}
 	}
 
-	public ResponseEntity<ControllerResponse<JwtResponse>> refreshAccessToken(RefreshTokenRequest req) {
-		String requestToken = req.refreshToken();
-		if (requestToken == null || requestToken.isEmpty()) {
-			return ResponseEntity
-					.badRequest()
-					.body(new ControllerResponse<>(false, "Refresh token is required", null, 400));
-		}
+        public ResponseEntity<ControllerResponse<JwtResponse>> refreshAccessToken(String refreshToken) {
+                if (refreshToken == null || refreshToken.isEmpty()) {
+                        return ResponseEntity
+                                        .badRequest()
+                                        .body(new ControllerResponse<>(false, "Refresh token is required", null, 400));
+                }
 
-		if (!jwtUtils.validateJwtToken(requestToken) || !jwtUtils.isRefreshToken(requestToken)) {
-			return ResponseEntity
-					.status(403)
-					.body(new ControllerResponse<>(false, "Invalid or expired refresh token", null,
-							403));
-		}
+                if (!jwtUtils.validateJwtToken(refreshToken) || !jwtUtils.isRefreshToken(refreshToken)) {
+                        return ResponseEntity
+                                        .status(403)
+                                        .body(new ControllerResponse<>(false, "Invalid or expired refresh token", null,
+                                                        403));
+                }
 
-		String username = jwtUtils.getUserNameFromJwtToken(requestToken);
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+                String username = jwtUtils.getUserNameFromJwtToken(refreshToken);
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
 		String newAccessToken = jwtUtils.generateAccessTokenFromUsername(username);
 		String newRefreshToken = jwtUtils.generateRefreshToken(username);
@@ -173,16 +177,20 @@ public class AuthService {
 				.map(GrantedAuthority::getAuthority)
 				.collect(Collectors.toList());
 
-		JwtResponse jwtResponse = new JwtResponse(newAccessToken, "Bearer",
-				userDetails.getId(),
-				userDetails.getUsername(),
-				userDetails.getEmail(),
-				roles, newRefreshToken, jwtUtils.getAccessTokenExpiryDate().toInstant(),
-				jwtUtils.getRefreshTokenExpiryDate().toInstant());
+                JwtResponse jwtResponse = new JwtResponse(newAccessToken, "Bearer",
+                                userDetails.getId(),
+                                userDetails.getUsername(),
+                                userDetails.getEmail(),
+                                roles, jwtUtils.getAccessTokenExpiryDate().toInstant(),
+                                jwtUtils.getRefreshTokenExpiryDate().toInstant());
 
-		return ResponseEntity
-				.ok(new ControllerResponse<>(true, "Access token refreshed successfully",
-						jwtResponse, 200));
+                ResponseCookie refreshCookie = createRefreshTokenCookie(newRefreshToken);
+
+                return ResponseEntity
+                                .ok()
+                                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                .body(new ControllerResponse<>(true, "Access token refreshed successfully",
+                                                jwtResponse, 200));
 	}
 
 	private String normalizeEmail(String email) {
@@ -351,12 +359,17 @@ public class AuthService {
 			}
 			String normalizedEmail = normalizeEmail(email);
 
-			User user = userRepository.findByEmail(normalizedEmail)
-					.map(existing -> updateExistingUserFromGoogle(existing, payload))
-					.orElseGet(() -> createUserFromGooglePayload(payload, normalizedEmail));
+                        User user = userRepository.findByEmail(normalizedEmail)
+                                        .map(existing -> updateExistingUserFromGoogle(existing, payload))
+                                        .orElseGet(() -> createUserFromGooglePayload(payload, normalizedEmail));
 
-			JwtResponse jwtResponse = buildJwtResponse(user);
-			return ResponseEntity.ok(new ControllerResponse<>(true, "Authenticated with Google", jwtResponse, 200));
+                        AuthTokens authTokens = buildJwtTokens(user);
+                        ResponseCookie refreshCookie = createRefreshTokenCookie(authTokens.refreshToken());
+
+                        return ResponseEntity.ok()
+                                        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                        .body(new ControllerResponse<>(true, "Authenticated with Google",
+                                                        authTokens.jwtResponse(), 200));
 		} catch (BadCredentialsException | IllegalArgumentException e) {
 			logger.warn("Google authentication failed: {}", e.getMessage());
 			return ResponseEntity.status(400)
@@ -462,26 +475,40 @@ public class AuthService {
 		return candidate;
 	}
 
-	private JwtResponse buildJwtResponse(User user) {
-		UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-				userDetails.getAuthorities());
-		String accessToken = jwtUtils.generateJwtToken(authentication);
-		String refreshToken = jwtUtils.generateRefreshToken(userDetails.getUsername());
+        private AuthTokens buildJwtTokens(User user) {
+                UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+                                userDetails.getAuthorities());
+                String accessToken = jwtUtils.generateJwtToken(authentication);
+                String refreshToken = jwtUtils.generateRefreshToken(userDetails.getUsername());
 		List<String> roles = userDetails.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority)
 				.collect(Collectors.toList());
 
-		return new JwtResponse(accessToken,
-				"Bearer",
-				userDetails.getId(),
-				userDetails.getUsername(),
-				userDetails.getEmail(),
-				roles,
-				refreshToken,
-				jwtUtils.getAccessTokenExpiryDate().toInstant(),
-				jwtUtils.getRefreshTokenExpiryDate().toInstant());
-	}
+                JwtResponse jwtResponse = new JwtResponse(accessToken,
+                                "Bearer",
+                                userDetails.getId(),
+                                userDetails.getUsername(),
+                                userDetails.getEmail(),
+                                roles,
+                                jwtUtils.getAccessTokenExpiryDate().toInstant(),
+                                jwtUtils.getRefreshTokenExpiryDate().toInstant());
+
+                return new AuthTokens(jwtResponse, refreshToken);
+        }
+
+        private ResponseCookie createRefreshTokenCookie(String refreshToken) {
+                return ResponseCookie.from("refreshToken", refreshToken)
+                                .httpOnly(true)
+                                .secure(true)
+                                .path("/api/auth/refresh")
+                                .sameSite("Strict")
+                                .maxAge(Duration.ofMillis(jwtUtils.getRefreshTokenExpirationMs()))
+                                .build();
+        }
+
+        private record AuthTokens(JwtResponse jwtResponse, String refreshToken) {
+        }
 
 	private Duration getVerificationDuration() {
 		long hours = emailVerificationExpirationHours > 0 ? emailVerificationExpirationHours : 24L;

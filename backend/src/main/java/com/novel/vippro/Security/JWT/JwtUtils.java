@@ -126,6 +126,10 @@ public class JwtUtils {
     return new Date(System.currentTimeMillis() + jwtRefreshExpirationMs);
   }
 
+  public long getRefreshTokenExpirationMs() {
+    return jwtRefreshExpirationMs;
+  }
+
   public Key getSigningKey() {
     return key();
   }
