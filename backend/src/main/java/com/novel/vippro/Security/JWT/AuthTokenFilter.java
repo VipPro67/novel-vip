@@ -50,10 +50,17 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
           @SuppressWarnings("unchecked")
           List<String> roles = (List<String>) claims.get("roles");
+          @SuppressWarnings("unchecked")
+          List<String> permissions = (List<String>) claims.get("permissions");
           List<SimpleGrantedAuthority> authorities = new ArrayList<>();
           if (roles != null) {
             for (String role : roles) {
-              authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+              authorities.add(new SimpleGrantedAuthority(role));
+            }
+          }
+          if (permissions != null) {
+            for (String permission : permissions) {
+              authorities.add(new SimpleGrantedAuthority(permission));
             }
           }
 

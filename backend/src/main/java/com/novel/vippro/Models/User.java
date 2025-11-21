@@ -59,15 +59,24 @@ public class User extends BaseEntity {
 	@Column(name = "email_verification_sent_at")
 	private Instant emailVerificationSentAt;
 
-	@Column(name = "email_verification_expires_at")
-	private Instant emailVerificationExpiresAt;
+    @Column(name = "email_verification_expires_at")
+    private Instant emailVerificationExpiresAt;
 
-	@Column(name = "email_verified_at")
-	private Instant emailVerifiedAt;
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-	private List<Role> roles;
+    @Column(name = "is_active")
+    private Boolean active = Boolean.TRUE;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private List<Role> roles;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private UserWallet wallet;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CoinTransaction> coinTransactions;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Novel> ownedNovels;

@@ -27,6 +27,9 @@ public class Chapter extends BaseEntity {
     @Column(nullable = false)
     private Integer chapterNumber;
 
+    @Column(name = "index_number")
+    private Integer indexNumber;
+
     @Column(nullable = false)
     private String title;
 
@@ -37,6 +40,15 @@ public class Chapter extends BaseEntity {
     @JoinColumn(name = "novel_id", nullable = false)
     @JsonBackReference("novel-chapters")
     private Novel novel;
+
+    @Column(name = "content_url")
+    private String contentUrl;
+
+    @Column(name = "is_locked")
+    private Boolean locked = Boolean.FALSE;
+
+    @Column(name = "audio_url")
+    private String audioUrl;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("chapter-comments")

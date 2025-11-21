@@ -3,6 +3,7 @@ package com.novel.vippro.Security.JWT;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import com.novel.vippro.Models.User;
 import com.novel.vippro.Security.UserDetailsImpl;
 
 import io.jsonwebtoken.*;
@@ -35,35 +37,11 @@ public class JwtUtils {
   // ====== ACCESS TOKEN (existing) ======
   public String generateJwtToken(Authentication authentication) {
     UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("userId", userPrincipal.getId());
-    claims.put("email", userPrincipal.getEmail());
-    claims.put("roles", userPrincipal.getAuthorities().stream()
-        .map(GrantedAuthority::getAuthority)
-        .collect(Collectors.toList()));
-    claims.put("typ", "access");
-
-    return Jwts.builder()
-        .setSubject(userPrincipal.getUsername())
-        .addClaims(claims)
-        .setIssuedAt(new Date())
-        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-        .signWith(key(), SignatureAlgorithm.HS256)
-        .compact();
+    return buildAccessToken(userPrincipal);
   }
 
-  /** Generate an access token when you only have the username (e.g. refresh flow). */
-  public String generateAccessTokenFromUsername(String username) {
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("typ", "access");
-    return Jwts.builder()
-        .setSubject(username)
-        .addClaims(claims)
-        .setIssuedAt(new Date())
-        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-        .signWith(key(), SignatureAlgorithm.HS256)
-        .compact();
+  public String generateAccessToken(User user) {
+    return buildAccessToken(UserDetailsImpl.build(user));
   }
 
   // ====== REFRESH TOKEN (new) ======
@@ -136,5 +114,38 @@ public class JwtUtils {
 
   private Key key() {
     return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+  }
+
+  private String buildAccessToken(UserDetailsImpl userDetails) {
+    Map<String, Object> claims = buildClaims(userDetails);
+    return Jwts.builder()
+        .setSubject(userDetails.getUsername())
+        .addClaims(claims)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+        .signWith(key(), SignatureAlgorithm.HS256)
+        .compact();
+  }
+
+  private Map<String, Object> buildClaims(UserDetailsImpl userDetails) {
+    Map<String, Object> claims = new HashMap<>();
+    List<String> authorities = userDetails.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .toList();
+
+    List<String> roles = authorities.stream()
+        .filter(a -> a.startsWith("ROLE_"))
+        .collect(Collectors.toList());
+
+    List<String> permissions = authorities.stream()
+        .filter(a -> !a.startsWith("ROLE_"))
+        .collect(Collectors.toList());
+
+    claims.put("userId", userDetails.getId());
+    claims.put("email", userDetails.getEmail());
+    claims.put("roles", roles);
+    claims.put("permissions", permissions);
+    claims.put("typ", "access");
+    return claims;
   }
 }
