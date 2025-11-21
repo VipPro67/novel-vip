@@ -169,8 +169,8 @@ public class AuthService {
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
-		String newAccessToken = jwtUtils.generateAccessTokenFromUsername(username);
-		String newRefreshToken = jwtUtils.generateRefreshToken(username);
+                String newAccessToken = jwtUtils.generateAccessToken(user);
+                String newRefreshToken = jwtUtils.generateRefreshToken(username);
 
 		UserDetailsImpl userDetails = UserDetailsImpl.build(user);
 		List<String> roles = userDetails.getAuthorities().stream()

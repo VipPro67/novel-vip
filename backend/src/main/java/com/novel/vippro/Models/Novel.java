@@ -38,8 +38,11 @@ public class Novel extends BaseEntity {
 	@Column(columnDefinition = "TEXT")
 	private String description;
 
-	@Column(nullable = false)
-	private String author;
+    @Column(nullable = false)
+    private String author;
+
+    @Column(name = "is_premium")
+    private Boolean premium = Boolean.FALSE;
 
 	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "cover_image_id", referencedColumnName = "id")
