@@ -4,4 +4,4 @@
 **/node_modules
 **/dist
 **/output
-**/novelvip.json
+backend/src/main/resources/novelvip.json
