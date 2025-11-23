@@ -21,6 +21,7 @@ services  :
     volumes:
       - ~/.m2:/root/.m2
       - app_logs:/app/logs
+      - ./src/main/resources/novelvip.json:/app/config/novelvip.json:ro
     depends_on:
       rabbitmq:
         condition: service_healthy

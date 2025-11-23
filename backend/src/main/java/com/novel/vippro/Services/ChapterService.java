@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
@@ -72,7 +73,7 @@ public class ChapterService {
     private Mapper mapper;
 
     @Autowired
-    @Qualifier("openAiEdgeTTS")
+    @Qualifier("gcpTTS")
     private TextToSpeechService textToSpeechService;
 
     @Autowired
@@ -456,8 +457,9 @@ public class ChapterService {
         }
 
         Map<String, Object> content = getChapterContent(chapter);
-        String textToConvert = chapter.getTitle() + "\n" + content.get("content");
-        textToConvert = textToConvert.replaceAll("</?(?!h2\\b)[^>]*>", "");
+        // only get text in p tags, remove other html tags
+        String rawHtml = (String) content.get("content");
+        String textToConvert = Jsoup.parse(rawHtml).select("p").text();
         FileMetadata audioFile;
         try {
             logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
@@ -472,7 +474,10 @@ public class ChapterService {
         chapter.setAudioFile(audioFile);
         chapterRepository.save(chapter);
         cacheManager.getCache("chapters").evict(chapter.getId());
-        cacheManager.getCache("chapters").evict("'novel-slug-' + " + chapter.getNovel().getSlug() + " + '-chapter-' + " + chapter.getChapterNumber());
+        var evictNovelId = "novel-" + chapter.getNovel().getId() + "-chapter-" + chapter.getChapterNumber();
+        cacheManager.getCache("chapters").evict(evictNovelId);
+        var evictNovelSlug = "novel-slug-" + chapter.getNovel().getSlug() + "-chapter-" + chapter.getChapterNumber();
+        cacheManager.getCache("chapters").evict(evictNovelSlug);
         logger.info("Audio generation completed for chapter id: {}", chapter.getId());
         return chapter;
     }
