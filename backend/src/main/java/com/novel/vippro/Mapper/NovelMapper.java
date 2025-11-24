@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = { CategoryMapper.class, TagMapper.class, GenreMapper.class })
+@Mapper(componentModel = "spring", uses = { CategoryMapper.class, TagMapper.class, GenreMapper.class }, unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public abstract class NovelMapper {
 
     @Autowired

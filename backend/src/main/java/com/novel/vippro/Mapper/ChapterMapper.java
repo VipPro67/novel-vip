@@ -13,7 +13,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-@Mapper(componentModel = "spring", uses = { NovelMapper.class, FileMetadataMapper.class })
+@Mapper(componentModel = "spring", uses = { NovelMapper.class, FileMetadataMapper.class }, unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public abstract class ChapterMapper {
 
     @Autowired

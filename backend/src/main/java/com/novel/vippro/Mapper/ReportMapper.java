@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring", uses = { UserMapper.class, NovelMapper.class, ChapterMapper.class, CommentMapper.class })
+@Mapper(componentModel = "spring", uses = { UserMapper.class, NovelMapper.class, ChapterMapper.class, CommentMapper.class }, unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface ReportMapper {
 
     ReportDTO ReporttoDTO(Report report);
