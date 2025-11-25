@@ -12,8 +12,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import java.time.LocalDateTime;
 import java.util.*;
-
-import org.hibernate.annotations.BatchSize;
 import com.novel.vippro.Models.base.BaseEntity;
 
 @Entity

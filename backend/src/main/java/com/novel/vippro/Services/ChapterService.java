@@ -29,21 +29,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
-import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
-import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.Exception.ResourceNotFoundException;
 import com.novel.vippro.Mapper.Mapper;
 import com.novel.vippro.Messaging.MessagePublisher;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.FileMetadata;
-import com.novel.vippro.Models.NotificationType;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.SystemJob;
 import com.novel.vippro.Models.SystemJobStatus;
@@ -90,10 +85,6 @@ public class ChapterService {
 
     @Autowired
     private CacheManager cacheManager;
-
-    @Autowired
-    private NotificationService notificationService;
-
 
     private static final Logger logger = LogManager.getLogger(ChapterService.class);
 

@@ -10,12 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Component
 public class HttpLoggingFilter implements jakarta.servlet.Filter {

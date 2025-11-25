@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.handler.annotation.Header;
@@ -33,7 +32,6 @@ public class SearchSocketController {
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final Map<String, Future<?>> inFlight = new ConcurrentHashMap<>();
 
-    @Autowired
     public SearchSocketController(SimpMessagingTemplate messagingTemplate, NovelService novelService) {
         this.messagingTemplate = messagingTemplate;
         this.novelService = novelService;

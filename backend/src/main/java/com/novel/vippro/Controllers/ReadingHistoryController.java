@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.novel.vippro.DTO.Novel.NovelDTO;
 import com.novel.vippro.DTO.ReadingHistory.ReadingHistoryDTO;
 import com.novel.vippro.DTO.ReadingHistory.ReadingStatsDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;

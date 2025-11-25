@@ -10,7 +10,6 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Services.AdvancedChapterUploadService;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.ChapterService;
-import com.novel.vippro.Services.ReadingHistoryService;
 import com.novel.vippro.Services.ViewStatService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,8 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @CrossOrigin(origins = "*")

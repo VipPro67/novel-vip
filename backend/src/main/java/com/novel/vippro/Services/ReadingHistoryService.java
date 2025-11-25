@@ -37,9 +37,6 @@ public class ReadingHistoryService {
     private NovelRepository novelRepository;
 
     @Autowired
-    private ChapterRepository chapterRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Autowired

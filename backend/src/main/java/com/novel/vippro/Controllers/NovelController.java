@@ -16,8 +16,6 @@ import com.novel.vippro.Services.SuggestService;
 import com.novel.vippro.Services.ViewStatService;
 import com.novel.vippro.DTO.Novel.SearchSuggestion;
 
-import jakarta.validation.Valid;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

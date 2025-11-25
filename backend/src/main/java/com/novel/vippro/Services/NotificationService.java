@@ -30,8 +30,6 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserService userService;
-    @Autowired
     private Mapper mapper;
 
     @Autowired

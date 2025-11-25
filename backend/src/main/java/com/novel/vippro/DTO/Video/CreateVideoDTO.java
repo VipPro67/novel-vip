@@ -2,7 +2,6 @@ package com.novel.vippro.DTO.Video;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
 
 public record CreateVideoDTO(
     @NotBlank

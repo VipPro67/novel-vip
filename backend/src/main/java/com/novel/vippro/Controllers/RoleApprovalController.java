@@ -21,10 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.novel.vippro.DTO.Role.RoleApprovalDTO;
 import com.novel.vippro.DTO.Role.RoleRejectDTO;
 import com.novel.vippro.DTO.Role.RoleRequestDTO;
-import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
-import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.Services.RoleApprovalService;
 
@@ -45,8 +43,6 @@ public class RoleApprovalController {
     @Operation(summary = "Request a new role", description = "Submit a request to gain a new role")
     @PostMapping("/request")
     public ControllerResponse<?> requestRole(@RequestBody RoleRequestDTO request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return ControllerResponse.success("Role request submitted successfully",
                 roleApprovalService.createRoleApprovalRequest(request));
     }

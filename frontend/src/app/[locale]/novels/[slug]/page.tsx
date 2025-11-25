@@ -98,17 +98,16 @@ export default function NovelDetailPage() {
   }, [slug])
 
   useEffect(() => {
+    console.log(chaptersPage);
     if (novel) {
       fetchChapters(novel.id, chaptersPage, chaptersSize)
       fetchUserRating(novel.id)
     }
   }, [chaptersPage, chaptersSize])
-
-  // fetch paginated chapters helper
   const fetchChapters = async (novelId: string, page = 0, size = 100) => {
     setChaptersLoading(true)
     try {
-      if (!novelId || chapters.length > 0) {
+      if (!novelId) {
         return
       }
       const chaptersResponse = await api.getChaptersByNovel(novelId, {

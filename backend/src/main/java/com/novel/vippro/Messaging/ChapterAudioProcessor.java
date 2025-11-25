@@ -4,7 +4,6 @@ import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.NotificationType;
-import com.novel.vippro.Models.SystemJob;
 import com.novel.vippro.Services.ChapterService;
 import com.novel.vippro.Services.NotificationService;
 
