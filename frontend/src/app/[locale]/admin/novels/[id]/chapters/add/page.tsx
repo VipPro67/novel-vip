@@ -19,10 +19,11 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel } from "@/services/api"
+import { api } from "@/services/api"
 import { Type, Upload, FileText, X, BookOpen, Clock, FileCheck, Lightbulb, } from "lucide-react"
 import RichTextEditor from "@/components/rich-text-editor"
 import { Link } from "@/navigation"
+import { Novel } from "@/models"
 
 // using shared RichTextEditor
 
@@ -32,15 +33,13 @@ export default function AddChapterPage() {
   const params = useParams()
   const { toast } = useToast()
 
-  const [novels, setNovels] = useState<Novel[]>([])
-  const [selectedNovelId, setSelectedNovelId] = useState("")
+  const [novel, setNovel] = useState<Novel>()
   const [title, setTitle] = useState("")
   const [chapterNumber, setChapterNumber] = useState("")
   const [contentHtml, setContent] = useState("")
   const [contentText, setContentText] = useState("")
   const [format, setFormat] = useState<'HTML' | 'TEXT'>('HTML')
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingNovels, setIsLoadingNovels] = useState(true)
 
   // prefer path param (parent [id]) then fallback to query param for backward compatibility
   const novelIdFromPath = (params as any)?.id
@@ -50,35 +49,23 @@ export default function AddChapterPage() {
     fetchNovels()
   }, [])
 
-  useEffect(() => {
-    if (novelIdParam && novels.length > 0) {
-      const novel = novels.find((n) => n.id === novelIdParam)
-      if (novel) {
-        setSelectedNovelId(novelIdParam)
-        toast({ title: "Novel Pre-selected", description: `Selected "${novel.title}" from URL parameter` })
-      }
-    }
-  }, [novelIdParam, novels, toast])
-
   const fetchNovels = async () => {
     try {
-      setIsLoadingNovels(true)
-      const response = await api.getNovels({ size: 100 })
+      const response = await api.getNovelById(novelIdParam)
       if (response.success) {
-        setNovels(response.data.content)
-      }
+        setNovel(response.data)
+        setChapterNumber((response.data.totalChapters + 1).toString())
+      } 
     } catch (error) {
       console.error("Error fetching novels:", error)
-    } finally {
-      setIsLoadingNovels(false)
-    }
+    } 
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // require the appropriate content field based on format
-    const missing = !selectedNovelId || !title || !chapterNumber || (format === 'HTML' ? !contentHtml : !contentText)
+    const missing = !novel || !title || !chapterNumber || (format === 'HTML' ? !contentHtml : !contentText)
     if (missing) {
       toast({ title: "Missing Information", description: "Please fill in all required fields", variant: "destructive" })
       return
@@ -86,8 +73,7 @@ export default function AddChapterPage() {
 
     try {
   setIsLoading(true)
-  const payload: any = { novelId: selectedNovelId, title, chapterNumber: Number.parseInt(chapterNumber), format }
-  // backend createChapter expects contentHtml; send HTML or plain text in contentHtml
+  const payload: any = { novelId: novel.id, title, chapterNumber: Number.parseInt(chapterNumber), format }
   if (format === 'HTML') payload.contentHtml = contentHtml
   else payload.contentHtml = contentText
 
@@ -95,7 +81,7 @@ export default function AddChapterPage() {
       if (response.success) {
         toast({ title: "Success", description: "Chapter created successfully" })
         // redirect to novel's chapters listing
-        router.push(`/admin/novels/${selectedNovelId}/chapters`)
+        router.push(`/admin/novels/${novel.id}/chapters`)
       } else {
         toast({ title: "Error", description: response.message || "Failed to create chapter", variant: "destructive" })
       }
@@ -113,7 +99,7 @@ export default function AddChapterPage() {
         <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <Link href={`/admin/novels/${selectedNovelId || ""}/chapters`}>
+            <Link href={`/admin/novels/${novel?.id || ""}/chapters`}>
               <Button variant="outline" size="sm">Back to Chapters</Button>
             </Link>
             <div>
@@ -131,16 +117,7 @@ export default function AddChapterPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Novel *</Label>
-                  <Select value={selectedNovelId} onValueChange={(v) => setSelectedNovelId(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a novel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {novels.map((n) => (
-                        <SelectItem key={n.id} value={n.id}>{n.title} - {n.author}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input value={novel?.title || ""} disabled />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -150,7 +127,7 @@ export default function AddChapterPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Chapter Number *</Label>
-                    <Input type="number" min="1" value={chapterNumber} onChange={(e) => setChapterNumber(e.target.value)} required />
+                    <Input type="number" min="1" value={chapterNumber} onChange={(e) => setChapterNumber(e.target.value)} required/>
                   </div>
                 </div>
 

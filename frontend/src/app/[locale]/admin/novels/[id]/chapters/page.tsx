@@ -8,32 +8,31 @@ import { Header } from "@/components/layout/header"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { api, type Chapter, type PageResponse } from "@/services/api"
+import { api } from "@/services/api"
 import { Loader2, Edit, Plus, Delete } from "lucide-react"
 import { se } from "date-fns/locale"
+import { Chapter } from "@/models"
 
 export default function ChaptersListPage() {
   const router = useRouter()
   const params = useParams()
-  const slug = params.slug as string
+  const id = params.id as string
 
   const [loading, setLoading] = useState(true)
   const [chapters, setChapters] = useState<Chapter[]>([])
-  const [novelId, setNovelId] = useState("")
 
   useEffect(() => {
     fetchChapters()
-  }, [slug])
+  }, [id])
 
   const fetchChapters = async () => {
     setLoading(true)
     try {
-      const response = await api.getNovelBySlug(slug);
+      const response = await api.getNovelById(id);
       if (!response.success) {
         throw new Error("Novel not found")
       }
-      setNovelId(response.data.id)
-      const res = await api.getChaptersByNovel(novelId, { size: 100, sortBy: "chapterNumber", sortDir: "asc" })
+      const res = await api.getChaptersByNovel(id, { size: 100, sortBy: "chapterNumber", sortDir: "asc" })
       if (res.success) {
         setChapters(res.data.content)
       }
@@ -55,7 +54,7 @@ export default function ChaptersListPage() {
                 <p className="text-muted-foreground">Manage chapters for this novel</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button onClick={() => router.push(`/admin/novels/${novelId}/chapters/add`)}>
+                <Button onClick={() => router.push(`/admin/novels/${id}/chapters/add`)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Chapter
                 </Button>
@@ -81,7 +80,7 @@ export default function ChaptersListPage() {
                           <div className="text-lg font-medium">{c.chapterNumber}. {c.title}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Link href={`/admin/novels/${novelId}/chapters/${c.id}/edit`}>
+                          <Link href={`/admin/novels/${id}/chapters/${c.chapterNumber}/edit`}>
                             <Button variant="ghost" size="sm">
                               <Edit className="h-4 w-4 mr-2" />
                               Edit

@@ -55,7 +55,6 @@ export function Header() {
   }
 
   const navigation = [
-    { name: t("nav.home"), href: "/" },
     { name: t("nav.hot"), href: "/novels/hot" },
     { name: t("nav.top"), href: "/novels/top" },
     { name: t("nav.latest"), href: "/novels/latest" },
@@ -75,7 +74,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex pl-8 items-center space-x-6">
             {navigation.map((item) => (
               <Link
                 key={item.name}

@@ -303,13 +303,21 @@ export function NovelManagement() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.slug}/edit`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/edit`)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Novel
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.slug}/chapters/add`)}>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/chapters/add`)}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Chapter
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/admin/novels/${novel.id}/chapters`)}>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Manage Chapters
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/novels/${novel.slug}`)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View as Reader
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {

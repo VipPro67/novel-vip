@@ -18,7 +18,8 @@ import { ArrowLeft, BookOpen, FileText, Clock, Target, Loader2 } from "lucide-re
 import RichTextEditor from "@/components/rich-text-editor"
 import { Link } from "@/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { api, type Novel } from "@/services/api"
+import { api } from "@/services/api"
+import { Novel } from "@/models"
 
 interface ChapterFormData {
   novelId: string
@@ -49,7 +50,7 @@ interface ChapterDetail {
 export default function EditChapterPage() {
   const router = useRouter()
   const params = useParams()
-  const slug = params.slug as string
+  const id = params.id as string
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
 
   const { toast } = useToast()
@@ -72,7 +73,7 @@ export default function EditChapterPage() {
   useEffect(() => {
     fetchChapter()
     fetchNovels()
-  }, [params.chapterId])
+  }, [params.id,params.chapterNumber])
 
   useEffect(() => {
     const source = contentState.format === 'HTML' ? (contentState.contentHtml || '') : (contentState.contentText || '')
@@ -84,7 +85,7 @@ export default function EditChapterPage() {
 
   const fetchChapter = async () => {
     try {
-      const response = await api.getChapterByNumber2(slug, chapterNumber)
+      const response = await api.getChapterByNumber(id, chapterNumber)
       if (response.success) {
         const chapterData = response.data as ChapterDetail
         setChapter(chapterData)

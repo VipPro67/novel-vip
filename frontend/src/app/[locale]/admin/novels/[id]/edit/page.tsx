@@ -77,7 +77,7 @@ export default function EditNovelPage() {
 
   useEffect(() => {
     fetchNovel();
-  }, [params.slug]);
+  }, [params.id]);
 
   // Load selectable options for categories, genres, and tags
   useEffect(() => {
@@ -104,8 +104,8 @@ export default function EditNovelPage() {
 
   const fetchNovel = async () => {
     try {
-      console.log("Fetching novel:", params.slug);
-      const response = await api.getNovelBySlug(params.slug);
+      console.log("Fetching novel:", params.id);
+      const response = await api.getNovelById(params.id);
       if (response.success) {
         const novelData = response.data;
         setNovel(novelData);
@@ -195,7 +195,7 @@ export default function EditNovelPage() {
     try {
       let coverImageId = null;
       if (coverImage) {
-        const uploadResponse = await api.updateNovelCover(novel.id, coverImage);
+        const uploadResponse = await api.updateNovelCover(params.id, coverImage);
         if (uploadResponse.success) {
           coverImageId = uploadResponse.data.id;
         }
