@@ -64,6 +64,12 @@ export const createChapterApi = (client: ApiClient) => ({
     })
   },
 
+  async reindexChapter(id: string) {
+    return client.request<void>(`/api/chapters/${id}/reindex`, {
+      method: "POST",
+    })
+  },
+
   async deleteChapter(id: string) {
     return client.request<void>(`/api/chapters/${id}`, {
       method: "DELETE",
