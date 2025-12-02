@@ -47,18 +47,28 @@ export const createChapterApi = (client: ApiClient) => ({
     })
   },
 
-  async updateChapter(
+  async updateChapterInfo(
     id: string,
     data: {
       title: string
       chapterNumber: number
-      content?: string
-      contentHtml?: string
-      format?: "HTML" | "TEXT"
       novelId: string
     },
   ) {
-    return client.request<Chapter>(`/api/chapters/${id}`, {
+    return client.request<Chapter>(`/api/chapters/${id}/info`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    })
+  },
+
+  async updateChapterContent(
+    id: string,
+    data: {
+      content?: string
+      contentHtml?: string
+    },
+  ) {
+    return client.request<Chapter>(`/api/chapters/${id}/content`, {
       method: "PUT",
       body: JSON.stringify(data),
     })

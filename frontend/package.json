@@ -75,6 +75,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sockjs-client": "^1.5.4",
+    "baseline-browser-mapping": "^2.8.32",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"

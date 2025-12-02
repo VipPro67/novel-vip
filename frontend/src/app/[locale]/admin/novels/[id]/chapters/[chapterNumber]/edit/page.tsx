@@ -1,12 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { useRef } from "react"
-import { useParams } from "next/navigation"
-import { useRouter } from "@/navigation"
-import { Header } from "@/components/layout/header"
+import { useParams, useRouter } from "next/navigation"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +15,6 @@ import RichTextEditor from "@/components/rich-text-editor"
 import { Link } from "@/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/services/api"
-import { Novel } from "@/models"
 
 interface ChapterFormData {
   novelId: string
@@ -32,8 +27,6 @@ interface ChapterContentState {
   contentText: string
   format: 'HTML' | 'TEXT'
 }
-
-// using shared RichTextEditor
 
 interface ChapterDetail {
   id: string
@@ -54,9 +47,9 @@ export default function EditChapterPage() {
   const chapterNumber = Number.parseInt(params.chapterNumber as string)
 
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [infoLoading, setInfoLoading] = useState(false)
+  const [contentLoading, setContentLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
-  const [novels, setNovels] = useState<Novel[]>([])
   const [chapter, setChapter] = useState<ChapterDetail | null>(null)
 
   const [formData, setFormData] = useState<ChapterFormData>({
@@ -66,14 +59,12 @@ export default function EditChapterPage() {
   })
 
   const [contentState, setContentState] = useState<ChapterContentState>({ contentHtml: "", contentText: "", format: 'HTML' })
-  
 
   const [stats, setStats] = useState({ wordCount: 0, charCount: 0, readingTime: 0 })
 
   useEffect(() => {
     fetchChapter()
-    fetchNovels()
-  }, [params.id,params.chapterNumber])
+  }, [params.id, params.chapterNumber])
 
   useEffect(() => {
     const source = contentState.format === 'HTML' ? (contentState.contentHtml || '') : (contentState.contentText || '')
@@ -90,7 +81,6 @@ export default function EditChapterPage() {
         const chapterData = response.data as ChapterDetail
         setChapter(chapterData)
 
-        // fetch content from jsonUrl if available
         let content = ""
         if (chapterData.jsonUrl) {
           try {
@@ -101,9 +91,8 @@ export default function EditChapterPage() {
             console.error("Error fetching chapter content:", error)
           }
         }
-        // populate both content states; allow user to pick format
         setFormData({ novelId: chapterData.novelId, title: chapterData.title, chapterNumber: chapterData.chapterNumber })
-        setContentState((prev) => ({ ...prev, contentHtml: content, contentText: content }))
+        setContentState({ contentHtml: content, contentText: content, format: 'HTML' })
       }
     } catch (error) {
       console.error("Error fetching chapter:", error)
@@ -113,44 +102,50 @@ export default function EditChapterPage() {
     }
   }
 
-  const fetchNovels = async () => {
-    try {
-      const response = await api.getNovels({ page: 0, size: 100, sortBy: "title", sortDir: "asc" })
-      if (response.success) setNovels(response.data.content)
-    } catch (error) {
-      console.error("Error fetching novels:", error)
-    }
-  }
-
-  const handleInputChange = (field: keyof ChapterFormData, value: string | number) => {
+  const handleInfoChange = (field: keyof ChapterFormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-
+    setInfoLoading(true)
     try {
-      // build payload based on chosen format
-  const payload: any = { title: formData.title, chapterNumber: formData.chapterNumber, novelId: formData.novelId, format: contentState.format }
-  // backend updateChapter expects 'content' field; put HTML content into content when format is HTML
-  payload.content = contentState.format === 'HTML' ? contentState.contentHtml : contentState.contentText
-      const response = await api.updateChapter(chapter?.id, payload)
+      const response = await api.updateChapterInfo(chapter!.id, formData)
       if (response.success) {
-        toast({ title: "Success", description: "Chapter updated successfully" })
-        router.push(`/admin/novels/${formData.novelId}/chapters`)
+        toast({ title: "Success", description: "Chapter info updated successfully" })
+        if(response.data.chapterNumber !== chapter?.chapterNumber) {
+            router.push(`/admin/novels/${response.data.novelId}/chapters/${response.data.chapterNumber}/edit`)
+        }
       }
     } catch (error) {
-      console.error("Error updating chapter:", error)
-      toast({ title: "Error", description: "Failed to update chapter", variant: "destructive" })
+      console.error("Error updating chapter info:", error)
+      toast({ title: "Error", description: "Failed to update chapter info", variant: "destructive" })
     } finally {
-      setLoading(false)
+      setInfoLoading(false)
+    }
+  }
+
+  const handleContentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setContentLoading(true)
+    try {
+      const payload: any = {}
+      payload.contentHtml = contentState.contentHtml
+      const response = await api.updateChapterContent(chapter!.id, payload)
+      if (response.success) {
+        toast({ title: "Success", description: "Chapter content updated successfully" })
+      }
+    } catch (error) {
+      console.error("Error updating chapter content:", error)
+      toast({ title: "Error", description: "Failed to update chapter content", variant: "destructive" })
+    } finally {
+      setContentLoading(false)
     }
   }
 
   if (initialLoading) {
     return (
-      <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
+      <AuthGuard requireRole={["ADMIN", "AUTHOR"]}>
         <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-center h-64">
@@ -164,7 +159,7 @@ export default function EditChapterPage() {
 
   if (!chapter) {
     return (
-      <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
+      <AuthGuard requireRole={["ADMIN", "AUTHOR"]}>
         <div className="min-h-screen bg-background">
           <main className="container mx-auto px-4 py-8">
             <div className="text-center">
@@ -180,9 +175,9 @@ export default function EditChapterPage() {
   }
 
   return (
-    <AuthGuard requireRole={["ADMIN","AUTHOR"]}>
+    <AuthGuard requireRole={["ADMIN", "AUTHOR"]}>
       <div className="min-h-screen bg-background">
-          <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <Link href={`/admin/novels/${chapter.novelId}/chapters`}>
@@ -197,53 +192,39 @@ export default function EditChapterPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                                    <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <form onSubmit={handleInfoSubmit}>
+                  <Card>
                     <CardHeader>
                       <CardTitle>Chapter Info</CardTitle>
-                      <CardDescription>Additional chapter details</CardDescription>
+                      <CardDescription>Update basic chapter details.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-start gap-2">
-                        <BookOpen className="h-4 w-4 text-blue-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Novel</p>
-                          <p className="text-xs text-muted-foreground">{chapter.novelTitle}</p>
-                        </div>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Novel</Label>
+                        <Input value={chapter.novelTitle} disabled />
                       </div>
-                      <div className="flex items-start gap-2">
-                        <FileText className="h-4 w-4 text-purple-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Chapter Title</p>
-                          <p className="text-xs text-muted-foreground">{chapter.title}</p>
-                        </div>
+                      <div>
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" value={formData.title} onChange={(e) => handleInfoChange("title", e.target.value)} required />
                       </div>
-                      <div className="flex items-start gap-2">
-                        <Target className="h-4 w-4 text-green-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Chapter #{chapter.chapterNumber}</p>
-                          <p className="text-xs text-muted-foreground">Position in series</p>
-                        </div>
+                      <div>
+                        <Label htmlFor="chapterNumber">Chapter Number</Label>
+                        <Input id="chapterNumber" type="number" value={formData.chapterNumber} onChange={(e) => handleInfoChange("chapterNumber", Number(e.target.value))} required />
                       </div>
-                      {chapter.audioUrl && (
-                        <div className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 text-purple-500 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">Audio Available</p>
-                            <p className="text-xs text-muted-foreground">Chapter has audio version</p>
-                          </div>
-                        </div>
-                      )}
+                    </CardContent>
+                    <CardContent>
+                        <Button type="submit" className="w-full" disabled={infoLoading}>{infoLoading ? "Updating..." : "Update Info"}</Button>
                     </CardContent>
                   </Card>
+                </form>
 
-
+                <form onSubmit={handleContentSubmit}>
                   <Card>
                     <CardHeader>
                       <CardTitle>Chapter Content</CardTitle>
-                      <CardDescription>Edit the chapter content</CardDescription>
+                      <CardDescription>Edit the chapter's text using the rich text editor or plain text.</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
@@ -269,53 +250,45 @@ export default function EditChapterPage() {
                         )}
                       </div>
                     </CardContent>
-                  </Card>
-                </div>
-
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Writing Statistics</CardTitle>
-                      <CardDescription>Track your writing progress</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-blue-500" />
-                        <div>
-                          <p className="text-sm font-medium">Word Count</p>
-                          <p className="text-2xl font-bold">{stats.wordCount.toLocaleString()}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Target className="h-5 w-5 text-green-500" />
-                        <div>
-                          <p className="text-sm font-medium">Characters</p>
-                          <p className="text-2xl font-bold">{stats.charCount.toLocaleString()}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-5 w-5 text-purple-500" />
-                        <div>
-                          <p className="text-sm font-medium">Reading Time</p>
-                          <p className="text-2xl font-bold">{stats.readingTime} min</p>
-                        </div>
-                      </div>
+                    <CardContent>
+                        <Button type="submit" className="w-full" disabled={contentLoading}>{contentLoading ? "Updating..." : "Update Content"}</Button>
                     </CardContent>
                   </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="space-y-2">
-                        <Button type="submit" className="w-full" disabled={loading}>{loading ? "Updating..." : "Update Chapter"}</Button>
-                        <Button type="button" variant="outline" className="w-full bg-transparent" asChild>
-                          <Link href={`/admin/novels/${chapter.novelId}/chapters`}>Cancel</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                </form>
               </div>
-            </form>
+
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Writing Statistics</CardTitle>
+                    <CardDescription>Track your writing progress.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="text-sm font-medium">Word Count</p>
+                        <p className="text-2xl font-bold">{stats.wordCount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Target className="h-5 w-5 text-green-500" />
+                      <div>
+                        <p className="text-sm font-medium">Characters</p>
+                        <p className="text-2xl font-bold">{stats.charCount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-purple-500" />
+                      <div>
+                        <p className="text-sm font-medium">Reading Time</p>
+                        <p className="text-2xl font-bold">{stats.readingTime} min</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </main>
       </div>

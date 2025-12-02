@@ -1,6 +1,8 @@
 package com.novel.vippro.Controllers;
 
 import com.novel.vippro.DTO.Chapter.CreateChapterDTO;
+import com.novel.vippro.DTO.Chapter.UpdateChapterContentDTO;
+import com.novel.vippro.DTO.Chapter.UpdateChapterInfoDTO;
 import com.novel.vippro.DTO.Chapter.UploadChapterResult;
 import com.novel.vippro.DTO.Chapter.ChapterDetailDTO;
 import com.novel.vippro.DTO.Chapter.ChapterDTO;
@@ -138,22 +140,36 @@ public class ChapterController {
         return ControllerResponse.success("Chapter created successfully", chapter);
     }
 
-    @Operation(summary = "Update chapter", description = "Update an existing chapter", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Update chapter information", description = "Update an existing chapter's information", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Chapter updated successfully"),
+            @ApiResponse(responseCode = "200", description = "Chapter info updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Chapter not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "403", description = "Not authorized")
+    })
+    @PutMapping("/{id}/info")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
+    public ControllerResponse<ChapterDTO> updateChapterInfo(
+            @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id,
+            @Parameter(description = "Updated chapter info", required = true) @RequestBody UpdateChapterInfoDTO chapterInfoDTO) {
+        ChapterDTO chapter = chapterService.updateChapterInfo(id, chapterInfoDTO);
+        return ControllerResponse.success("Chapter info updated successfully", chapter);
+    }
+
+    @Operation(summary = "Update chapter content", description = "Update an existing chapter's content", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Chapter content updated successfully"),
             @ApiResponse(responseCode = "404", description = "Chapter not found"),
             @ApiResponse(responseCode = "400", description = "Invalid input or error saving content"),
             @ApiResponse(responseCode = "403", description = "Not authorized")
     })
-    @PutMapping("/{id}")
+    @PutMapping("/{id}/content")
     @PreAuthorize("hasRole('ADMIN') or hasRole('AUTHOR')")
-    public ControllerResponse<ChapterDTO> updateChapter(
+    public ControllerResponse<ChapterDTO> updateChapterContent(
             @Parameter(description = "Chapter ID", required = true) @PathVariable UUID id,
-            @Parameter(description = "Updated chapter details", required = true) @RequestBody CreateChapterDTO chapterDTO) {
-
-        ChapterDTO chapter = chapterService.updateChapterDTO(id, chapterDTO);
-        return ControllerResponse.success("Chapter updated successfully", chapter);
-
+            @Parameter(description = "Updated chapter content", required = true) @RequestBody UpdateChapterContentDTO chapterContentDTO) {
+        ChapterDTO chapter = chapterService.updateChapterContent(id, chapterContentDTO);
+        return ControllerResponse.success("Chapter content updated successfully", chapter);
     }
 
     @Operation(summary = "Delete chapter", description = "Delete an existing chapter", security = @SecurityRequirement(name = "bearerAuth"))
