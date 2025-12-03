@@ -86,8 +86,9 @@ public class GoogleTTSService implements TextToSpeechService  {
             // Generate a unique public ID for the audio file
             String publicId = String.format("novels/%s/audios/chap-%d-audio", novelSlug, chapterNumber);
 
-            // Upload the audio content to Cloudinary
-            return fileService.uploadFile(combinedAudio, publicId, "audio/mpeg", "mp3");
+            String filename = String.format("chap-%d-audio.mp3", chapterNumber);
+
+            return fileService.uploadFileWithPublicId(combinedAudio, publicId, filename, "audio/mpeg", "mp3");
 
         } catch (IOException e) {
             e.printStackTrace();
