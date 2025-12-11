@@ -28,7 +28,7 @@ export const createNotificationsApi = (client: ApiClient) => ({
   },
 
   async markAllNotificationsAsRead() {
-    return client.request<void>("/api/notifications/mark-all-read", {
+    return client.request<void>("/api/notifications/read-all", {
       method: "PUT",
     })
   },

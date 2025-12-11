@@ -3,7 +3,7 @@ import { Link } from "@/navigation"
 import { Star, Eye, BookOpen } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { Novel } from "@/services/api"
+import { Novel } from "@/models"
 
 interface NovelCardProps {
 	novel: Novel

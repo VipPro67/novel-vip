@@ -1,4 +1,4 @@
-import type { ApiResponse, Category, Genre, Novel, PageResponse, Tag } from "@/models"
+import type { ApiResponse, Category, Genre, Novel, PageResponse, ReadingHistory, Tag } from "@/models"
 import type { ApiClient } from "../api-client"
 
 export const createNovelApi = (client: ApiClient) => ({
@@ -297,6 +297,6 @@ export const createNovelApi = (client: ApiClient) => ({
   },
 
   async getRecentlyRead(size = 6) {
-    return client.request<Novel[]>(`/api/reading-history`)
+    return client.request<PageResponse<ReadingHistory>>(`/api/reading-history`)
   },
 })

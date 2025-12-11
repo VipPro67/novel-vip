@@ -1096,6 +1096,10 @@ export default function ChapterPage() {
       );
     }
 
+    if(audioUrl === null && effectiveReaderSettings?.audioAutoNextChapter === true) {
+      handleGenerateAudio();
+    }
+
     if (audioError) {
       return (
         <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 md:flex-row md:items-center md:justify-between">
@@ -1248,11 +1252,10 @@ export default function ChapterPage() {
           <Card>
             <CardContent className="p-3" style={cardContentStyle}>
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-3xl font-bold mb-2">{chapter.title}</h1>
-                  <div className="grid">
+                <div className="flex justify-between">
+                  <h2 className="text-xl font-bold">{chapter.title}</h2>
+                  <div className="hidden md:grid">
                     <span>{chapterContent?.content.length} words</span>
-                    
                     <span>
                       {Math.round(chapterContent?.content.length/1500)} minutes
                     </span>
