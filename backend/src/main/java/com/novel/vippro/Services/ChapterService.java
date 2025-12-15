@@ -211,7 +211,6 @@ public class ChapterService {
     public void deleteChapter(UUID id) {
         Chapter chapter = getChapterById(id);
         chapterRepository.delete(chapter);
-        // Update total chapters and updated at
         novelRepository.findById(chapter.getNovel().getId()).ifPresent(novel -> {
             novel.setTotalChapters(novel.getTotalChapters() - 1);
             novel.setUpdatedAt(Instant.now());

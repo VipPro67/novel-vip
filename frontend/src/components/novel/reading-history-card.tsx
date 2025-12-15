@@ -34,7 +34,7 @@ export function ReadingHistoryCard({ history }: ReadingHistoryCardProps) {
 	return (
 		<Card className="overflow-hidden hover:shadow-lg transition-shadow w-full flex flex-col h-full">
 			{/* Cover Image Section */}
-			<Link href={`/novels/${novel.slug}`} className="flex-shrink-0">
+			<Link href={`/novels/${novel.slug}/chapters/${history.lastReadChapterIndex}`} className="flex-shrink-0">
 				<div className="aspect-[3/4] sm:aspect-[2/3] md:aspect-[3/4] relative">
 					<Image
 						src={novel.imageUrl || "/placeholder.svg?height=400&width=300"}
@@ -59,11 +59,11 @@ export function ReadingHistoryCard({ history }: ReadingHistoryCardProps) {
 							{novel.title}
 						</h3>
 					</Link>
-					<p className="text-xs text-muted-foreground mb-2 hidden sm:block truncate">{novel.author}</p>
+					<p className="text-xs text-muted-foreground hidden sm:block truncate">{novel.author}</p>
 				</div>
 
 				{/* Stats */}
-				<div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+				<div className="flex items-center justify-between text-xs text-muted-foreground">
 					{/* Rating */}
 					<div className="flex items-center space-x-1">
 						<Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -91,9 +91,9 @@ export function ReadingHistoryCard({ history }: ReadingHistoryCardProps) {
 				<p className="text-xs text-muted-foreground mt-2 sm:hidden truncate mb-2">by {novel.author}</p>
 
 				{/* Reading Progress Section */}
-				<div className="border-t pt-3 mt-3">
+				<div className="border-t pt-1">
 					{/* Current Chapter Info */}
-					<div className="mb-3">
+					<div className="mb-1">
 						<div className="flex items-center justify-between mb-1">
 							<span className="text-xs font-medium">Chapter {history.lastReadChapterIndex}</span>
 							<span className="text-xs text-muted-foreground">{progressPercentage}%</span>
@@ -108,20 +108,9 @@ export function ReadingHistoryCard({ history }: ReadingHistoryCardProps) {
 					</div>
 
 					{/* Last Read Time */}
-					<p className="text-xs text-muted-foreground mb-3">
+					<p className="text-xs text-muted-foreground">
 						Last read: {formatDate(history.lastReadAt)}
 					</p>
-
-					{/* Continue Reading Button */}
-					<Button
-						asChild
-						size="sm"
-						className="w-full h-8 text-xs"
-					>
-						<Link href={`/novels/${novel.slug}/chapters/${history.lastReadChapterIndex}`}>
-							Continue Reading <ChevronRight className="ml-1 h-3 w-3" />
-						</Link>
-					</Button>
 				</div>
 			</CardContent>
 		</Card>

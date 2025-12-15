@@ -109,7 +109,7 @@ export const createChapterApi = (client: ApiClient) => ({
 
   async getReadingHistory(
     params: {
-      page?: number
+      page?: number  
       size?: number
       sortBy?: string
       sortDir?: string

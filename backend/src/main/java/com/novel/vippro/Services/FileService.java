@@ -133,6 +133,16 @@ public class FileService {
         }
     }
 
+    @Transactional
+    public boolean deleteFile(String publicId){
+        try {
+            fileStorageService.deleteFile(publicId);
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete file", e);
+        }
+    }
+
     public FileMetadataDTO getFileMetadata(UUID id) {
         FileMetadata metadata = fileMetadataRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("File", "id", id));

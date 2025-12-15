@@ -1025,6 +1025,7 @@ export default function ChapterPage() {
   const renderHtmlContent = (htmlContent: string) => {
     // Basic HTML sanitization - remove potentially dangerous tags and attributes
     const sanitizedContent = htmlContent
+      .replace(/<link[^>]*rel="stylesheet"[^>]*>/gi, "") // Remove stylesheet links
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "") // Remove script tags
       .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "") // Remove iframe tags
       .replace(/on\w+="[^"]*"/gi, "") // Remove event handlers

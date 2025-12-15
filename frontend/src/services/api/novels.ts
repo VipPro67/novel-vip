@@ -296,7 +296,21 @@ export const createNovelApi = (client: ApiClient) => ({
     return client.request<PageResponse<Novel>>(`/api/novels/latest-updates?${searchParams}`)
   },
 
-  async getRecentlyRead(size = 6) {
-    return client.request<PageResponse<ReadingHistory>>(`/api/reading-history`)
-  },
+  async getReadingHistory(
+      params: {
+        page?: number  
+        size?: number
+        sortBy?: string
+        sortDir?: string
+      } = {},
+    ) {
+      const searchParams = new URLSearchParams()
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString())
+        }
+      })
+
+      return client.request<PageResponse<ReadingHistory>>(`/api/reading-history?${searchParams}`)
+    },
 })

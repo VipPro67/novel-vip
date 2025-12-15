@@ -30,28 +30,8 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <main>
-        {/* Hero Section - Render tĩnh luôn */}
-        <section className="relative py-20 px-4 text-center bg-gradient-to-b from-primary/10 to-background hidden lg:block">
-          <div className="container mx-auto px-4 max-w-4xl">
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">{t("heroTitle")}</h1>
-              <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">{t("heroDescription")}</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="text-lg px-8">
-                  <Link href="/novels">{t("heroPrimary")}<ArrowRight className="ml-2 h-5 w-5" /></Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg px-8 bg-transparent">
-                  <Link href="/novels/hot">{t("heroSecondary")}</Link>
-                </Button>
-              </div>
-          </div>
-        </section>
-
-        <div className="container mx-auto px-4 py-12 space-y-16">
-          
-          {/* Recently Read: Phần này phụ thuộc User, nên tách ra Client Component */}
+        <div className="container mx-auto px-4 py-6 space-y-6">
           <RecentlyReadSection />
-
-          {/* Latest Updates - Render Server (SEO Tốt) */}
           <section>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-2">
@@ -62,15 +42,12 @@ export default async function HomePage() {
                 <Link href="/novels/latest">{t("viewAll")}<ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
-            {/* Không cần loading state vì server đã có data rồi mới trả về HTML */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {latestNovels.map((novel: any) => (
                 <NovelCard key={novel.id} novel={novel} />
               ))}
             </div>
           </section>
-
-          {/* Hot Novels */}
           <section>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-2">
@@ -87,8 +64,6 @@ export default async function HomePage() {
               ))}
             </div>
           </section>
-
-          {/* Top Rated */}
           <section>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-2">

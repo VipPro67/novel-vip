@@ -18,7 +18,14 @@ export function RecentlyReadSection() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      api.getRecentlyRead(6)
+      api.getReadingHistory(
+        {
+          page: 0,
+          size: 6,
+          sortBy: "updatedAt",
+          sortDir: "desc",
+        }
+      )
         .then((res) => {
            if (res.success) 
             {
@@ -37,7 +44,7 @@ export function RecentlyReadSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <Clock className="h-6 w-6 text-primary" />
           <h2 className="text-3xl font-bold">{t("continueReading")}</h2>

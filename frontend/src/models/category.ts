@@ -1,4 +1,4 @@
-export interface Category {
+cexport interface Category {
   id: string
   name: string
   description?: string
