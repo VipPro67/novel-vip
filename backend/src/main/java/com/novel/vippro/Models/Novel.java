@@ -79,6 +79,10 @@ public class Novel extends BaseEntity {
 	@JsonManagedReference("novel-comments")
 	private List<Comment> comments = new ArrayList<>();
 
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JsonManagedReference("novel-corrections")
+	private List<CorrectionRequest> corrections = new ArrayList<>();
+
 	@Column(name = "total_views", nullable = true)
 	private Long totalViews = 0L;
 

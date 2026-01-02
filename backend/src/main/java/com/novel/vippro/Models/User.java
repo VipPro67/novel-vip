@@ -69,6 +69,9 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Novel> ownedNovels;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CorrectionRequest> corrections;
+
 	public User(String username, String email, String password) {
 		this.username = username;
 		this.email = email;

@@ -49,4 +49,8 @@ public class Chapter extends BaseEntity {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "audio_file_id", referencedColumnName = "id")
     private FileMetadata audioFile;
+
+    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("chapter-corrections")
+    private List<CorrectionRequest> corrections;
 }
