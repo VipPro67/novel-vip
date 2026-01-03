@@ -1,6 +1,9 @@
 package com.novel.vippro.Controllers;
 
 import com.novel.vippro.Models.CorrectionRequest;
+import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestDTO;
+import com.novel.vippro.DTO.CorrectionRequest.CreateCorrectionRequestDTO;
+import com.novel.vippro.DTO.CorrectionRequest.RejectCorrectionDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Security.UserDetailsImpl;
@@ -52,23 +55,10 @@ public class CorrectionRequestController {
     })
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ControllerResponse<CorrectionRequest>> submitCorrectionRequest(
-            @RequestBody SubmitCorrectionRequestDTO request) {
+    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> submitCorrectionRequest(
+            @RequestBody CreateCorrectionRequestDTO request) {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
-            UUID userId = userDetails.getId();
-
-            CorrectionRequest correction = correctionRequestService.submitCorrectionRequest(
-                    userId,
-                    request.getNovelId(),
-                    request.getChapterId(),
-                    request.getS3Key(),
-                    request.getParagraphIndex(),
-                    request.getOriginalText(),
-                    request.getSuggestedText()
-            );
-
+            CorrectionRequestDTO correction = correctionRequestService.submitCorrectionRequest(request);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ControllerResponse<>(true, "Correction request submitted successfully", correction));
         } catch (Exception e) {
@@ -88,13 +78,13 @@ public class CorrectionRequestController {
     })
     @GetMapping("/admin/pending")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequest>>> getPendingCorrections(
+    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestDTO>>> getPendingCorrections(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, "createdAt"));
-            PageResponse<CorrectionRequest> corrections = correctionRequestService.getPendingCorrections(pageable);
+            PageResponse<CorrectionRequestDTO> corrections = correctionRequestService.getPendingCorrections(pageable);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Pending corrections retrieved", corrections));
         } catch (Exception e) {
             logger.error("Error retrieving pending corrections", e);
@@ -109,14 +99,14 @@ public class CorrectionRequestController {
     @Operation(summary = "Get corrections by status", description = "Retrieve corrections filtered by status")
     @GetMapping("/admin/by-status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequest>>> getCorrectionsByStatus(
+    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestDTO>>> getCorrectionsByStatus(
             @Parameter(description = "Correction status") @PathVariable String status,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         try {
             CorrectionRequest.CorrectionStatus correctionStatus = CorrectionRequest.CorrectionStatus.valueOf(status.toUpperCase());
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            PageResponse<CorrectionRequest> corrections = correctionRequestService.getCorrectionsByStatus(correctionStatus, pageable);
+            PageResponse<CorrectionRequestDTO> corrections = correctionRequestService.getCorrectionsByStatus(correctionStatus, pageable);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Corrections retrieved", corrections));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
@@ -133,10 +123,10 @@ public class CorrectionRequestController {
      */
     @Operation(summary = "Get correction details", description = "Retrieve details of a specific correction request")
     @GetMapping("/{id}")
-    public ResponseEntity<ControllerResponse<CorrectionRequest>> getCorrectionById(
+    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> getCorrectionById(
             @Parameter(description = "Correction ID") @PathVariable UUID id) {
         try {
-            CorrectionRequest correction = correctionRequestService.getCorrectionById(id);
+            CorrectionRequestDTO correction = correctionRequestService.getCorrectionById(id);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Correction retrieved", correction));
         } catch (Exception e) {
             logger.error("Error retrieving correction", e);
@@ -157,10 +147,10 @@ public class CorrectionRequestController {
     })
     @PostMapping("/admin/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<CorrectionRequest>> approveCorrectionRequest(
+    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> approveCorrectionRequest(
             @Parameter(description = "Correction ID") @PathVariable UUID id) {
         try {
-            CorrectionRequest approved = correctionRequestService.approveCorrectionRequest(id);
+            CorrectionRequestDTO approved = correctionRequestService.approveCorrectionRequest(id);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Correction approved and S3 file patched", approved));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
@@ -188,11 +178,11 @@ public class CorrectionRequestController {
     })
     @PostMapping("/admin/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<CorrectionRequest>> rejectCorrectionRequest(
+    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> rejectCorrectionRequest(
             @Parameter(description = "Correction ID") @PathVariable UUID id,
-            @RequestBody RejectCorrectionDTO request) {
+            @RequestBody String request) {
         try {
-            CorrectionRequest rejected = correctionRequestService.rejectCorrectionRequest(id, request.getReason());
+            CorrectionRequestDTO rejected = correctionRequestService.rejectCorrectionRequest(id, request);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Correction rejected", rejected));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
@@ -210,7 +200,7 @@ public class CorrectionRequestController {
     @Operation(summary = "Get user's corrections", description = "Retrieve correction requests submitted by the current user")
     @GetMapping("/my-corrections")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequest>>> getUserCorrections(
+    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestDTO>>> getUserCorrections(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         try {
@@ -219,51 +209,12 @@ public class CorrectionRequestController {
             UUID userId = userDetails.getId();
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            PageResponse<CorrectionRequest> corrections = correctionRequestService.getUserCorrections(userId, pageable);
+            PageResponse<CorrectionRequestDTO> corrections = correctionRequestService.getUserCorrections(userId, pageable);
             return ResponseEntity.ok(new ControllerResponse<>(true, "User corrections retrieved", corrections));
         } catch (Exception e) {
             logger.error("Error retrieving user corrections", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ControllerResponse<>(false, "Failed to retrieve corrections: " + e.getMessage()));
         }
-    }
-
-    // DTOs for request bodies
-    public static class SubmitCorrectionRequestDTO {
-        private UUID novelId;
-        private UUID chapterId;
-        private String s3Key;
-        private Integer paragraphIndex;
-        private String originalText;
-        private String suggestedText;
-
-        public SubmitCorrectionRequestDTO() {}
-
-        public UUID getNovelId() { return novelId; }
-        public void setNovelId(UUID novelId) { this.novelId = novelId; }
-
-        public UUID getChapterId() { return chapterId; }
-        public void setChapterId(UUID chapterId) { this.chapterId = chapterId; }
-
-        public String getS3Key() { return s3Key; }
-        public void setS3Key(String s3Key) { this.s3Key = s3Key; }
-
-        public Integer getParagraphIndex() { return paragraphIndex; }
-        public void setParagraphIndex(Integer paragraphIndex) { this.paragraphIndex = paragraphIndex; }
-
-        public String getOriginalText() { return originalText; }
-        public void setOriginalText(String originalText) { this.originalText = originalText; }
-
-        public String getSuggestedText() { return suggestedText; }
-        public void setSuggestedText(String suggestedText) { this.suggestedText = suggestedText; }
-    }
-
-    public static class RejectCorrectionDTO {
-        private String reason;
-
-        public RejectCorrectionDTO() {}
-
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
     }
 }

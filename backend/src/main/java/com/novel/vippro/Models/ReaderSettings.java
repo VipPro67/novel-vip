@@ -75,4 +75,7 @@ public class ReaderSettings extends BaseEntity {
 
     @Column(name = "audio_speed", nullable = false, columnDefinition = "DOUBLE PRECISION DEFAULT 1.0")
     private Double audioSpeed = 1.0;
+
+    @Column(name = "correction_enabled", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean correctionEnabled = false;
 }

@@ -113,7 +113,8 @@ type BooleanSettingKey =
   | "showTime"
   | "showBattery"
   | "audioEnabled"
-  | "audioAutoNextChapter";
+  | "audioAutoNextChapter"
+  | "correctionEnabled";
 
 type IntegerSettingKey =
   | "fontSize"
@@ -355,6 +356,11 @@ function AppearanceSettingsForm() {
       key: "showBattery",
       label: t("appearanceSettings.showBattery"),
       description: t("appearanceSettings.showBatteryDesc"),
+    },
+    {
+      key: "correctionEnabled",
+      label: "Enable Text Corrections",
+      description: "Allow selecting text to submit correction requests",
     },
   ];
 

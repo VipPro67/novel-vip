@@ -212,6 +212,11 @@ function AdminDashboardContent() {
                       Manage Tags
                     </Button>
                   </Link>
+                  <Link href="/admin/corrections" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Manage Corrections Request
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

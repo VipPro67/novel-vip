@@ -24,5 +24,6 @@ public record ReaderSettingsDTO(
     String backgroundColor,
     Boolean audioEnabled,
     Boolean audioAutoNextChapter,
-    Double audioSpeed
+    Double audioSpeed,
+    Boolean correctionEnabled
 ) {}

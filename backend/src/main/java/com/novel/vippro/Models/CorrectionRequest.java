@@ -33,16 +33,23 @@ public class CorrectionRequest extends BaseEntity {
     private Chapter chapter;
 
     @Column(nullable = false)
-    private String s3Key;
+    private Integer chapterNumber;
 
     @Column(nullable = true)
     private Integer paragraphIndex;
+
+    // Character index within the paragraph for precise replacement
+    @Column(nullable = true)
+    private Integer charIndex;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String originalText;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String suggestedText;
+
+    @Column(columnDefinition = "TEXT")
+    private String reason;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -19,4 +19,5 @@ export interface ReaderSettings {
   audioEnabled: boolean
   audioAutoNextChapter: boolean
   audioSpeed: number
+  correctionEnabled: boolean
 }

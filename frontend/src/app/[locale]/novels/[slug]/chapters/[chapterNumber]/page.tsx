@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { CorrectionRequestModal } from "@/components/novel/correction-request-modal";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useReaderSettings } from "@/components/providers/reader-settings-provider";
 import {
@@ -78,6 +79,11 @@ type ErrorType =
   | null;
 
 export default function ChapterPage() {
+  // Correction mode and modal state
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
+  const [correctionMode, setCorrectionMode] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(null);
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -1031,7 +1037,36 @@ export default function ChapterPage() {
       .replace(/on\w+="[^"]*"/gi, "") // Remove event handlers
       .replace(/javascript:/gi, ""); // Remove javascript: URLs
 
-    return { __html: sanitizedContent };
+    // Instead of returning raw HTML, split into paragraphs for selection
+    const paragraphs = sanitizedContent.split(/<p[^>]*>|<\/p>/gi).filter(Boolean);
+    let runningCharIndex = 0;
+    return paragraphs.map((para, idx) => {
+      const paraStart = runningCharIndex;
+      runningCharIndex += para.length + 1; // +1 for paragraph break
+      return (
+        <p
+          key={idx}
+          className="chapter-selectable-paragraph"
+          onMouseUp={e => {
+            if (!effectiveReaderSettings?.correctionEnabled) return;
+            const selection = window.getSelection();
+            if (selection && selection.toString().trim() && isAuthenticated) {
+              const selected = selection.toString();
+              const paraText = e.currentTarget.textContent || "";
+              const charIndexInPara = paraText.indexOf(selected);
+              if (charIndexInPara !== -1) {
+                setSelectedText(selected);
+                setSelectedCharIndex(paraStart + charIndexInPara);
+                setCorrectionModalOpen(true);
+              }
+            }
+          }}
+          style={chapterTypographyStyle}
+        >
+          <span dangerouslySetInnerHTML={{ __html: para }} />
+        </p>
+      );
+    });
   };
 
   const renderAudioSection = () => {
@@ -1215,7 +1250,7 @@ export default function ChapterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Chapter Content */}
+      {/* Correction Mode Toggle */}
       <div className="container mx-auto px-4 py-4">
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumb: Novels > slug > Chapter number */}
@@ -1301,15 +1336,44 @@ export default function ChapterPage() {
                   </div>
                 ) : chapterContent ? (
                   <div className="prose prose-lg dark:prose-invert max-w-none">
-                    <div
-                      className="chapter-content leading-relaxed text-base"
-                      dangerouslySetInnerHTML={renderHtmlContent(
-                        chapterContent.content
-                      )}
-                      style={chapterTypographyStyle}
-                    />
+                    <div className="chapter-content leading-relaxed text-base">
+                      {renderHtmlContent(chapterContent.content)}
+                    </div>
                   </div>
                 ) : null}
+                    {/* Correction Request Modal */}
+                    <CorrectionRequestModal
+                      open={correctionModalOpen}
+                      onClose={() => {
+                        setCorrectionModalOpen(false);
+                        setSelectedText("");
+                        setSelectedCharIndex(null);
+                      }}
+                      selectedText={selectedText}
+                      originalText={selectedText}
+                      onSubmit={async (suggestedText, reason) => {
+                        if (!chapter || selectedCharIndex === null) return;
+                        try {
+                          const res = await api.submitCorrectionRequest({
+                            novelId: chapter.novelId,
+                            chapterId: chapter.id,
+                            chapterNumber: chapterNumber,
+                            charIndex: selectedCharIndex,
+                            paragraphIndex: undefined,
+                            originalText: selectedText,
+                            suggestedText: suggestedText,
+                            reason: reason || undefined,
+                          });
+                          if (res.success) {
+                            toast({ title: "Correction submitted!", description: "Thank you for your contribution." });
+                          } else {
+                            toast({ title: "Failed to submit correction", description: res.message || "Unknown error", variant: "destructive" });
+                          }
+                        } catch (err: any) {
+                          toast({ title: "Failed to submit correction", description: err?.message || "Unknown error", variant: "destructive" });
+                        }
+                      }}
+                    />
               </div>
             </CardContent>
           </Card>

@@ -20,6 +20,7 @@ import { createReportsApi } from "./api/reports"
 import { createReviewsApi } from "./api/reviews"
 import { createRoleRequestsApi } from "./api/role-requests"
 import { createVideosApi } from "./api/videos"
+import { createCorrectionApi } from "./api/corrections"
 
 type ApiModules =
   & ReturnType<typeof createAuthApi>
@@ -43,6 +44,7 @@ type ApiModules =
   & ReturnType<typeof createAdminReportsApi>
   & ReturnType<typeof createMessagesApi>
   & ReturnType<typeof createGroupsApi>
+  & ReturnType<typeof createCorrectionApi>
 
 type ApiService = ApiClient & ApiModules
 
@@ -70,7 +72,11 @@ const factories = [
   createAdminReportsApi,
   createMessagesApi,
   createGroupsApi,
+  createCorrectionApi,
 ] as const
+
+// Add corrections API
+// Object.assign(apiClient, createCorrectionApi(apiClient));
 
 factories.forEach((factory) => {
   Object.assign(apiClient, factory(apiClient))

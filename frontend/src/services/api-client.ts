@@ -101,6 +101,38 @@ export class ApiClient {
       throw error
     }
   }
+
+  async get<T>(endpoint: string, options: RequestInit = {}) {
+    return this.request<T>(endpoint, { ...options, method: "GET" })
+  }
+
+  async post<T>(endpoint: string, data?: unknown, options: RequestInit = {}) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async put<T>(endpoint: string, data?: unknown, options: RequestInit = {}) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async patch<T>(endpoint: string, data?: unknown, options: RequestInit = {}) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async delete<T>(endpoint: string, options: RequestInit = {}) {
+    return this.request<T>(endpoint, { ...options, method: "DELETE" })
+  }
 }
 
 export const createApiClient = (baseURL: string = API_BASE_URL) => new ApiClient(baseURL)
