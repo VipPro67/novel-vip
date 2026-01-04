@@ -1,12 +1,14 @@
 package com.novel.vippro.DTO.CorrectionRequest;
 
-import com.google.auto.value.AutoValue.Builder;
+import com.novel.vippro.DTO.Chapter.ChapterDTO;
+import com.novel.vippro.DTO.Novel.NovelDTO;
+import com.novel.vippro.DTO.User.UserDTO;
 import com.novel.vippro.Models.CorrectionRequest;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-@Builder
-public record CorrectionRequestDTO(
+
+public record CorrectionRequestWithDetailsDTO(
         UUID id,
         UUID userId,
         UUID novelId,
@@ -23,6 +25,9 @@ public record CorrectionRequestDTO(
         String paragraphText,
         String nextParagraph,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        UserDTO user,
+        NovelDTO novel,
+        ChapterDTO chapter
 ) {
 }

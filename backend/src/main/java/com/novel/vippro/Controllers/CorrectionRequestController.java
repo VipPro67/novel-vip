@@ -2,6 +2,7 @@ package com.novel.vippro.Controllers;
 
 import com.novel.vippro.Models.CorrectionRequest;
 import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestDTO;
+import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestWithDetailsDTO;
 import com.novel.vippro.DTO.CorrectionRequest.CreateCorrectionRequestDTO;
 import com.novel.vippro.DTO.CorrectionRequest.RejectCorrectionDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
@@ -78,13 +79,13 @@ public class CorrectionRequestController {
     })
     @GetMapping("/admin/pending")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestDTO>>> getPendingCorrections(
+    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestWithDetailsDTO>>> getPendingCorrections(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort direction") @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by(direction, "createdAt"));
-            PageResponse<CorrectionRequestDTO> corrections = correctionRequestService.getPendingCorrections(pageable);
+            PageResponse<CorrectionRequestWithDetailsDTO> corrections = correctionRequestService.getPendingCorrections(pageable);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Pending corrections retrieved", corrections));
         } catch (Exception e) {
             logger.error("Error retrieving pending corrections", e);
@@ -99,14 +100,14 @@ public class CorrectionRequestController {
     @Operation(summary = "Get corrections by status", description = "Retrieve corrections filtered by status")
     @GetMapping("/admin/by-status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestDTO>>> getCorrectionsByStatus(
+    public ResponseEntity<ControllerResponse<PageResponse<CorrectionRequestWithDetailsDTO>>> getCorrectionsByStatus(
             @Parameter(description = "Correction status") @PathVariable String status,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         try {
             CorrectionRequest.CorrectionStatus correctionStatus = CorrectionRequest.CorrectionStatus.valueOf(status.toUpperCase());
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            PageResponse<CorrectionRequestDTO> corrections = correctionRequestService.getCorrectionsByStatus(correctionStatus, pageable);
+            PageResponse<CorrectionRequestWithDetailsDTO> corrections = correctionRequestService.getCorrectionsByStatus(correctionStatus, pageable);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Corrections retrieved", corrections));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
@@ -147,10 +148,10 @@ public class CorrectionRequestController {
     })
     @PostMapping("/admin/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> approveCorrectionRequest(
+    public ResponseEntity<ControllerResponse<CorrectionRequestWithDetailsDTO>> approveCorrectionRequest(
             @Parameter(description = "Correction ID") @PathVariable UUID id) {
         try {
-            CorrectionRequestDTO approved = correctionRequestService.approveCorrectionRequest(id);
+            CorrectionRequestWithDetailsDTO approved = correctionRequestService.approveCorrectionRequest(id);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Correction approved and S3 file patched", approved));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
@@ -178,11 +179,11 @@ public class CorrectionRequestController {
     })
     @PostMapping("/admin/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ControllerResponse<CorrectionRequestDTO>> rejectCorrectionRequest(
+    public ResponseEntity<ControllerResponse<CorrectionRequestWithDetailsDTO>> rejectCorrectionRequest(
             @Parameter(description = "Correction ID") @PathVariable UUID id,
             @RequestBody String request) {
         try {
-            CorrectionRequestDTO rejected = correctionRequestService.rejectCorrectionRequest(id, request);
+            CorrectionRequestWithDetailsDTO rejected = correctionRequestService.rejectCorrectionRequest(id, request);
             return ResponseEntity.ok(new ControllerResponse<>(true, "Correction rejected", rejected));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()

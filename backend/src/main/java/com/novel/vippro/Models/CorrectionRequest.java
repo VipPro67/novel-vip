@@ -58,6 +58,16 @@ public class CorrectionRequest extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
 
+    // Context paragraphs for better review experience
+    @Column(columnDefinition = "TEXT")
+    private String previousParagraph;
+
+    @Column(columnDefinition = "TEXT")
+    private String paragraphText;
+
+    @Column(columnDefinition = "TEXT")
+    private String nextParagraph;
+
     public enum CorrectionStatus {
         PENDING,
         APPROVED,

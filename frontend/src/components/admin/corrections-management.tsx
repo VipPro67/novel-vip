@@ -18,12 +18,12 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { api, type CorrectionRequest } from "@/services/api"
+import { api, type CorrectionRequestWithDetails } from "@/services/api"
 import { Pagination } from "@/components/ui/pagination"
 import { usePagination } from "@/hooks/use-pagination"
 
 export function CorrectionsManagement() {
-  const [corrections, setCorrections] = useState<CorrectionRequest[]>([])
+  const [corrections, setCorrections] = useState<CorrectionRequestWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const { currentPage, totalPages, handlePageChange, updateTotalPages, resetPage, getPaginationParams } = usePagination(
     {
@@ -33,7 +33,7 @@ export function CorrectionsManagement() {
       initialSortDir: "desc",
     },
   )
-  const [selectedCorrection, setSelectedCorrection] = useState<CorrectionRequest | null>(null)
+  const [selectedCorrection, setSelectedCorrection] = useState<CorrectionRequestWithDetails | null>(null)
   const [viewDialog, setViewDialog] = useState(false)
   const [rejectDialog, setRejectDialog] = useState(false)
   const [rejectionReason, setRejectionReason] = useState("")
@@ -80,7 +80,7 @@ export function CorrectionsManagement() {
     }
   }
 
-  const handleApprove = async (correction: CorrectionRequest) => {
+  const handleApprove = async (correction: CorrectionRequestWithDetails) => {
     try {
       await api.approveCorrection(correction.id)
       toast({
@@ -118,43 +118,45 @@ export function CorrectionsManagement() {
     }
   }
 
-  const handleViewCorrection = async (correction: CorrectionRequest) => {
+  const handleViewCorrection = async (correction: CorrectionRequestWithDetails) => {
     setSelectedCorrection(correction)
     setViewDialog(true)
-    setLoadingContent(true)
-    try {
-      // Fetch chapter details first
-      const chapterResponse = await api.getChapterById(correction.chapterId)
-      if (chapterResponse.success && chapterResponse.data.jsonUrl) {
-        // Fetch content from S3
-        const contentResponse = await fetch(chapterResponse.data.jsonUrl)
-        if (contentResponse.ok) {
-          const contentData = await contentResponse.json()
-          setChapterContent(contentData.content || "")
-        } else {
-          setChapterContent("")
-        }
-      } else {
-        setChapterContent("")
-      }
-    } catch (error) {
-      console.error("Failed to fetch chapter content:", error)
-      setChapterContent("")
-    } finally {
-      setLoadingContent(false)
+    setLoadingContent(false) // No need to load content since we have context saved
+
+    // Build context content from saved paragraphs
+    let contextContent = ""
+    if (correction.previousParagraph) {
+      contextContent += correction.previousParagraph + '\n\n...\n\n'
     }
+    // Add the paragraph with the correction (we'll highlight it in renderTextWithCorrection)
+    // For now, we'll use the original text as the target paragraph
+    contextContent += correction.originalText
+    if (correction.nextParagraph) {
+      contextContent += '\n\n...\n\n' + correction.nextParagraph
+    }
+
+    setChapterContent(contextContent)
   }
 
-  const renderTextWithCorrection = (content: string, correction: CorrectionRequest) => {
-    if (!correction.charIndex) return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const generateDiffHtml = (paragraphHtml: string, original: string, suggested: string) => {
+    if (!paragraphHtml) return "";
 
-    const before = content.slice(0, correction.charIndex).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const original = correction.originalText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const suggested = correction.suggestedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const after = content.slice(correction.charIndex + correction.originalText.length).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Create the highlight HTML
+    // We use <span> to avoid breaking block structures like <p>
+    const highlightHtml = `
+      <span class="bg-red-200 dark:bg-red-900/50 text-red-800 dark:text-red-200 decoration-red-500 line-through decoration-2 mx-1 px-1 rounded">
+        ${original}
+      </span>
+      <span class="bg-green-200 dark:bg-green-900/50 text-green-800 dark:text-green-200 font-bold mx-1 px-1 rounded">
+        ${suggested}
+      </span>
+    `;
 
-    return `${before}<span class="bg-red-200 dark:bg-red-900 px-1 rounded">${original}</span><span class="bg-green-200 dark:bg-green-900 px-1 rounded ml-1">${suggested}</span>${after}`
-  }
+    // CAUTION: This replaces the FIRST occurrence of the text in the paragraph.
+    // Since Jsoup on backend already isolated the paragraph, this is usually safe.
+    // We use replace() instead of replaceAll() to target the likely specific instance.
+    return paragraphHtml.replace(original, highlightHtml);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -239,9 +241,11 @@ export function CorrectionsManagement() {
                   {filteredCorrections.map((correction) => (
                     <TableRow key={correction.id}>
                       <TableCell className="font-medium">
-                        Novel #{correction.novelId.slice(0, 8)}...
+                        {correction.novel?.title || `Novel #${correction.novelId.slice(0, 8)}...`}
                       </TableCell>
-                      <TableCell>Chapter {correction.chapterNumber}</TableCell>
+                      <TableCell>
+                        {correction.chapter?.title ? `${correction.chapter.title} (${correction.chapterNumber})` : `Chapter ${correction.chapterNumber}`}
+                      </TableCell>
                       <TableCell>{getStatusBadge(correction.status)}</TableCell>
                       <TableCell>
                         {new Date(correction.createdAt).toLocaleDateString()}
@@ -308,7 +312,7 @@ export function CorrectionsManagement() {
           <DialogHeader>
             <DialogTitle>Correction Details</DialogTitle>
             <DialogDescription>
-              Review the proposed text correction in context
+              Review the proposed text correction in the context of the affected paragraph
             </DialogDescription>
           </DialogHeader>
           {selectedCorrection && (
@@ -325,27 +329,67 @@ export function CorrectionsManagement() {
 
               {/* Context with Correction */}
               <div>
-                <h4 className="font-semibold mb-2">Correction in Context</h4>
-                {loadingContent ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                  </div>
-                ) : chapterContent ? (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md max-h-96 overflow-y-auto">
-                    <div
-                      className="text-sm leading-relaxed whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{
-                        __html: renderTextWithCorrection(chapterContent, selectedCorrection)
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md">
-                    <p className="text-sm text-muted-foreground">Unable to load chapter content</p>
-                  </div>
-                )}
-              </div>
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  Correction in Context
+                  <span className="text-xs font-normal text-muted-foreground bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+                    Paragraph #{selectedCorrection.paragraphIndex ?? 'N/A'}
+                  </span>
+                </h4>
 
+                <div className="p-4 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-md shadow-sm max-h-[500px] overflow-y-auto">
+                  <div className="font-serif text-lg leading-loose text-gray-700 dark:text-gray-300">
+
+                    {/* 1. PREVIOUS PARAGRAPH (Faded for context) */}
+                    {selectedCorrection.previousParagraph && (
+                      <div
+                        className="opacity-40 hover:opacity-100 transition-opacity duration-200 mb-4 border-l-2 border-transparent pl-2"
+                        dangerouslySetInnerHTML={{ __html: selectedCorrection.previousParagraph }}
+                      />
+                    )}
+
+                    {/* 2. TARGET PARAGRAPH (Highlighted) */}
+                    <div className="relative my-4 pl-4 border-l-4 border-yellow-400 bg-yellow-50/50 dark:bg-yellow-900/10 py-2 rounded-r-md">
+                      {/* Label */}
+                      <span className="absolute -left-1 top-0 -translate-x-full text-xs text-yellow-500 font-sans font-bold pr-2 pt-1">
+                        EDIT
+                      </span>
+
+                      <div
+                        className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: (() => {
+                            const baseParagraphText = selectedCorrection.paragraphText || selectedCorrection.originalText;
+                            const original = selectedCorrection.originalText;
+                            const suggested = selectedCorrection.suggestedText;
+
+                            if (!original) return `<p>${baseParagraphText}</p>`;
+
+                            // FIX: Written as a SINGLE LINE string to avoid injecting hidden newlines
+                            const deletedHtml = `<span class="bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-200 decoration-red-500/70 line-through decoration-2 mx-0.5 px-1 rounded-sm inline">${original}</span>`;
+
+                            // FIX: Written as a SINGLE LINE string
+                            const addedHtml = `<span class="bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-200 font-semibold mx-0.5 px-1 rounded-sm inline">${suggested}</span>`;
+
+                            // Combine them tightly
+                            const replacementHtml = `${deletedHtml}${addedHtml}`;
+
+                            // Use replace() to swap the text
+                            return `<p>${baseParagraphText.replace(original, replacementHtml)}</p>`;
+                          })()
+                        }}
+                      />
+                    </div>
+                    {/* 3. NEXT PARAGRAPH (Faded for context) */}
+                    {selectedCorrection.nextParagraph && (
+                      <div
+                        className="opacity-40 hover:opacity-100 transition-opacity duration-200 mt-4 border-l-2 border-transparent pl-2"
+                        dangerouslySetInnerHTML={{ __html: selectedCorrection.nextParagraph }}
+                      />
+                    )}
+
+                  </div>
+                </div>
+              </div>
               {/* Original vs Suggested */}
               <div>
                 <h4 className="font-semibold mb-2">Text Changes</h4>
@@ -368,8 +412,8 @@ export function CorrectionsManagement() {
               {/* Metadata */}
               <div className="text-sm text-muted-foreground grid grid-cols-2 gap-4">
                 <div>
-                  <p><strong>Novel ID:</strong> {selectedCorrection.novelId}</p>
-                  <p><strong>Chapter:</strong> {selectedCorrection.chapterNumber}</p>
+                  <p><strong>Novel:</strong> {selectedCorrection.novel?.title || selectedCorrection.novelId}</p>
+                  <p><strong>Chapter:</strong> {selectedCorrection.chapter?.title ? `${selectedCorrection.chapter.title} (${selectedCorrection.chapterNumber})` : `Chapter ${selectedCorrection.chapterNumber}`}</p>
                   <p><strong>Character Index:</strong> {selectedCorrection.charIndex || 'N/A'}</p>
                 </div>
                 <div>

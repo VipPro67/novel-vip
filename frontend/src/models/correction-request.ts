@@ -11,6 +11,9 @@ export interface CorrectionRequest {
   reason?: string
   status: "PENDING" | "APPROVED" | "REJECTED"
   rejectionReason?: string
+  previousParagraph?: string
+  paragraphText?: string
+  nextParagraph?: string
   createdAt: string
   updatedAt: string
 }

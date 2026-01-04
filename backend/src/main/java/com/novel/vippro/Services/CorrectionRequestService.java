@@ -16,17 +16,25 @@ import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.UserRepository;
 import com.novel.vippro.Security.UserDetailsImpl;
 import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestDTO;
+import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestWithDetailsDTO;
 import com.novel.vippro.Mapper.CorrectionRequestMapper;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 // import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,6 +68,9 @@ public class CorrectionRequestService {
 
     @Autowired
     private CorrectionRequestMapper correctionRequestMapper;
+    
+    @Autowired
+    private CacheManager cacheManager;
 
     /**
      * Submit a new text correction request
@@ -90,9 +101,56 @@ public class CorrectionRequestService {
         request.setReason(dto.reason());
         request.setStatus(CorrectionRequest.CorrectionStatus.PENDING);
 
+        try {
+            String s3Key = chapter.getJsonFile().getPublicId();
+            byte[] fileBytes = fileStorageService.downloadFile(s3Key);
+            String jsonContent = new String(fileBytes, StandardCharsets.UTF_8);
+
+            Map<String, Object> jsonData = objectMapper.readValue(jsonContent,
+                    new TypeReference<Map<String, Object>>() {
+                    });
+            String htmlContent = (String) jsonData.get("content");
+
+            if (htmlContent != null) {
+                Document doc = Jsoup.parseBodyFragment(htmlContent);
+
+                Elements paragraphs = doc.select("p");
+
+                Integer targetParagraphIndex = dto.paragraphIndex();
+                String searchKey = dto.originalText() != null ? dto.originalText().trim() : "";
+
+                if (targetParagraphIndex == null && !searchKey.isEmpty()) {
+                    for (int i = 0; i < paragraphs.size(); i++) {
+                        Element p = paragraphs.get(i);
+
+                        if (p.text().contains(searchKey)) {
+                            targetParagraphIndex = i;
+                            request.setParagraphIndex(i);
+                            break;
+                        }
+                    }
+                }
+
+                if (targetParagraphIndex != null) {
+                    if (targetParagraphIndex > 0) {
+                        request.setPreviousParagraph(paragraphs.get(targetParagraphIndex - 1).outerHtml());
+                    }
+                    request.setParagraphText(paragraphs.get(targetParagraphIndex).outerHtml());
+                    if (targetParagraphIndex < paragraphs.size() - 1) {
+                        request.setNextParagraph(paragraphs.get(targetParagraphIndex + 1).outerHtml());
+                    }
+
+                    logger.info("HTML Context found. Index: {}", targetParagraphIndex);
+                } else {
+                    logger.warn("Could not find paragraph containing text: '{}'", searchKey);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error parsing HTML content", e);
+        }
         CorrectionRequest saved = correctionRequestRepository.save(request);
         logger.info("New correction request submitted. ID: {}, Novel: {}, Chapter: {}", saved.getId(), dto.novelId(),
-            dto.chapterId());
+                dto.chapterId());
 
         return correctionRequestMapper.toDto(saved);
     }
@@ -100,29 +158,30 @@ public class CorrectionRequestService {
     /**
      * Get paginated pending correction requests
      */
-    public PageResponse<CorrectionRequestDTO> getPendingCorrections(Pageable pageable) {
+    @Transactional(readOnly = true)
+    public PageResponse<CorrectionRequestWithDetailsDTO> getPendingCorrections(Pageable pageable) {
         Page<CorrectionRequest> page = correctionRequestRepository.findPendingCorrections(pageable);
-        return new PageResponse<>(page.map(correctionRequestMapper::toDto));
+        return new PageResponse<>(page.map(correctionRequestMapper::toDetailsDto));
     }
 
-    
     public List<CorrectionRequestDTO> getPendingByNovelId(UUID novelId) {
-        return correctionRequestRepository.findPendingByNovelId(novelId).stream().map(correctionRequestMapper::toDto).toList();
+        return correctionRequestRepository.findPendingByNovelId(novelId).stream().map(correctionRequestMapper::toDto)
+                .toList();
     }
 
-    
     public List<CorrectionRequestDTO> getPendingByChapterId(UUID chapterId) {
-        return correctionRequestRepository.findPendingByChapterId(chapterId).stream().map(correctionRequestMapper::toDto).toList();
+        return correctionRequestRepository.findPendingByChapterId(chapterId).stream()
+                .map(correctionRequestMapper::toDto).toList();
     }
 
     /**
      * Get corrections by status
      */
-    public PageResponse<CorrectionRequestDTO> getCorrectionsByStatus(
+    public PageResponse<CorrectionRequestWithDetailsDTO> getCorrectionsByStatus(
             CorrectionRequest.CorrectionStatus status,
             Pageable pageable) {
         Page<CorrectionRequest> page = correctionRequestRepository.findByStatus(status, pageable);
-        Page<CorrectionRequestDTO> dtoPage = page.map(correctionRequestMapper::toDto);
+        Page<CorrectionRequestWithDetailsDTO> dtoPage = page.map(correctionRequestMapper::toDetailsDto);
         return new PageResponse<>(dtoPage);
     }
 
@@ -131,7 +190,7 @@ public class CorrectionRequestService {
      */
     public CorrectionRequestDTO getCorrectionById(UUID id) {
         return correctionRequestRepository.findById(id).map(correctionRequestMapper::toDto)
-            .orElseThrow(() -> new ResourceNotFoundException("Correction request not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Correction request not found with id: " + id));
     }
 
     /**
@@ -139,9 +198,10 @@ public class CorrectionRequestService {
      * This is the critical operation that patches the JSON file in S3
      */
     @Transactional
-    public CorrectionRequestDTO approveCorrectionRequest(UUID correctionId) throws IOException {
+    public CorrectionRequestWithDetailsDTO approveCorrectionRequest(UUID correctionId) throws IOException {
         CorrectionRequest correction = correctionRequestRepository.findById(correctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Correction request not found with id: " + correctionId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Correction request not found with id: " + correctionId));
 
         if (!correction.getStatus().equals(CorrectionRequest.CorrectionStatus.PENDING)) {
             throw new IllegalStateException(
@@ -155,14 +215,17 @@ public class CorrectionRequestService {
             String jsonContent = new String(fileBytes, "UTF-8");
 
             // Parse JSON content - it should be an object with "content" field
-            Map<String, Object> jsonData = objectMapper.readValue(jsonContent, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> jsonData = objectMapper.readValue(jsonContent,
+                    new TypeReference<Map<String, Object>>() {
+                    });
             String fullContent = (String) jsonData.get("content");
-            
+
             if (fullContent == null) {
                 throw new IOException("Invalid JSON structure: missing 'content' field");
             }
 
-            // Split content into paragraphs (assuming paragraphs are separated by double newlines or similar)
+            // Split content into paragraphs (assuming paragraphs are separated by double
+            // newlines or similar)
             List<String> paragraphs = new java.util.ArrayList<>(java.util.Arrays.asList(fullContent.split("\n\n")));
 
             boolean replaced = false;
@@ -170,12 +233,13 @@ public class CorrectionRequestService {
             if (correction.getParagraphIndex() != null && correction.getParagraphIndex() < paragraphs.size()) {
                 int pIdx = correction.getParagraphIndex();
                 String paragraph = paragraphs.get(pIdx);
-                if (correction.getCharIndex() != null && correction.getCharIndex() >= 0 && correction.getCharIndex() < paragraph.length()) {
+                if (correction.getCharIndex() != null && correction.getCharIndex() >= 0
+                        && correction.getCharIndex() < paragraph.length()) {
                     int cIdx = correction.getCharIndex();
                     String originalText = correction.getOriginalText();
                     // Check if the substring at charIndex matches originalText
                     if (cIdx + originalText.length() <= paragraph.length() &&
-                        paragraph.substring(cIdx, cIdx + originalText.length()).equals(originalText)) {
+                            paragraph.substring(cIdx, cIdx + originalText.length()).equals(originalText)) {
                         // Replace only at the specified charIndex
                         String patchedParagraph = paragraph.substring(0, cIdx)
                                 + correction.getSuggestedText()
@@ -186,7 +250,8 @@ public class CorrectionRequestService {
                 }
                 // If not replaced by charIndex, fallback to first occurrence in paragraph
                 if (!replaced && paragraph.contains(correction.getOriginalText())) {
-                    String patchedParagraph = paragraph.replaceFirst(java.util.regex.Pattern.quote(correction.getOriginalText()),
+                    String patchedParagraph = paragraph.replaceFirst(
+                            java.util.regex.Pattern.quote(correction.getOriginalText()),
                             java.util.regex.Matcher.quoteReplacement(correction.getSuggestedText()));
                     paragraphs.set(pIdx, patchedParagraph);
                     replaced = true;
@@ -229,9 +294,11 @@ public class CorrectionRequestService {
             correction.setStatus(CorrectionRequest.CorrectionStatus.APPROVED);
             CorrectionRequest updated = correctionRequestRepository.save(correction);
 
-            logger.info("Correction request approved and S3 file patched. Correction ID: {}, S3 Key: {}", correctionId, s3Key);
+            logger.info("Correction request approved and S3 file patched. Correction ID: {}, S3 Key: {}", correctionId,
+                    s3Key);
+            cacheManager.getCache("chapters").evict(correction.getChapter().getId());
 
-            return correctionRequestMapper.toDto(updated);
+            return correctionRequestMapper.toDetailsDto(updated);
 
         } catch (IOException e) {
             logger.error("Failed to approve correction request. ID: {}", correctionId, e);
@@ -243,9 +310,10 @@ public class CorrectionRequestService {
      * Reject a correction request
      */
     @Transactional
-    public CorrectionRequestDTO rejectCorrectionRequest(UUID correctionId, String rejectionReason) {
+    public CorrectionRequestWithDetailsDTO rejectCorrectionRequest(UUID correctionId, String rejectionReason) {
         CorrectionRequest correction = correctionRequestRepository.findById(correctionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Correction request not found with id: " + correctionId));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Correction request not found with id: " + correctionId));
 
         if (!correction.getStatus().equals(CorrectionRequest.CorrectionStatus.PENDING)) {
             throw new IllegalStateException(
@@ -258,7 +326,7 @@ public class CorrectionRequestService {
 
         logger.info("Correction request rejected. ID: {}, Reason: {}", correctionId, rejectionReason);
 
-        return correctionRequestMapper.toDto(updated);
+        return correctionRequestMapper.toDetailsDto(updated);
     }
 
     /**
