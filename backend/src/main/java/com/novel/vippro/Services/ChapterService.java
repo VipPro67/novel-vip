@@ -446,7 +446,7 @@ public class ChapterService {
         // only get text in p tags, remove other html tags
         String rawHtml = (String) content.get("content");
         String textToConvert = Jsoup.parse(rawHtml).select("p").text();
-        textToConvert = textToConvert.replaceAll("(?m)^[\\-\\*_]{2,}$", "").trim();
+        textToConvert = textToConvert.replaceAll("[^\\p{L}\\p{N}\\s]{3,}", "").trim();
         FileMetadata audioFile;
         try {
             logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
