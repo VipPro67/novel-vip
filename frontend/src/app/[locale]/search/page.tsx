@@ -268,14 +268,13 @@ export default function SearchPage() {
 
   const activeFilters = useMemo(() => {
     if (!lastSubmittedFilters) return [];
-    const t = useTranslations("Search");
     return (Object.entries(lastSubmittedFilters) as [FilterKey, string][]).map(
       ([key, value]) => ({
         key,
         label: `${t(`filterLabels.${key}`)}: ${value}`,
       })
     );
-  }, [lastSubmittedFilters]);
+  }, [lastSubmittedFilters, t]);
 
   const hasSubmittedFilters = activeFilters.length > 0;
 
