@@ -32,10 +32,12 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.checkerframework.checker.units.qual.s;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,6 +46,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,6 +83,16 @@ public class NovelService {
 
     @Autowired
     private CacheManager cacheManager;
+
+    private String normalizeText(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        normalized = pattern.matcher(normalized).replaceAll("");
+        return normalized.toLowerCase().trim();
+    }
 
     @Transactional(readOnly = true)
     public void reindexAllNovels() {
@@ -167,11 +180,16 @@ public class NovelService {
         Page<Novel> novels = searchService.search(filters, pageable);
 
         if (novels.isEmpty()) {
-            logger.info("Elasticsearch search returned no results. Falling back to database query.");
+            logger.info("SearchService returned no results. Falling back to database query.");
+            
+            String normalizedKeyword = filters.keyword() != null ? normalizeText(filters.keyword()) : null;
+            String normalizedTitle = filters.title() != null ? normalizeText(filters.title()) : null;
+            String normalizedAuthor = filters.author() != null ? normalizeText(filters.author()) : null;
+            
             novels = novelRepository.searchByCriteria(
-                    filters.keyword(),
-                    filters.title(),
-                    filters.author(),
+                    normalizedKeyword,
+                    normalizedTitle,
+                    normalizedAuthor,
                     filters.category(),
                     filters.genre(),
                     filters.tag(),
@@ -180,9 +198,13 @@ public class NovelService {
             if (novels.isEmpty() && filters.keyword() != null) {
                 logger.info("No novels found using criteria. Falling back to keyword search for: {}",
                         filters.keyword());
-                novels = novelRepository.searchByKeyword(filters.keyword(), pageable);
-                searchService.indexNovels(novels.getContent());
-                logger.info("Reindexing completed. {} novels reindexed.", novels.getTotalElements());
+                novels = novelRepository.searchByKeyword(normalizedKeyword, pageable);
+                if(novels.isEmpty()) {
+                    logger.info("No novels found using keyword search either.");
+                } else {
+                    logger.info("Found {} novels using keyword search.", novels.getTotalElements());
+                    searchService.indexNovels(novels.getContent());
+                }
             }
         }
 
@@ -225,7 +247,7 @@ public class NovelService {
         novel.setSlug(novelDTO.slug());
         novel.setDescription(novelDTO.description());
         novel.setAuthor(novelDTO.author());
-        novel.setTitleNormalized(novelDTO.title().toLowerCase());
+        novel.setTitleNormalized(normalizeText(novelDTO.title()));
         novel.setStatus(novelDTO.status());
         UUID ownerId = UserDetailsImpl.getCurrentUserId();
         User owner = userRepository.findById(ownerId)
@@ -304,6 +326,7 @@ public class NovelService {
         return mapper.NoveltoDTO(savedNovel);
     }
 
+    @CacheEvict(value = "novels", allEntries = true)
     public NovelDTO createNovelFromEpub(EpubParseResult epubResult, String slug, String status) {
         Novel saved = saveNovelInitial(epubResult, slug, status);
 
@@ -353,7 +376,7 @@ public class NovelService {
         novel.setDescription("Imported from EPUB: " + (epubResult.getTitle() != null ? epubResult.getTitle() : ""));
         novel.setAuthor(epubResult.getAuthor() == null || epubResult.getAuthor().isBlank() ? "Unknown"
                 : epubResult.getAuthor());
-        novel.setTitleNormalized(novel.getTitle().toLowerCase());
+        novel.setTitleNormalized(normalizeText(novel.getTitle()));
         novel.setStatus(status == null ? "ongoing" : status);
         novel.setRating(0);
         novel.setTotalChapters(0);
@@ -395,7 +418,7 @@ public class NovelService {
         // novel.setSlug(novelDTO.slug()); dont allow slug change :)
         novel.setDescription(novelDTO.description());
         novel.setAuthor(novelDTO.author());
-        novel.setTitleNormalized(novelDTO.title().toLowerCase());
+        novel.setTitleNormalized(normalizeText(novelDTO.title()));
         novel.setStatus(novelDTO.status());
 
         // Handle categories
@@ -463,18 +486,20 @@ public class NovelService {
         return mapper.NoveltoDTO(updatedNovel);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "novels", key = "#id"),
-            @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
-    })
+    @CacheEvict(value = "novels", allEntries = true)
     @Transactional
     public void deleteNovel(UUID id) {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", id));
+        String slug = novel.getSlug();
         novelRepository.delete(novel);
         searchService.deleteNovel(id);
+        // Evict specific keys after deletion
+        cacheManager.getCache("novels").evict(id);
+        cacheManager.getCache("novels").evict("slug-" + slug);
     }
 
+    @CacheEvict(value = "novels", allEntries = true)
     @Transactional
     public NovelDTO updateRating(UUID id, int rating) {
         Novel novel = novelRepository.findById(id)
@@ -482,6 +507,9 @@ public class NovelService {
 
         novel.setRating(rating);
         Novel updatedNovel = novelRepository.save(novel);
+        // Evict specific keys
+        cacheManager.getCache("novels").evict(id);
+        cacheManager.getCache("novels").evict("slug-" + novel.getSlug());
         return mapper.NoveltoDTO(updatedNovel);
     }
 
@@ -493,10 +521,7 @@ public class NovelService {
         return mapper.NoveltoDTO(novel);
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "novels", key = "#novelId"),
-            @CacheEvict(value = "novels", key = "'slug-' + #novel.slug")
-    })
+    @CacheEvict(value = {"novels", "chapters"}, allEntries = true)
     @Transactional
     public NovelDTO addChaptersFromEpub(UUID novelId, EpubParseResult epubResult) {
         Novel novel = novelRepository.findById(novelId)

@@ -48,25 +48,23 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
     @Query("SELECT n FROM Novel n WHERE n.status = :status")
     Page<Novel> findByStatus(String status, Pageable pageable);
 
-    @Query("SELECT n FROM Novel n WHERE n.titleNormalized LIKE %:keyword%")
+    @Query("SELECT n FROM Novel n WHERE n.titleNormalized ILIKE CONCAT('%', LOWER(:keyword), '%')")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("""
-            SELECT DISTINCT n FROM Novel n
-            LEFT JOIN n.categories c
-            LEFT JOIN n.genres g
-            LEFT JOIN n.tags t
-            WHERE (:keyword IS NULL OR 
-                  CAST(n.titleNormalized AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%')
-                  OR CAST(n.description AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%')
-                  OR CAST(n.author AS string) ILIKE CONCAT('%', CAST(:keyword AS string), '%'))
-              AND (:title IS NULL OR CAST(n.title AS string) ILIKE CONCAT('%', CAST(:title AS string), '%'))
-              AND (:author IS NULL OR CAST(n.author AS string) ILIKE CONCAT('%', CAST(:author AS string), '%'))
-              AND (:category IS NULL OR CAST(c.name AS string) ILIKE CONCAT('%', CAST(:category AS string), '%'))
-              AND (:tag IS NULL OR CAST(t.name AS string) ILIKE CONCAT('%', CAST(:tag AS string), '%'))
-              AND (:genre IS NULL OR CAST(g.name AS string) ILIKE CONCAT('%', CAST(:genre AS string), '%'))
-        
-            """)
+        SELECT DISTINCT n FROM Novel n
+        LEFT JOIN n.categories c
+        LEFT JOIN n.genres g
+        LEFT JOIN n.tags t
+        WHERE LOWER(n.title) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
+        OR LOWER(n.description) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
+        OR LOWER(n.author) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
+        AND LOWER(n.title) LIKE '%' || LOWER(COALESCE(:title, '')) || '%'
+        AND LOWER(n.author) LIKE '%' || LOWER(COALESCE(:author, '')) || '%'
+        AND LOWER(COALESCE(c.name, '')) LIKE '%' || LOWER(COALESCE(:category, '')) || '%'
+        AND LOWER(COALESCE(t.name, '')) LIKE '%' || LOWER(COALESCE(:tag, '')) || '%'
+        AND LOWER(COALESCE(g.name, '')) LIKE '%' || LOWER(COALESCE(:genre, '')) || '%'
+        """)
     Page<Novel> searchByCriteria(
             @Param("keyword") String keyword,
             @Param("title") String title,

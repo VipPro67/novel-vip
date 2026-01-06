@@ -2,6 +2,7 @@ package com.novel.vippro.Services.ThirdParty;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -72,6 +74,19 @@ public class OpenSearchSearchService implements SearchService {
     private URI uri(String path) {
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         return URI.create(fullUri + normalizedPath);
+    }
+
+    /**
+     * Normalize text for search: removes diacritics, converts to lowercase, and trims whitespace
+     */
+    private String normalizeText(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        normalized = pattern.matcher(normalized).replaceAll("");
+        return normalized.toLowerCase().trim();
     }
 
     @Override
@@ -146,24 +161,29 @@ public class OpenSearchSearchService implements SearchService {
             List<JsonNode> mustClauses = new ArrayList<>();
 
             NovelSearchDTO filters = searchDTO.cleanedCopy();
+            
+            // Normalize search parameters for better Vietnamese text matching
+            String normalizedKeyword = filters.keyword() != null ? normalizeText(filters.keyword()) : null;
+            String normalizedTitle = filters.title() != null ? normalizeText(filters.title()) : null;
+            String normalizedAuthor = filters.author() != null ? normalizeText(filters.author()) : null;
 
-            if (filters.keyword() != null) {
+            if (normalizedKeyword != null && !normalizedKeyword.isBlank()) {
                 ObjectNode multiMatch = objectMapper.createObjectNode();
                 multiMatch.putArray("fields")
                         .add("title^3")
                         .add("description^2")
                         .add("author");
-                multiMatch.put("query", filters.keyword());
+                multiMatch.put("query", normalizedKeyword);
                 mustClauses.add(objectMapper.createObjectNode().set("multi_match", multiMatch));
             }
-            if (filters.title() != null) {
+            if (normalizedTitle != null && !normalizedTitle.isBlank()) {
                 ObjectNode matchPhrase = objectMapper.createObjectNode();
-                matchPhrase.put("title", filters.title());
+                matchPhrase.put("title", normalizedTitle);
                 mustClauses.add(objectMapper.createObjectNode().set("match_phrase", matchPhrase));
             }
-            if (filters.author() != null) {
+            if (normalizedAuthor != null && !normalizedAuthor.isBlank()) {
                 ObjectNode matchPhrase = objectMapper.createObjectNode();
-                matchPhrase.put("author", filters.author());
+                matchPhrase.put("author", normalizedAuthor);
                 mustClauses.add(objectMapper.createObjectNode().set("match_phrase", matchPhrase));
             }
             if (filters.category() != null) {

@@ -143,10 +143,14 @@ public class ChapterService {
         return mapper.ChaptertoChapterDTO(chapter);
     }
 
-    @CacheEvict(value = { "chapters", "novels" }, key = "#id")
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public ChapterDTO updateChapterInfo(UUID id, UpdateChapterInfoDTO chapterInfoDTO) {
         Chapter chapter = getChapterById(id);
+        UUID oldNovelId = chapter.getNovel().getId();
+        String oldNovelSlug = chapter.getNovel().getSlug();
+        Integer oldChapterNumber = chapter.getChapterNumber();
+        
         chapter.setChapterNumber(chapterInfoDTO.chapterNumber());
         chapter.setTitle(chapterInfoDTO.title());
 
@@ -155,13 +159,26 @@ public class ChapterService {
                     .orElseThrow(() -> new RuntimeException("Novel not found with id: " + chapterInfoDTO.novelId())));
         }
         Chapter updatedChapter = chapterRepository.save(chapter);
+        
+        // Evict specific cache keys
+        cacheManager.getCache("chapters").evict(id);
+        cacheManager.getCache("chapters").evict("novel-" + oldNovelId + "-chapter-" + oldChapterNumber);
+        cacheManager.getCache("chapters").evict("novel-slug-" + oldNovelSlug + "-chapter-" + oldChapterNumber);
+        if (!oldChapterNumber.equals(chapterInfoDTO.chapterNumber())) {
+            cacheManager.getCache("chapters").evict("novel-" + updatedChapter.getNovel().getId() + "-chapter-" + chapterInfoDTO.chapterNumber());
+            cacheManager.getCache("chapters").evict("novel-slug-" + updatedChapter.getNovel().getSlug() + "-chapter-" + chapterInfoDTO.chapterNumber());
+        }
+        
         return mapper.ChaptertoChapterDTO(updatedChapter);
     }
     
-    @CacheEvict(value = { "chapters", "novels" }, key = "#id")
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public ChapterDTO updateChapterContent(UUID id, UpdateChapterContentDTO chapterContentDTO) {
         Chapter chapter = getChapterById(id);
+        UUID novelId = chapter.getNovel().getId();
+        String novelSlug = chapter.getNovel().getSlug();
+        Integer chapterNumber = chapter.getChapterNumber();
 
         Map<String, Object> contentMap = Map.of(
                 "novelSlug", chapter.getNovel().getSlug(),
@@ -203,6 +220,12 @@ public class ChapterService {
         chapter.setJsonFile(jsonFile);
         
         Chapter updatedChapter = chapterRepository.save(chapter);
+        
+        // Evict specific cache keys
+        cacheManager.getCache("chapters").evict(id);
+        cacheManager.getCache("chapters").evict("novel-" + novelId + "-chapter-" + chapterNumber);
+        cacheManager.getCache("chapters").evict("novel-slug-" + novelSlug + "-chapter-" + chapterNumber);
+        
         return mapper.ChaptertoChapterDTO(updatedChapter);
     }
 
@@ -275,6 +298,7 @@ public class ChapterService {
     }
 
 
+    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
     @Transactional
     public Chapter createChapter(CreateChapterDTO chapterDTO) {
 
@@ -446,7 +470,7 @@ public class ChapterService {
         // only get text in p tags, remove other html tags
         String rawHtml = (String) content.get("content");
         String textToConvert = Jsoup.parse(rawHtml).select("p").text();
-        textToConvert = textToConvert.replaceAll("(?m)^[\\-\\*_]{2,}$", "").trim();
+        textToConvert = textToConvert.replaceAll("[^\\p{L}\\p{N}\\s]{3,}", "").trim();
         FileMetadata audioFile;
         try {
             logger.info("Starting speech synthesis for chapter id: {}", chapter.getId());
@@ -532,9 +556,19 @@ public class ChapterService {
         return jsonFile;
     }
 
+    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
     @Transactional
     public Chapter saveChapterEntity(Chapter chapter) {
-        return chapterRepository.save(chapter);
+        Chapter saved = chapterRepository.save(chapter);
+        // Evict specific cache keys if chapter has novel relationship
+        if (saved.getNovel() != null) {
+            cacheManager.getCache("chapters").evict(saved.getId());
+            cacheManager.getCache("chapters").evict("novel-" + saved.getNovel().getId() + "-chapter-" + saved.getChapterNumber());
+            if (saved.getNovel().getSlug() != null) {
+                cacheManager.getCache("chapters").evict("novel-slug-" + saved.getNovel().getSlug() + "-chapter-" + saved.getChapterNumber());
+            }
+        }
+        return saved;
     }
 
     public int getLastChapterNumber(UUID novelId) {
