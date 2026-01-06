@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController
+// TODO: Restrict CORS to specific origins in production for security
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/notifications")
 @PreAuthorize("isAuthenticated()")
@@ -83,13 +84,17 @@ public class NotificationStreamController {
         
         logger.info("Sending notification to {} active connections for user {}", emitters.size(), userId);
         
-        for (SseEmitter emitter : emitters) {
+        // Create a copy of the emitters list to avoid concurrent modification
+        CopyOnWriteArrayList<SseEmitter> emittersCopy = new CopyOnWriteArrayList<>(emitters);
+        
+        for (SseEmitter emitter : emittersCopy) {
             try {
                 emitter.send(SseEmitter.event()
                     .name("notification")
                     .data(notification));
             } catch (IOException e) {
                 logger.error("Failed to send notification to user {}, removing dead connection", userId, e);
+                // Use the original emitters list for removal (it's already thread-safe)
                 emitters.remove(emitter);
                 if (emitters.isEmpty()) {
                     userEmitters.remove(userId);
