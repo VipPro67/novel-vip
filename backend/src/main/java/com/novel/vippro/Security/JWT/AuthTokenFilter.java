@@ -112,6 +112,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
       return headerAuth.substring(7);
     }
 
+    // For SSE connections, also check query parameter
+    String tokenParam = request.getParameter("token");
+    if (StringUtils.hasText(tokenParam)) {
+      return tokenParam;
+    }
+
     return null;
   }
 }
