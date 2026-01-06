@@ -4,13 +4,22 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
 
 let eventSource: EventSource | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
+let lastErrorTime = 0;
+const ERROR_THROTTLE_MS = 5000; // Only log errors every 5 seconds
 
 export function connectNotifications(
   userId: string,
   onNotification: (notification: Notification) => void,
 ): boolean {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // Only run in browser environment
+  if (typeof window === "undefined") {
+    console.warn("SSE connection can only be established in browser environment");
+    return false;
+  }
+
+  const token = localStorage.getItem("token");
 
   if (!token) {
     console.error("No authentication token found for SSE connection");
@@ -19,6 +28,9 @@ export function connectNotifications(
 
   // Disconnect any existing connection
   disconnectNotifications();
+
+  // Reset reconnect attempts on manual connection
+  reconnectAttempts = 0;
 
   // Create SSE connection with authentication token as query parameter
   // NOTE: Passing JWT in URL is not ideal as it may be logged in server logs,
@@ -35,6 +47,7 @@ export function connectNotifications(
 
     eventSource.onopen = () => {
       console.log("SSE connection established for user:", userId);
+      reconnectAttempts = 0; // Reset on successful connection
     };
 
     eventSource.addEventListener("connected", (event) => {
@@ -51,13 +64,29 @@ export function connectNotifications(
     });
 
     eventSource.onerror = (error) => {
-      console.error("SSE connection error:", error);
+      const now = Date.now();
       
-      // EventSource will automatically reconnect unless we explicitly close it
-      // Only disconnect if the connection is in CLOSED state
+      // Throttle error logging to prevent console spam
+      if (now - lastErrorTime > ERROR_THROTTLE_MS) {
+        console.error("SSE connection error:", error);
+        lastErrorTime = now;
+      }
+      
+      // Check connection state
       if (eventSource?.readyState === EventSource.CLOSED) {
-        console.log("SSE connection closed, cleaning up");
-        disconnectNotifications();
+        reconnectAttempts++;
+        console.log(`SSE connection closed (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+        
+        // Only fully disconnect after max reconnect attempts
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          console.warn("Max SSE reconnection attempts reached, giving up");
+          disconnectNotifications();
+        }
+      } else if (eventSource?.readyState === EventSource.CONNECTING) {
+        // Connection is attempting to reconnect, this is normal behavior
+        if (now - lastErrorTime > ERROR_THROTTLE_MS) {
+          console.log("SSE reconnecting...");
+        }
       }
     };
     
@@ -74,4 +103,7 @@ export function disconnectNotifications() {
     eventSource.close();
     eventSource = null;
   }
+  // Reset reconnect state
+  reconnectAttempts = 0;
+  lastErrorTime = 0;
 }
