@@ -1,5 +1,6 @@
 package com.novel.vippro.Messaging;
 
+import com.novel.vippro.Controllers.NotificationStreamController;
 import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,13 @@ import org.springframework.stereotype.Service;
 public class NovelVipPublisher {
 
 	private final SimpMessagingTemplate messagingTemplate;
+	private final NotificationStreamController notificationStreamController;
 
     public void publishNotification(NotificationDTO notification) {
+        // Send via SSE
+        notificationStreamController.sendNotificationToUser(notification.userId(), notification);
+        
+        // Keep WebSocket for backward compatibility (can be removed later)
         messagingTemplate.convertAndSend(
                 "/topic/user." + notification.userId(),
                 notification);

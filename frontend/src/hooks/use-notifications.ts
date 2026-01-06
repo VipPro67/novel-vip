@@ -31,7 +31,7 @@ export function useNotifications() {
     // 🔹 Fetch unread count immediately on login/page load
     refreshUnreadCount()
 
-    // 🔹 Connect websocket for live notifications
+    // 🔹 Connect SSE for live notifications
     connectNotifications(user.id, (notification) => {
       if (!isMounted) return
       setNotifications((prev) => [notification, ...prev])
