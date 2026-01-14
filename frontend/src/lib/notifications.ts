@@ -8,6 +8,9 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 3;
 let lastErrorTime = 0;
 const ERROR_THROTTLE_MS = 5000; // Only log errors every 5 seconds
+let isConnecting = false; // Guard to prevent multiple simultaneous connections
+let currentUserId: string | null = null; // Track current user to prevent duplicate connections
+let shouldReconnect = true; // Flag to control reconnection behavior
 
 export function connectNotifications(
   userId: string,
@@ -26,11 +29,35 @@ export function connectNotifications(
     return false;
   }
 
-  // Disconnect any existing connection
-  disconnectNotifications();
+  // Prevent duplicate connections for the same user
+  if (isConnecting) {
+    console.log("SSE connection already in progress, skipping...");
+    return false;
+  }
+  
+  if (eventSource && eventSource.readyState !== EventSource.CLOSED && currentUserId === userId) {
+    console.log("SSE connection already exists for user:", userId, "state:", eventSource.readyState);
+    return false;
+  }
+
+  // Force disconnect any existing connection (even if state seems closed)
+  if (eventSource) {
+    console.log("Force closing existing EventSource before creating new one");
+    try {
+      eventSource.close();
+    } catch (e) {
+      console.warn("Error force-closing EventSource:", e);
+    }
+    eventSource = null;
+  }
+
+  // Set connection state
+  isConnecting = true;
+  currentUserId = userId;
 
   // Reset reconnect attempts on manual connection
   reconnectAttempts = 0;
+  shouldReconnect = true; // Enable reconnection for this new connection attempt
 
   // Create SSE connection with authentication token as query parameter
   // NOTE: Passing JWT in URL is not ideal as it may be logged in server logs,
@@ -48,6 +75,7 @@ export function connectNotifications(
     eventSource.onopen = () => {
       console.log("SSE connection established for user:", userId);
       reconnectAttempts = 0; // Reset on successful connection
+      isConnecting = false; // Connection successful
     };
 
     eventSource.addEventListener("connected", (event) => {
@@ -65,45 +93,69 @@ export function connectNotifications(
 
     eventSource.onerror = (error) => {
       const now = Date.now();
+      //Check if we should give up on reconnecting
+      if (!shouldReconnect) {
+        console.log("Reconnection disabled, not attempting reconnect");
+        disconnectNotifications();
+        return;
+      }
       
       // Throttle error logging to prevent console spam
       if (now - lastErrorTime > ERROR_THROTTLE_MS) {
         console.error("SSE connection error:", error);
+        console.error("EventSource readyState:", eventSource?.readyState);
         lastErrorTime = now;
+      }
+      
+      // CRITICAL: EventSource auto-reconnects on error, creating infinite connections.
+      // We MUST force close it and stop reconnecting to prevent accumulating dead connections.
+      reconnectAttempts++;
+      
+      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.error(`SSE reconnect attempts exceeded (${reconnectAttempts}), permanently disabling reconnection`);
+        shouldReconnect = false; // Disable future reconnection attempts
+        disconnectNotifications();
+        return;
       }
       
       // Check connection state
       if (eventSource?.readyState === EventSource.CLOSED) {
-        reconnectAttempts++;
         console.log(`SSE connection closed (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
-        
-        // Only fully disconnect after max reconnect attempts
-        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-          console.warn("Max SSE reconnection attempts reached, giving up");
-          disconnectNotifications();
-        }
+        // Let EventSource handle reconnect naturally, but we'll stop after MAX attempts
       } else if (eventSource?.readyState === EventSource.CONNECTING) {
-        // Connection is attempting to reconnect, this is normal behavior
-        if (now - lastErrorTime > ERROR_THROTTLE_MS) {
-          console.log("SSE reconnecting...");
-        }
+        console.log(`SSE reconnecting... (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+        // EventSource is already trying to reconnect
+      } else if (eventSource?.readyState === EventSource.OPEN) {
+        // Connection is open but got an error - this is unusual, force close
+        console.warn("SSE error on open connection, force closing");
+        shouldReconnect = false; // Disable future reconnection attempts
+        console.warn("SSE error on open connection, force closing");
+        disconnectNotifications();
       }
     };
     
     return true;
   } catch (error) {
     console.error("Failed to establish SSE connection:", error);
+    isConnecting = false; // Reset connection flag on exception
     return false;
   }
 }
 
 export function disconnectNotifications() {
   if (eventSource) {
-    console.log("Closing SSE connection");
-    eventSource.close();
+    console.log("Closing SSE connection, readyState:", eventSource.readyState);
+    try {
+      eventSource.close();
+    } catch (error) {
+  shouldReconnect = true; // Reset for next connection attempt
+      console.error("Error closing EventSource:", error);
+    }
     eventSource = null;
   }
-  // Reset reconnect state
+  // Reset all connection state
   reconnectAttempts = 0;
   lastErrorTime = 0;
+  isConnecting = false;
+  currentUserId = null;
 }
