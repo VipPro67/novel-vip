@@ -265,6 +265,9 @@ public class EpubParser {
         for (Element p : body.select("p")) {
             sb.append(p.outerHtml());
         }
+        if (sb.length() == 0) {
+            sb.append("<p>").append(body.html().replaceAll("(?i)<br[^>]*>", "</p><p>").replaceAll("(<p>\\s*</p>)", "").trim()).append("</p>");
+        }
         return sb.toString();
     }
 
