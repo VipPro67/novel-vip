@@ -20,5 +20,7 @@ public record NovelSourceDTO(
     String errorMessage,
     Integer consecutiveFailures,
     Instant createdAt,
-    Instant updatedAt
+    Instant updatedAt,
+    UUID createdBy,
+    UUID updatedBy
 ) {}

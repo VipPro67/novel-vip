@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -150,16 +149,15 @@ public class ShubaImportProcessor {
                         
                         // Create chapter
                         int targetChapterNumber = highestChapterNumber + rawChapter.getChapterNumber();
-                        CreateChapterDTO chapterDTO = new CreateChapterDTO(
-                            message.getNovelId(),
-                            targetChapterNumber,
-                            translatedTitle,
-                            translatedContent,
-                            null, // audio
-                            true  // skipAudioGeneration
-                        );
+                        CreateChapterDTO chapterDTO = CreateChapterDTO.builder()
+                            .novelId(message.getNovelId())
+                            .chapterNumber(targetChapterNumber)
+                            .title(translatedTitle)
+                            .contentHtml(translatedContent)
+                            .format(CreateChapterDTO.ContentFormat.HTML)
+                            .build();
                         
-                        chapterService.createChapter(chapterDTO, message.getUserId());
+                        chapterService.createChapter(chapterDTO);
                         
                         processedCount++;
                         job.setChaptersProcessed(processedCount);
@@ -236,14 +234,13 @@ public class ShubaImportProcessor {
 
     private void sendNotification(UUID userId, String novelTitle, int chapterCount) {
         try {
-            CreateNotificationDTO notification = new CreateNotificationDTO(
-                userId,
-                NotificationType.SYSTEM,
-                "Shuba Import Complete",
-                String.format("Successfully imported %d chapters for novel: %s", chapterCount, novelTitle),
-                null,
-                null
-            );
+            CreateNotificationDTO notification = CreateNotificationDTO.builder()
+                .userId(userId)
+                .title("Shuba Import Complete")
+                .message(String.format("Successfully imported %d chapters for novel: %s", chapterCount, novelTitle))
+                .type(NotificationType.SYSTEM)
+                .reference(null)
+                .build();
             notificationService.createNotification(notification);
         } catch (Exception e) {
             log.warn("Failed to send notification: {}", e.getMessage());

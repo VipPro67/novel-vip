@@ -391,6 +391,8 @@
     "toasts": {
       "correctionSuccess": "Đã gửi chỉnh sửa!",
       "correctionThanks": "Cảm ơn bạn đã đóng góp.",
+      "correctionApplied": "Đã áp dụng chỉnh sửa!",
+      "correctionReloading": "Đang tải lại chương để hiển thị nội dung mới...",
       "correctionFailed": "Gửi chỉnh sửa thất bại",
       "unknownError": "Lỗi không xác định"
     },
@@ -497,6 +499,115 @@
       "googleSignInSuccess": "Đã đăng nhập bằng Google",
       "googleSignInSuccessDesc": "Chào mừng đến với Novel VIP!",
       "googleSignUpFailedPopup": "Cửa sổ Google đã bị đóng hoặc có lỗi xảy ra"
+    }
+  },
+  "NovelSources": {
+    "title": "Nguồn Truyện",
+    "totalSources": "{count} nguồn đã cấu hình",
+    "status": {
+      "idle": "Chờ",
+      "syncing": "Đang đồng bộ",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "disabled": "Đã tắt",
+      "never": "Chưa bao giờ"
+    },
+    "fields": {
+      "lastSync": "Lần đồng bộ cuối",
+      "lastChapter": "Chương cuối",
+      "interval": "Chu kỳ đồng bộ",
+      "minutes": "phút",
+      "failures": "Lỗi liên tiếp",
+      "error": "Lỗi"
+    },
+    "actions": {
+      "addSource": "Thêm nguồn",
+      "addFirstSource": "Thêm nguồn đầu tiên",
+      "enable": "Bật",
+      "disable": "Tắt",
+      "syncNow": "Đồng bộ ngay",
+      "fullImport": "Nhập toàn bộ",
+      "delete": "Xóa"
+    },
+    "filters": {
+      "searchPlaceholder": "Tìm theo tên truyện hoặc URL...",
+      "all": "Tất cả nguồn",
+      "enabled": "Chỉ đã bật",
+      "disabled": "Chỉ đã tắt",
+      "failed": "Chỉ lỗi"
+    },
+    "empty": {
+      "noSources": "Chưa có nguồn nào được cấu hình",
+      "noMatches": "Không có nguồn nào khớp với bộ lọc"
+    },
+    "time": {
+      "justNow": "Vừa xong",
+      "minutesAgo": "{count} phút trước",
+      "hoursAgo": "{count} giờ trước",
+      "daysAgo": "{count} ngày trước"
+    },
+    "success": {
+      "toggled": "Đã chuyển trạng thái nguồn",
+      "enabled": "Đã bật nguồn thành công",
+      "disabled": "Đã tắt nguồn thành công",
+      "syncStarted": "Đã bắt đầu đồng bộ",
+      "syncStartedDescription": "Công việc đồng bộ đã được xếp hàng",
+      "fullImportStarted": "Đã bắt đầu nhập toàn bộ thành công",
+      "deleted": "Đã xóa nguồn",
+      "deletedDescription": "Nguồn truyện đã được xóa"
+    },
+    "errors": {
+      "loadFailed": "Không thể tải nguồn",
+      "loadFailedDescription": "Không thể lấy danh sách nguồn truyện",
+      "updateFailed": "Cập nhật thất bại",
+      "updateFailedDescription": "Không thể cập nhật nguồn",
+      "syncFailed": "Đồng bộ thất bại",
+      "syncFailedDescription": "Không thể bắt đầu công việc đồng bộ",
+      "deleteFailed": "Xóa thất bại",
+      "deleteFailedDescription": "Không thể xóa nguồn"
+    },
+    "delete": {
+      "title": "Xóa nguồn truyện",
+      "description": "Bạn có chắc muốn xóa nguồn này? Hành động này không thể hoàn tác.",
+      "cancel": "Hủy",
+      "confirm": "Xóa"
+    },
+    "dialog": {
+      "titleCreate": "Thêm nguồn truyện",
+      "titleEdit": "Chỉnh sửa nguồn truyện",
+      "descriptionCreate": "Cấu hình nguồn mới để tự động nhập chương",
+      "descriptionEdit": "Cập nhật cài đặt đồng bộ cho nguồn này",
+      "fields": {
+        "novel": "Truyện",
+        "selectNovel": "Chọn truyện",
+        "platform": "Nền tảng nguồn",
+        "platformHelp": "Chọn nền tảng bên ngoài để nhập",
+        "other": "Khác",
+        "url": "URL nguồn",
+        "urlHelp": "URL đầy đủ của truyện trên nền tảng nguồn",
+        "sourceId": "ID nguồn",
+        "sourceIdHelp": "Tự động trích xuất từ URL",
+        "interval": "Chu kỳ đồng bộ",
+        "minutes": "phút",
+        "intervalHelp": "Tần suất kiểm tra chương mới (30-1440 phút)"
+      },
+      "actions": {
+        "cancel": "Hủy",
+        "create": "Tạo & Nhập",
+        "update": "Cập nhật"
+      },
+      "success": {
+        "created": "Đã tạo nguồn",
+        "createdDescription": "Công việc nhập đã được bắt đầu",
+        "updated": "Đã cập nhật nguồn",
+        "updatedDescription": "Đã lưu thay đổi thành công"
+      },
+      "errors": {
+        "validation": "Lỗi xác thực",
+        "requiredFields": "Vui lòng điền đầy đủ các trường bắt buộc",
+        "failed": "Thao tác thất bại",
+        "failedDescription": "Không thể lưu nguồn"
+      }
     }
   }
 }

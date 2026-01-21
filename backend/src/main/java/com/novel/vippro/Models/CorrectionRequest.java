@@ -38,6 +38,10 @@ public class CorrectionRequest extends BaseEntity {
     @Column(nullable = true)
     private Integer paragraphIndex;
 
+    // Multiple paragraph indices for batch corrections
+    @Column(columnDefinition = "TEXT")
+    private String paragraphIndices;  // Stored as comma-separated values
+
     // Character index within the paragraph for precise replacement
     @Column(nullable = true)
     private Integer charIndex;

@@ -4,6 +4,7 @@ import com.google.auto.value.AutoValue.Builder;
 import com.novel.vippro.Models.CorrectionRequest;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 @Builder
 public record CorrectionRequestDTO(
@@ -14,6 +15,7 @@ public record CorrectionRequestDTO(
         Integer chapterNumber,
         Integer charIndex,
         Integer paragraphIndex,
+        List<Integer> paragraphIndices,
         String originalText,
         String suggestedText,
         String reason,

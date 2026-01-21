@@ -9,6 +9,7 @@ import com.novel.vippro.Models.CorrectionRequest;
 import com.novel.vippro.Models.Chapter;
 import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.User;
+import com.novel.vippro.Models.ERole;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.CorrectionRequestRepository;
 import com.novel.vippro.Repository.ChapterRepository;
@@ -34,13 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-// import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-// import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -101,6 +99,14 @@ public class CorrectionRequestService {
         request.setReason(dto.reason());
         request.setStatus(CorrectionRequest.CorrectionStatus.PENDING);
 
+        // Handle multiple paragraph indices
+        if (dto.paragraphIndices() != null && !dto.paragraphIndices().isEmpty()) {
+            String indicesStr = dto.paragraphIndices().stream()
+                    .map(String::valueOf)
+                    .collect(java.util.stream.Collectors.joining(","));
+            request.setParagraphIndices(indicesStr);
+        }
+
         try {
             String s3Key = chapter.getJsonFile().getPublicId();
             byte[] fileBytes = fileStorageService.downloadFile(s3Key);
@@ -148,9 +154,27 @@ public class CorrectionRequestService {
         } catch (Exception e) {
             logger.error("Error parsing HTML content", e);
         }
+        
         CorrectionRequest saved = correctionRequestRepository.save(request);
         logger.info("New correction request submitted. ID: {}, Novel: {}, Chapter: {}", saved.getId(), dto.novelId(),
                 dto.chapterId());
+
+        // Check if user has EDITOR role and auto-approve
+        boolean isEditor = user.getRoles().stream()
+                .anyMatch(role -> role.getName() == ERole.EDITOR);
+        
+        if (isEditor) {
+            logger.info("User has EDITOR role. Auto-approving correction request. ID: {}", saved.getId());
+            try {
+                return correctionRequestMapper.toDto(
+                    autoApproveCorrectionRequest(saved)
+                );
+            } catch (IOException e) {
+                logger.error("Failed to auto-approve correction request. ID: {}", saved.getId(), e);
+                // Return as PENDING if auto-approval fails
+                return correctionRequestMapper.toDto(saved);
+            }
+        }
 
         return correctionRequestMapper.toDto(saved);
     }
@@ -208,67 +232,192 @@ public class CorrectionRequestService {
                     "Only PENDING corrections can be approved. Current status: " + correction.getStatus());
         }
 
+        CorrectionRequest updated = performCorrection(correction);
+        return correctionRequestMapper.toDetailsDto(updated);
+    }
+
+    /**
+     * Auto-approve correction request for EDITOR role users
+     * Internal method that bypasses status check
+     */
+    private CorrectionRequest autoApproveCorrectionRequest(CorrectionRequest correction) throws IOException {
+        return performCorrection(correction);
+    }
+
+    /**
+     * Perform the actual correction on the S3 file
+     * Supports both single and multiple paragraph corrections
+     */
+    private CorrectionRequest performCorrection(CorrectionRequest correction) throws IOException {
         try {
             String s3Key = correction.getChapter().getJsonFile().getPublicId();
             // Download the JSON file from S3
             byte[] fileBytes = fileStorageService.downloadFile(s3Key);
             String jsonContent = new String(fileBytes, "UTF-8");
 
-            // Parse JSON content - it should be an object with "content" field
+            // Parse JSON content
             Map<String, Object> jsonData = objectMapper.readValue(jsonContent,
                     new TypeReference<Map<String, Object>>() {
                     });
-            String fullContent = (String) jsonData.get("content");
+            String htmlContent = (String) jsonData.get("content");
 
-            if (fullContent == null) {
+            if (htmlContent == null) {
                 throw new IOException("Invalid JSON structure: missing 'content' field");
             }
 
-            // Split content into paragraphs (assuming paragraphs are separated by double
-            // newlines or similar)
-            List<String> paragraphs = new java.util.ArrayList<>(java.util.Arrays.asList(fullContent.split("\n\n")));
+            // Parse HTML content
+            Document doc = Jsoup.parseBodyFragment(htmlContent);
+            Elements paragraphs = doc.select("p");
 
             boolean replaced = false;
-            // Try to use paragraphIndex and charIndex for precise replacement
-            if (correction.getParagraphIndex() != null && correction.getParagraphIndex() < paragraphs.size()) {
+
+            // Handle multiple paragraph indices if available
+            if (correction.getParagraphIndices() != null && !correction.getParagraphIndices().isEmpty()) {
+                List<Integer> indices = Arrays.stream(correction.getParagraphIndices().split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(Integer::parseInt)
+                        .sorted()
+                        .collect(java.util.stream.Collectors.toList());
+                
+                // Determine if this is a deletion (blank suggested text)
+                String suggestedText = correction.getSuggestedText();
+                boolean isDeletion = suggestedText == null || suggestedText.trim().isEmpty();
+                
+                // Split originalText by common separators that might appear between paragraphs
+                String[] originalTextParts = correction.getOriginalText().split("\\n\\n|\\n");
+                
+                // If we have multiple parts matching multiple indices, process each separately
+                if (originalTextParts.length == indices.size()) {
+                    // Match each part to its corresponding paragraph
+                    for (int i = 0; i < indices.size(); i++) {
+                        int idx = indices.get(i);
+                        if (idx >= 0 && idx < paragraphs.size()) {
+                            Element paragraph = paragraphs.get(idx);
+                            String paragraphText = paragraph.text();
+                            String paragraphHtml = paragraph.html();
+                            String textToReplace = originalTextParts[i].trim();
+                            
+                            if (!textToReplace.isEmpty() && paragraphText.contains(textToReplace)) {
+                                String updatedHtml;
+                                if (isDeletion) {
+                                    updatedHtml = paragraphHtml.replaceFirst(
+                                            java.util.regex.Pattern.quote(textToReplace),
+                                            "");
+                                } else {
+                                    updatedHtml = paragraphHtml.replaceFirst(
+                                            java.util.regex.Pattern.quote(textToReplace),
+                                            java.util.regex.Matcher.quoteReplacement(suggestedText));
+                                }
+                                paragraph.html(updatedHtml);
+                                replaced = true;
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback: try to find the whole text in each selected paragraph
+                    String originalText = correction.getOriginalText().replaceAll("\\n+", " ").trim();
+                    for (Integer idx : indices) {
+                        if (idx >= 0 && idx < paragraphs.size()) {
+                            Element paragraph = paragraphs.get(idx);
+                            String paragraphText = paragraph.text();
+                            String paragraphHtml = paragraph.html();
+                            
+                            if (paragraphText.contains(originalText)) {
+                                String updatedHtml;
+                                if (isDeletion) {
+                                    updatedHtml = paragraphHtml.replaceFirst(
+                                            java.util.regex.Pattern.quote(originalText),
+                                            "");
+                                } else {
+                                    updatedHtml = paragraphHtml.replaceFirst(
+                                            java.util.regex.Pattern.quote(originalText),
+                                            java.util.regex.Matcher.quoteReplacement(suggestedText));
+                                }
+                                paragraph.html(updatedHtml);
+                                replaced = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } 
+            // Single paragraph correction
+            else if (correction.getParagraphIndex() != null && correction.getParagraphIndex() < paragraphs.size()) {
                 int pIdx = correction.getParagraphIndex();
-                String paragraph = paragraphs.get(pIdx);
-                if (correction.getCharIndex() != null && correction.getCharIndex() >= 0
-                        && correction.getCharIndex() < paragraph.length()) {
+                Element paragraph = paragraphs.get(pIdx);
+                String paragraphHtml = paragraph.outerHtml();
+                
+                // Determine if this is a deletion (blank suggested text)
+                String suggestedText = correction.getSuggestedText();
+                boolean isDeletion = suggestedText == null || suggestedText.trim().isEmpty();
+                String replacementText = isDeletion ? "" : suggestedText;
+
+                // Try charIndex-based replacement first
+                if (correction.getCharIndex() != null && correction.getCharIndex() >= 0) {
+                    String textContent = paragraph.text();
                     int cIdx = correction.getCharIndex();
                     String originalText = correction.getOriginalText();
-                    // Check if the substring at charIndex matches originalText
-                    if (cIdx + originalText.length() <= paragraph.length() &&
-                            paragraph.substring(cIdx, cIdx + originalText.length()).equals(originalText)) {
-                        // Replace only at the specified charIndex
-                        String patchedParagraph = paragraph.substring(0, cIdx)
-                                + correction.getSuggestedText()
-                                + paragraph.substring(cIdx + originalText.length());
-                        paragraphs.set(pIdx, patchedParagraph);
+                    
+                    if (cIdx + originalText.length() <= textContent.length() &&
+                            textContent.substring(cIdx, cIdx + originalText.length()).equals(originalText)) {
+                        // Replace or delete at exact char position
+                        String newText = textContent.substring(0, cIdx)
+                                + replacementText
+                                + textContent.substring(cIdx + originalText.length());
+                        paragraph.text(newText);
                         replaced = true;
                     }
                 }
-                // If not replaced by charIndex, fallback to first occurrence in paragraph
-                if (!replaced && paragraph.contains(correction.getOriginalText())) {
-                    String patchedParagraph = paragraph.replaceFirst(
-                            java.util.regex.Pattern.quote(correction.getOriginalText()),
-                            java.util.regex.Matcher.quoteReplacement(correction.getSuggestedText()));
-                    paragraphs.set(pIdx, patchedParagraph);
-                    replaced = true;
+                
+                // Fallback to first occurrence in paragraph
+                if (!replaced) {
+                    String paragraphTextContent = paragraph.text();
+                    if (paragraphTextContent.contains(correction.getOriginalText())) {
+                        String updatedHtml;
+                        if (isDeletion) {
+                            // Delete: replace with empty string
+                            updatedHtml = paragraphHtml.replaceFirst(
+                                    java.util.regex.Pattern.quote(correction.getOriginalText()),
+                                    "");
+                        } else {
+                            // Replace with suggested text
+                            updatedHtml = paragraphHtml.replaceFirst(
+                                    java.util.regex.Pattern.quote(correction.getOriginalText()),
+                                    java.util.regex.Matcher.quoteReplacement(suggestedText));
+                        }
+                        paragraph.html(updatedHtml);
+                        replaced = true;
+                    }
                 }
             }
-            // If not replaced, search all paragraphs for the first occurrence
+            
+            // Search all paragraphs if not replaced yet
             if (!replaced) {
+                // Determine if this is a deletion (blank suggested text)
+                String suggestedText = correction.getSuggestedText();
+                boolean isDeletion = suggestedText == null || suggestedText.trim().isEmpty();
+                
                 for (int i = 0; i < paragraphs.size(); i++) {
-                    String paragraph = paragraphs.get(i);
-                    int idx = paragraph.indexOf(correction.getOriginalText());
-                    if (idx != -1) {
-                        String patchedParagraph = paragraph.substring(0, idx)
-                                + correction.getSuggestedText()
-                                + paragraph.substring(idx + correction.getOriginalText().length());
-                        paragraphs.set(i, patchedParagraph);
+                    Element paragraph = paragraphs.get(i);
+                    String paragraphText = paragraph.text();
+                    String paragraphHtml = paragraph.html();
+                    
+                    if (paragraphText.contains(correction.getOriginalText())) {
+                        String updatedHtml;
+                        if (isDeletion) {
+                            // Delete: replace with empty string
+                            updatedHtml = paragraphHtml.replaceFirst(
+                                    java.util.regex.Pattern.quote(correction.getOriginalText()),
+                                    "");
+                        } else {
+                            // Replace with suggested text
+                            updatedHtml = paragraphHtml.replaceFirst(
+                                    java.util.regex.Pattern.quote(correction.getOriginalText()),
+                                    java.util.regex.Matcher.quoteReplacement(suggestedText));
+                        }
+                        paragraph.html(updatedHtml);
                         correction.setParagraphIndex(i);
-                        correction.setCharIndex(idx);
                         replaced = true;
                         break;
                     }
@@ -279,12 +428,12 @@ public class CorrectionRequestService {
                 throw new IOException("Could not find the text to replace in the chapter content");
             }
 
-            // Join paragraphs back with double newlines
-            String patchedContent = String.join("\n\n", paragraphs);
+            // Get updated HTML content
+            String patchedHtmlContent = doc.body().html();
 
             // Create the JSON structure to upload back
-            Map<String, Object> patchedJsonData = new java.util.HashMap<>();
-            patchedJsonData.put("content", patchedContent);
+            Map<String, Object> patchedJsonData = new HashMap<>();
+            patchedJsonData.put("content", patchedHtmlContent);
             String patchedJsonContent = objectMapper.writeValueAsString(patchedJsonData);
 
             // Upload the patched file back to S3 (overwrite)
@@ -294,14 +443,18 @@ public class CorrectionRequestService {
             correction.setStatus(CorrectionRequest.CorrectionStatus.APPROVED);
             CorrectionRequest updated = correctionRequestRepository.save(correction);
 
-            logger.info("Correction request approved and S3 file patched. Correction ID: {}, S3 Key: {}", correctionId,
-                    s3Key);
-            cacheManager.getCache("chapters").evict(correction.getChapter().getId());
+            logger.info("Correction performed and S3 file patched. Correction ID: {}, S3 Key: {}", 
+                    correction.getId(), s3Key);
+            
+            // Evict cache
+            if (cacheManager.getCache("chapters") != null) {
+                cacheManager.getCache("chapters").evict(correction.getChapter().getId());
+            }
 
-            return correctionRequestMapper.toDetailsDto(updated);
+            return updated;
 
         } catch (IOException e) {
-            logger.error("Failed to approve correction request. ID: {}", correctionId, e);
+            logger.error("Failed to perform correction. ID: {}", correction.getId(), e);
             throw new IOException("Failed to process S3 file: " + e.getMessage(), e);
         }
     }

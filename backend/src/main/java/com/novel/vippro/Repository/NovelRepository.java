@@ -126,4 +126,7 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n WHERE n.slug = :slug")
     Optional<Novel> findBySlug(String slug);
+    
+    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.novel.id = :novelId")
+    long countChaptersByNovelId(@Param("novelId") UUID novelId);
 }

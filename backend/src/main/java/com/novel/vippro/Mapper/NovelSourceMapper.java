@@ -2,57 +2,25 @@ package com.novel.vippro.Mapper;
 
 import com.novel.vippro.DTO.NovelSource.NovelSourceDTO;
 import com.novel.vippro.Models.NovelSource;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
-@Component
-public class NovelSourceMapper implements Mapper<NovelSource, NovelSourceDTO> {
+@Mapper(componentModel = "spring")
+public interface NovelSourceMapper {
 
-    @Override
-    public NovelSourceDTO toDTO(NovelSource entity) {
-        if (entity == null) {
-            return null;
-        }
-        
-        return new NovelSourceDTO(
-            entity.getId(),
-            entity.getNovel() != null ? entity.getNovel().getId() : null,
-            entity.getNovel() != null ? entity.getNovel().getTitle() : null,
-            entity.getSourceUrl(),
-            entity.getSourceId(),
-            entity.getSourcePlatform(),
-            entity.getEnabled(),
-            entity.getLastSyncedChapter(),
-            entity.getLastSyncTime(),
-            entity.getSyncStatus(),
-            entity.getNextSyncTime(),
-            entity.getSyncIntervalMinutes(),
-            entity.getErrorMessage(),
-            entity.getConsecutiveFailures(),
-            entity.getCreatedAt(),
-            entity.getUpdatedAt()
-        );
-    }
+    NovelSourceMapper INSTANCE = Mappers.getMapper(NovelSourceMapper.class);
 
-    @Override
-    public NovelSource toEntity(NovelSourceDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-        
-        NovelSource entity = new NovelSource();
-        entity.setId(dto.id());
-        entity.setSourceUrl(dto.sourceUrl());
-        entity.setSourceId(dto.sourceId());
-        entity.setSourcePlatform(dto.sourcePlatform());
-        entity.setEnabled(dto.enabled());
-        entity.setLastSyncedChapter(dto.lastSyncedChapter());
-        entity.setLastSyncTime(dto.lastSyncTime());
-        entity.setSyncStatus(dto.syncStatus());
-        entity.setNextSyncTime(dto.nextSyncTime());
-        entity.setSyncIntervalMinutes(dto.syncIntervalMinutes());
-        entity.setErrorMessage(dto.errorMessage());
-        entity.setConsecutiveFailures(dto.consecutiveFailures());
-        
-        return entity;
-    }
+    @Mapping(source = "novel.id", target = "novelId")
+    @Mapping(source = "novel.title", target = "novelTitle")
+    NovelSourceDTO toDTO(NovelSource entity);
+
+    @Mapping(target = "novel", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "isActive", ignore = true)
+    NovelSource toEntity(NovelSourceDTO dto);
 }

@@ -16,6 +16,10 @@ import com.novel.vippro.Models.Novel;
 public interface SearchService {
 
     void indexNovels(List<Novel> novel);
+    
+    default void indexNovel(Novel novel) {
+        indexNovels(List.of(novel));
+    }
 
     void deleteNovel(UUID id);
 

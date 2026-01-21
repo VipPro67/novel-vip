@@ -33,7 +33,8 @@ export function useNotifications() {
     // 🔹 Fetch unread count immediately on login/page load
     refreshUnreadCount()
 
-    // 🔹 Debounce SSE connection to prevent duplicate connections during rapid remounts
+    // 🔹 Delay SSE connection to prevent blocking page load
+    // Connection happens after a delay to allow page to render first
     connectionTimeout = setTimeout(() => {
       if (!isMounted) {
         console.log("[useNotifications] Component unmounted before connection, skipping...")
@@ -41,7 +42,7 @@ export function useNotifications() {
       }
       
       console.log("[useNotifications] Attempting to connect SSE for user:", user.id)
-      // Connect SSE for live notifications
+      // Connect SSE for live notifications (non-blocking)
       const connected = connectNotifications(user.id, (notification) => {
         if (!isMounted) return
         setNotifications((prev) => [notification, ...prev])
@@ -50,7 +51,7 @@ export function useNotifications() {
         }
       })
       console.log("[useNotifications] Connection attempt result:", connected)
-    }, 100) // Small delay to debounce rapid remounts
+    }, 2000) // 2 second delay to allow page to load first
 
     return () => {
       console.log("[useNotifications] Cleanup: disconnecting for user:", user.id)

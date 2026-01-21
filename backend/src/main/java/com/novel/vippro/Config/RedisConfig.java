@@ -30,19 +30,19 @@ import java.util.Map;
 
 @Configuration
 public class RedisConfig {
-	@Value("${REDIS_HOST}")
+	@Value("${spring.data.redis.host}")
 	private String redisHost;
 
-	@Value("${REDIS_PORT}")
+	@Value("${spring.data.redis.port}")
 	private int redisPort;
 
-	@Value("${REDIS_USERNAME:}")
+	@Value("${spring.data.redis.username:}")
 	private String redisUsername;
 
-	@Value("${REDIS_PASSWORD:}")
+	@Value("${spring.data.redis.password:}")
 	private String redisPassword;
 
-	@Value("${REDIS_SSL:false}")
+	@Value("${spring.data.redis.ssl.enabled:false}")
 	private boolean redisSsl;
 
 	@Bean
@@ -57,8 +57,11 @@ public class RedisConfig {
 			config.setPassword(RedisPassword.of(redisPassword));
 		}
 
-		LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder().useSsl()
-				.build();
+		var clientConfigBuilder = LettuceClientConfiguration.builder();
+		if (redisSsl) {
+			clientConfigBuilder.useSsl();
+		}
+		LettuceClientConfiguration clientConfig = clientConfigBuilder.build();
 
 		return new LettuceConnectionFactory(config, clientConfig);
 	}

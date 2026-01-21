@@ -392,6 +392,8 @@
     "toasts": {
       "correctionSuccess": "Correction submitted!",
       "correctionThanks": "Thank you for your contribution.",
+      "correctionApplied": "Correction applied!",
+      "correctionReloading": "Reloading chapter to show updated content...",
       "correctionFailed": "Failed to submit correction",
       "unknownError": "Unknown error"
     },
@@ -498,6 +500,115 @@
       "googleSignInSuccess": "Signed in with Google",
       "googleSignInSuccessDesc": "Welcome to Novel VIP!",
       "googleSignUpFailedPopup": "The Google window was closed or an error occurred"
+    }
+  },
+  "NovelSources": {
+    "title": "Novel Sources",
+    "totalSources": "{count} sources configured",
+    "status": {
+      "idle": "Idle",
+      "syncing": "Syncing",
+      "success": "Success",
+      "failed": "Failed",
+      "disabled": "Disabled",
+      "never": "Never"
+    },
+    "fields": {
+      "lastSync": "Last Sync",
+      "lastChapter": "Last Chapter",
+      "interval": "Sync Interval",
+      "minutes": "minutes",
+      "failures": "Consecutive Failures",
+      "error": "Error"
+    },
+    "actions": {
+      "addSource": "Add Source",
+      "addFirstSource": "Add First Source",
+      "enable": "Enable",
+      "disable": "Disable",
+      "syncNow": "Sync Now",
+      "fullImport": "Full Import",
+      "delete": "Delete"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by novel title or URL...",
+      "all": "All Sources",
+      "enabled": "Enabled Only",
+      "disabled": "Disabled Only",
+      "failed": "Failed Only"
+    },
+    "empty": {
+      "noSources": "No sources configured yet",
+      "noMatches": "No sources match your filters"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago"
+    },
+    "success": {
+      "toggled": "Source toggled",
+      "enabled": "Source enabled successfully",
+      "disabled": "Source disabled successfully",
+      "syncStarted": "Sync started",
+      "syncStartedDescription": "The sync job has been queued",
+      "fullImportStarted": "Full import started successfully",
+      "deleted": "Source deleted",
+      "deletedDescription": "The novel source has been removed"
+    },
+    "errors": {
+      "loadFailed": "Failed to load sources",
+      "loadFailedDescription": "Unable to retrieve novel sources",
+      "updateFailed": "Update failed",
+      "updateFailedDescription": "Unable to update the source",
+      "syncFailed": "Sync failed",
+      "syncFailedDescription": "Unable to start the sync job",
+      "deleteFailed": "Delete failed",
+      "deleteFailedDescription": "Unable to delete the source"
+    },
+    "delete": {
+      "title": "Delete Novel Source",
+      "description": "Are you sure you want to delete this source? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "dialog": {
+      "titleCreate": "Add Novel Source",
+      "titleEdit": "Edit Novel Source",
+      "descriptionCreate": "Configure a new source for automatic chapter imports",
+      "descriptionEdit": "Update the sync settings for this source",
+      "fields": {
+        "novel": "Novel",
+        "selectNovel": "Select a novel",
+        "platform": "Source Platform",
+        "platformHelp": "Select the external platform to import from",
+        "other": "Other",
+        "url": "Source URL",
+        "urlHelp": "The complete URL of the novel on the source platform",
+        "sourceId": "Source ID",
+        "sourceIdHelp": "Automatically extracted from the URL",
+        "interval": "Sync Interval",
+        "minutes": "minutes",
+        "intervalHelp": "How often to check for new chapters (30-1440 minutes)"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "create": "Create & Import",
+        "update": "Update"
+      },
+      "success": {
+        "created": "Source created",
+        "createdDescription": "Import job has been started",
+        "updated": "Source updated",
+        "updatedDescription": "Changes saved successfully"
+      },
+      "errors": {
+        "validation": "Validation error",
+        "requiredFields": "Please fill in all required fields",
+        "failed": "Operation failed",
+        "failedDescription": "Unable to save the source"
+      }
     }
   }
 }
