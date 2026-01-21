@@ -102,8 +102,6 @@ export function connectNotifications(
       
       // Throttle error logging to prevent console spam
       if (now - lastErrorTime > ERROR_THROTTLE_MS) {
-        console.error("SSE connection error:", error);
-        console.error("EventSource readyState:", eventSource?.readyState);
         lastErrorTime = now;
       }
       

@@ -19,7 +19,8 @@ export default function AdminDashboard() {
 }
 
 function AdminDashboardContent() {
-  const [stats, setStats] = useState({
+  // Use lazy state initialization for complex initial state
+  const [stats, setStats] = useState(() => ({
     totalUsers: 0,
     totalNovels: 0,
     totalChapters: 0,
@@ -28,7 +29,7 @@ function AdminDashboardContent() {
     newUsersToday: 0,
     popularNovels: 0,
     avgRating: 0,
-  })
+  }))
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

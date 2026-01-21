@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/navigation"
 import { BookOpen, Search, User, LogOut, Settings, Shield, BookmarkIcon, Clock, Lightbulb, Flag } from "lucide-react"
@@ -37,17 +37,17 @@ export function Header() {
       else setHidden(false)
       setLastScroll(current)
     }
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [lastScroll])
 
-  const handleProtectedNavigation = (path: string) => {
+  const handleProtectedNavigation = useCallback((path: string) => {
     if (!isAuthenticated) {
       openLogin()
     } else {
       router.push(path)
     }
-  }
+  }, [isAuthenticated, openLogin, router])
 
   const handleLogout = () => {
     logout()
@@ -159,10 +159,9 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" onClick={openLogin}>
+                <Button onClick={openLogin}>
                   {t("actions.signIn")}
                 </Button>
-                <Button onClick={openRegister}>{t("actions.signUp")}</Button>
               </div>
             )}
           </div>

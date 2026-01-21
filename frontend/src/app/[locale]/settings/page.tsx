@@ -78,9 +78,17 @@ function SettingsContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">
-                    {t("notificationSettings.notImplemented")}
-                  </p>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-base font-semibold flex items-center justify-between">
+                        <span>Chat Widget</span>
+                      </Label>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Enable chat messaging widget</span>
+                        <ChatWidgetToggle />
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -637,4 +645,21 @@ function AppearanceSettingsForm() {
       </div>
     </form>
   );
+}
+function ChatWidgetToggle() {
+  const [isEnabled, setIsEnabled] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const chatEnabled = localStorage.getItem("chatWidgetEnabled") === "true"
+      setIsEnabled(chatEnabled)
+    }
+  }, [])
+
+  const handleToggle = (checked: boolean) => {
+    setIsEnabled(checked)
+    localStorage.setItem("chatWidgetEnabled", checked ? "true" : "false")
+  }
+
+  return <Switch checked={isEnabled} onCheckedChange={handleToggle} />
 }

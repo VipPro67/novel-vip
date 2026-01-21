@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { ArrowRight, Clock } from "lucide-react"
 import { Link } from "@/navigation"
@@ -16,29 +16,37 @@ export function RecentlyReadSection() {
   const [recentlyRead, setRecentlyRead] = useState<ReadingHistory[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      api.getReadingHistory(
-        {
-          page: 0,
-          size: 6,
-          sortBy: "updatedAt",
-          sortDir: "desc",
-        }
-      )
-        .then((res) => {
-           if (res.success) 
-            {
-                setRecentlyRead(res.data.content)
-            }
-        })
-        .finally(() => setLoading(false))
-    } else {
-        setLoading(false)
+  const fetchHistory = useCallback(() => {
+    if (!isAuthenticated) {
+      setLoading(false)
+      return
     }
+
+    api.getReadingHistory({
+      page: 0,
+      size: 4,
+      sortBy: "updatedAt",
+      sortDir: "desc",
+    })
+      .then((res) => {
+        if (res.success) {
+          setRecentlyRead(res.data.content)
+        }
+      })
+      .finally(() => setLoading(false))
   }, [isAuthenticated])
 
-  if (!isAuthenticated || (!loading && recentlyRead.length === 0)) {
+  useEffect(() => {
+    fetchHistory()
+  }, [fetchHistory])
+
+  // Early return - don't subscribe to state in render if not shown
+  const shouldShow = useMemo(
+    () => isAuthenticated && (loading || recentlyRead.length > 0),
+    [isAuthenticated, loading, recentlyRead.length]
+  )
+
+  if (!shouldShow) {
     return null
   }
 
@@ -57,16 +65,20 @@ export function RecentlyReadSection() {
       </div>
 
       {loading ? (
-        // Skeleton loading cho riêng phần này
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-             {/* ... skeleton code ... */}
-             <div className="h-48 bg-muted animate-pulse rounded-md"></div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="aspect-[3/4] bg-muted animate-pulse rounded" />
+              <div className="h-4 bg-muted animate-pulse rounded" />
+              <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {Array.isArray(recentlyRead) && recentlyRead.length > 0 ? (
             recentlyRead.map((history) => (
-            <ReadingHistoryCard key={history.id} history={history} />
+            <ReadingHistoryCard key={history.id} history={history} hideImage />
             ))
         ) : (
             <div className="col-span-full text-center text-muted-foreground">

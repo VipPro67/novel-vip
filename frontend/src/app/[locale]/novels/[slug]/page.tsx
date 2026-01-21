@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useRouter } from "@/navigation"
 import Image from "next/image"
 import { Link } from "@/navigation"
+import dynamic from "next/dynamic"
+import { useTranslations } from "next-intl"
 import {
   Heart,
   Star,
@@ -48,8 +50,12 @@ import { useAuth } from "@/components/providers/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api} from "@/services/api"
 import { formatRelativeTime } from "@/lib/utils"
-import { ReportDialog } from "@/components/report/report-dialog"
 import { Comment, Chapter, Novel } from "@/models"
+
+// Dynamic imports for heavy components
+const ReportDialog = dynamic(() => import("@/components/report/report-dialog").then(mod => ({ default: mod.ReportDialog })), {
+  loading: () => null,
+})
 
 interface CommentWithReplies extends Comment {
   replies: CommentWithReplies[]
@@ -60,6 +66,7 @@ export default function NovelDetailPage() {
   const params = useParams()
   const slug = params.slug as string | undefined
   const router = useRouter()
+  const t = useTranslations("NovelDetail")
   const { isAuthenticated, user } = useAuth()
   const { toast } = useToast()
   const [novel, setNovel] = useState<Novel | null>(null)
@@ -765,7 +772,7 @@ export default function NovelDetailPage() {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold">Novel not found</h1>
+            <h1 className="text-2xl font-bold">{t("errors.notFound")}</h1>
           </div>
         </div>
       </div>
@@ -774,13 +781,13 @@ export default function NovelDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Novel Cover and Actions */}
           <div className="lg:col-span-1">
             <Card>
-              <CardContent className="p-6">
-                <div className="aspect-[3/4] relative mb-4">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="aspect-[3/4] relative mb-3 sm:mb-4">
                   <Image
                     src={novel.imageUrl || "/placeholder.svg?height=600&width=450" || "/placeholder.svg"}
                     alt={novel.title}
@@ -789,10 +796,10 @@ export default function NovelDetailPage() {
                   />
                 </div>
 
-                <div className="space-y-4">
-                  <Button onClick={startReading} className="w-full" size="lg">
+                <div className="space-y-2 sm:space-y-3 md:space-y-4">
+                  <Button onClick={startReading} className="w-full h-10 sm:h-11 md:h-12 text-sm sm:text-base" size="lg">
                     <Play className="mr-2 h-4 w-4" />
-                    Start Reading
+                    {t("actions.start")}
                   </Button>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -802,12 +809,12 @@ export default function NovelDetailPage() {
                       className="w-full"
                     >
                       <Heart className={`mr-2 h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-                      {isFavorite ? "Favorited" : "Favorite"}
+                      {isFavorite ? t("actions.favorited") : t("actions.favorite")}
                     </Button>
 
                     <Button variant="outline" className="w-full bg-transparent" onClick={handleShowComments}>
                       <MessageCircle className="mr-2 h-4 w-4" />
-                      Comments
+                      {t("actions.comments")}
                       {totalComments > 0 && (
                         <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
                           {totalComments > 99 ? "99+" : totalComments}
@@ -823,14 +830,14 @@ export default function NovelDetailPage() {
                     trigger={
                       <Button variant="outline" className="w-full bg-transparent">
                         <Flag className="mr-2 h-4 w-4" />
-                        Report Novel
+                        {t("actions.report")}
                       </Button>
                     }
                   />
 
                   {/* Rating */}
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">Rate this novel</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t("actions.rate")}</p>
                     <div className="flex justify-center space-x-1">
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <button key={rating} onClick={() => handleRating(rating)} className="p-1">
@@ -849,7 +856,7 @@ export default function NovelDetailPage() {
             {/* Description */}
               <Card className="mt-2">
                 <CardHeader>
-                  <CardTitle>Description</CardTitle>
+                  <CardTitle>{t("labels.description")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground leading-relaxed">{novel.description}</p>
@@ -862,8 +869,8 @@ export default function NovelDetailPage() {
             <div className="space-y-6">
               {/* Title and Meta */}
               <div>
-                <h1 className="text-3xl font-bold mb-2">{novel.title}</h1>
-                <p className="text-lg text-muted-foreground mb-4">by {novel.author}</p>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{novel.title}</h1>
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-3 sm:mb-4">{t("labels.byAuthor", { author: novel.author })}</p>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center space-x-1">
@@ -872,15 +879,15 @@ export default function NovelDetailPage() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Eye className="h-4 w-4" />
-                    <span>{novel?.totalViews?.toLocaleString()} views</span>
+                    <span>{t("labels.views", { count: novel?.totalViews?.toLocaleString() ?? 0 })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <BookOpen className="h-4 w-4" />
-                    <span>{novel.totalChapters} chapters</span>
+                    <span>{t("labels.chapters", { count: novel.totalChapters })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="h-4 w-4" />
-                    <span>Updated {formatRelativeDate(novel.updatedAt)}</span>
+                    <span>{t("labels.updated", { time: formatRelativeDate(novel.updatedAt) })}</span>
                   </div>
                   <Badge variant="secondary">{novel.status}</Badge>
                 </div>
@@ -906,25 +913,30 @@ export default function NovelDetailPage() {
                 </div>
               </div>
               {/* Tabs */}
-              <Tabs value={tab} onValueChange={setTab} defaultValue="chapters" className="w-full">
+              <Tabs value={tab} onValueChange={setTab} defaultValue="chapters" className="w-full mt-4 sm:mt-6">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="chapters">Chapters</TabsTrigger>
-                  <TabsTrigger value="comments" onClick={() => !commentsLoaded && fetchNovelComments()}>
-                    Comments
+                  <TabsTrigger value="chapters" className="text-sm sm:text-base">
+                    <span className="hidden sm:inline">{t("tabs.chapters")}</span>
+                    <span className="sm:hidden">Ch.</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="comments" className="text-sm sm:text-base" onClick={() => !commentsLoaded && fetchNovelComments()}>
+                    {t("tabs.comments")}
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="chapters" className="space-y-4">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Chapters ({chaptersTotalElements})</CardTitle>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="text-lg sm:text-xl md:text-2xl">
+                        {t("chapters.title", { count: chaptersTotalElements })}
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 sm:p-4 md:p-6">
                       <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
                             <span>
-                              Showing page {chaptersPage + 1} of {Math.max(1, chaptersTotalPages)}
+                              {t("chapters.showing", { page: chaptersPage + 1, total: Math.max(1, chaptersTotalPages) })}
                             </span>
                           </div>
                           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
@@ -935,13 +947,13 @@ export default function NovelDetailPage() {
                                 setChaptersSize(newSize)
                                 setChaptersPage(0) // Reset to first page when changing size
                               }}
-                              className="h-8 rounded-md border border-input bg-transparent px-3 py-1 text-sm ring-offset-background 
+                              className="h-8 rounded-md border border-input bg-transparent px-2 sm:px-3 py-1 text-xs sm:text-sm ring-offset-background 
                                        focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                             >
-                              <option value={10}>10 per page</option>
-                              <option value={20}>20 per page</option>
-                              <option value={50}>50 per page</option>
-                              <option value={100}>100 per page</option>
+                              <option value={10}>{t("chapters.perPage", { count: 10 })}</option>
+                              <option value={20}>{t("chapters.perPage", { count: 20 })}</option>
+                              <option value={50}>{t("chapters.perPage", { count: 50 })}</option>
+                              <option value={100}>{t("chapters.perPage", { count: 100 })}</option>
                             </select>
 
                             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -956,7 +968,7 @@ export default function NovelDetailPage() {
                                     handleJumpToChapter()
                                   }
                                 }}
-                                placeholder="Go to chapter..."
+                                placeholder={t("chapters.gotoPlaceholder")}
                                 className="h-8 rounded-md border border-input bg-transparent px-3 py-1 text-sm ring-offset-background 
                                          focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full sm:w-32"
                               />
@@ -966,7 +978,7 @@ export default function NovelDetailPage() {
                                 disabled={!jumpToChapter || chaptersLoading}
                                 className="whitespace-nowrap"
                               >
-                                Go
+                                {t("actions.go")}
                               </Button>
                             </div>
                           </div>
@@ -984,12 +996,14 @@ export default function NovelDetailPage() {
                               <Link
                                 key={chapter.id}
                                 href={`/novels/${novel.slug}/chapters/${chapter.chapterNumber}`}
-                                className="block p-2 rounded-lg border hover:bg-muted transition-colors"
+                                className="block p-3 sm:p-4 rounded-lg border hover:bg-muted transition-colors touch-manipulation"
                               >
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-2">
                                   <div className="flex justify-between w-full">
-                                    <p className="font-medium">{chapter.title}</p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="font-medium text-sm sm:text-base line-clamp-2 sm:line-clamp-1 flex-1">
+                                      {chapter.title}
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap ml-2">
                                       Updated {formatRelativeDate(chapter.updatedAt)}
                                     </p>
                                   </div>
@@ -1003,43 +1017,47 @@ export default function NovelDetailPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="h-9 px-2 sm:px-4 text-xs sm:text-sm"
                             onClick={() => setChaptersPage((p) => Math.max(0, p - 1))}
                             disabled={chaptersPage <= 0 || chaptersLoading}
                           >
-                            <ChevronLeft className="h-4 w-4 mr-2" />
-                            Previous
+                            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            <span className="hidden xs:inline">{t("actions.prev")}</span>
+                            <span className="xs:hidden">{t("actions.prev")}</span>
                           </Button>
-                          <div className="flex items-center gap-1 text-sm">
+                          <div className="flex items-center gap-1 text-xs sm:text-sm">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-muted-foreground"
+                              className="text-muted-foreground hidden xs:flex"
                               onClick={() => setChaptersPage(0)}
                               disabled={chaptersPage === 0}
                             >
-                              First
+                              {t("actions.first")}
                             </Button>
-                            <span className="text-muted-foreground">
-                              Page {chaptersPage + 1} of {Math.max(1, chaptersTotalPages)}
+                            <span className="text-muted-foreground px-2 whitespace-nowrap">
+                              {chaptersPage + 1}/{Math.max(1, chaptersTotalPages)}
                             </span>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-muted-foreground"
+                              className="text-muted-foreground hidden xs:flex"
                               onClick={() => setChaptersPage(Math.max(0, chaptersTotalPages - 1))}
                               disabled={chaptersPage >= chaptersTotalPages - 1}
                             >
-                              Last
+                              {t("actions.last")}
                             </Button>
                           </div>
                           <Button
                             variant="outline"
                             size="sm"
+                            className="h-9 px-2 sm:px-4 text-xs sm:text-sm"
                             onClick={() => setChaptersPage((p) => Math.min(chaptersTotalPages - 1, p + 1))}
                             disabled={chaptersPage >= chaptersTotalPages - 1 || chaptersLoading}
                           >
-                            Next
-                            <ChevronRight className="h-4 w-4 ml-2" />
+                            <span className="hidden xs:inline">{t("actions.next")}</span>
+                            <span className="xs:hidden">{t("actions.next")}</span>
+                            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
                           </Button>
                         </div>
                       </div>
@@ -1052,12 +1070,12 @@ export default function NovelDetailPage() {
                   {isAuthenticated ? (
                     <Card>
                       <CardHeader>
-                        <CardTitle>Add Comment</CardTitle>
+                        <CardTitle>{t("comments.addTitle")}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
                           <Textarea
-                            placeholder="Share your thoughts about this novel..."
+                            placeholder={t("comments.placeholder")}
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             className="min-h-[100px]"
@@ -1066,12 +1084,12 @@ export default function NovelDetailPage() {
                             {submittingComment ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Posting...
+                                {t("actions.posting")}
                               </>
                             ) : (
                               <>
                                 <Send className="mr-2 h-4 w-4" />
-                                Post Comment
+                                {t("actions.postComment")}
                               </>
                             )}
                           </Button>
@@ -1081,9 +1099,9 @@ export default function NovelDetailPage() {
                   ) : (
                     <Card>
                       <CardContent className="text-center py-8">
-                        <p className="text-muted-foreground mb-4">Please log in to comment</p>
+                        <p className="text-muted-foreground mb-4">{t("comments.loginPrompt")}</p>
                         <Button asChild>
-                          <Link href="/login">Login</Link>
+                          <Link href="/login">{t("actions.login")}</Link>
                         </Button>
                       </CardContent>
                     </Card>
@@ -1091,7 +1109,7 @@ export default function NovelDetailPage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Comments ({totalComments})</CardTitle>
+                      <CardTitle>{t("comments.title", { count: totalComments })}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {commentsLoading ? (
@@ -1112,7 +1130,7 @@ export default function NovelDetailPage() {
                       ) : (
                         <div className="text-center py-8">
                           <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
+                          <p className="text-muted-foreground">{t("comments.empty")}</p>
                         </div>
                       )}
                     </CardContent>

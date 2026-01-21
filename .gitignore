@@ -6,3 +6,6 @@
 **/output
 backend/src/main/resources/novelvip.json
 .vscode
+.github/skills
+*.node_modules
+*.md
