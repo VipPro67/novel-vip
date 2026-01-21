@@ -4,7 +4,6 @@ import com.novel.vippro.Models.CorrectionRequest;
 import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestDTO;
 import com.novel.vippro.DTO.CorrectionRequest.CorrectionRequestWithDetailsDTO;
 import com.novel.vippro.DTO.CorrectionRequest.CreateCorrectionRequestDTO;
-import com.novel.vippro.DTO.CorrectionRequest.RejectCorrectionDTO;
 import com.novel.vippro.Payload.Response.ControllerResponse;
 import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Security.UserDetailsImpl;
@@ -60,8 +59,17 @@ public class CorrectionRequestController {
             @RequestBody CreateCorrectionRequestDTO request) {
         try {
             CorrectionRequestDTO correction = correctionRequestService.submitCorrectionRequest(request);
+            
+            // Different message based on status (APPROVED for EDITOR, PENDING for normal users)
+            String message;
+            if (correction.status() == CorrectionRequest.CorrectionStatus.APPROVED) {
+                message = "Correction applied successfully. Content has been updated.";
+            } else {
+                message = "Correction request submitted successfully";
+            }
+            
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ControllerResponse<>(true, "Correction request submitted successfully", correction));
+                    .body(new ControllerResponse<>(true, message, correction));
         } catch (Exception e) {
             logger.error("Error submitting correction request", e);
             return ResponseEntity.badRequest()

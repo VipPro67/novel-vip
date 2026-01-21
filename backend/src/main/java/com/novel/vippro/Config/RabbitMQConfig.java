@@ -41,6 +41,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue shubaImportQueue() {
+        return new Queue(MessageQueues.SHUBA_IMPORT, true, false, false);
+    }
+
+    @Bean
     public MessageConverter jsonMessageConverter() {
             return new Jackson2JsonMessageConverter();
     }

@@ -9,3 +9,4 @@ backend/src/main/resources/novelvip.json
 .github/skills
 *.node_modules
 *.md
+backend/src/main/resources/application-local.properties

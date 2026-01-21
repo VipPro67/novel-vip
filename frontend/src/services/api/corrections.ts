@@ -6,8 +6,9 @@ export function createCorrectionApi(api: ApiClient) {
       novelId: string;
       chapterId: string;
       chapterNumber: number;
-      charIndex: number;
+      charIndex?: number;
       paragraphIndex?: number;
+      paragraphIndices?: number[];
       originalText: string;
       suggestedText: string;
       reason?: string;

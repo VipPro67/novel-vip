@@ -6,6 +6,7 @@ export interface CorrectionRequest {
   chapterNumber: number
   charIndex?: number
   paragraphIndex?: number
+  paragraphIndices?: number[]  // For multi-paragraph selection
   originalText: string
   suggestedText: string
   reason?: string

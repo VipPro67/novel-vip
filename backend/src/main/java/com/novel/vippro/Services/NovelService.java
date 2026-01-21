@@ -32,7 +32,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.checkerframework.checker.units.qual.s;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -577,6 +576,18 @@ public class NovelService {
 
         // Notification for novel owner
         return mapper.NoveltoDTO(novel);
+    }
+
+    @Transactional
+    public void updateNovelChapterCount(UUID novelId) {
+        Novel novel = novelRepository.findById(novelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Novel", "id", novelId));
+        
+        long chapterCount = novelRepository.countChaptersByNovelId(novelId);
+        novel.setTotalChapters((int) chapterCount);
+        novelRepository.save(novel);
+        
+        logger.debug("Updated chapter count for novel {}: {}", novelId, chapterCount);
     }
 
 }

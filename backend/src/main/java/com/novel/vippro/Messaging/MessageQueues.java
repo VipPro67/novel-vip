@@ -10,6 +10,7 @@ public final class MessageQueues {
     public static final String EPUB_UPLOAD = "epub.upload.queue";
     public static final String CHAPTER_AUDIO = "chapter.audio.queue";
     public static final String EMAIL_VERIFICATION = "email.verification.queue";
+    public static final String SHUBA_IMPORT = "shuba.import.queue";
 
     private MessageQueues() {
     }

@@ -11,6 +11,8 @@ const ERROR_THROTTLE_MS = 5000; // Only log errors every 5 seconds
 let isConnecting = false; // Guard to prevent multiple simultaneous connections
 let currentUserId: string | null = null; // Track current user to prevent duplicate connections
 let shouldReconnect = true; // Flag to control reconnection behavior
+const CONNECTION_TIMEOUT_MS = 5000; // 5 second timeout for initial connection
+let connectionTimeoutId: NodeJS.Timeout | null = null;
 
 export function connectNotifications(
   userId: string,
@@ -72,10 +74,24 @@ export function connectNotifications(
   try {
     eventSource = new EventSource(url.toString());
 
+    // Set a timeout for the initial connection
+    connectionTimeoutId = setTimeout(() => {
+      if (isConnecting && eventSource?.readyState === EventSource.CONNECTING) {
+        console.warn("SSE connection timeout - backend may be unavailable");
+        shouldReconnect = false;
+        disconnectNotifications();
+      }
+    }, CONNECTION_TIMEOUT_MS);
+
     eventSource.onopen = () => {
       console.log("SSE connection established for user:", userId);
       reconnectAttempts = 0; // Reset on successful connection
       isConnecting = false; // Connection successful
+      // Clear timeout on successful connection
+      if (connectionTimeoutId) {
+        clearTimeout(connectionTimeoutId);
+        connectionTimeoutId = null;
+      }
     };
 
     eventSource.addEventListener("connected", (event) => {
@@ -92,6 +108,12 @@ export function connectNotifications(
     });
 
     eventSource.onerror = (error) => {
+      // Clear connection timeout on error
+      if (connectionTimeoutId) {
+        clearTimeout(connectionTimeoutId);
+        connectionTimeoutId = null;
+      }
+      
       const now = Date.now();
       //Check if we should give up on reconnecting
       if (!shouldReconnect) {
@@ -141,12 +163,17 @@ export function connectNotifications(
 }
 
 export function disconnectNotifications() {
+  // Clear any pending connection timeout
+  if (connectionTimeoutId) {
+    clearTimeout(connectionTimeoutId);
+    connectionTimeoutId = null;
+  }
+  
   if (eventSource) {
     console.log("Closing SSE connection, readyState:", eventSource.readyState);
     try {
       eventSource.close();
     } catch (error) {
-  shouldReconnect = true; // Reset for next connection attempt
       console.error("Error closing EventSource:", error);
     }
     eventSource = null;
@@ -156,4 +183,5 @@ export function disconnectNotifications() {
   lastErrorTime = 0;
   isConnecting = false;
   currentUserId = null;
+  shouldReconnect = true; // Reset for next connection attempt
 }

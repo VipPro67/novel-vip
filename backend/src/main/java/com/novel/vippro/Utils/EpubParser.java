@@ -42,7 +42,15 @@ public class EpubParser {
              ZipInputStream zis = new ZipInputStream(bais)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                files.put(entry.getName(), zis.readAllBytes());
+                try {
+                    files.put(entry.getName(), zis.readAllBytes());
+                } catch (IllegalArgumentException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("EXT descriptor")) {
+                        System.err.println("Skipping corrupted ZIP entry: " + entry.getName());
+                        continue;
+                    }
+                    throw e;
+                }
             }
         }
 

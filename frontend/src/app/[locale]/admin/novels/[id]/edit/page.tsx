@@ -33,6 +33,18 @@ import { api } from "@/services/api";
 import Image from "next/image";
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox";
 import { Novel } from "@/models";
+import type { NovelSource, CreateNovelSourceDTO, SourcePlatform } from "@/services/api/novel-sources";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface NovelFormData {
   title: string;
@@ -64,6 +76,20 @@ export default function EditNovelPage() {
   const [epubPreview, setEpubPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
+  // Novel sources state
+  const [novelSources, setNovelSources] = useState<NovelSource[]>([]);
+  const [loadingSources, setLoadingSources] = useState(false);
+  const [showAddSource, setShowAddSource] = useState(false);
+  const [newSource, setNewSource] = useState<CreateNovelSourceDTO>({
+    novelId: "",
+    sourceUrl: "",
+    sourceId: "",
+    sourcePlatform: "SHUBA69",
+    syncIntervalMinutes: 60,
+  });
+  const [syncingSource, setSyncingSource] = useState<string | null>(null);
+  const [deletingSource, setDeletingSource] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState<NovelFormData>({
     title: "",
     slug: "",
@@ -77,6 +103,7 @@ export default function EditNovelPage() {
 
   useEffect(() => {
     fetchNovel();
+    fetchNovelSources();
   }, [params.id]);
 
   // Load selectable options for categories, genres, and tags
@@ -133,6 +160,142 @@ export default function EditNovelPage() {
     } finally {
       setInitialLoading(false);
     }
+  };
+
+  const fetchNovelSources = async () => {
+    setLoadingSources(true);
+    try {
+      const response = await api.getNovelSourcesByNovelId(params.id as string);
+      if (response.success) {
+        setNovelSources(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching novel sources:", error);
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
+  const handleAddSource = async () => {
+    if (!newSource.sourceUrl.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Source URL is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const sourceData = {
+        ...newSource,
+        novelId: params.id as string,
+      };
+      const response = await api.createNovelSource(sourceData);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Novel source created successfully",
+        });
+        setShowAddSource(false);
+        setNewSource({
+          novelId: "",
+          sourceUrl: "",
+          sourceId: "",
+          sourcePlatform: "SHUBA69",
+          syncIntervalMinutes: 60,
+        });
+        fetchNovelSources();
+      }
+    } catch (error) {
+      console.error("Error creating novel source:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create novel source",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTriggerSync = async (sourceId: string) => {
+    setSyncingSource(sourceId);
+    try {
+      const response = await api.triggerSync(sourceId);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Sync triggered successfully",
+        });
+        fetchNovelSources();
+      }
+    } catch (error) {
+      console.error("Error triggering sync:", error);
+      toast({
+        title: "Error",
+        description: "Failed to trigger sync",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncingSource(null);
+    }
+  };
+
+  const handleToggleSource = async (sourceId: string, enabled: boolean) => {
+    try {
+      const response = await api.updateNovelSource(sourceId, { enabled: !enabled });
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: `Source ${!enabled ? "enabled" : "disabled"} successfully`,
+        });
+        fetchNovelSources();
+      }
+    } catch (error) {
+      console.error("Error toggling source:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update source",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteSource = async (sourceId: string) => {
+    try {
+      const response = await api.deleteNovelSource(sourceId);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Source deleted successfully",
+        });
+        setDeletingSource(null);
+        fetchNovelSources();
+      }
+    } catch (error) {
+      console.error("Error deleting source:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete source",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getSyncStatusBadge = (status: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      IDLE: "secondary",
+      SYNCING: "default",
+      SUCCESS: "outline",
+      FAILED: "destructive",
+    };
+    return (
+      <Badge variant={variants[status] || "default"}>
+        {status}
+      </Badge>
+    );
   };
 
   const handleInputChange = (field: keyof NovelFormData, value: string) => {
@@ -352,6 +515,229 @@ export default function EditNovelPage() {
                         Update the basic details of the novel
                       </CardDescription>
                     </CardHeader>
+
+                  {/* Novel Sources */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Novel Sources</CardTitle>
+                          <CardDescription>
+                            Manage external sources for automatic chapter imports
+                          </CardDescription>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAddSource(!showAddSource)}
+                        >
+                          {showAddSource ? "Cancel" : "+ Add Source"}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Add New Source Form */}
+                      {showAddSource && (
+                        <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                          <div className="space-y-2">
+                            <Label htmlFor="sourceUrl">Source URL *</Label>
+                            <Input
+                              id="sourceUrl"
+                              value={newSource.sourceUrl}
+                              onChange={(e) =>
+                                setNewSource({ ...newSource, sourceUrl: e.target.value })
+                              }
+                              placeholder="https://example.com/novel/123"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="sourceId">Source ID</Label>
+                              <Input
+                                id="sourceId"
+                                value={newSource.sourceId}
+                                onChange={(e) =>
+                                  setNewSource({ ...newSource, sourceId: e.target.value })
+                                }
+                                placeholder="Novel ID on source"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="sourcePlatform">Platform</Label>
+                              <Select
+                                value={newSource.sourcePlatform}
+                                onValueChange={(value) =>
+                                  setNewSource({ ...newSource, sourcePlatform: value as SourcePlatform })
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select platform" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="SHUBA69">SHUBA69</SelectItem>
+                                  <SelectItem value="OTHER">OTHER</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="syncInterval">Sync Interval (minutes)</Label>
+                            <Input
+                              id="syncInterval"
+                              type="number"
+                              value={newSource.syncIntervalMinutes}
+                              onChange={(e) =>
+                                setNewSource({
+                                  ...newSource,
+                                  syncIntervalMinutes: parseInt(e.target.value) || 60,
+                                })
+                              }
+                              min={15}
+                              placeholder="60"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={handleAddSource}
+                            disabled={loading}
+                            className="w-full"
+                          >
+                            {loading ? "Creating..." : "Create Source"}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Sources List */}
+                      {loadingSources ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                      ) : novelSources.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No sources configured yet
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {novelSources.map((source) => (
+                            <div
+                              key={source.id}
+                              className="p-4 border rounded-lg space-y-3"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline">
+                                      {source.sourcePlatform}
+                                    </Badge>
+                                    {getSyncStatusBadge(source.syncStatus)}
+                                    {!source.enabled && (
+                                      <Badge variant="secondary">Disabled</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm font-medium break-all">
+                                    {source.sourceUrl}
+                                  </p>
+                                  {source.sourceId && (
+                                    <p className="text-xs text-muted-foreground">
+                                      ID: {source.sourceId}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                {source.lastSyncedChapter && (
+                                  <span>Last synced: Ch. {source.lastSyncedChapter}</span>
+                                )}
+                                {source.lastSyncTime && (
+                                  <span>
+                                    • {new Date(source.lastSyncTime).toLocaleString()}
+                                  </span>
+                                )}
+                                <span>
+                                  • Interval: {source.syncIntervalMinutes}min
+                                </span>
+                                {source.consecutiveFailures > 0 && (
+                                  <span className="text-destructive">
+                                    • Failures: {source.consecutiveFailures}
+                                  </span>
+                                )}
+                              </div>
+
+                              {source.errorMessage && (
+                                <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">
+                                  {source.errorMessage}
+                                </p>
+                              )}
+
+                              <div className="flex gap-2">
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!deletingSource}
+          onOpenChange={() => setDeletingSource(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Novel Source</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this source? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deletingSource && handleDeleteSource(deletingSource)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleTriggerSync(source.id)}
+                                  disabled={syncingSource === source.id || source.syncStatus === "SYNCING"}
+                                >
+                                  {syncingSource === source.id ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                      Syncing...
+                                    </>
+                                  ) : (
+                                    "Sync Now"
+                                  )}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() =>
+                                    handleToggleSource(source.id, source.enabled)
+                                  }
+                                >
+                                  {source.enabled ? "Disable" : "Enable"}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => setDeletingSource(source.id)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">

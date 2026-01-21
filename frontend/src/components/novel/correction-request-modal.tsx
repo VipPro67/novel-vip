@@ -44,7 +44,7 @@ export function CorrectionRequestModal({
               className="w-full border rounded p-2 min-h-[60px]"
               value={suggestedText}
               onChange={e => setSuggestedText(e.target.value)}
-              required
+              placeholder="Leave blank to delete the selected text"
             />
           </div>
           <div>

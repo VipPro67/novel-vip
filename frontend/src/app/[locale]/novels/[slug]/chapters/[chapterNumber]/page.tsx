@@ -85,6 +85,7 @@ export default function ChapterPage() {
   const [correctionMode, setCorrectionMode] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(null);
+  const [selectedParagraphIndices, setSelectedParagraphIndices] = useState<number[]>([]);
   const params = useParams();
   const router = useRouter();
   const t = useTranslations("Chapter");
@@ -1048,17 +1049,50 @@ export default function ChapterPage() {
       return (
         <p
           key={idx}
+          data-paragraph-index={idx}
           className="chapter-selectable-paragraph"
           onMouseUp={e => {
             if (!effectiveReaderSettings?.correctionEnabled) return;
             const selection = window.getSelection();
             if (selection && selection.toString().trim() && isAuthenticated) {
               const selected = selection.toString();
-              const paraText = e.currentTarget.textContent || "";
-              const charIndexInPara = paraText.indexOf(selected);
-              if (charIndexInPara !== -1) {
+              
+              // Check if selection spans multiple paragraphs
+              const range = selection.getRangeAt(0);
+              const startContainer = range.startContainer;
+              const endContainer = range.endContainer;
+              
+              // Find all paragraph elements in the selection
+              const allParagraphs = Array.from(
+                document.querySelectorAll('.chapter-selectable-paragraph')
+              );
+              
+              // Get start and end paragraph indices
+              let startParagraph = startContainer.nodeType === Node.TEXT_NODE 
+                ? (startContainer.parentElement?.closest('p[data-paragraph-index]') as HTMLElement)
+                : (startContainer as HTMLElement).closest('p[data-paragraph-index]');
+              
+              let endParagraph = endContainer.nodeType === Node.TEXT_NODE
+                ? (endContainer.parentElement?.closest('p[data-paragraph-index]') as HTMLElement)
+                : (endContainer as HTMLElement).closest('p[data-paragraph-index]');
+              
+              if (startParagraph && endParagraph) {
+                const startIdx = parseInt((startParagraph as HTMLElement).dataset.paragraphIndex || '0');
+                const endIdx = parseInt((endParagraph as HTMLElement).dataset.paragraphIndex || '0');
+                
+                // Create array of all selected paragraph indices
+                const selectedIndices: number[] = [];
+                for (let i = Math.min(startIdx, endIdx); i <= Math.max(startIdx, endIdx); i++) {
+                  selectedIndices.push(i);
+                }
+                
+                // Calculate char index relative to the first paragraph
+                const paraText = startParagraph.textContent || "";
+                const charIndexInPara = paraText.indexOf(selected.substring(0, Math.min(50, selected.length)));
+                
                 setSelectedText(selected);
-                setSelectedCharIndex(paraStart + charIndexInPara);
+                setSelectedCharIndex(charIndexInPara !== -1 ? paraStart + charIndexInPara : null);
+                setSelectedParagraphIndices(selectedIndices);
                 setCorrectionModalOpen(true);
               }
             }
@@ -1289,9 +1323,9 @@ export default function ChapterPage() {
               <div className="space-y-4 sm:space-y-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-4">
                   <h2 className="text-lg sm:text-xl md:text-2xl font-bold line-clamp-2">{chapter.title}</h2>
-                  <div className="flex flex-row gap-2 sm:flex-col text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                  <div className="flex-col text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                     <span>{t("meta.words", { count: chapterContent?.content.length ?? 0 })}</span>
-                                        <span className="hidden sm:inline">•</span>
+                                        <span className="inline"> • </span>
                     <span>
                       {t("meta.minutes", { count: Math.round((chapterContent?.content.length ?? 0)/1500) })}
                     </span>
@@ -1348,18 +1382,20 @@ export default function ChapterPage() {
                         setCorrectionModalOpen(false);
                         setSelectedText("");
                         setSelectedCharIndex(null);
+                        setSelectedParagraphIndices([]);
                       }}
                       selectedText={selectedText}
                       originalText={selectedText}
                       onSubmit={async (suggestedText, reason) => {
-                        if (!chapter || selectedCharIndex === null) return;
+                        if (!chapter) return;
                         try {
                           const res = await api.submitCorrectionRequest({
                             novelId: chapter.novelId,
                             chapterId: chapter.id,
                             chapterNumber: chapterNumber,
-                            charIndex: selectedCharIndex,
-                            paragraphIndex: undefined,
+                            charIndex: selectedCharIndex ?? undefined,
+                            paragraphIndex: selectedParagraphIndices.length === 1 ? selectedParagraphIndices[0] : undefined,
+                            paragraphIndices: selectedParagraphIndices.length > 1 ? selectedParagraphIndices : undefined,
                             originalText: selectedText,
                             suggestedText: suggestedText,
                             reason: reason || undefined,

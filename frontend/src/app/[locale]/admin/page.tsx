@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, AlertCircle, PlayCircle } from "lucide-react"
+import { Users, BookOpen, FileText, TrendingUp, Eye, Star, MessageCircle, Bell, AlertCircle, PlayCircle, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { useAuth } from "@/components/providers/auth-provider"
@@ -218,7 +218,29 @@ function AdminDashboardContent() {
                       Manage Corrections Request
                     </Button>
                   </Link>
+                  <Link href="/admin/novel-sources" className="block">
+                    <Button variant="outline" className="w-full justify-start bg-transparent">
+                      Novel Sources
+                    </Button>
+                  </Link>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="h-5 w-5" />
+                  Import & Sync
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">Automatic chapter imports from external sources</p>
+                <Link href="/admin/novel-sources" className="block">
+                  <Button variant="outline" className="w-full justify-start bg-transparent">
+                    Manage Novel Sources
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 

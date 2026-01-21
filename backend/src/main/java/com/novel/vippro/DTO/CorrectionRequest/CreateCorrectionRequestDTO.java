@@ -1,5 +1,6 @@
 package com.novel.vippro.DTO.CorrectionRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 public record CreateCorrectionRequestDTO(
@@ -8,6 +9,7 @@ public record CreateCorrectionRequestDTO(
     Integer chapterNumber,
     Integer charIndex,
     Integer paragraphIndex,
+    List<Integer> paragraphIndices,  // For multi-paragraph selection
     String originalText,
     String suggestedText,
     String reason

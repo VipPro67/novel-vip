@@ -4,6 +4,7 @@ import com.novel.vippro.DTO.Comment.CommentDTO;
 import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Messaging.payload.EpubImportMessage;
+import com.novel.vippro.Messaging.payload.ShubaImportMessage;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -21,4 +22,6 @@ public interface MessagePublisher {
     void publishChapterAudio(ChapterAudioMessage message);
 
     void publishEmailVerification(UUID userId, Duration validFor);
+    
+    void publishShubaImport(ShubaImportMessage message);
 }
