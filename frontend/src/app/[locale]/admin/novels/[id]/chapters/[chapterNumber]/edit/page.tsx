@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,10 +12,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, BookOpen, FileText, Clock, Target, Loader2 } from "lucide-react"
-import RichTextEditor from "@/components/rich-text-editor"
 import { Link } from "@/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/services/api"
+
+// Dynamic import for heavy editor component
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  loading: () => (
+    <div className="border rounded-lg p-8 min-h-[400px] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  ),
+  ssr: false,
+})
 
 interface ChapterFormData {
   novelId: string

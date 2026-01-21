@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import { useRouter, useSearchParams } from "@/navigation"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/layout/header"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Button } from "@/components/ui/button"
@@ -20,12 +21,19 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/services/api"
-import { Type, Upload, FileText, X, BookOpen, Clock, FileCheck, Lightbulb, } from "lucide-react"
-import RichTextEditor from "@/components/rich-text-editor"
+import { Type, Upload, FileText, X, BookOpen, Clock, FileCheck, Lightbulb, Loader2 } from "lucide-react"
 import { Link } from "@/navigation"
 import { Novel } from "@/models"
 
-// using shared RichTextEditor
+// Dynamic import for heavy editor component
+const RichTextEditor = dynamic(() => import("@/components/rich-text-editor"), {
+  loading: () => (
+    <div className="border rounded-lg p-8 min-h-[400px] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function AddChapterPage() {
   const router = useRouter()

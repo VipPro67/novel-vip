@@ -1,8 +1,15 @@
 import type { ApiResponse, User } from "@/models"
 import type { ApiClient } from "../api-client"
+import crypto from "crypto"
+
+// Hash password using SHA-256
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex")
+}
 
 export const createAuthApi = (client: ApiClient) => ({
   async login(email: string, password: string) {
+      const hashedPassword = hashPassword(password)
     const response = await client.request<{
       id: string
       username: string
@@ -12,7 +19,7 @@ export const createAuthApi = (client: ApiClient) => ({
       accessToken: string
     }>("/api/auth/signin", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password: hashedPassword }),
     })
 
     if (response.success && response.data.accessToken) {
@@ -23,9 +30,10 @@ export const createAuthApi = (client: ApiClient) => ({
   },
 
   async register(username: string, email: string, password: string): Promise<ApiResponse<string>> {
+      const hashedPassword = hashPassword(password)
     return client.request("/api/auth/signup", {
       method: "POST",
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password: hashedPassword }),
     })
   },
 
@@ -75,9 +83,13 @@ export const createAuthApi = (client: ApiClient) => ({
   },
 
   async changePassword(oldPassword: string, newPassword: string, confirmPassword: string) {
+      const hashedOldPassword = hashPassword(oldPassword)
+      const hashedNewPassword = hashPassword(newPassword)
+      const hashedConfirmPassword = hashPassword(confirmPassword)
+    
     return client.request<void>("/api/users/change-password", {
       method: "PUT",
-      body: JSON.stringify({ oldPassword, newPassword, confirmPassword }),
+      body: JSON.stringify({ oldPassword: hashedOldPassword, newPassword: hashedNewPassword, confirmPassword: hashedConfirmPassword }),
     })
   },
 })

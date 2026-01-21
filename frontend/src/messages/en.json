@@ -88,6 +88,16 @@
     },
     "searchPlaceholder": "Search your followed novels..."
   },
+  "ReadingHistoryCard": {
+    "by": "by",
+    "chapter": "Chapter",
+    "lastRead": "Last read:",
+    "timeAgo": {
+      "minutesAgo": "m ago",
+      "hoursAgo": "h ago",
+      "daysAgo": "d ago"
+    }
+  },
   "History": {
     "title": "Reading History",
     "timeAgo": "ago",
@@ -334,6 +344,107 @@
       "deleteSuccessTitle": "Success",
       "deleteSuccessDesc": "Novel deleted successfully",
       "deleteErrorDesc": "Failed to delete novel"
+    }
+  }
+  ,
+  "Chapter": {
+    "breadcrumb": {
+      "novels": "Novels",
+      "chapter": "Ch. {number}"
+    },
+    "audio": {
+      "preparing": "Preparing audio...",
+      "unavailableTitle": "Audio unavailable",
+      "unavailableDesc": "{message}",
+      "tryAgain": "Try again",
+      "notAvailableTitle": "Audio not available yet",
+      "notAvailableDesc": "Generate an audio version for this chapter.",
+      "signInToGenerate": "Sign in to generate an audio version for this chapter.",
+      "checking": "Checking audio availability...",
+      "generate": "Generate audio"
+    },
+    "errors": {
+      "chapterNotFound": "Chapter Not Found",
+      "notFoundDesc": "The chapter you're looking for could not be found.",
+      "contentNotAvailable": "Content Not Available",
+      "contentError": "Error Loading Content",
+      "contentUnavailable": "This chapter does not have any content yet.",
+      "contentFetchError": "Failed to load chapter content",
+      "general": "Unable to load chapter content"
+    },
+    "actions": {
+      "goBack": "Go Back",
+      "tryAgain": "Try Again",
+      "prevChapter": "Previous Chapter",
+      "nextChapter": "Next Chapter",
+      "hideComments": "Hide Comments",
+      "showComments": "Show Comments",
+      "addComment": "Add a Comment",
+      "postComment": "Post Comment",
+      "posting": "Posting...",
+      "retry": "Retry"
+    },
+    "comments": {
+      "placeholder": "Share your thoughts about this chapter...",
+      "empty": "No comments yet. Be the first to share your thoughts!",
+      "count": "Comments ({count})"
+    },
+    "toasts": {
+      "correctionSuccess": "Correction submitted!",
+      "correctionThanks": "Thank you for your contribution.",
+      "correctionFailed": "Failed to submit correction",
+      "unknownError": "Unknown error"
+    },
+    "meta": {
+      "words": "{count} words",
+      "minutes": "{count} min"
+    }
+  }
+  ,
+  "NovelDetail": {
+    "errors": {
+      "notFound": "Novel not found"
+    },
+    "actions": {
+      "start": "Start Reading",
+      "favorite": "Favorite",
+      "favorited": "Favorited",
+      "comments": "Comments",
+      "report": "Report Novel",
+      "rate": "Rate this novel",
+      "go": "Go",
+      "prev": "Previous",
+      "next": "Next",
+      "first": "First",
+      "last": "Last",
+      "login": "Login",
+      "postComment": "Post Comment",
+      "posting": "Posting..."
+    },
+    "labels": {
+      "description": "Description",
+      "byAuthor": "by {author}",
+      "views": "{count} views",
+      "chapters": "{count} chapters",
+      "updated": "Updated {time}"
+    },
+    "tabs": {
+      "chapters": "Chapters",
+      "comments": "Comments"
+    },
+    "chapters": {
+      "title": "Chapters ({count})",
+      "showing": "Showing page {page} of {total}",
+      "perPage": "{count} per page",
+      "gotoPlaceholder": "Go to chapter...",
+      "jump": "Go"
+    },
+    "comments": {
+      "addTitle": "Add Comment",
+      "placeholder": "Share your thoughts about this novel...",
+      "title": "Comments ({count})",
+      "empty": "No comments yet. Be the first to share your thoughts!",
+      "loginPrompt": "Please log in to comment"
     }
   }
   ,

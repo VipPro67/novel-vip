@@ -87,6 +87,16 @@
     },
     "searchPlaceholder": "Tìm kiếm truyện bạn theo dõi..."
   },
+  "ReadingHistoryCard": {
+    "by": "bởi",
+    "chapter": "Chương",
+    "lastRead": "Đọc lần cuối:",
+    "timeAgo": {
+      "minutesAgo": "p trước",
+      "hoursAgo": "g trước",
+      "daysAgo": "n trước"
+    }
+  },
   "History": {
     "title": "Lịch sử đọc",
     "timeAgo": "trước",
@@ -333,6 +343,107 @@
       "deleteSuccessTitle": "Thành công",
       "deleteSuccessDesc": "Truyện đã bị xoá thành công",
       "deleteErrorDesc": "Xoá truyện thất bại"
+    }
+  }
+  ,
+  "Chapter": {
+    "breadcrumb": {
+      "novels": "Truyện",
+      "chapter": "Ch. {number}"
+    },
+    "audio": {
+      "preparing": "Đang chuẩn bị âm thanh...",
+      "unavailableTitle": "Không thể phát âm thanh",
+      "unavailableDesc": "{message}",
+      "tryAgain": "Thử lại",
+      "notAvailableTitle": "Chưa có âm thanh",
+      "notAvailableDesc": "Tạo bản âm thanh cho chương này.",
+      "signInToGenerate": "Đăng nhập để tạo bản âm thanh cho chương này.",
+      "checking": "Đang kiểm tra khả dụng...",
+      "generate": "Tạo âm thanh"
+    },
+    "errors": {
+      "chapterNotFound": "Không tìm thấy chương",
+      "notFoundDesc": "Không thể tìm thấy chương bạn cần.",
+      "contentNotAvailable": "Nội dung không khả dụng",
+      "contentError": "Lỗi tải nội dung",
+      "contentUnavailable": "Chương này chưa có nội dung.",
+      "contentFetchError": "Tải nội dung chương thất bại",
+      "general": "Không thể tải nội dung chương"
+    },
+    "actions": {
+      "goBack": "Quay lại",
+      "tryAgain": "Thử lại",
+      "prevChapter": "Chương trước",
+      "nextChapter": "Chương tiếp",
+      "hideComments": "Ẩn bình luận",
+      "showComments": "Hiện bình luận",
+      "addComment": "Thêm bình luận",
+      "postComment": "Đăng bình luận",
+      "posting": "Đang đăng...",
+      "retry": "Thử lại"
+    },
+    "comments": {
+      "placeholder": "Chia sẻ cảm nghĩ về chương này...",
+      "empty": "Chưa có bình luận. Hãy là người đầu tiên chia sẻ!",
+      "count": "Bình luận ({count})"
+    },
+    "toasts": {
+      "correctionSuccess": "Đã gửi chỉnh sửa!",
+      "correctionThanks": "Cảm ơn bạn đã đóng góp.",
+      "correctionFailed": "Gửi chỉnh sửa thất bại",
+      "unknownError": "Lỗi không xác định"
+    },
+    "meta": {
+      "words": "{count} từ",
+      "minutes": "{count} phút"
+    }
+  }
+  ,
+  "NovelDetail": {
+    "errors": {
+      "notFound": "Không tìm thấy truyện"
+    },
+    "actions": {
+      "start": "Bắt đầu đọc",
+      "favorite": "Yêu thích",
+      "favorited": "Đã yêu thích",
+      "comments": "Bình luận",
+      "report": "Báo cáo truyện",
+      "rate": "Đánh giá truyện",
+      "go": "Đi",
+      "prev": "Trước",
+      "next": "Sau",
+      "first": "Đầu",
+      "last": "Cuối",
+      "login": "Đăng nhập",
+      "postComment": "Đăng bình luận",
+      "posting": "Đang đăng..."
+    },
+    "labels": {
+      "description": "Mô tả",
+      "byAuthor": "tác giả {author}",
+      "views": "{count} lượt xem",
+      "chapters": "{count} chương",
+      "updated": "Cập nhật {time}"
+    },
+    "tabs": {
+      "chapters": "Chương",
+      "comments": "Bình luận"
+    },
+    "chapters": {
+      "title": "Danh sách chương ({count})",
+      "showing": "Trang {page}/{total}",
+      "perPage": "{count} mỗi trang",
+      "gotoPlaceholder": "Đi tới chương...",
+      "jump": "Đi"
+    },
+    "comments": {
+      "addTitle": "Thêm bình luận",
+      "placeholder": "Chia sẻ cảm nghĩ về truyện này...",
+      "title": "Bình luận ({count})",
+      "empty": "Chưa có bình luận. Hãy là người đầu tiên chia sẻ!",
+      "loginPrompt": "Đăng nhập để bình luận"
     }
   }
   ,

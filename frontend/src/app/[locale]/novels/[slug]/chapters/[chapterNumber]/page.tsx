@@ -6,6 +6,7 @@ import { Client } from "@stomp/stompjs";
 import { Link } from "@/navigation";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/navigation";
+import { useTranslations } from "next-intl";
 import {
   ChevronLeft,
   ChevronRight,
@@ -86,6 +87,7 @@ export default function ChapterPage() {
   const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(null);
   const params = useParams();
   const router = useRouter();
+  const t = useTranslations("Chapter");
   const { toast } = useToast();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { settings: readerSettings } = useReaderSettings();
@@ -103,7 +105,7 @@ export default function ChapterPage() {
     }
 
     if (typeof window === "undefined") {
-      return;
+                {t("audio.preparing")}
     }
 
     try {
@@ -1143,9 +1145,9 @@ export default function ChapterPage() {
             <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
             <div>
               <p className="text-sm font-medium text-destructive">
-                Audio unavailable
+                {t("audio.unavailableTitle")}
               </p>
-              <p className="text-xs text-muted-foreground">{audioError}</p>
+              <p className="text-xs text-muted-foreground">{t("audio.unavailableDesc", { message: audioError })}</p>
             </div>
           </div>
           {canGenerateAudio ? (
@@ -1156,12 +1158,12 @@ export default function ChapterPage() {
               className="self-start md:self-auto bg-transparent"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Try again
+              {t("audio.tryAgain")}
             </Button>
           ) : (
             !authLoading && (
               <p className="text-xs text-muted-foreground">
-                Sign in to generate an audio version for this chapter.
+                {t("audio.signInToGenerate")}
               </p>
             )
           )}
@@ -1174,13 +1176,13 @@ export default function ChapterPage() {
         <div className="flex items-start space-x-3">
           <AlertCircle className="mt-0.5 h-5 w-5 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium">Audio not available yet</p>
+            <p className="text-sm font-medium">{t("audio.notAvailableTitle")}</p>
             <p className="text-xs text-muted-foreground">
               {authLoading
-                ? "Checking audio availability..."
+                ? t("audio.checking")
                 : canGenerateAudio
-                ? "Generate an audio version for this chapter."
-                : "Sign in to generate an audio version for this chapter."}
+                ? t("audio.notAvailableDesc")
+                : t("audio.signInToGenerate")}
             </p>
           </div>
         </div>
@@ -1192,7 +1194,7 @@ export default function ChapterPage() {
             className="self-start md:self-auto bg-transparent"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
-            Generate audio
+            {t("audio.generate")}
           </Button>
         )}
       </div>
@@ -1225,19 +1227,19 @@ export default function ChapterPage() {
             <CardContent className="p-8">
               <div className="text-center space-y-4">
                 <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
-                <h1 className="text-2xl font-bold">Chapter Not Found</h1>
+                <h1 className="text-2xl font-bold">{t("errors.chapterNotFound")}</h1>
                 <p className="text-muted-foreground">
                   {errorMessage ||
-                    "The chapter you're looking for could not be found."}
+                    t("errors.notFoundDesc")}
                 </p>
                 <div className="flex justify-center gap-3">
                   <Button onClick={() => router.back()} variant="outline">
                     <ChevronLeft className="h-4 w-4 mr-2" />
-                    Go Back
+                    {t("actions.goBack")}
                   </Button>
                   <Button onClick={fetchChapter}>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Try Again
+                    {t("actions.tryAgain")}
                   </Button>
                 </div>
               </div>
@@ -1251,26 +1253,23 @@ export default function ChapterPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Correction Mode Toggle */}
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 md:py-4">
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumb: Novels > slug > Chapter number */}
-          <div className="mb-4 text-sm text-muted-foreground">
+          <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-muted-foreground">
             <nav
               aria-label="Breadcrumb"
-              className="flex items-center space-x-2"
-            >
+              className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto">
               <Link
                 href="/novels"
-                className="text-sm text-primary hover:underline"
-              >
-                Novels
+                className="text-xs sm:text-sm text-primary hover:underline whitespace-nowrap">
+                {t("breadcrumb.novels")}
               </Link>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
               {slug ? (
                 <Link
                   href={`/novels/${slug}`}
-                  className="text-sm hover:underline"
-                >
+                  className="text-xs sm:text-sm hover:underline truncate max-w-[120px] sm:max-w-none">
                   {chapter.novelTitle}
                 </Link>
               ) : (
@@ -1280,20 +1279,21 @@ export default function ChapterPage() {
               )}
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">
-                Chapter {chapterNumber}
+                {t("breadcrumb.chapter", { number: chapterNumber })}
               </span>
             </nav>
           </div>
 
           <Card>
-            <CardContent className="p-3" style={cardContentStyle}>
-              <div className="space-y-6">
-                <div className="flex justify-between">
-                  <h2 className="text-xl font-bold">{chapter.title}</h2>
-                  <div className="hidden md:grid">
-                    <span>{chapterContent?.content.length} words</span>
+            <CardContent className="p-3 sm:p-4 md:p-6" style={cardContentStyle}>
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-4">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold line-clamp-2">{chapter.title}</h2>
+                  <div className="flex flex-row gap-2 sm:flex-col text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                    <span>{t("meta.words", { count: chapterContent?.content.length ?? 0 })}</span>
+                                        <span className="hidden sm:inline">•</span>
                     <span>
-                      {Math.round(chapterContent?.content.length/1500)} minutes
+                      {t("meta.minutes", { count: Math.round((chapterContent?.content.length ?? 0)/1500) })}
                     </span>
                   </div>
                 </div>
@@ -1302,7 +1302,7 @@ export default function ChapterPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-8" style={cardContentStyle}>
+            <CardContent className="p-4 sm:p-6 md:p-8" style={cardContentStyle}>
               <div className="space-y-6">
                 {renderAudioSection()}
                 {contentLoading ? (
@@ -1317,11 +1317,11 @@ export default function ChapterPage() {
                     <div>
                       <h3 className="text-lg font-semibold mb-2">
                         {error === "content-not-available"
-                          ? "Content Not Available"
-                          : "Error Loading Content"}
+                          ? t("errors.contentNotAvailable")
+                          : t("errors.contentError")}
                       </h3>
                       <p className="text-muted-foreground">
-                        {errorMessage || "Unable to load chapter content"}
+                        {errorMessage || t("errors.general")}
                       </p>
                     </div>
                     {error === "content-fetch-error" && (
@@ -1330,7 +1330,7 @@ export default function ChapterPage() {
                         variant="outline"
                       >
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry
+                        {t("actions.retry")}
                       </Button>
                     )}
                   </div>
@@ -1365,12 +1365,12 @@ export default function ChapterPage() {
                             reason: reason || undefined,
                           });
                           if (res.success) {
-                            toast({ title: "Correction submitted!", description: "Thank you for your contribution." });
+                            toast({ title: t("toasts.correctionSuccess"), description: t("toasts.correctionThanks") });
                           } else {
-                            toast({ title: "Failed to submit correction", description: res.message || "Unknown error", variant: "destructive" });
+                            toast({ title: t("toasts.correctionFailed"), description: res.message || t("toasts.unknownError"), variant: "destructive" });
                           }
                         } catch (err: any) {
-                          toast({ title: "Failed to submit correction", description: err?.message || "Unknown error", variant: "destructive" });
+                          toast({ title: t("toasts.correctionFailed"), description: err?.message || t("toasts.unknownError"), variant: "destructive" });
                         }
                       }}
                     />
@@ -1386,10 +1386,10 @@ export default function ChapterPage() {
               disabled={chapterNumber <= 1}
             >
               <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous Chapter
+              {t("actions.prevChapter")}
             </Button>
             <Button variant="outline" onClick={() => navigateChapter("next")}>
-              Next Chapter
+              {t("actions.nextChapter")}
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
@@ -1403,7 +1403,7 @@ export default function ChapterPage() {
               className="mb-6 bg-transparent"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
-              {showComments ? "Hide Comments" : "Show Comments"}
+              {showComments ? t("actions.hideComments") : t("actions.showComments")}
               {totalComments > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {totalComments > 99 ? "99+" : totalComments}
@@ -1417,11 +1417,11 @@ export default function ChapterPage() {
                   <div className="text-left space-y-6">
                     {/* Add Comment Form */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold">Add a Comment</h3>
+                      <h3 className="text-lg font-semibold">{t("actions.addComment")}</h3>
                       <Textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Share your thoughts about this chapter..."
+                        placeholder={t("comments.placeholder")}
                         className="min-h-[100px]"
                       />
                       <Button
@@ -1431,12 +1431,12 @@ export default function ChapterPage() {
                         {submittingComment ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            Posting...
+                            {t("actions.posting")}
                           </>
                         ) : (
                           <>
                             <Send className="mr-2 h-4 w-4" />
-                            Post Comment
+                            {t("actions.postComment")}
                           </>
                         )}
                       </Button>
@@ -1464,8 +1464,7 @@ export default function ChapterPage() {
                         <div className="text-center py-8">
                           <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                           <p className="text-muted-foreground">
-                            No comments yet. Be the first to share your
-                            thoughts!
+                            {t("comments.empty")}
                           </p>
                         </div>
                       ) : (
