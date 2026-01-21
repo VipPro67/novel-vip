@@ -5,6 +5,7 @@ import com.novel.vippro.DTO.Notification.NotificationDTO;
 import com.novel.vippro.Messaging.payload.ChapterAudioMessage;
 import com.novel.vippro.Messaging.payload.EpubImportMessage;
 import com.novel.vippro.Messaging.payload.EmailVerificationMessage;
+import com.novel.vippro.Messaging.payload.ShubaImportMessage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -59,5 +60,11 @@ public class RabbitMessagePublisher implements MessagePublisher {
                 Instant.now().getEpochSecond());
         rabbitTemplate.convertAndSend(MessageQueues.EMAIL_VERIFICATION, payload);
         logger.debug("Queued email verification job for user {}", userId);
+    }
+
+    @Override
+    public void publishShubaImport(ShubaImportMessage message) {
+        logger.info("Publishing Shuba import job {} to queue {}", message.getJobId(), MessageQueues.SHUBA_IMPORT);
+        rabbitTemplate.convertAndSend(MessageQueues.SHUBA_IMPORT, message);
     }
 }

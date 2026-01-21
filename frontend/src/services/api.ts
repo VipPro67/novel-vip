@@ -21,6 +21,7 @@ import { createReviewsApi } from "./api/reviews"
 import { createRoleRequestsApi } from "./api/role-requests"
 import { createVideosApi } from "./api/videos"
 import { createCorrectionApi } from "./api/corrections"
+import { createNovelSourcesApi } from "./api/novel-sources"
 
 type ApiModules =
   & ReturnType<typeof createAuthApi>
@@ -45,6 +46,7 @@ type ApiModules =
   & ReturnType<typeof createMessagesApi>
   & ReturnType<typeof createGroupsApi>
   & ReturnType<typeof createCorrectionApi>
+  & ReturnType<typeof createNovelSourcesApi>
 
 type ApiService = ApiClient & ApiModules
 
@@ -73,6 +75,7 @@ const factories = [
   createMessagesApi,
   createGroupsApi,
   createCorrectionApi,
+  createNovelSourcesApi,
 ] as const
 
 // Add corrections API

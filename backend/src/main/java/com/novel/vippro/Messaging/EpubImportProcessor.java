@@ -90,12 +90,36 @@ public class EpubImportProcessor {
 
             FileMetadata importFile = resolveFile(message, job);
             byte[] epubBytes = fileStorageService.downloadFile(importFile.getPublicId());
-            EpubParseResult parsed = EpubParser.parse(epubBytes);
+            EpubParseResult parsed = null;
+            try {
+                parsed = EpubParser.parse(epubBytes);
+            } catch (IllegalArgumentException e) {
+                if (e.getMessage() != null && e.getMessage().contains("EXT descriptor")) {
+                    logger.error("EPUB file has corrupted ZIP entries: {}", importFile.getPublicId(), e);
+                    job.setStatus(SystemJobStatus.FAILED);
+                    job.setStatusMessage("Failed: EPUB file is corrupted or has invalid ZIP format");
+                    job.setCompletedAt(Instant.now());
+                    jobRepository.save(job);
+                    notifyUser(job, "EPUB import failed", "The EPUB file appears to be corrupted with invalid ZIP entries. Please try a different file.", NotificationType.SYSTEM, job.getSlug());
+                    return;
+                }
+                throw e;
+            }
             int chapterCount = parsed.getChapters() == null ? 0 : parsed.getChapters().size();
             job.setTotalChapters(chapterCount);
             job.setChaptersProcessed(0);
             job.setAudioCompleted(0);
             jobRepository.save(job);
+
+            if (chapterCount == 0) {
+                logger.warn("EPUB file contained no readable chapters: {}", importFile.getPublicId());
+                job.setStatus(SystemJobStatus.FAILED);
+                job.setStatusMessage("Failed: EPUB file contains no readable chapters");
+                job.setCompletedAt(Instant.now());
+                jobRepository.save(job);
+                notifyUser(job, "EPUB import failed", "The EPUB file could not be read or contains no chapters.", NotificationType.SYSTEM, job.getSlug());
+                return;
+            }
 
             if (job.getImportType() == EpubImportType.CREATE_NOVEL) {
                 processCreateNovel(job, parsed);

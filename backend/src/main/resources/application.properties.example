@@ -79,4 +79,12 @@ aws.s3.path-style-access=
 # e.g. spring.servlet.multipart.max-file-size=20MB
 # spring.servlet.multipart.max-request-size=20MB
 
+# Gemini Translation API
+gemini.api.key=
+gemini.api.model=gemini-pro
+
+# Shuba Import Scheduler
+shuba.sync.enabled=false
+shuba.sync.interval=900000
+
 
