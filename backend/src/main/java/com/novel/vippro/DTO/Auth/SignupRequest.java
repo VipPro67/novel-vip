@@ -15,12 +15,10 @@ public record SignupRequest(
     String email,
 
     @NotBlank
-    @Size(min = 3, max = 20)
     String username,
 
     Set<String> role,
 
     @NotBlank
-    @Size(min = 6, max = 40)
     String password
 ) {}
