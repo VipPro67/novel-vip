@@ -124,17 +124,15 @@ public class ShubaNovelCrawlerService {
         
         List<ChapterInfo> chapters = new ArrayList<>();
         
-        // Try different selectors for chapter links
-        Elements chapterLinks = doc.select(".chapter-list a, .listmain a, #list a, .catalog a");
+        Elements chapterLinks = doc.select(".chapter-list a, .listmain a, #list a, .catalog a, li a");
         
-        int chapterNumber = 1;
         for (Element link : chapterLinks) {
             String href = link.attr("abs:href");
             String title = link.text().trim();
-            
+            int chapterNumber = Integer.parseInt(link.parent().attr("data-num"));
             if (!href.isEmpty() && !title.isEmpty()) {
                 ChapterInfo chapter = new ChapterInfo();
-                chapter.setChapterNumber(chapterNumber++);
+                chapter.setChapterNumber(chapterNumber);
                 chapter.setTitle(title);
                 chapter.setChapterUrl(href);
                 chapter.setSourceChapterId(extractChapterId(href));
@@ -149,7 +147,7 @@ public class ShubaNovelCrawlerService {
     /**
      * Fetch a single chapter content
      */
-    public ShubaChapterDTO fetchChapter(ChapterInfo chapterInfo) throws IOException {
+    public ShubaChapterDTO  fetchChapter(ChapterInfo chapterInfo) throws IOException {
         log.info("Fetching chapter {}: {} from {}", 
             chapterInfo.getChapterNumber(), chapterInfo.getTitle(), chapterInfo.getChapterUrl());
         
