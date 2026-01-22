@@ -8,7 +8,6 @@ import com.novel.vippro.Models.Novel;
 import com.novel.vippro.Models.ReadingHistory;
 import com.novel.vippro.Models.User;
 import com.novel.vippro.Payload.Response.PageResponse;
-import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.ReadingHistoryRepository;
 import com.novel.vippro.Repository.UserRepository;

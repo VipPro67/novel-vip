@@ -14,7 +14,6 @@ import com.novel.vippro.Security.UserDetailsImpl;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,8 +33,6 @@ public class NotificationService {
 
     @Autowired
     private MessagePublisher messagePublisher;
-
-    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Transactional
     public NotificationDTO createNotification(CreateNotificationDTO notificationDTO) {

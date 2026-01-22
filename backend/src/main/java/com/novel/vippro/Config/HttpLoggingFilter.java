@@ -11,7 +11,6 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Component
 public class HttpLoggingFilter implements jakarta.servlet.Filter {
@@ -57,15 +56,5 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 		// 	}
 		// }
 		wrappedResponse.copyBodyToResponse();
-	}
-
-	private String getPayload(byte[] buf, String encoding) {
-		if (buf == null || buf.length == 0)
-			return "";
-		try {
-			return new String(buf, encoding != null ? encoding : StandardCharsets.UTF_8.name());
-		} catch (Exception e) {
-			return "[unknown]";
-		}
 	}
 }

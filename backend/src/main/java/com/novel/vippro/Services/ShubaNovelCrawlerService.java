@@ -20,19 +20,68 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ShubaNovelCrawlerService {
     
-    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
     private static final int TIMEOUT_MS = 30000;
+    private static final int RETRY_COUNT = 3;
+    private static final int RETRY_DELAY_MS = 2000;
     
+    /**
+     * Helper method to create a Cloudflare-friendly connection
+     */
+    private org.jsoup.Connection createCloudflareFriendlyConnection(String url) {
+        return Jsoup.connect(url)
+            .userAgent(USER_AGENT)
+            .timeout(TIMEOUT_MS)
+            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+            .header("Accept-Language", "en-US,en;q=0.9")
+            .header("Accept-Encoding", "gzip, deflate, br")
+            .header("DNT", "1")
+            .header("Connection", "keep-alive")
+            .header("Upgrade-Insecure-Requests", "1")
+            .header("Sec-Fetch-Dest", "document")
+            .header("Sec-Fetch-Mode", "navigate")
+            .header("Sec-Fetch-Site", "none")
+            .header("Cache-Control", "max-age=0")
+            .followRedirects(true)
+            .ignoreHttpErrors(true);
+    }
+    
+    /**
+     * Fetch with retry logic for Cloudflare rate limiting
+     */
+    private Document fetchWithRetry(String url) throws IOException {
+        IOException lastException = null;
+        
+        for (int attempt = 0; attempt < RETRY_COUNT; attempt++) {
+            try {
+                log.debug("Fetching {} (attempt {}/{})", url, attempt + 1, RETRY_COUNT);
+                return createCloudflareFriendlyConnection(url).get();
+            } catch (IOException e) {
+                lastException = e;
+                log.warn("Fetch attempt {} failed: {}. Retrying in {}ms...", 
+                    attempt + 1, e.getMessage(), RETRY_DELAY_MS);
+                
+                if (attempt < RETRY_COUNT - 1) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS * (attempt + 1)); // Exponential backoff
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Interrupted during retry delay", ie);
+                    }
+                }
+            }
+        }
+        
+        throw new IOException("Failed to fetch " + url + " after " + RETRY_COUNT + " attempts", lastException);
+    }
+
     /**
      * Fetch novel metadata from 69shuba
      */
     public NovelMetadata fetchNovelMetadata(String novelUrl) throws IOException {
         log.info("Fetching novel metadata from: {}", novelUrl);
         
-        Document doc = Jsoup.connect(novelUrl)
-            .userAgent(USER_AGENT)
-            .timeout(TIMEOUT_MS)
-            .get();
+        Document doc = fetchWithRetry(novelUrl);
         
         NovelMetadata metadata = new NovelMetadata();
         
@@ -71,10 +120,7 @@ public class ShubaNovelCrawlerService {
     public List<ChapterInfo> fetchChapterList(String chapterListUrl) throws IOException {
         log.info("Fetching chapter list from: {}", chapterListUrl);
         
-        Document doc = Jsoup.connect(chapterListUrl)
-            .userAgent(USER_AGENT)
-            .timeout(TIMEOUT_MS)
-            .get();
+        Document doc = fetchWithRetry(chapterListUrl);
         
         List<ChapterInfo> chapters = new ArrayList<>();
         
@@ -107,10 +153,7 @@ public class ShubaNovelCrawlerService {
         log.info("Fetching chapter {}: {} from {}", 
             chapterInfo.getChapterNumber(), chapterInfo.getTitle(), chapterInfo.getChapterUrl());
         
-        Document doc = Jsoup.connect(chapterInfo.getChapterUrl())
-            .userAgent(USER_AGENT)
-            .timeout(TIMEOUT_MS)
-            .get();
+        Document doc = fetchWithRetry(chapterInfo.getChapterUrl());
         
         // Try different selectors for chapter content
         Element contentElement = doc.selectFirst("#content, .content, .chapter-content, .txtnav");
