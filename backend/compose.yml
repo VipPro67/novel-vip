@@ -11,6 +11,7 @@ services  :
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      FLARESOLVERR_URL: http://flaresolverr:8191
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
@@ -25,6 +26,8 @@ services  :
     depends_on:
       rabbitmq:
         condition: service_healthy
+      flaresolverr:
+        condition: service_started
       # opensearch:
       #   condition: service_healthy
   caddy:
@@ -81,6 +84,18 @@ services  :
         timeout: 5s
         retries: 5
         start_period: 40s
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=Asia/Ho_Chi_Minh
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
 
   # postgres:
   #   image: postgres:16

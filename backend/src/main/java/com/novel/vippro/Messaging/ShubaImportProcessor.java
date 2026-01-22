@@ -5,6 +5,7 @@ import com.novel.vippro.DTO.NovelSource.ShubaChapterDTO;
 import com.novel.vippro.DTO.Notification.CreateNotificationDTO;
 import com.novel.vippro.Messaging.payload.ShubaImportMessage;
 import com.novel.vippro.Models.*;
+import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.NovelRepository;
 import com.novel.vippro.Repository.SystemJobRepository;
 import com.novel.vippro.Repository.NovelSourceRepository;
@@ -12,11 +13,13 @@ import com.novel.vippro.Services.*;
 import com.novel.vippro.Services.ShubaNovelCrawlerService.ChapterInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,13 +31,18 @@ public class ShubaImportProcessor {
 
     private static final int CHAPTER_BATCH_SIZE = 50;
     
+    @Value("${translation.provider:groq}")
+    private String translationProvider;
+    
     private final SystemJobRepository jobRepository;
     private final NovelSourceRepository novelSourceRepository;
     private final NovelRepository novelRepository;
+    private final ChapterRepository chapterRepository;
     private final ChapterService chapterService;
     private final NovelService novelService;
     private final ShubaNovelCrawlerService crawlerService;
-    private final GeminiTranslationService translationService;
+    private final GeminiTranslationService geminiTranslationService;
+    private final GroqTranslationService groqTranslationService;
     private final SearchService searchService;
     private final NotificationService notificationService;
 
@@ -78,37 +86,107 @@ public class ShubaImportProcessor {
                 return;
             }
 
-            // Determine which chapters to fetch
-            int startIndex = 0;
-            int endIndex = allChapters.size();
+            long startTime = System.currentTimeMillis();
+            
+            // Get existing chapters from database - only fetch chapter numbers for efficiency
+            long dbQueryStart = System.currentTimeMillis();
+            List<Integer> existingChapterNumbers = chapterRepository.findChapterNumbersByNovelId(message.getNovelId());
+            Novel novel = novelRepository.findById(message.getNovelId())
+                .orElseThrow(() -> new RuntimeException("Novel not found"));
+            long dbQueryTime = System.currentTimeMillis() - dbQueryStart;
+            log.info("Database query took {}ms (fetched {} chapter numbers)", dbQueryTime, existingChapterNumbers.size());
+            
+            // Create a set of existing chapter numbers for efficient lookup
+            long setCreationStart = System.currentTimeMillis();
+            java.util.Set<Integer> existingChapterNumberSet = new java.util.HashSet<>(existingChapterNumbers);
+            
+            int highestChapterNumber = existingChapterNumbers.isEmpty() ? 0 : 
+                existingChapterNumbers.stream().max(Integer::compareTo).orElse(0);
+            long setCreationTime = System.currentTimeMillis() - setCreationStart;
+            log.info("Set creation and max finding took {}ms", setCreationTime);
+            
+            log.info("Current highest chapter number in database: {}, total existing: {}", 
+                highestChapterNumber, existingChapterNumbers.size());
+            
+            // Determine which chapters to fetch based on range
+            long rangeCalculationStart = System.currentTimeMillis();
+            
+            // Build a map for faster chapter lookup by chapter number
+            java.util.Map<Integer, ChapterInfo> chapterMap = new java.util.HashMap<>();
+            int minChapterNum = Integer.MAX_VALUE;
+            int maxChapterNum = Integer.MIN_VALUE;
+            
+            for (ChapterInfo chapter : allChapters) {
+                int chapterNum = chapter.getChapterNumber();
+                chapterMap.put(chapterNum, chapter);
+                minChapterNum = Math.min(minChapterNum, chapterNum);
+                maxChapterNum = Math.max(maxChapterNum, chapterNum);
+            }
+            
+            log.info("Source has chapters from {} to {}", minChapterNum, maxChapterNum);
+            
+            // Determine range based on import type
+            Integer startChapterNum = null;
+            Integer endChapterNum = null;
             
             if (!Boolean.TRUE.equals(message.getFullImport())) {
-                // Incremental import: fetch only new chapters
+                // Incremental import: start from highest existing chapter + 1
                 Integer lastSynced = novelSource.getLastSyncedChapter();
                 if (lastSynced != null && lastSynced > 0) {
-                    startIndex = lastSynced; // Start from next chapter
+                    startChapterNum = lastSynced + 1;
+                } else if (highestChapterNumber > 0) {
+                    startChapterNum = highestChapterNumber + 1;
                 }
                 
+                // Cap the end at the maximum available chapter from source
+                endChapterNum = maxChapterNum;
+                
                 if (message.getStartChapter() != null) {
-                    startIndex = Math.max(startIndex, message.getStartChapter() - 1);
+                    startChapterNum = message.getStartChapter();
                 }
                 if (message.getEndChapter() != null) {
-                    endIndex = Math.min(endIndex, message.getEndChapter());
+                    endChapterNum = Math.min(message.getEndChapter(), maxChapterNum);
                 }
             } else if (message.getStartChapter() != null || message.getEndChapter() != null) {
                 // Manual range specified
-                if (message.getStartChapter() != null) {
-                    startIndex = message.getStartChapter() - 1;
+                startChapterNum = message.getStartChapter();
+                endChapterNum = message.getEndChapter() != null ? 
+                    Math.min(message.getEndChapter(), maxChapterNum) : maxChapterNum;
+            }
+            
+            log.info("Filtering chapters from {} to {}", startChapterNum, endChapterNum);
+            
+            // Collect chapters to fetch based on chapter numbers
+            List<ChapterInfo> chaptersToFetch = new ArrayList<>();
+            
+            if (startChapterNum == null && endChapterNum == null) {
+                // No range specified, check all chapters
+                for (ChapterInfo chapter : allChapters) {
+                    if (!existingChapterNumberSet.contains(chapter.getChapterNumber())) {
+                        chaptersToFetch.add(chapter);
+                    }
                 }
-                if (message.getEndChapter() != null) {
-                    endIndex = message.getEndChapter();
+            } else {
+                // Range specified, only check chapters in range
+                int start = startChapterNum != null ? startChapterNum : minChapterNum;
+                int end = endChapterNum != null ? endChapterNum : maxChapterNum;
+                
+                for (int chapterNum = start; chapterNum <= end; chapterNum++) {
+                    if (!existingChapterNumberSet.contains(chapterNum)) {
+                        ChapterInfo chapter = chapterMap.get(chapterNum);
+                        if (chapter != null) {
+                            chaptersToFetch.add(chapter);
+                        }
+                    }
                 }
             }
-
-            List<ChapterInfo> chaptersToFetch = allChapters.subList(
-                Math.max(0, startIndex), 
-                Math.min(allChapters.size(), endIndex)
-            );
+            
+            long rangeCalculationTime = System.currentTimeMillis() - rangeCalculationStart;
+            log.info("Range calculation and filtering took {}ms", rangeCalculationTime);
+            
+            long totalPreprocessingTime = System.currentTimeMillis() - startTime;
+            log.info("Total preprocessing took {}ms (DB: {}ms, Set: {}ms, Filter: {}ms)", 
+                totalPreprocessingTime, dbQueryTime, setCreationTime, rangeCalculationTime);
 
             if (chaptersToFetch.isEmpty()) {
                 log.info("No new chapters to import for novel source {}", novelSource.getId());
@@ -118,15 +196,11 @@ public class ShubaImportProcessor {
 
             job.setTotalChapters(chaptersToFetch.size());
             job.setChaptersProcessed(0);
-            job.setStatusMessage(String.format("Importing %d chapters", chaptersToFetch.size()));
+            job.setStatusMessage(String.format("Importing %d new chapters", chaptersToFetch.size()));
             jobRepository.save(job);
-
-            // Process chapters in batches
-            Novel novel = novelRepository.findById(message.getNovelId())
-                .orElseThrow(() -> new RuntimeException("Novel not found"));
             
             int processedCount = 0;
-            int highestChapterNumber = novel.getTotalChapters() != null ? novel.getTotalChapters() : 0;
+            int statusUpdateInterval = 25; // Update status every 25 chapters instead of every chapter
             
             for (int i = 0; i < chaptersToFetch.size(); i += CHAPTER_BATCH_SIZE) {
                 int batchEnd = Math.min(i + CHAPTER_BATCH_SIZE, chaptersToFetch.size());
@@ -139,19 +213,33 @@ public class ShubaImportProcessor {
                         // Fetch chapter content
                         ShubaChapterDTO rawChapter = crawlerService.fetchChapter(chapterInfo);
                         
-                        // Translate to Vietnamese
-                        job.setStatusMessage(String.format("Translating chapter %d: %s", 
-                            rawChapter.getChapterNumber(), rawChapter.getTitle()));
-                        jobRepository.save(job);
+                        // Log translation progress (don't save to DB every time)
+                        if (processedCount % statusUpdateInterval == 0) {
+                            job.setStatusMessage(String.format("Translating chapter %d: %s", 
+                                rawChapter.getChapterNumber(), rawChapter.getTitle()));
+                            jobRepository.save(job);
+                        } else {
+                            log.info("Translating chapter {}: {}", rawChapter.getChapterNumber(), rawChapter.getTitle());
+                        }
                         
-                        String translatedContent = translationService.translateHtmlToVietnamese(rawChapter.getContentHtml());
-                        String translatedTitle = translationService.translateText(rawChapter.getTitle());
+                        // Use configured translation provider
+                        String translatedContent;
+                        String translatedTitle;
                         
-                        // Create chapter
-                        int targetChapterNumber = highestChapterNumber + rawChapter.getChapterNumber();
+                        if ("groq".equalsIgnoreCase(translationProvider)) {
+                            log.debug("Using Groq for translation");
+                            translatedContent = groqTranslationService.translateHtmlToVietnamese(rawChapter.getContentHtml());
+                            translatedTitle = groqTranslationService.translateText(rawChapter.getTitle());
+                        } else {
+                            log.debug("Using Gemini for translation");
+                            translatedContent = geminiTranslationService.translateHtmlToVietnamese(rawChapter.getContentHtml());
+                            translatedTitle = geminiTranslationService.translateText(rawChapter.getTitle());
+                        }
+                        
+                        // Create chapter - source chapter number directly maps to database chapter number
                         CreateChapterDTO chapterDTO = CreateChapterDTO.builder()
                             .novelId(message.getNovelId())
-                            .chapterNumber(targetChapterNumber)
+                            .chapterNumber(rawChapter.getChapterNumber())
                             .title(translatedTitle)
                             .contentHtml(translatedContent)
                             .format(CreateChapterDTO.ContentFormat.HTML)
@@ -160,22 +248,31 @@ public class ShubaImportProcessor {
                         chapterService.createChapter(chapterDTO);
                         
                         processedCount++;
-                        job.setChaptersProcessed(processedCount);
-                        job.setStatusMessage(String.format("Imported %d/%d chapters", processedCount, chaptersToFetch.size()));
-                        jobRepository.save(job);
                         
-                        // Update last synced chapter
-                        novelSource.setLastSyncedChapter(chapterInfo.getChapterNumber());
-                        novelSourceRepository.save(novelSource);
+                        // Update progress in DB every statusUpdateInterval chapters
+                        if (processedCount % statusUpdateInterval == 0) {
+                            job.setChaptersProcessed(processedCount);
+                            job.setStatusMessage(String.format("Imported %d/%d chapters", processedCount, chaptersToFetch.size()));
+                            jobRepository.save(job);
+                            
+                            // Update last synced chapter
+                            novelSource.setLastSyncedChapter(chapterInfo.getChapterNumber());
+                            novelSourceRepository.save(novelSource);
+                        }
                         
                         // Rate limiting
                         Thread.sleep(500);
                         
                     } catch (Exception e) {
-                        log.error("Failed to process chapter {}: {}", chapterInfo.getChapterNumber(), e.getMessage());
+                        log.error("Failed to process chapter {}: {}", chapterInfo.getChapterNumber(), e.getMessage(), e);
                         // Continue with next chapter
                     }
                 }
+                
+                // Update at end of each batch
+                job.setChaptersProcessed(processedCount);
+                job.setStatusMessage(String.format("Imported %d/%d chapters", processedCount, chaptersToFetch.size()));
+                jobRepository.save(job);
             }
 
             // Update novel chapter count
@@ -193,7 +290,7 @@ public class ShubaImportProcessor {
             
             // Send notification
             sendNotification(message.getUserId(), novel.getTitle(), processedCount);
-
+            log.info("Shuba import job {} completed successfully", job.getId());
         } catch (Exception e) {
             log.error("Error processing Shuba import job {}: {}", message.getJobId(), e.getMessage(), e);
             if (job != null) {

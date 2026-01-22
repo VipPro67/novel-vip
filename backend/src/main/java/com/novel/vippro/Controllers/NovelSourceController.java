@@ -110,7 +110,7 @@ public class NovelSourceController {
             .novelSourceId(id)
             .startChapter(requestDTO != null ? requestDTO.startChapter() : null)
             .endChapter(requestDTO != null ? requestDTO.endChapter() : null)
-            .fullImport(requestDTO != null ? requestDTO.fullImport() : false)
+            .fullImport(requestDTO != null && requestDTO.fullImport() != null && requestDTO.fullImport())
             .build();
         
         messagePublisher.publishShubaImport(message);
