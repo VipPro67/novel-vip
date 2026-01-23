@@ -233,10 +233,21 @@ public class ShubaImportProcessor {
                         } else {
                             log.debug("Using Gemini for translation");
                             translatedContent = geminiTranslationService.translateHtmlToVietnamese(rawChapter.getContentHtml());
-                            translatedTitle = geminiTranslationService.translateText(rawChapter.getTitle());
+                            translatedTitle = null;
+                            if (translatedContent.contains("<p>") && translatedContent.contains("</p>")) {
+                                String[] parts = translatedContent.split("<p>", 2);
+                                if (parts.length > 1) {
+                                    String[] titleParts = parts[1].split("</p>", 2);
+                                    if (titleParts.length > 0) {
+                                        translatedTitle = titleParts[0].replaceAll("<[^>]+>", "").trim();
+                                    }
+                                }
+                            }
+                            if (translatedTitle == null || translatedTitle.isEmpty()) {
+                                translatedTitle = rawChapter.getTitle();
+                            }
                         }
                         
-                        // Create chapter - source chapter number directly maps to database chapter number
                         CreateChapterDTO chapterDTO = CreateChapterDTO.builder()
                             .novelId(message.getNovelId())
                             .chapterNumber(rawChapter.getChapterNumber())
