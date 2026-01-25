@@ -83,6 +83,30 @@ public class Novel extends BaseEntity {
 	@JsonManagedReference("novel-corrections")
 	private List<CorrectionRequest> corrections = new ArrayList<>();
 
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Rating> ratings = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Review> reviews = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Favorite> favorites = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Bookmark> bookmarks = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<ReadingHistory> readingHistories = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<ViewStat> viewStats = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<NovelSource> novelSources = new ArrayList<>();
+
+	@OneToMany(mappedBy = "novel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Report> reports = new ArrayList<>();
+
 	@Column(name = "total_views", nullable = true)
 	private Long totalViews = 0L;
 

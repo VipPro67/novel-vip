@@ -40,7 +40,6 @@ public class CommentController {
             @ApiResponse(responseCode = "404", description = "Novel not found")
     })
     @GetMapping("/novel/{novelId}")
-    @PreAuthorize("isAuthenticated()")
     public ControllerResponse<PageResponse<CommentDTO>> getNovelComments(
             @Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
             @Parameter(description = "Page number", example = "0") @RequestParam(defaultValue = "0") int page,

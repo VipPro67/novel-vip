@@ -23,13 +23,13 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtils {
   private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-  @Value("${JWT_SECRET:VGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lZXJhdGlvbg==}")
+  @Value("${novel.app.jwtSecret:VGhpcyBpcyBhIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lZXJhdGlvbg==}")
   private String jwtSecret;
 
-  @Value("${JWT_EXPIRATION:864000}")
+  @Value("${novel.app.jwtExpirationMs:25920000}")
   private int jwtExpirationMs;
 
-  @Value("${JWT_REFRESH_EXPIRATION:25920000}")
+  @Value("${novel.app.jwtRefreshExpirationMs:864000000}")
   private int jwtRefreshExpirationMs;
 
   // ====== ACCESS TOKEN (existing) ======
