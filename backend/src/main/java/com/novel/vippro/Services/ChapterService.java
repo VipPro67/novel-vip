@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -120,7 +121,7 @@ public class ChapterService {
             throw new ResourceNotFoundException("Novel", "slug", slug);
         }
         Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novel.getId(), chapterNumber);
-        
+
         if (chapter == null) {
             throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
                     novel.getId() + " and " + chapterNumber);
@@ -150,7 +151,7 @@ public class ChapterService {
         UUID oldNovelId = chapter.getNovel().getId();
         String oldNovelSlug = chapter.getNovel().getSlug();
         Integer oldChapterNumber = chapter.getChapterNumber();
-        
+
         chapter.setChapterNumber(chapterInfoDTO.chapterNumber());
         chapter.setTitle(chapterInfoDTO.title());
 
@@ -159,19 +160,21 @@ public class ChapterService {
                     .orElseThrow(() -> new RuntimeException("Novel not found with id: " + chapterInfoDTO.novelId())));
         }
         Chapter updatedChapter = chapterRepository.save(chapter);
-        
+
         // Evict specific cache keys
         cacheManager.getCache("chapters").evict(id);
         cacheManager.getCache("chapters").evict("novel-" + oldNovelId + "-chapter-" + oldChapterNumber);
         cacheManager.getCache("chapters").evict("novel-slug-" + oldNovelSlug + "-chapter-" + oldChapterNumber);
         if (!oldChapterNumber.equals(chapterInfoDTO.chapterNumber())) {
-            cacheManager.getCache("chapters").evict("novel-" + updatedChapter.getNovel().getId() + "-chapter-" + chapterInfoDTO.chapterNumber());
-            cacheManager.getCache("chapters").evict("novel-slug-" + updatedChapter.getNovel().getSlug() + "-chapter-" + chapterInfoDTO.chapterNumber());
+            cacheManager.getCache("chapters")
+                    .evict("novel-" + updatedChapter.getNovel().getId() + "-chapter-" + chapterInfoDTO.chapterNumber());
+            cacheManager.getCache("chapters").evict(
+                    "novel-slug-" + updatedChapter.getNovel().getSlug() + "-chapter-" + chapterInfoDTO.chapterNumber());
         }
-        
+
         return mapper.ChaptertoChapterDTO(updatedChapter);
     }
-    
+
     @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public ChapterDTO updateChapterContent(UUID id, UpdateChapterContentDTO chapterContentDTO) {
@@ -218,14 +221,14 @@ public class ChapterService {
         jsonFile.setFileUrl(jsonUrl);
         jsonFile.setUpdatedAt(Instant.now());
         chapter.setJsonFile(jsonFile);
-        
+
         Chapter updatedChapter = chapterRepository.save(chapter);
-        
+
         // Evict specific cache keys
         cacheManager.getCache("chapters").evict(id);
         cacheManager.getCache("chapters").evict("novel-" + novelId + "-chapter-" + chapterNumber);
         cacheManager.getCache("chapters").evict("novel-slug-" + novelSlug + "-chapter-" + chapterNumber);
-        
+
         return mapper.ChaptertoChapterDTO(updatedChapter);
     }
 
@@ -283,12 +286,12 @@ public class ChapterService {
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(presignedUrl))
-                .GET()
-                .build();
+                    .uri(URI.create(presignedUrl))
+                    .GET()
+                    .build();
 
             HttpResponse<String> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofString());
+                    .send(request, HttpResponse.BodyHandlers.ofString());
 
             String json = response.body();
             return new ObjectMapper().readValue(json, Map.class);
@@ -297,8 +300,7 @@ public class ChapterService {
         }
     }
 
-
-    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public Chapter createChapter(CreateChapterDTO chapterDTO) {
 
@@ -366,14 +368,15 @@ public class ChapterService {
         return chapter;
     }
 
-    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public List<Chapter> createChaptersBatch(List<CreateChapterDTO> chapterDTOs, int batchSize) {
         if (chapterDTOs == null || chapterDTOs.isEmpty()) {
             return Collections.emptyList();
         }
 
-        ExecutorService executor = Executors.newFixedThreadPool(Math.min(8, Runtime.getRuntime().availableProcessors() * 2));
+        ExecutorService executor = Executors
+                .newFixedThreadPool(Math.min(8, Runtime.getRuntime().availableProcessors() * 2));
         List<CompletableFuture<Chapter>> futures = new ArrayList<>();
 
         for (CreateChapterDTO dto : chapterDTOs) {
@@ -404,7 +407,8 @@ public class ChapterService {
                     throw new RuntimeException("Error converting chapter content to JSON", e);
                 }
 
-                String publicId = String.format("novels/%s/chapters/chap-%d.json", novel.getSlug(), dto.chapterNumber());
+                String publicId = String.format("novels/%s/chapters/chap-%d.json", novel.getSlug(),
+                        dto.chapterNumber());
                 String jsonUrl;
                 try {
                     jsonUrl = fileStorageService.uploadFile(jsonContent.getBytes(), publicId, "application/json");
@@ -556,16 +560,18 @@ public class ChapterService {
         return jsonFile;
     }
 
-    @CacheEvict(value = {"chapters", "novels"}, allEntries = true)
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
     @Transactional
     public Chapter saveChapterEntity(Chapter chapter) {
         Chapter saved = chapterRepository.save(chapter);
         // Evict specific cache keys if chapter has novel relationship
         if (saved.getNovel() != null) {
             cacheManager.getCache("chapters").evict(saved.getId());
-            cacheManager.getCache("chapters").evict("novel-" + saved.getNovel().getId() + "-chapter-" + saved.getChapterNumber());
+            cacheManager.getCache("chapters")
+                    .evict("novel-" + saved.getNovel().getId() + "-chapter-" + saved.getChapterNumber());
             if (saved.getNovel().getSlug() != null) {
-                cacheManager.getCache("chapters").evict("novel-slug-" + saved.getNovel().getSlug() + "-chapter-" + saved.getChapterNumber());
+                cacheManager.getCache("chapters")
+                        .evict("novel-slug-" + saved.getNovel().getSlug() + "-chapter-" + saved.getChapterNumber());
             }
         }
         return saved;
@@ -574,5 +580,29 @@ public class ChapterService {
     public int getLastChapterNumber(UUID novelId) {
         Chapter last = chapterRepository.findTopByNovelIdOrderByChapterNumberDesc(novelId);
         return last == null ? 0 : last.getChapterNumber();
+    }
+
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
+    @Transactional
+    public int reindexChapterNumbers(UUID novelId) {
+        List<Chapter> chapters = chapterRepository.findByNovelIdOrderByChapterNumberAsc(novelId);
+
+        for (int i = 0; i < chapters.size(); i++) {
+            chapters.get(i).setChapterNumber(-(i + 1));
+        }
+        chapterRepository.saveAll(chapters);
+        chapterRepository.flush();
+
+        for (int i = 0; i < chapters.size(); i++) {
+            chapters.get(i).setChapterNumber(i + 1);
+        }
+        chapterRepository.saveAll(chapters);
+
+        int count = chapters.size();
+        novelRepository.findById(novelId).ifPresent(n -> {
+            n.setTotalChapters(count);
+            novelRepository.save(n);
+        });
+        return count;
     }
 }

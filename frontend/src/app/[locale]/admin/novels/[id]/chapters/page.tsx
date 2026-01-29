@@ -58,6 +58,29 @@ export default function ChaptersListPage() {
                   <Plus className="h-4 w-4 mr-2" />
                   Add Chapter
                 </Button>
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    if (window.confirm("Reindex all chapter numbers? This will renumber all chapters sequentially.")) {
+                      try {
+                        setLoading(true)
+                        const res = await api.reindexChapter(id)
+                        if (res.success) {
+                          alert(`Reindexed chapters. Total chapters: ${res.data}`)
+                          fetchChapters()
+                        } else {
+                          alert(res.message || "Failed to reindex chapters.")
+                        }
+                      } catch (err) {
+                        alert("Failed to reindex chapters.")
+                      } finally {
+                        setLoading(false)
+                      }
+                    }
+                  }}
+                >
+                  Reindex Chapters
+                </Button>
                 <Link href="/admin/novels">
                   <Button variant="outline">Back to Novels</Button>
                 </Link>
@@ -87,10 +110,27 @@ export default function ChaptersListPage() {
                             </Button>
                             
                           </Link>
-                          <Button variant="ghost" size="sm">
-                              <Delete className="h-4 w-4 mr-2" />
-                              Delete
-                            </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              if (window.confirm(`Are you sure you want to delete chapter ${c.chapterNumber}?`)) {
+                                try {
+                                  const res = await api.deleteChapter(c.id)
+                                      if (res.success) {
+                                        setChapters((prev) => prev.filter((ch) => ch.id !== c.id))
+                                  } else {
+                                    alert(res.message || "Failed to delete chapter.")
+                                  }
+                                } catch (err) {
+                                  alert("Failed to delete chapter.")
+                                }
+                              }
+                            }}
+                          >
+                            <Delete className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
                         </div>
                       </div>
                     ))}

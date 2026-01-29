@@ -57,7 +57,10 @@ public class AwsS3Config {
 
         var builder = S3Presigner.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials));
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(pathStyleAccess)
+                        .build());
 
         if (endpoint != null && !endpoint.isBlank()) {
             builder = builder.endpointOverride(URI.create(endpoint));
