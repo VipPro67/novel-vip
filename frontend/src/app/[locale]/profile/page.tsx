@@ -8,6 +8,7 @@ import { MyRoleRequests } from "@/components/user/my-role-requests";
 import { ChangePasswordForm } from "@/components/user/change-password-form";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import GamificationProfileSection from "@/components/gamification/GamificationProfileSection";
 
 export default function ProfilePage() {
   return (
@@ -31,6 +32,7 @@ function ProfileContent() {
         <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 px-4">
           <div className="space-y-4 sm:space-y-6">
             <MyProfile />
+            <GamificationProfileSection />
 
             <div className="space-y-2">
               <Button

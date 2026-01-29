@@ -62,6 +62,16 @@ public class User extends BaseEntity {
 	@Column(name = "email_verified_at")
 	private Instant emailVerifiedAt;
 
+	// Gamification Fields
+	@Column(columnDefinition = "bigint default 0")
+	private Long cultivationPoints = 0L;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "rank_id")
+	private CultivationRank currentRank;
+
+	private Boolean displayRankEffect = true;
+
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private List<Role> roles;
