@@ -74,8 +74,8 @@ export const createChapterApi = (client: ApiClient) => ({
     })
   },
 
-  async reindexChapter(id: string) {
-    return client.request<void>(`/api/chapters/${id}/reindex`, {
+  async reindexChapter(novelId: string) {
+    return client.request<{ data: number }>(`/api/chapters/novel/${novelId}/reindex`, {
       method: "POST",
     })
   },

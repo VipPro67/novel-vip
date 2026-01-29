@@ -163,7 +163,11 @@ export function LoginModal() {
               </div>
             </div>
             <div className={loading ? "pointer-events-none opacity-60" : ""}>
-              <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}><GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} width="100%" /></GoogleOAuthProvider>
+              <div className="flex justify-center">
+                <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+                  <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} useOneTap={false} width="100%" />
+                </GoogleOAuthProvider>
+              </div>
             </div>
           </div>
         )}
