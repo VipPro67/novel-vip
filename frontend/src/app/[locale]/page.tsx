@@ -23,6 +23,25 @@ const getCachedHomeData = cache(async () => {
   }
 })
 
+export async function generateMetadata() {
+  const t = await getTranslations("Home")
+
+  return {
+    title: "NovelVip – Read novels online for free",
+    description: "Read your favorite novels online for free. NovelVip offers a vast collection of novels with daily updates.",
+    openGraph: {
+      title: "NovelVip – Read novels online for free",
+      description: "Read your favorite novels online for free. NovelVip offers a vast collection of novels with daily updates.",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "NovelVip – Read novels online for free",
+      description: "Read your favorite novels online for free. NovelVip offers a vast collection of novels with daily updates.",
+    },
+  }
+}
+
 export default async function HomePage() {
   const t = await getTranslations("Home")
 
