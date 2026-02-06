@@ -13,8 +13,21 @@ import lombok.RequiredArgsConstructor;
 public class SuggestService {
 
     private final SearchService searchService;
+    private final com.novel.vippro.Repository.NovelRepository novelRepository;
 
     public List<SearchSuggestion> suggest(String query, int size) {
-        return searchService.suggest(query, size);
+        List<SearchSuggestion> suggestions = List.of();
+        try {
+            suggestions = searchService.suggest(query, size);
+        } catch (Exception e) {
+        }
+
+        if (suggestions.isEmpty()) {
+            org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, size);
+            suggestions = novelRepository.findByTitleContainingIgnoreCaseOrderByRatingDesc(query, pageable)
+                    .map(novel -> new SearchSuggestion(novel.getId().toString(), novel.getTitle()))
+                    .getContent();
+        }
+        return suggestions;
     }
 }

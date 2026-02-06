@@ -176,7 +176,12 @@ public class NovelService {
         }
 
         logger.info("Searching novels with filters: {}", filters);
-        Page<Novel> novels = searchService.search(filters, pageable);
+        try {
+            novels = searchService.search(filters, pageable);
+        } catch (Exception e) {
+            logger.error("Search service failed: {}", e.getMessage());
+            novels = Page.empty();
+        }
 
         if (novels.isEmpty()) {
             logger.info("SearchService returned no results. Falling back to database query.");

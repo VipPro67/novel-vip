@@ -50,15 +50,14 @@ public interface NovelRepository extends JpaRepository<Novel, UUID> {
 
     @Query("SELECT n FROM Novel n WHERE n.titleNormalized ILIKE CONCAT('%', LOWER(:keyword), '%')")
     Page<Novel> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
-
     @Query("""
         SELECT DISTINCT n FROM Novel n
         LEFT JOIN n.categories c
         LEFT JOIN n.genres g
         LEFT JOIN n.tags t
-        WHERE LOWER(n.title) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
+        WHERE (LOWER(n.title) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
         OR LOWER(n.description) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
-        OR LOWER(n.author) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%'
+        OR LOWER(n.author) LIKE '%' || LOWER(COALESCE(:keyword, '')) || '%')
         AND LOWER(n.title) LIKE '%' || LOWER(COALESCE(:title, '')) || '%'
         AND LOWER(n.author) LIKE '%' || LOWER(COALESCE(:author, '')) || '%'
         AND LOWER(COALESCE(c.name, '')) LIKE '%' || LOWER(COALESCE(:category, '')) || '%'
