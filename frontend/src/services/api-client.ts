@@ -34,9 +34,15 @@ export class ApiClient {
     return this.token
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}) {
+  private isRefreshing = false
+  private failedRequestsQueue: Array<{
+    resolve: (value: unknown) => void
+    reject: (reason?: unknown) => void
+  }> = []
+
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
-    const headers: HeadersInit = { ...options.headers }
+    const headers: Record<string, string> = { ...(options.headers as Record<string, string> || {}) }
     const isFormData = options.body instanceof FormData
 
     if (!isFormData) {
@@ -44,7 +50,7 @@ export class ApiClient {
     }
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
+      headers["Authorization"] = `Bearer ${this.token}`
     }
 
     try {
@@ -66,9 +72,54 @@ export class ApiClient {
       }
 
       if (!response.ok) {
+        if (response.status === 401 && !endpoint.includes("/auth/signin")) {
+          if (!this.isRefreshing) {
+            this.isRefreshing = true
+            try {
+              const refreshResponse = await this.refreshToken()
+              if (refreshResponse.success && refreshResponse.data?.accessToken) {
+                this.setToken(refreshResponse.data.accessToken)
+                this.processQueue(null, refreshResponse.data.accessToken)
+
+                // Retry original request with new token
+                return this.request<T>(endpoint, options)
+              } else {
+                throw new Error("Refresh failed")
+              }
+            } catch (refreshError) {
+              this.processQueue(refreshError, null)
+              this.clearToken()
+              // Redirect to login or handle logout?
+              // For now just throw the original 401 or refresh error
+              const fallbackMessage = "Authentication failed. Please login again."
+              const message = parsedBody?.message || fallbackMessage
+              const error: ApiError = Object.assign(new Error(message), {
+                status: response.status,
+                body: parsedBody as ApiResponse<unknown> | null,
+              })
+              throw error
+            } finally {
+              this.isRefreshing = false
+            }
+          } else {
+            // Add to queue
+            return new Promise((resolve, reject) => {
+              this.failedRequestsQueue.push({
+                resolve: (token: any) => {
+                  // Retry with new token
+                  const newHeaders = { ...headers, Authorization: `Bearer ${token}` }
+                  resolve(this.request<T>(endpoint, { ...options, headers: newHeaders }))
+                },
+                reject: (err) => {
+                  reject(err)
+                }
+              })
+            })
+          }
+        }
+
         let fallbackMessage = `Request failed with status ${response.status}`
         if (response.status === 401) {
-          this.clearToken()
           fallbackMessage = "Authentication failed. Please login again."
         } else if (response.status === 403) {
           fallbackMessage = "Access denied. Insufficient permissions."
@@ -100,6 +151,44 @@ export class ApiClient {
       console.error("API Request Error:", error)
       throw error
     }
+  }
+
+  private async refreshToken(): Promise<ApiResponse<{ accessToken: string } | undefined>> {
+    try {
+      // The refresh token is in HttpOnly cookie, so we don't send it manually in body/header
+      // unless backend expects it differently. The implementation assumes cookie.
+      // But we pass credentials: 'include' to send cookies.
+
+      const response = await fetch(`${this.baseURL}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include" // Important for sending cookies
+      })
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error("Error refreshing token:", error)
+      return {
+        success: false,
+        message: "Failed to refresh token",
+        statusCode: 401,
+        data: undefined
+      }
+    }
+  }
+
+  private processQueue(error: any, token: string | null = null) {
+    this.failedRequestsQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error)
+      } else {
+        prom.resolve(token)
+      }
+    })
+    this.failedRequestsQueue = []
   }
 
   async get<T>(endpoint: string, options: RequestInit = {}) {

@@ -79,4 +79,10 @@ public class AuthController {
     public ResponseEntity<ControllerResponse<JwtResponse>> loginWithGoogle(@Valid @RequestBody GoogleAuthRequest request) {
         return authService.loginOrRegisterWithGoogle(request);
     }
+
+    @Operation(summary = "Logout user", description = "Logout the user and invalidate the refresh token")
+    @PostMapping("/signout")
+    public ResponseEntity<ControllerResponse<String>> logoutUser() {
+        return authService.logoutUser();
+    }
 }
