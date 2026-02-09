@@ -18,5 +18,8 @@ public record ChapterDetailDTO(
     UUID novelId,
     String novelTitle,
     String jsonUrl,
-    String audioUrl
+    String audioUrl,
+    Integer price,
+    Boolean isLocked,
+    Boolean isUnlocked
 ) {}

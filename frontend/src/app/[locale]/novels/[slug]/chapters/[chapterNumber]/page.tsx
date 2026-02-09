@@ -23,6 +23,8 @@ import {
   AlertCircle,
   Volume2,
   Flag,
+  Lock,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,7 +92,7 @@ export default function ChapterPage() {
   const router = useRouter();
   const t = useTranslations("Chapter");
   const { toast } = useToast();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, refreshUser } = useAuth();
   const { settings: readerSettings } = useReaderSettings();
   const [cachedReaderSettings, setCachedReaderSettings] =
     useState<ReaderSettings | null>(null);
@@ -106,7 +108,7 @@ export default function ChapterPage() {
     }
 
     if (typeof window === "undefined") {
-                {t("audio.preparing")}
+      { t("audio.preparing") }
     }
 
     try {
@@ -171,7 +173,46 @@ export default function ChapterPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioGenerating, setAudioGenerating] = useState(false);
+
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
+
+  const handleUnlock = async () => {
+    if (!chapter) return;
+    setUnlocking(true);
+    try {
+      const response = await api.unlockChapter(chapter.novelId, chapter.chapterNumber);
+      if (response.success) {
+        toast({
+          title: t("locked.successTitle", { defaultMessage: "Success" }),
+          description: t("locked.successDesc", { defaultMessage: "Chapter unlocked successfully!" }),
+        });
+        setChapter(response.data);
+        if (response.data.jsonUrl) {
+          // Fetch content immediately
+          fetchChapterContent(response.data);
+        }
+        // Refresh user profile to update wallet balance
+        if (refreshUser) {
+          await refreshUser();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || t("locked.failed", { defaultMessage: "Failed to unlock chapter" }),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: t("locked.error", { defaultMessage: "An error occurred while unlocking" }),
+        variant: "destructive",
+      });
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   const effectiveReaderSettings = readerSettings ?? cachedReaderSettings;
 
@@ -197,9 +238,8 @@ export default function ChapterPage() {
       fontFamily: effectiveReaderSettings?.fontFamily ?? "inherit",
     };
 
-    style["--paragraph-spacing"] = `${
-      effectiveReaderSettings?.paragraphSpacing ?? 10
-    }px`;
+    style["--paragraph-spacing"] = `${effectiveReaderSettings?.paragraphSpacing ?? 10
+      }px`;
     return style;
   }, [effectiveReaderSettings]);
   useEffect(() => {
@@ -293,8 +333,8 @@ export default function ChapterPage() {
     if (!chapter) {
       return
     }
-      updateReadingProgress(chapter);
-  },[chapter]);
+    updateReadingProgress(chapter);
+  }, [chapter]);
 
   const fetchChapter = async () => {
     if (fetchingChapterRef.current) return;
@@ -389,10 +429,10 @@ export default function ChapterPage() {
     }
   };
 
-  const updateReadingProgress = async (chapter : Chapter) => {
+  const updateReadingProgress = async (chapter: Chapter) => {
     try {
-      if(isAuthenticated)
-        await api.updateReadingProgress(chapter.novelId,chapter.chapterNumber)
+      if (isAuthenticated)
+        await api.updateReadingProgress(chapter.novelId, chapter.chapterNumber)
     }
     catch {
 
@@ -450,7 +490,7 @@ export default function ChapterPage() {
         setAudioError(null);
         setAudioLoading(false);
         setAudioGenerating(true);
-        
+
         // Start polling for audio availability as fallback
         pollForAudioCompletion(chapter.id);
       } else {
@@ -495,24 +535,24 @@ export default function ChapterPage() {
         setComments((prev) => [incoming, ...prev]);
         setTotalComments((prev) => prev + 1);
       });
-      
+
       // Subscribe to audio generation completion
       client.subscribe(`/topic/chapter.${chapter.id}.audio`, (message) => {
         try {
           const audioData = JSON.parse(message.body);
           console.log("Audio generation completed for chapter", audioData);
-          
+
           // Update audio URL and stop loading state
           if (audioData.audioUrl) {
             setAudioUrl(audioData.audioUrl);
             setAudioGenerating(false);
             setAudioError(null);
-            
+
             toast({
               title: "Success",
               description: "Audio has been generated successfully!",
             });
-            
+
             // Refetch chapter to ensure we have all latest data
             fetchChapter();
           }
@@ -814,9 +854,8 @@ export default function ChapterPage() {
     return (
       <div
         key={comment.id}
-        className={`space-y-3 ${
-          depth > 0 ? "ml-6 pl-4 border-l-2 border-muted" : ""
-        }`}
+        className={`space-y-3 ${depth > 0 ? "ml-6 pl-4 border-l-2 border-muted" : ""
+          }`}
       >
         <div className="space-y-2">
           <div className="flex items-start justify-between">
@@ -1056,40 +1095,40 @@ export default function ChapterPage() {
             const selection = window.getSelection();
             if (selection && selection.toString().trim() && isAuthenticated) {
               const selected = selection.toString();
-              
+
               // Check if selection spans multiple paragraphs
               const range = selection.getRangeAt(0);
               const startContainer = range.startContainer;
               const endContainer = range.endContainer;
-              
+
               // Find all paragraph elements in the selection
               const allParagraphs = Array.from(
                 document.querySelectorAll('.chapter-selectable-paragraph')
               );
-              
+
               // Get start and end paragraph indices
-              let startParagraph = startContainer.nodeType === Node.TEXT_NODE 
+              let startParagraph = startContainer.nodeType === Node.TEXT_NODE
                 ? (startContainer.parentElement?.closest('p[data-paragraph-index]') as HTMLElement)
                 : (startContainer as HTMLElement).closest('p[data-paragraph-index]');
-              
+
               let endParagraph = endContainer.nodeType === Node.TEXT_NODE
                 ? (endContainer.parentElement?.closest('p[data-paragraph-index]') as HTMLElement)
                 : (endContainer as HTMLElement).closest('p[data-paragraph-index]');
-              
+
               if (startParagraph && endParagraph) {
                 const startIdx = parseInt((startParagraph as HTMLElement).dataset.paragraphIndex || '0');
                 const endIdx = parseInt((endParagraph as HTMLElement).dataset.paragraphIndex || '0');
-                
+
                 // Create array of all selected paragraph indices
                 const selectedIndices: number[] = [];
                 for (let i = Math.min(startIdx, endIdx); i <= Math.max(startIdx, endIdx); i++) {
                   selectedIndices.push(i);
                 }
-                
+
                 // Calculate char index relative to the first paragraph
                 const paraText = startParagraph.textContent || "";
                 const charIndexInPara = paraText.indexOf(selected.substring(0, Math.min(50, selected.length)));
-                
+
                 setSelectedText(selected);
                 setSelectedCharIndex(charIndexInPara !== -1 ? paraStart + charIndexInPara : null);
                 setSelectedParagraphIndices(selectedIndices);
@@ -1168,7 +1207,7 @@ export default function ChapterPage() {
       );
     }
 
-    if(audioUrl === null && effectiveReaderSettings?.audioAutoNextChapter === true) {
+    if (audioUrl === null && effectiveReaderSettings?.audioAutoNextChapter === true) {
       handleGenerateAudio();
     }
 
@@ -1215,8 +1254,8 @@ export default function ChapterPage() {
               {authLoading
                 ? t("audio.checking")
                 : canGenerateAudio
-                ? t("audio.notAvailableDesc")
-                : t("audio.signInToGenerate")}
+                  ? t("audio.notAvailableDesc")
+                  : t("audio.signInToGenerate")}
             </p>
           </div>
         </div>
@@ -1325,9 +1364,9 @@ export default function ChapterPage() {
                   <h2 className="text-lg sm:text-xl md:text-2xl font-bold line-clamp-2">{chapter.title}</h2>
                   <div className="flex-col text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                     <span>{t("meta.words", { count: chapterContent?.content.length ?? 0 })}</span>
-                                        <span className="inline"> • </span>
+                    <span className="inline"> • </span>
                     <span>
-                      {t("meta.minutes", { count: Math.round((chapterContent?.content.length ?? 0)/1500) })}
+                      {t("meta.minutes", { count: Math.round((chapterContent?.content.length ?? 0) / 1500) })}
                     </span>
                   </div>
                 </div>
@@ -1374,42 +1413,83 @@ export default function ChapterPage() {
                       {renderHtmlContent(chapterContent.content)}
                     </div>
                   </div>
+                ) : chapter && chapter.isLocked && !chapter.isUnlocked ? (
+                  <div className="flex flex-col items-center justify-center py-16 space-y-6 text-center border-2 border-dashed rounded-lg bg-muted/30">
+                    <div className="p-4 rounded-full bg-primary/10">
+                      <Lock className="w-12 h-12 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-bold">{t("locked.title", { defaultMessage: "Chapter Locked" })}</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        {t("locked.description", { defaultMessage: "This chapter is locked. Unlock it to continue reading." })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xl font-semibold">
+                      <span>{t("locked.price", { defaultMessage: "Price:" })}</span>
+                      <Badge variant="secondary" className="px-3 py-1 text-lg">
+                        {chapter.price} Coins
+                      </Badge>
+                    </div>
+                    <Button
+                      size="lg"
+                      onClick={handleUnlock}
+                      disabled={unlocking}
+                      className="w-full max-w-xs"
+                    >
+                      {unlocking ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {t("locked.unlocking", { defaultMessage: "Unlocking..." })}
+                        </>
+                      ) : (
+                        <>
+                          <Coins className="w-4 h-4 mr-2" />
+                          {t("locked.unlockButton", { defaultMessage: "Unlock Chapter" })}
+                        </>
+                      )}
+                    </Button>
+                    {!isAuthenticated && (
+                      <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                        {t("locked.loginRequired", { defaultMessage: "Please login to unlock chapters." })}
+                      </p>
+                    )}
+                  </div>
                 ) : null}
-                    {/* Correction Request Modal */}
-                    <CorrectionRequestModal
-                      open={correctionModalOpen}
-                      onClose={() => {
-                        setCorrectionModalOpen(false);
-                        setSelectedText("");
-                        setSelectedCharIndex(null);
-                        setSelectedParagraphIndices([]);
-                      }}
-                      selectedText={selectedText}
-                      originalText={selectedText}
-                      onSubmit={async (suggestedText, reason) => {
-                        if (!chapter) return;
-                        try {
-                          const res = await api.submitCorrectionRequest({
-                            novelId: chapter.novelId,
-                            chapterId: chapter.id,
-                            chapterNumber: chapterNumber,
-                            charIndex: selectedCharIndex ?? undefined,
-                            paragraphIndex: selectedParagraphIndices.length === 1 ? selectedParagraphIndices[0] : undefined,
-                            paragraphIndices: selectedParagraphIndices.length > 1 ? selectedParagraphIndices : undefined,
-                            originalText: selectedText,
-                            suggestedText: suggestedText,
-                            reason: reason || undefined,
-                          });
-                          if (res.success) {
-                            toast({ title: t("toasts.correctionSuccess"), description: t("toasts.correctionThanks") });
-                          } else {
-                            toast({ title: t("toasts.correctionFailed"), description: res.message || t("toasts.unknownError"), variant: "destructive" });
-                          }
-                        } catch (err: any) {
-                          toast({ title: t("toasts.correctionFailed"), description: err?.message || t("toasts.unknownError"), variant: "destructive" });
-                        }
-                      }}
-                    />
+                {/* Correction Request Modal */}
+                <CorrectionRequestModal
+                  open={correctionModalOpen}
+                  onClose={() => {
+                    setCorrectionModalOpen(false);
+                    setSelectedText("");
+                    setSelectedCharIndex(null);
+                    setSelectedParagraphIndices([]);
+                  }}
+                  selectedText={selectedText}
+                  originalText={selectedText}
+                  onSubmit={async (suggestedText, reason) => {
+                    if (!chapter) return;
+                    try {
+                      const res = await api.submitCorrectionRequest({
+                        novelId: chapter.novelId,
+                        chapterId: chapter.id,
+                        chapterNumber: chapterNumber,
+                        charIndex: selectedCharIndex ?? undefined,
+                        paragraphIndex: selectedParagraphIndices.length === 1 ? selectedParagraphIndices[0] : undefined,
+                        paragraphIndices: selectedParagraphIndices.length > 1 ? selectedParagraphIndices : undefined,
+                        originalText: selectedText,
+                        suggestedText: suggestedText,
+                        reason: reason || undefined,
+                      });
+                      if (res.success) {
+                        toast({ title: t("toasts.correctionSuccess"), description: t("toasts.correctionThanks") });
+                      } else {
+                        toast({ title: t("toasts.correctionFailed"), description: res.message || t("toasts.unknownError"), variant: "destructive" });
+                      }
+                    } catch (err: any) {
+                      toast({ title: t("toasts.correctionFailed"), description: err?.message || t("toasts.unknownError"), variant: "destructive" });
+                    }
+                  }}
+                />
               </div>
             </CardContent>
           </Card>

@@ -15,4 +15,7 @@ export interface ChapterDetail extends Chapter {
   audioUrl?: string
   jsonMetadata?: FileMetadata
   audioMetadata?: FileMetadata
+  price?: number
+  isLocked?: boolean
+  isUnlocked?: boolean
 }

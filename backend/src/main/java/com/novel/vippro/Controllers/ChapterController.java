@@ -125,6 +125,22 @@ public class ChapterController {
 		return ControllerResponse.success(message, chapter);
 	}
 
+	@Operation(summary = "Unlock chapter", description = "Unlock a specific chapter using coins")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Chapter unlocked successfully"),
+			@ApiResponse(responseCode = "404", description = "Chapter or novel not found"),
+			@ApiResponse(responseCode = "400", description = "Error unlocking chapter or insufficient balance")
+	})
+	@PostMapping("/novel/{novelId}/chapter/{chapterNumber}/unlock")
+	@PreAuthorize("isAuthenticated()")
+	public ControllerResponse<ChapterDetailDTO> unlockChapter(
+			@Parameter(description = "Novel ID", required = true) @PathVariable UUID novelId,
+			@Parameter(description = "Chapter number", required = true) @PathVariable Integer chapterNumber) {
+		UUID userId = UserDetailsImpl.getCurrentUserId();
+		ChapterDetailDTO chapter = chapterService.unlockChapter(novelId, chapterNumber, userId);
+		return ControllerResponse.success("Chapter unlocked successfully", chapter);
+	}
+
 	@Operation(summary = "Create new chapter", description = "Create a new chapter for a novel", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Chapter created successfully"),

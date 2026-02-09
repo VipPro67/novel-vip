@@ -109,7 +109,7 @@ export const createChapterApi = (client: ApiClient) => ({
 
   async getReadingHistory(
     params: {
-      page?: number  
+      page?: number
       size?: number
       sortBy?: string
       sortDir?: string
@@ -123,5 +123,11 @@ export const createChapterApi = (client: ApiClient) => ({
     })
 
     return client.request<PageResponse<ReadingHistory>>(`/api/reading-history?${searchParams}`)
+  },
+
+  async unlockChapter(novelId: string, chapterNumber: number) {
+    return client.request<ChapterDetail>(`/api/chapters/novel/${novelId}/chapter/${chapterNumber}/unlock`, {
+      method: "POST",
+    })
   },
 })

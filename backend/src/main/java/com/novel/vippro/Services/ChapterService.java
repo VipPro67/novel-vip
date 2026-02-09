@@ -50,6 +50,13 @@ import com.novel.vippro.Payload.Response.PageResponse;
 import com.novel.vippro.Repository.ChapterRepository;
 import com.novel.vippro.Repository.FileMetadataRepository;
 import com.novel.vippro.Repository.NovelRepository;
+import com.novel.vippro.Models.ChapterUnlock;
+import com.novel.vippro.Models.User;
+import com.novel.vippro.Repository.ChapterUnlockRepository;
+import com.novel.vippro.Repository.UserRepository;
+import com.novel.vippro.Security.UserDetailsImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.novel.vippro.Repository.SystemJobRepository;
 
 @Service
@@ -60,6 +67,12 @@ public class ChapterService {
 
     @Autowired
     private NovelRepository novelRepository;
+
+    @Autowired
+    private ChapterUnlockRepository chapterUnlockRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     @Qualifier("s3FileStorageService")
@@ -96,7 +109,7 @@ public class ChapterService {
     public ChapterDetailDTO getChapterDetailDTO(UUID id) {
         Chapter chapter = chapterRepository.getChapterDetailById(id);
         ChapterDetailDTO dto = mapper.ChaptertoChapterDetailDTO(chapter);
-        return dto;
+        return enrichChapterDetailDTO(dto, chapter);
     }
 
     @Transactional(readOnly = true)
@@ -110,7 +123,7 @@ public class ChapterService {
             throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber",
                     novelId + " and " + chapterNumber);
         }
-        return mapper.ChaptertoChapterDetailDTO(chapter);
+        return enrichChapterDetailDTO(mapper.ChaptertoChapterDetailDTO(chapter), chapter);
     }
 
     @Transactional(readOnly = true)
@@ -127,7 +140,7 @@ public class ChapterService {
                     novel.getId() + " and " + chapterNumber);
         }
         chapter.setNovel(novel);
-        return mapper.ChaptertoChapterDetailDTO(chapter);
+        return enrichChapterDetailDTO(mapper.ChaptertoChapterDetailDTO(chapter), chapter);
     }
 
     @Transactional(readOnly = true)
@@ -271,7 +284,7 @@ public class ChapterService {
         logger.info("chapter audio file: {}", chapter.getAudioFile().getId());
         logger.info("chapter json file: {}", chapter.getJsonFile().getId());
 
-        return mapper.ChaptertoChapterDetailDTO(chapter);
+        return enrichChapterDetailDTO(mapper.ChaptertoChapterDetailDTO(chapter), chapter);
     }
 
     public Map<String, Object> getChapterContent(Chapter chapter) {
@@ -604,5 +617,110 @@ public class ChapterService {
             novelRepository.save(n);
         });
         return count;
+    }
+    private ChapterDetailDTO enrichChapterDetailDTO(ChapterDetailDTO dto, Chapter chapter) {
+        if (chapter.getPrice() != null && chapter.getPrice() > 0) {
+            UUID currentUserId = null;
+            try {
+                currentUserId = UserDetailsImpl.getCurrentUserId();
+            } catch (Exception e) {
+                // User not logged in
+            }
+
+            boolean isUnlocked = false;
+            boolean isAuthor = false;
+            boolean isAdmin = false;
+
+            if (currentUserId != null) {
+                if (chapter.getNovel().getOwner() != null && chapter.getNovel().getOwner().getId().equals(currentUserId)) {
+                    isAuthor = true;
+                }
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                    isAdmin = true;
+                }
+
+                if (isAuthor || isAdmin || chapterUnlockRepository.existsByUserIdAndChapterId(currentUserId, chapter.getId())) {
+                    isUnlocked = true;
+                }
+            }
+
+            if (!isUnlocked) {
+                 return new ChapterDetailDTO(
+                    dto.id(),
+                    dto.isActive(),
+                    dto.isDeleted(),
+                    dto.createdBy(),
+                    dto.updatedBy(),
+                    dto.createdAt(),
+                    dto.updatedAt(),
+                    dto.chapterNumber(),
+                    dto.title(),
+                    dto.novelId(),
+                    dto.novelTitle(),
+                    null, // Hide JSON URL
+                    null, // Hide Audio URL
+                    chapter.getPrice(),
+                    true, // isLocked
+                    false // isUnlocked
+                 );
+            } else {
+                 return new ChapterDetailDTO(
+                    dto.id(),
+                    dto.isActive(),
+                    dto.isDeleted(),
+                    dto.createdBy(),
+                    dto.updatedBy(),
+                    dto.createdAt(),
+                    dto.updatedAt(),
+                    dto.chapterNumber(),
+                    dto.title(),
+                    dto.novelId(),
+                    dto.novelTitle(),
+                    dto.jsonUrl(),
+                    dto.audioUrl(),
+                    chapter.getPrice(),
+                    false, // isLocked
+                    true // isUnlocked
+                 );
+            }
+        }
+        // Free chapter
+        return dto;
+    }
+
+    @Transactional
+    @CacheEvict(value = { "chapters", "novels" }, allEntries = true)
+    public ChapterDetailDTO unlockChapter(UUID novelId, Integer chapterNumber, UUID userId) {
+        Chapter chapter = chapterRepository.findByNovelIdAndChapterNumber(novelId, chapterNumber);
+        if (chapter == null) {
+            throw new ResourceNotFoundException("Chapter", "novelId and chapterNumber", novelId + " " + chapterNumber);
+        }
+
+        if (chapter.getPrice() == null || chapter.getPrice() <= 0) {
+             throw new RuntimeException("This chapter is free and does not need to be unlocked.");
+        }
+
+        if (chapterUnlockRepository.existsByUserIdAndChapterId(userId, chapter.getId())) {
+             return enrichChapterDetailDTO(mapper.ChaptertoChapterDetailDTO(chapter), chapter);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        if (user.getWallet() < chapter.getPrice()) {
+            throw new RuntimeException("Insufficient wallet balance.");
+        }
+
+        user.setWallet(user.getWallet() - chapter.getPrice());
+        userRepository.save(user);
+
+        ChapterUnlock unlock = new ChapterUnlock();
+        unlock.setChapter(chapter);
+        unlock.setUser(user);
+        unlock.setPricePaid(chapter.getPrice());
+        chapterUnlockRepository.save(unlock);
+
+        return enrichChapterDetailDTO(mapper.ChaptertoChapterDetailDTO(chapter), chapter);
     }
 }

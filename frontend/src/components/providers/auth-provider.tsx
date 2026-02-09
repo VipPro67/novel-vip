@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean
   isAuthenticated: boolean
   hasRole: (role: string[]) => boolean
+  refreshUser: () => Promise<void>
 }
 type AuthResponse = ApiResponse<{
   accessToken?: string
@@ -196,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     isAuthenticated: !!user,
     hasRole,
+    refreshUser: fetchUserProfile,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

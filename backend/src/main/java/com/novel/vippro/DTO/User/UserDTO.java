@@ -18,5 +18,7 @@ public record UserDTO(
     String username,
     String email,
     String fullName,
-    List<Role> roles
+    List<Role> roles,
+    Long wallet,
+    Long cultivationPoints
 ) {}

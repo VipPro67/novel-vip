@@ -64,6 +64,9 @@ public class User extends BaseEntity {
 
 	// Gamification Fields
 	@Column(columnDefinition = "bigint default 0")
+	private Long wallet = 0L;
+
+	@Column(columnDefinition = "bigint default 0")
 	private Long cultivationPoints = 0L;
 
 	@ManyToOne(fetch = FetchType.LAZY)

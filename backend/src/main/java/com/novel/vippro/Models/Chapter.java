@@ -33,6 +33,9 @@ public class Chapter extends BaseEntity {
     @Column(nullable = false)
     private Integer views = 0;
 
+    @Column(nullable = false)
+    private Integer price = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "novel_id", nullable = false)
     @JsonBackReference("novel-chapters")
