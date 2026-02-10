@@ -22,15 +22,12 @@ public class RateLimitFilter implements Filter {
 
     private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
 
-    // Limit: 20 requests per minute per IP
     private Bucket resolveBucket(String ip) {
         return cache.computeIfAbsent(ip, this::newBucket);
     }
 
     private Bucket newBucket(String apiKey) {
-        // Allow 20 tokens (requests)
-        // Refill 20 tokens every 1 minute
-        Bandwidth limit = Bandwidth.classic(20, Refill.greedy(20, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1)));
         return Bucket.builder()
                 .addLimit(limit)
                 .build();
@@ -42,7 +39,6 @@ public class RateLimitFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        // Apply rate limiting only to API endpoints, exclude static assets if any
         if (request.getRequestURI().startsWith("/api/")) {
             String ip = getClientIP(request);
             Bucket bucket = resolveBucket(ip);
