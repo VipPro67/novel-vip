@@ -174,7 +174,7 @@ public class NovelService {
             Page<Novel> emptyResult = Page.empty(pageable);
             return new PageResponse<>(emptyResult.map(mapper::NoveltoDTO));
         }
-
+        Page<Novel> novels;
         logger.info("Searching novels with filters: {}", filters);
         try {
             novels = searchService.search(filters, pageable);

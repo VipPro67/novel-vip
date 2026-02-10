@@ -207,16 +207,7 @@ public class AuthService {
         if (principle.toString().equals("anonymousUser")) {
              return ResponseEntity.ok().body(new ControllerResponse<>(true, "You have been logged out!", null, 200));
         }
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) principle;
-        Long userId = userDetails.getId();
-        
-        // Let's rely on wiping the cookie client-side, 
-        // but ideally we should also delete refresh tokens for this user from DB to be strict.
-        // For now, we'll just clear the cookie.  
-        // If strict logout is needed: refreshTokenRepository.deleteByUserId(userId);
-       
-        ResponseCookie cleanCookie = ResponseCookie.from("refreshToken", "")
+               ResponseCookie cleanCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/api/auth/refresh")
@@ -229,7 +220,7 @@ public class AuthService {
     }
     
     @Transactional
-    public RefreshToken createRefreshToken(Long userId) {
+    public RefreshToken createRefreshToken(UUID userId) {
         RefreshToken refreshToken = new RefreshToken();
 
         User user = userRepository.findById(userId)

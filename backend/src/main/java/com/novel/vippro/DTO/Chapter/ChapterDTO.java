@@ -17,5 +17,8 @@ public record ChapterDTO(
     Integer chapterNumber,
     UUID novelId,
     String novelTitle,
-    Integer views
+    Integer views,
+    Integer price,
+    Boolean isLocked,
+    Boolean isUnlocked
 ) {}

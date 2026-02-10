@@ -29,6 +29,13 @@ public abstract class ChapterMapper {
     @Mapping(target = "isUnlocked", constant = "false")
     public abstract ChapterDetailDTO ChaptertoChapterDetailDTO(Chapter chapter);
 
+    @Mapping(target = "novelId", source = "novel.id")
+    @Mapping(target = "novelTitle", source = "novel.title")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "isLocked", constant = "false")
+    @Mapping(target = "isUnlocked", constant = "false")
+    public abstract ChapterDTO ChaptertoDTO(Chapter chapter);
+
     @AfterMapping
     protected void enrichDetailDto(Chapter chapter, @MappingTarget ChapterDetailDTO.ChapterDetailDTOBuilder builder) {
         if (chapter == null) {
