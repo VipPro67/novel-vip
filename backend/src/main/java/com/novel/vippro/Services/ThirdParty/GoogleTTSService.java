@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service("gcpTTS")
@@ -33,6 +35,9 @@ public class GoogleTTSService implements TextToSpeechService {
     @Value("${google.credentials.path}")
     private String googleCredentialsPath;
 
+    @Value("${google.credentials.base64:}")
+    private String googleCredentialsBase64;
+
     @Autowired
     private FileService fileService;
 
@@ -43,10 +48,10 @@ public class GoogleTTSService implements TextToSpeechService {
         try {
             logger.info("Initializing Google TTS Client...");
             InputStream credentialsStream = loadCredentialsStream();
-            
+
             if (credentialsStream == null) {
                 logger.error("CRITICAL: Google credentials not found. TTS will not work.");
-                return; 
+                return;
             }
 
             try (credentialsStream) {
@@ -94,10 +99,10 @@ public class GoogleTTSService implements TextToSpeechService {
             List<byte[]> audioChunks = new ArrayList<>();
             for (int i = 0; i < chunks.size(); i++) {
                 String chunk = chunks.get(i);
-                
+
                 SynthesisInput input = SynthesisInput.newBuilder().setText(chunk).build();
                 SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
-                
+
                 audioChunks.add(response.getAudioContent().toByteArray());
                 logger.debug("Synthesized chunk {}/{}", i + 1, chunks.size());
             }
@@ -114,13 +119,14 @@ public class GoogleTTSService implements TextToSpeechService {
             throw new IOException("Failed to synthesize speech: " + e.getMessage(), e);
         }
     }
+
     private List<String> chunkText(String text) {
         List<String> chunks = new ArrayList<>();
         String[] sentences = text.split("(?<=[.!?;])\\s+");
 
         StringBuilder currentChunk = new StringBuilder();
         int currentByteSize = 0;
-        final int MAX_BYTES = 4800; 
+        final int MAX_BYTES = 4800;
 
         for (String sentence : sentences) {
             int sentenceBytes = sentence.getBytes(StandardCharsets.UTF_8).length;
@@ -137,12 +143,12 @@ public class GoogleTTSService implements TextToSpeechService {
                     currentChunk = new StringBuilder();
                     currentByteSize = 0;
                 }
-                chunks.add(sentence); 
+                chunks.add(sentence);
                 continue;
             }
             if (currentChunk.length() > 0) {
                 currentChunk.append(" ");
-                currentByteSize += 1; 
+                currentByteSize += 1;
             }
             currentChunk.append(sentence);
             currentByteSize += sentenceBytes;
@@ -154,8 +160,10 @@ public class GoogleTTSService implements TextToSpeechService {
     }
 
     private byte[] combineAudioChunks(List<byte[]> mp3Chunks) throws IOException {
-        if (mp3Chunks.isEmpty()) return new byte[0];
-        if (mp3Chunks.size() == 1) return mp3Chunks.get(0);
+        if (mp3Chunks.isEmpty())
+            return new byte[0];
+        if (mp3Chunks.size() == 1)
+            return mp3Chunks.get(0);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             for (byte[] chunk : mp3Chunks) {
                 // Strip tags to prevent "blips" between sentences
@@ -169,24 +177,26 @@ public class GoogleTTSService implements TextToSpeechService {
     }
 
     private byte[] stripMP3ID3Tags(byte[] mp3Data) {
-        if (mp3Data == null || mp3Data.length == 0) return new byte[0];
+        if (mp3Data == null || mp3Data.length == 0)
+            return new byte[0];
 
         int offset = 0;
         int length = mp3Data.length;
         if (length > 10 && mp3Data[0] == 'I' && mp3Data[1] == 'D' && mp3Data[2] == '3') {
-            int tagSize = ((mp3Data[6] & 0x7F) << 21) | 
-                          ((mp3Data[7] & 0x7F) << 14) | 
-                          ((mp3Data[8] & 0x7F) << 7)  | 
-                           (mp3Data[9] & 0x7F);
+            int tagSize = ((mp3Data[6] & 0x7F) << 21) |
+                    ((mp3Data[7] & 0x7F) << 14) |
+                    ((mp3Data[8] & 0x7F) << 7) |
+                    (mp3Data[9] & 0x7F);
             offset = 10 + tagSize;
         }
 
-        if (length > 128 && mp3Data[length - 128] == 'T' && 
-                            mp3Data[length - 127] == 'A' && 
-                            mp3Data[length - 126] == 'G') {
+        if (length > 128 && mp3Data[length - 128] == 'T' &&
+                mp3Data[length - 127] == 'A' &&
+                mp3Data[length - 126] == 'G') {
             length -= 128;
         }
-        if (offset >= length) return new byte[0];
+        if (offset >= length)
+            return new byte[0];
 
         int audioSize = length - offset;
         byte[] cleanAudio = new byte[audioSize];
@@ -196,20 +206,31 @@ public class GoogleTTSService implements TextToSpeechService {
     }
 
     private InputStream loadCredentialsStream() {
+
         try {
+            if (googleCredentialsBase64 != null && !googleCredentialsBase64.trim().isEmpty()) {
+                try {
+                    logger.info("Loading Google credentials from Base64 environment variable...");
+                    byte[] decodedBytes = Base64.getDecoder().decode(googleCredentialsBase64.trim());
+                    return new ByteArrayInputStream(decodedBytes);
+                } catch (IllegalArgumentException e) {
+                    logger.error("Failed to decode Base64 Google credentials!", e);
+                }
+            }
             ClassPathResource resource = new ClassPathResource(googleCredentialsPath);
             if (resource.exists()) {
                 logger.info("Found credentials in classpath: {}", googleCredentialsPath);
                 return resource.getInputStream();
             }
-        } catch (Exception ignored) {}
-
+        } catch (Exception ignored) {
+        }
         try {
             if (Files.exists(Paths.get(googleCredentialsPath))) {
                 logger.info("Found credentials in filesystem: {}", googleCredentialsPath);
                 return Files.newInputStream(Paths.get(googleCredentialsPath));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         try {
             String dockerPath = "/app/config/" + googleCredentialsPath;
@@ -217,7 +238,8 @@ public class GoogleTTSService implements TextToSpeechService {
                 logger.info("Found credentials in Docker config: {}", dockerPath);
                 return Files.newInputStream(Paths.get(dockerPath));
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return null;
     }

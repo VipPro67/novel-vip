@@ -19,8 +19,5 @@ WORKDIR /app
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/novel-vippro-0.0.1-SNAPSHOT.jar app.jar
 
-# Copy Google credentials file
-COPY src/main/resources/novelvip.json /app/config/novelvip.json
-
 EXPOSE 8081
 ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
