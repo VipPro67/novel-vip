@@ -1,0 +1,13 @@
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    elasticsearch:
+      enabled: false
+    jms:
+      enabled: false
+    db:
+      enabled: true
+    rabbit:
+      enabled: true

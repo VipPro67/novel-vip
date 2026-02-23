@@ -12,6 +12,14 @@ services  :
     environment:
       SPRING_PROFILES_ACTIVE: docker
       FLARESOLVERR_URL: http://flaresolverr:8191
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/opentelemetry-javaagent.jar"
+      OTEL_SERVICE_NAME: "novel-vip"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${GRAFANA_OTLP_ENDPOINT}"
+      OTEL_EXPORTER_OTLP_HEADERS: "Authorization=${GRAFANA_OTLP_AUTH}"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_LOGS_EXPORTER: "otlp"
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_TRACES_EXPORTER: "none"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
@@ -26,8 +34,8 @@ services  :
     depends_on:
       rabbitmq:
         condition: service_healthy
-      flaresolverr:
-        condition: service_started
+      #flaresolverr:
+      #   condition: service_started
       # opensearch:
       #   condition: service_healthy
   caddy:

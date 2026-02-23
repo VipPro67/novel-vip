@@ -285,6 +285,24 @@
             <version>8.7.0</version>
         </dependency>
 
+        <!-- OpenTelemetry – Grafana Loki log shipping via OTLP -->
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
+            <version>2.10.0-alpha</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+            <version>1.44.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+            <version>1.44.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
