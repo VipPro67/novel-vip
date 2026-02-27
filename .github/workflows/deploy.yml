@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout code with submodules
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup SSH
         run: |
@@ -25,14 +27,15 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 deploy@${{ secrets.HOST }} << 'EOF'
             set -e
-            cd /home/deploy/novel-vip/backend
+            cd /home/deploy/novel-vip
 
-            echo "🔁 Pulling latest code..."
+            echo "🔁 Pulling latest code with submodules..."
             git fetch --all
             git reset --hard origin/main
+            git submodule update --init --recursive
 
             echo "🧱 Rebuilding Docker containers..."
+            cd backend
             docker compose down
             docker compose up -d --build
-          EOF
-
+          EOF   
