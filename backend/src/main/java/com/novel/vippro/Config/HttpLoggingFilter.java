@@ -44,7 +44,9 @@ public class HttpLoggingFilter implements jakarta.servlet.Filter {
 			logger.info("<<< END: {} {} - Status: {} - Time: {}ms", 
 					request.getMethod(), uri, wrappedResponse.getStatus(), duration);
 			if("development".equalsIgnoreCase(env)) {
-				logger.info("Request Body: {}", new String(wrappedRequest.getContentAsByteArray()));
+				if(wrappedRequest.getContentAsByteArray().length > 0) {
+					logger.info("Request Body: {}", new String(wrappedRequest.getContentAsByteArray()));
+				}
 				logger.info("Response Body: {}", new String(wrappedResponse.getContentAsByteArray()));
 			}
 			wrappedResponse.copyBodyToResponse();
